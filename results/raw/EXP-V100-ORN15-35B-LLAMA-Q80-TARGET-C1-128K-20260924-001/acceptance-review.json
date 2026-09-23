@@ -1,0 +1,14 @@
+{
+  "reviewed_at_utc": "2026-09-23T16:30:00+00:00",
+  "verdict": "PASS_C1_128K",
+  "prompt_receipt_matches_usage": true,
+  "reserved_budget_tokens": 131071,
+  "completion_tokens": 922,
+  "finish_reason": "stop",
+  "runtime_truncated": 0,
+  "post_health_healthy": true,
+  "content_review": "Coherent, non-truncated response. It correctly notes that dict(self.pages) is only a shallow copy, but the proposed mutable-value regression test replaces the stored object with a new Page object rather than mutating the already-shared object in place, so that test would not actually reproduce shallow-copy aliasing. This is a model-quality caveat, not a serving/output-integrity failure.",
+  "speculative_evidence": "target-only; no speculative decoding",
+  "runtime_errors": [],
+  "cleanup": "owned container stopped; server exit 0"
+}
