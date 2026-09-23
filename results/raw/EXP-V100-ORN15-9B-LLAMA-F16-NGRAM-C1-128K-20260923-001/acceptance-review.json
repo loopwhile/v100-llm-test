@@ -8,7 +8,8 @@
   "runtime_truncated": 0,
   "post_health_healthy": true,
   "content_review": "Coherent, non-truncated response with no repetition/corruption. It repeats the TARGET semantic mistake in the proposed verification assertions after a later put(). This is a model-quality caveat only.",
-  "speculative_evidence": "ngram-simple configured and preflight-verified; request/server evidence contains no draft/accepted-token counters demonstrating useful NGRAM speculation for this workload",
+  "speculative_evidence": "ngram-simple configured and preflight-verified; no draft/accepted-token counters were exposed for this request",
   "runtime_errors": [],
-  "cleanup": "owned container stopped; server exit 0"
+  "cleanup": "owned container stopped; server exit 0",
+  "ngram_acceptance_scope": "C1 validates NGRAM-on 128K compatibility/capacity and output integrity; draft activity or speedup is not required. Performance effectiveness is deferred to Phase 5."
 }
