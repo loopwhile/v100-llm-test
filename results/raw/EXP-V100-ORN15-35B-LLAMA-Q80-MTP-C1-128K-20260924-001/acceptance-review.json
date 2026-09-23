@@ -1,0 +1,14 @@
+{
+  "reviewed_at_utc": "2026-09-23T16:30:00+00:00",
+  "verdict": "PASS_C1_128K",
+  "prompt_receipt_matches_usage": true,
+  "reserved_budget_tokens": 131071,
+  "completion_tokens": 906,
+  "finish_reason": "stop",
+  "runtime_truncated": 0,
+  "post_health_healthy": true,
+  "content_review": "Coherent, non-truncated response. The concurrency risk is a legitimate verification target when the class is used concurrently, but whether Transaction.commit must be atomic as a transaction is contract-dependent. The response is suitable for serving-integrity acceptance.",
+  "speculative_evidence": "embedded native MTP active with --spec-draft-n-max 1; draft_n=505, draft_n_accepted=401, acceptance=0.79406, mean len=1.79",
+  "runtime_errors": [],
+  "cleanup": "owned container stopped; server exit 0"
+}
