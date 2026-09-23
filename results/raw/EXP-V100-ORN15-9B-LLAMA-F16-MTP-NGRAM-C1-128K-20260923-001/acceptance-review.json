@@ -8,7 +8,8 @@
   "runtime_truncated": 0,
   "post_health_healthy": true,
   "content_review": "Structurally coherent and non-truncated, but repeats the MTP semantic error that dict(self.pages) is a live reference. The supplied code creates a defensive dict copy. Recorded as a model-quality caveat only.",
-  "speculative_evidence": "composite draft-mtp,ngram-simple configured; observed counters exactly match MTP-only: draft_n=645, accepted=291, acceptance=0.45116, mean draft length=2.35; no evidence of additional NGRAM contribution in this request",
+  "speculative_evidence": "composite draft-mtp,ngram-simple configured; MTP observed draft_n=645, accepted=291, acceptance=0.45116, mean draft length=2.35",
   "runtime_errors": [],
-  "cleanup": "owned container stopped; server exit 0"
+  "cleanup": "owned container stopped; server exit 0",
+  "ngram_acceptance_scope": "C1 validates the composite NGRAM-on configuration for 128K compatibility/capacity and output integrity; additional NGRAM speedup is not required or judged here. Performance effectiveness is deferred to Phase 5."
 }
