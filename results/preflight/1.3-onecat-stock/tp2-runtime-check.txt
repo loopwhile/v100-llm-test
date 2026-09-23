@@ -1,0 +1,175 @@
+============================================================
+[1] PROCESS
+============================================================
+PID=25378
+UID          PID    PPID  C STIME TTY          TIME CMD
+
+============================================================
+[2] PORT
+============================================================
+
+============================================================
+[3] GPU
+============================================================
+Wed Sep 23 17:41:48 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.178.04             Driver Version: 580.178.04     CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  Tesla V100-SXM2-16GB           On  |   00000000:65:00.0 Off |                    0 |
+| N/A   47C    P0             27W /  150W |       0MiB /  16384MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+|   1  Tesla V100-SXM2-16GB           On  |   00000000:B3:00.0 Off |                    0 |
+| N/A   43C    P0             27W /  150W |       0MiB /  16384MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+
+============================================================
+[4] HEALTH
+============================================================
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  
+============================================================
+[5] MODELS
+============================================================
+Upload  Total   Spent   Left   Speed
+  0      0   0      0   0      0      0      0                              0
+curl: (7) Failed to connect to 127.0.0.1 port 18080 after 0 ms: Could not connect to server
+curl: (7) Failed to connect to 127.0.0.1 port 18080 after 0 ms: Could 
+
+============================================================
+[6] LOG TAIL
+============================================================
+not connect to server
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346] Traceback (most recent call last):
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1320, in run_engine_core
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]     engine_core = EngineCoreProc(*args, engine_index=dp_rank, **kwargs)
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]     return func(*args, **kwargs)
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1086, in __init__
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]     super().__init__(
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 131, in __init__
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]     kv_cache_config = self._initialize_kv_caches(vllm_config)
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]     return func(*args, **kwargs)
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 270, in _initialize_kv_caches
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]     kv_cache_configs = get_kv_cache_configs(
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]                        ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/core/kv_cache_utils.py", line 2744, in get_kv_cache_configs
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]     _check_enough_kv_cache_memory(
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/core/kv_cache_utils.py", line 720, in _check_enough_kv_cache_memory
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]     raise ValueError(
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346] ValueError: To serve at least one request with the model's max seq len (131072), (2.15 GiB KV cache is needed, which is larger than the available KV cache memory (1.19 GiB). Based on the available memory, the estimated maximum model length is 67424. Try increasing `gpu_memory_utilization` (which also controls CPU memory on the CPU backend) or decreasing `max_model_len` when initializing the engine. See https://docs.vllm.ai/en/latest/configuration/conserving_memory/ for more details.
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:23 [multiproc_executor.py:894] WorkerProc was terminated
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:23 [multiproc_executor.py:894] WorkerProc was terminated
+(EngineCore pid=25567) ERROR 09-23 17:41:27 [multiproc_executor.py:284] Worker proc VllmWorker-0 died unexpectedly, shutting down executor.
+(EngineCore pid=25567) Process EngineCore:
+(EngineCore pid=25567) Traceback (most recent call last):
+(EngineCore pid=25567)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+(EngineCore pid=25567)     self.run()
+(EngineCore pid=25567)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/multiprocessing/process.py", line 108, in run
+(EngineCore pid=25567)     self._target(*self._args, **self._kwargs)
+(EngineCore pid=25567)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1350, in run_engine_core
+(EngineCore pid=25567)     raise e
+(EngineCore pid=25567)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1320, in run_engine_core
+(EngineCore pid=25567)     engine_core = EngineCoreProc(*args, engine_index=dp_rank, **kwargs)
+(EngineCore pid=25567)                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=25567)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=25567)     return func(*args, **kwargs)
+(EngineCore pid=25567)            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=25567)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1086, in __init__
+(EngineCore pid=25567)     super().__init__(
+(EngineCore pid=25567)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 131, in __init__
+(EngineCore pid=25567)     kv_cache_config = self._initialize_kv_caches(vllm_config)
+(EngineCore pid=25567)                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=25567)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=25567)     return func(*args, **kwargs)
+(EngineCore pid=25567)            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=25567)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 270, in _initialize_kv_caches
+(EngineCore pid=25567)     kv_cache_configs = get_kv_cache_configs(
+(EngineCore pid=25567)                        ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=25567)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/core/kv_cache_utils.py", line 2744, in get_kv_cache_configs
+(EngineCore pid=25567)     _check_enough_kv_cache_memory(
+(EngineCore pid=25567)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/core/kv_cache_utils.py", line 720, in _check_enough_kv_cache_memory
+(EngineCore pid=25567)     raise ValueError(
+(EngineCore pid=25567) ValueError: To serve at least one request with the model's max seq len (131072), (2.15 GiB KV cache is needed, which is larger than the available KV cache memory (1.19 GiB). Based on the available memory, the estimated maximum model length is 67424. Try increasing `gpu_memory_utilization` (which also controls CPU memory on the CPU backend) or decreasing `max_model_len` when initializing the engine. See https://docs.vllm.ai/en/latest/configuration/conserving_memory/ for more details.
+(APIServer pid=25378) Traceback (most recent call last):
+(APIServer pid=25378)   File "<frozen runpy>", line 198, in _run_module_as_main
+(APIServer pid=25378)   File "<frozen runpy>", line 88, in _run_code
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 718, in <module>
+(APIServer pid=25378)     uvloop.run(run_server(args))
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/uvloop/__init__.py", line 96, in run
+(APIServer pid=25378)     return __asyncio.run(
+(APIServer pid=25378)            ^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 195, in run
+(APIServer pid=25378)     return runner.run(main)
+(APIServer pid=25378)            ^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 118, in run
+(APIServer pid=25378)     return self._loop.run_until_complete(task)
+(APIServer pid=25378)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/uvloop/__init__.py", line 48, in wrapper
+(APIServer pid=25378)     return await main
+(APIServer pid=25378)            ^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 678, in run_server
+(APIServer pid=25378)     await run_server_worker(listen_address, sock, args, **uvicorn_kwargs)
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 692, in run_server_worker
+(APIServer pid=25378)     async with build_async_engine_client(
+(APIServer pid=25378)                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 210, in __aenter__
+(APIServer pid=25378)     return await anext(self.gen)
+(APIServer pid=25378)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 100, in build_async_engine_client
+(APIServer pid=25378)     async with build_async_engine_client_from_engine_args(
+(APIServer pid=25378)                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 210, in __aenter__
+(APIServer pid=25378)     return await anext(self.gen)
+(APIServer pid=25378)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 136, in build_async_engine_client_from_engine_args
+(APIServer pid=25378)     async_llm = AsyncLLM.from_vllm_config(
+(APIServer pid=25378)                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/async_llm.py", line 217, in from_vllm_config
+(APIServer pid=25378)     return cls(
+(APIServer pid=25378)            ^^^^
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/async_llm.py", line 146, in __init__
+(APIServer pid=25378)     self.engine_core = EngineCoreClient.make_async_mp_client(
+(APIServer pid=25378)                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(APIServer pid=25378)     return func(*args, **kwargs)
+(APIServer pid=25378)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 131, in make_async_mp_client
+(APIServer pid=25378)     return AsyncMPClient(*client_args)
+(APIServer pid=25378)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(APIServer pid=25378)     return func(*args, **kwargs)
+(APIServer pid=25378)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 932, in __init__
+(APIServer pid=25378)     super().__init__(
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 567, in __init__
+(APIServer pid=25378)     with launch_core_engines(
+(APIServer pid=25378)          ^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 144, in __exit__
+(APIServer pid=25378)     next(self.gen)
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/utils.py", line 1150, in launch_core_engines
+(APIServer pid=25378)     wait_for_engine_startup(
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/utils.py", line 1209, in wait_for_engine_startup
+(APIServer pid=25378)     raise RuntimeError(
+(APIServer pid=25378) RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}
+/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 2 leaked shared_memory objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '

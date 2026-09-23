@@ -1,0 +1,180 @@
+============================================================
+[1] IMAGE
+============================================================
+IMAGE_MISSING -> pulling ghcr.io/berriai/litellm:v1.101.0
+v1.101.0: Pulling from berriai/litellm
+844d8950faae: Pulling fs layer
+ff5bc8858b4c: Pulling fs layer
+72466b0de672: Pulling fs layer
+bc0f2d8a7aba: Pulling fs layer
+cdeb21336e65: Pulling fs layer
+81c2df651ac7: Pulling fs layer
+cdea145aa115: Pulling fs layer
+8900cb4f88ab: Pulling fs layer
+93e6f6a1b39c: Pulling fs layer
+d2c73f0ad689: Pulling fs layer
+9b470bd37a46: Pulling fs layer
+b71c5b6c5811: Pulling fs layer
+392fc32e63fc: Pulling fs layer
+7dd711ec8254: Pulling fs layer
+c920184a3208: Pulling fs layer
+58e898589401: Pulling fs layer
+f374ce30c98c: Pulling fs layer
+f31765ca95df: Pulling fs layer
+ac37ed09f36c: Pulling fs layer
+b10d4a946640: Pulling fs layer
+ff0b8f1d4451: Pulling fs layer
+8d2fb9647cdc: Pulling fs layer
+44136fa355b3: Download complete
+b71c5b6c5811: Download complete
+357cac4e70ad: Download complete
+cdea145aa115: Download complete
+8900cb4f88ab: Download complete
+bc0f2d8a7aba: Download complete
+7dd711ec8254: Download complete
+f31765ca95df: Download complete
+844d8950faae: Download complete
+392fc32e63fc: Download complete
+ff5bc8858b4c: Download complete
+b10d4a946640: Download complete
+cdeb21336e65: Download complete
+8d2fb9647cdc: Download complete
+ff0b8f1d4451: Download complete
+c920184a3208: Download complete
+72466b0de672: Download complete
+ac37ed09f36c: Download complete
+93e6f6a1b39c: Download complete
+f374ce30c98c: Download complete
+81c2df651ac7: Download complete
+f374ce30c98c: Pull complete
+72466b0de672: Pull complete
+844d8950faae: Pull complete
+392fc32e63fc: Pull complete
+b10d4a946640: Pull complete
+c920184a3208: Pull complete
+8900cb4f88ab: Pull complete
+bc0f2d8a7aba: Pull complete
+f31765ca95df: Pull complete
+cdea145aa115: Pull complete
+b71c5b6c5811: Pull complete
+7dd711ec8254: Pull complete
+d2c73f0ad689: Download complete
+d2c73f0ad689: Pull complete
+ff5bc8858b4c: Pull complete
+9b470bd37a46: Download complete
+58e898589401: Download complete
+58e898589401: Pull complete
+cdeb21336e65: Pull complete
+8d2fb9647cdc: Pull complete
+ff0b8f1d4451: Pull complete
+ac37ed09f36c: Pull complete
+81c2df651ac7: Pull complete
+9b470bd37a46: Pull complete
+93e6f6a1b39c: Pull complete
+Digest: sha256:d295634e09c648dcdb72c4cc2dd226f5fb87823a73e88cbbed6f205e4deb044b
+Status: Downloaded newer image for ghcr.io/berriai/litellm:v1.101.0
+ghcr.io/berriai/litellm:v1.101.0
+
+RepoDigests:
+["ghcr.io/berriai/litellm@sha256:d295634e09c648dcdb72c4cc2dd226f5fb87823a73e88cbbed6f205e4deb044b"]
+
+Image ID:
+sha256:d295634e09c648dcdb72c4cc2dd226f5fb87823a73e88cbbed6f205e4deb044b
+
+Labels:
+{"dev.chainguard.image.title":"wolfi-base","dev.chainguard.package.main":"","org.opencontainers.image.authors":"Chainguard Team https://www.chainguard.dev/","org.opencontainers.image.created":"2026-08-30T12:58:50Z","org.opencontainers.image.revision":"18243cd7af4c3325165ba68b21379e2719e051c7","org.opencontainers.image.source":"https://github.com/BerriAI/litellm","org.opencontainers.image.title":"wolfi-base","org.opencontainers.image.url":"https://images.chainguard.dev/directory/image/wolfi-base/overview","org.opencontainers.image.vendor":"Chainguard"}
+
+============================================================
+[2] LITELLM VERSION
+============================================================
+1.101.0
+
+============================================================
+[3] GATEWAY CONFIG
+============================================================
+model_list:
+  - model_name: Ornith-1.5-9B
+    litellm_params:
+      model: openai/Ornith-1.5-9B
+      api_base: http://127.0.0.1:18080/v1
+      api_key: local-no-key
+      max_parallel_requests: 1
+      timeout: 1800
+      stream_timeout: 1800
+      max_retries: 0
+
+  - model_name: Ornith-1.5-9B
+    litellm_params:
+      model: openai/Ornith-1.5-9B
+      api_base: http://127.0.0.1:18081/v1
+      api_key: local-no-key
+      max_parallel_requests: 1
+      timeout: 1800
+      stream_timeout: 1800
+      max_retries: 0
+
+router_settings:
+  routing_strategy: least-busy
+  num_retries: 0
+
+============================================================
+[4] START GATEWAY
+============================================================
+5cf389fb7202abafe24f5db5f0c0e81350b6447c8d0308b896444b0fc236287a
+
+============================================================
+[5] LIVENESS
+============================================================
+LITELLM_LIVENESS_PASS
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+  0      0   0      0   0     HTTP/1.1 200 OK
+date: Wed, 23 Sep 2026 09:13:25 GMT
+content-length: 12
+content-type: application/json
+x-frame-options: DENY
+content-security-policy: frame-ancestors 'none'
+x-content-type-options: nosniff
+
+"I'm alive!"
+============================================================
+[6] LOGS
+============================================================
+ 0      0      0                              0100     12 100     12   0      0   3504      0                              0100     12 100     12   0      0   3317      0                              0100     12 100     12   0      0   3158      0                              0
+INFO:     Started server process [1]
+INFO:     Waiting for application startup.
+
+   ██╗     ██╗████████╗███████╗██╗     ██╗     ███╗   ███╗
+   ██║     ██║╚══██╔══╝██╔════╝██║     ██║     ████╗ ████║
+   ██║     ██║   ██║   █████╗  ██║     ██║     ██╔████╔██║
+   ██║     ██║   ██║   ██╔══╝  ██║     ██║     ██║╚██╔╝██║
+   ███████╗██║   ██║   ███████╗███████╗███████╗██║ ╚═╝ ██║
+   ╚══════╝╚═╝   ╚═╝   ╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:18079 (Press CTRL+C to quit)
+
+[1;37m#------------------------------------------------------------#[0m
+[1;37m#                                                            #[0m
+[1;37m#         'The worst thing about this product is...'          #[0m
+[1;37m#        https://github.com/BerriAI/litellm/issues/new        #[0m
+[1;37m#                                                            #[0m
+[1;37m#------------------------------------------------------------#[0m
+
+ Thank you for using LiteLLM! - Krrish & Ishaan
+
+
+
+[1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new[0m
+
+
+[32mLiteLLM: Proxy initialized with Config, Set models:[0m
+[32m    Ornith-1.5-9B[0m
+[32m    Ornith-1.5-9B[0m
+INFO:     127.0.0.1:50786 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50790 - "GET /health/liveliness HTTP/1.1" 200 OK
+
+============================================================
+[7] STOP
+============================================================
+PORT_18079_FREE

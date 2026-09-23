@@ -1,0 +1,24 @@
+model_list:
+  - model_name: Ornith-1.5-9B
+    litellm_params:
+      model: openai/Ornith-1.5-9B
+      api_base: http://127.0.0.1:18080/v1
+      api_key: local-no-key
+      max_parallel_requests: 1
+      timeout: 1800
+      stream_timeout: 1800
+      max_retries: 0
+
+  - model_name: Ornith-1.5-9B
+    litellm_params:
+      model: openai/Ornith-1.5-9B
+      api_base: http://127.0.0.1:18081/v1
+      api_key: local-no-key
+      max_parallel_requests: 1
+      timeout: 1800
+      stream_timeout: 1800
+      max_retries: 0
+
+router_settings:
+  routing_strategy: least-busy
+  num_retries: 0

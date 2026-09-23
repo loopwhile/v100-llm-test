@@ -1,0 +1,48 @@
+============================================================
+[1] TEMPLATE THINKING / TOOL MARKERS
+============================================================
+46:{%- if enable_thinking is undefined or enable_thinking is true %}
+54:        {%- set reasoning_instructions = 'Reasoning effort is set to low. Keep your thinking brief and focused, moving directly to the conclusion without unnecessary elaboration.' %}
+57:{%- if tools and tools is iterable and tools is not mapping %}
+62:    {{- "# Tools\n\nYou have access to the following functions:\n\n<tools>" }}
+63:    {%- for tool in tools %}
+67:    {{- "\n</tools>" }}
+68:    {{- '\n\nIf you choose to call a function ONLY reply in the following format with NO suffix:\n\n<tool_call>\n<function=example_function_name>\n<parameter=example_parameter_1>\nvalue_1\n</parameter>\n<parameter=example_parameter_2>\nThis is the value for the second parameter\nthat can span\nmultiple lines\n</parameter>\n</function>\n</tool_call>\n\n<IMPORTANT>\nReminder:\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\n- Required parameters MUST be specified\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\n</IMPORTANT>' }}
+116:        {%- if preserve_thinking is undefined or preserve_thinking is true or loop.index0 > ns.last_query_index %}
+117:            {{- '<|im_start|>' + message.role + '\n<think>\n' + reasoning_content + '\n</think>\n\n' + content }}
+121:        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}
+122:            {%- for tool_call in message.tool_calls %}
+123:                {%- if tool_call.function is defined %}
+124:                    {%- set tool_call = tool_call.function %}
+128:                        {{- '\n\n<tool_call>\n<function=' + tool_call.name + '>\n' }}
+130:                        {{- '<tool_call>\n<function=' + tool_call.name + '>\n' }}
+133:                    {{- '\n<tool_call>\n<function=' + tool_call.name + '>\n' }}
+135:                {%- if tool_call.arguments is defined and tool_call.arguments != '' %}
+136:                    {%- for args_name, args_value in tool_call.arguments|items %}
+143:                {{- '</function>\n</tool_call>' }}
+165:    {%- if enable_thinking is defined and enable_thinking is false %}
+166:        {{- '<think>\n\n</think>\n\n' }}
+168:        {{- '<think>\n' }}
+
+============================================================
+[2] TOKENIZER CONFIG RELEVANT FIELDS
+============================================================
+chat_template = <string length=8952>
+
+============================================================
+[3] README PARSER / TEMPLATE REFERENCES
+============================================================
+4:base_model: Qwen/Qwen3.8-27B
+15:# Qwen3.8-27B NVFP4, trained with QUASAR
+17:`QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4` is a 4-bit NVFP4 version of
+18:[`Qwen/Qwen3.8-27B`](https://huggingface.co/Qwen/Qwen3.8-27B), produced with
+21:Use it exactly as you would a post-training-quantized (PTQ) build of Qwen3.8-27B: it is a
+32:This model uses the most aggressive quantization settings available for Qwen3.8-27B:
+39:checkpoint** of Qwen3.8-27B and **one of the highest quality**.
+48:vllm serve QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4 \
+62:`unsloth/Qwen3.8-27B-NVFP4` (23.4 GB) quantizes only 168 of 496 linears to NVFP4, holding
+64:`Inferact/Qwen3.8-27B-NVFP4` (26.4 GB) quantizes 304, leaving 192 of the 240 delta-net
+69:| `Qwen/Qwen3.8-27B` (BF16 original) | 55.6 GB | **0.9141** | **1.0000** |
+70:| **`QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4`** (this model) | **19.7 GB** | 0.9091 | **1.0000** |
+71:| `unsloth/Qwen3.8-27B-NVFP4` | 23.4 GB | 0.8939 | 0.9778 |
+72:| `Inferact/Qwen3.8-27B-NVFP4` | 26.4 GB | 0.8763 | 0.9667 |

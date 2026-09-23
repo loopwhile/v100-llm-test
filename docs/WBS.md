@@ -44,7 +44,7 @@
 - draft-mtp
 - composite draft-mtp,ngram-simple
 
-### 1.3 1Cat-vLLM STOCK 및 LiteLLM gateway 검증
+### 1.3 1Cat-vLLM STOCK 및 LiteLLM gateway 검증 [DONE]
 다음을 검증한다.
 - 1Cat-vLLM 1.5.0 exact wheel identity.
 - FLASH_ATTN_V100.

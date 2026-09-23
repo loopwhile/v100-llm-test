@@ -1,0 +1,79 @@
+============================================================
+[1] TOKENIZER CONFIG
+============================================================
+tokenizer_class = Qwen2Tokenizer
+model_max_length = 262144
+bos_token = None
+eos_token = <|im_end|>
+pad_token = <|endoftext|>
+chat_template_in_tokenizer_config = YES
+chat_template_length = 8952
+standalone_chat_template = True
+
+============================================================
+[2] CHAT TEMPLATE HEAD
+============================================================
+{%- set image_count = namespace(value=0) %}
+{%- set video_count = namespace(value=0) %}
+{%- macro render_content(content, do_vision_count, is_system_content=false) %}
+    {%- if content is string %}
+        {{- content }}
+    {%- elif content is iterable and content is not mapping %}
+        {%- for item in content %}
+            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}
+                {%- if is_system_content %}
+                    {{- raise_exception('System message cannot contain images.') }}
+                {%- endif %}
+                {%- if do_vision_count %}
+                    {%- set image_count.value = image_count.value + 1 %}
+                {%- endif %}
+                {%- if add_vision_id %}
+                    {{- 'Picture ' ~ image_count.value ~ ': ' }}
+                {%- endif %}
+                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}
+            {%- elif 'video' in item or item.type == 'video' %}
+                {%- if is_system_content %}
+                    {{- raise_exception('System message cannot contain videos.') }}
+                {%- endif %}
+                {%- if do_vision_count %}
+                    {%- set video_count.value = video_count.value + 1 %}
+                {%- endif %}
+                {%- if add_vision_id %}
+                    {{- 'Video ' ~ video_count.value ~ ': ' }}
+                {%- endif %}
+                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}
+            {%- elif 'text' in item %}
+                {{- item.text }}
+            {%- else %}
+                {{- raise_exception('Unexpected item type in content.') }}
+            {%- endif %}
+        {%- endfor %}
+    {%- elif content is none or content is undefined %}
+        {{- '' }}
+    {%- else %}
+        {{- raise_exception('Unexpected content type.') }}
+    {%- endif %}
+
+============================================================
+[3] VLLM PARSER OPTIONS
+============================================================
+                     [--config CONFIG] [--grpc]
+                     [--lora-modules LORA_MODULES [LORA_MODULES ...]]
+                     [--chat-template CHAT_TEMPLATE]
+                     [--chat-template-content-format {auto,openai,string}]
+                     [--trust-request-chat-template | --no-trust-request-chat-template]
+                     [--default-chat-template-kwargs DEFAULT_CHAT_TEMPLATE_KWARGS]
+                     [--response-role RESPONSE_ROLE]
+                     [--return-tokens-as-token-ids | --no-return-tokens-as-token-ids]
+                     [--enable-auto-tool-choice | --no-enable-auto-tool-choice]
+                     [--exclude-tools-when-tool-choice-none | --no-exclude-tools-when-tool-choice-none]
+                     [--tool-call-parser {apertus,cohere_command3,cohere_command4,deepseek_v3,deepseek_v31,deepseek_v32,deepseek_v4,ernie45,functiongemma,gemma4,gigachat3,glm45,glm47,granite,granite-20b-fc,granite4,hermes,hunyuan_a13b,hy_v3,internlm,jamba,kimi_k2,lfm2,llama3_json,llama4_json,llama4_pythonic,longcat,mimo,minicpm5,minimax,minimax_m2,mistral,olmo3,openai,phi4_mini_json,poolside_v1,pythonic,qwen3_coder,qwen3_xml,seed_oss,step3,step3p5,xlam} or name registered in --tool-parser-plugin]
+                     [--tool-parser-plugin TOOL_PARSER_PLUGIN]
+                     [--tool-server TOOL_SERVER]
+--
+                     [--enable-mamba-cache-stochastic-rounding | --no-enable-mamba-cache-stochastic-rounding]
+                     [--mamba-cache-philox-rounds MAMBA_CACHE_PHILOX_ROUNDS]
+                     [--reasoning-parser REASONING_PARSER]
+                     [--reasoning-parser-plugin REASONING_PARSER_PLUGIN]
+                     [--distributed-executor-backend ['external_launcher', 'mp', 'ray', 'uni']]
+                     [--pipeline-parallel-size PIPELINE_PARALLEL_SIZE]

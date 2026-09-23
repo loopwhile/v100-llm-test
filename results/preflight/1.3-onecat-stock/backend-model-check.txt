@@ -1,0 +1,16 @@
+============================================================
+[1] FLASH_ATTN_V100 IMPORT
+============================================================
+module = <module 'flash_attn_v100' from '/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/flash_attn_v100/__init__.py'>
+file = /home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/flash_attn_v100/__init__.py
+version = 1.2.0
+
+============================================================
+[2] MODEL CONFIG
+============================================================
+model_type = qwen3_5
+architectures = ['Qwen3_5ForConditionalGeneration']
+max_position_embeddings = None
+torch_dtype = bfloat16
+dtype = bfloat16
+quantization_config = {'config_groups': {'group_0': {'format': 'nvfp4-pack-quantized', 'input_activations': {'actorder': None, 'block_structure': None, 'dynamic': 'local', 'group_size': 16, 'num_bits': 4, 'observer': 'static_minmax', 'observer_kwargs': {}, 'scale_dtype': 'torch.float8_e4m3fn', 'strategy': 'tensor_group', 'symmetric': True, 'type': 'float', 'zp_dtype': None}, 'output_activations': None, 'targets': ['Linear'], 'weights': {'actorder': None, 'block_structure': None, 'dynamic': False, 'group_size': 16, 'num_bits': 4, 'observer': 'memoryless_minmax', 'observer_kwargs': {}, 'scale_dtype': 'torch.float8_e4m3fn', 'strategy': 'tensor_group', 'symmetric': True, 'type': 'float', 'zp_dtype': None}}}, 'format': 'nvfp4-pack-quantized', 'global_compression_ratio': None, 'ignore': ['lm_head', 're:.*visual.*', 're:.*mtp.*', 're:.*embed_vision.*', 're:.*embed_audio.*', 're:.*vision_embedder.*'], 'kv_cache_scheme': None, 'producer': {'name': 'qatfactory', 'version': '0.1.0'}, 'quant_method': 'compressed-tensors', 'quantization_status': 'compressed', 'sparsity_config': {}, 'transform_config': {}}

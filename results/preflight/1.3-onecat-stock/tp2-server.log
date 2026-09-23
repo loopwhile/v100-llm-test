@@ -1,0 +1,275 @@
+(APIServer pid=25378) INFO 09-23 17:39:45 [utils.py:344] 
+(APIServer pid=25378) INFO 09-23 17:39:45 [utils.py:344]        █     █     █▄   ▄█
+(APIServer pid=25378) INFO 09-23 17:39:45 [utils.py:344]  ▄▄ ▄█ █     █     █ ▀▄▀ █  version 1.5.0
+(APIServer pid=25378) INFO 09-23 17:39:45 [utils.py:344]   █▄█▀ █     █     █     █  model   /srv/models/qwen3.8-vllm/Qwen3.8-27B-QUASAR-NVFP4
+(APIServer pid=25378) INFO 09-23 17:39:45 [utils.py:344]    ▀▀  ▀▀▀▀▀ ▀▀▀▀▀ ▀     ▀
+(APIServer pid=25378) INFO 09-23 17:39:45 [utils.py:344] 
+(APIServer pid=25378) INFO 09-23 17:39:45 [utils.py:278] non-default args: {'host': '127.0.0.1', 'port': 18080, 'model': '/srv/models/qwen3.8-vllm/Qwen3.8-27B-QUASAR-NVFP4', 'trust_remote_code': True, 'dtype': 'half', 'max_model_len': 131072, 'enforce_eager': True, 'served_model_name': ['Qwen3.8-27B'], 'attention_backend': 'FLASH_ATTN_V100', 'tensor_parallel_size': 2, 'gpu_memory_utilization': 0.9, 'kv_cache_dtype': 'fp8_e5m2', 'max_num_batched_tokens': 2048, 'max_num_seqs': 1}
+(APIServer pid=25378) INFO 09-23 17:39:45 [model.py:617] Resolved architecture: Qwen3_5ForConditionalGeneration
+(APIServer pid=25378) WARNING 09-23 17:39:45 [model.py:2089] Casting torch.bfloat16 to torch.float16.
+(APIServer pid=25378) INFO 09-23 17:39:45 [model.py:1751] Using max model len 131072
+(APIServer pid=25378) INFO 09-23 17:39:47 [arg_utils.py:1811] Applied 1Cat SM70 serving defaults: enable_prefix_caching=True, mamba_cache_mode=align. Set VLLM_1CAT_ENABLE_SM70_MTP_DEFAULTS=1 to opt into automatic MTP4.
+(APIServer pid=25378) INFO 09-23 17:39:47 [cache.py:273] Using fp8_e5m2 data type to store kv cache. It reduces the GPU memory footprint; performance depends on backend and hardware support. Meanwhile, it may cause accuracy drop without a proper scaling factor
+(APIServer pid=25378) INFO 09-23 17:39:47 [config.py:386] Prefix caching is enabled with Mamba cache 'align' mode.
+(APIServer pid=25378) INFO 09-23 17:39:47 [vllm.py:1324] Asynchronous scheduling is enabled.
+(APIServer pid=25378) WARNING 09-23 17:39:47 [vllm.py:1412] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+(APIServer pid=25378) INFO 09-23 17:39:47 [vllm.py:1535] Using SM70 Flash-V100 multimodal default: image=1, video=0. Set --limit-mm-per-prompt to override.
+(APIServer pid=25378) INFO 09-23 17:39:47 [vllm.py:1592] Not auto-setting VLLM_SM70_FLASH_V100_0DOT3_COMPILE_GRAPH=1 for the SM70 Flash-V100 baseline because no-compile decode graph is requested or compile was explicitly disabled.
+(APIServer pid=25378) INFO 09-23 17:39:47 [vllm.py:1601] Auto-setting VLLM_ENABLE_FLA_PACKED_RECURRENT_DECODE=1 for the SM70 Flash-V100 baseline. Set it explicitly to override.
+(APIServer pid=25378) INFO 09-23 17:39:47 [vllm.py:1601] Auto-setting VLLM_SM70_GDN_KKT_SCHEDULE=1 for the SM70 Flash-V100 baseline. Set it explicitly to override.
+(APIServer pid=25378) INFO 09-23 17:39:47 [vllm.py:1601] Auto-setting VLLM_SM70_GDN_DELTA_H_SCHEDULE=1 for the SM70 Flash-V100 baseline. Set it explicitly to override.
+(APIServer pid=25378) INFO 09-23 17:39:47 [vllm.py:1601] Auto-setting VLLM_SM70_GDN_CHUNK_O_SCHEDULE=1 for the SM70 Flash-V100 baseline. Set it explicitly to override.
+(APIServer pid=25378) INFO 09-23 17:39:47 [vllm.py:1601] Auto-setting VLLM_SM70_FLA_RECURRENT_SCHEDULE=1 for the SM70 Flash-V100 baseline. Set it explicitly to override.
+(APIServer pid=25378) INFO 09-23 17:39:47 [vllm.py:1601] Auto-setting VLLM_SM70_FUSED_SIGMOID_GATING_SCHED=1 for the SM70 Flash-V100 baseline. Set it explicitly to override.
+(APIServer pid=25378) INFO 09-23 17:39:47 [vllm.py:1601] Auto-setting VLLM_SM70_GEMMA_RMS_NORM_COMPILE_NATIVE=1 for the SM70 Flash-V100 baseline. Set it explicitly to override.
+(APIServer pid=25378) INFO 09-23 17:39:47 [vllm.py:1601] Auto-setting VLLM_SM70_GDN_DECODE_FLASHQLA=1 for the SM70 Flash-V100 baseline. Set it explicitly to override.
+(APIServer pid=25378) INFO 09-23 17:39:47 [kernel.py:270] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(APIServer pid=25378) INFO 09-23 17:39:47 [vllm.py:2062] Cudagraph is disabled under eager mode
+(APIServer pid=25378) INFO 09-23 17:39:47 [compilation.py:321] Enabled custom fusions: norm_quant, act_quant
+(APIServer pid=25378) [transformers] The `use_fast` parameter is deprecated and will be removed in a future version. Use `backend="torchvision"` instead of `use_fast=True`, or `backend="pil"` instead of `use_fast=False`.
+(EngineCore pid=25567) INFO 09-23 17:40:10 [core.py:112] Initializing a V1 LLM engine (v1.5.0) with config: model='/srv/models/qwen3.8-vllm/Qwen3.8-27B-QUASAR-NVFP4', speculative_config=None, tokenizer='/srv/models/qwen3.8-vllm/Qwen3.8-27B-QUASAR-NVFP4', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.float16, max_seq_len=131072, download_dir=None, load_format=auto, tensor_parallel_size=2, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=compressed-tensors, quantization_config=None, enforce_eager=True, enable_return_routed_experts=False, kv_cache_dtype=fp8_e5m2, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False), seed=0, served_model_name=Qwen3.8-27B, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['all'], 'ir_enable_torch_wrap': False, 'splitting_ops': [], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': [], 'compile_ranges_endpoints': [2048], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'size_asserts': False, 'alignment_asserts': False, 'scalar_asserts': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': True, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native']), enable_flashinfer_autotune=True, moe_backend='auto', linear_backend='auto')
+(EngineCore pid=25567) INFO 09-23 17:40:10 [multiproc_executor.py:140] DP group leader: node_rank=0, node_rank_within_dp=0, master_addr=127.0.0.1, mq_connect_ip=172.30.1.153 (local), world_size=2, local_world_size=2
+(Worker pid=25779) INFO 09-23 17:40:22 [parallel_state.py:1782] world_size=2 rank=0 local_rank=0 distributed_init_method=tcp://127.0.0.1:33049 backend=nccl
+(Worker pid=25781) INFO 09-23 17:40:22 [parallel_state.py:1782] world_size=2 rank=1 local_rank=1 distributed_init_method=tcp://127.0.0.1:33049 backend=nccl
+(Worker pid=25779) INFO 09-23 17:40:23 [pynccl.py:113] vLLM is using nccl==2.27.5
+(Worker pid=25779) INFO 09-23 17:40:24 [cuda_communicator.py:324] Using ['CUSTOM', 'PYNCCL'] all-reduce backends (in dispatch order) for group 'tp:0' out of potential backends: ['NCCL_SYMM_MEM', 'QUICK_REDUCE', 'FLASHINFER', 'CUSTOM', 'SYMM_MEM', 'PYNCCL'].
+(Worker pid=25779) INFO 09-23 17:40:24 [parallel_state.py:2095] rank 0 in world size 2 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+(Worker pid=25779) INFO 09-23 17:40:24 [cudagraph_dispatcher.py:160] Auto-enabling the SM70 E5M2 KV short-context decode CUDA graph at 8192 tokens. This keeps the short D256 GQA graph scalar-only while the unbounded graph retains the long-context XQA routes. Set VLLM_SM70_FP8_KV_DECODE_CONTEXT_BUCKETS explicitly to override or to an empty value to disable.
+(Worker pid=25779) [transformers] The `use_fast` parameter is deprecated and will be removed in a future version. Use `backend="torchvision"` instead of `use_fast=True`, or `backend="pil"` instead of `use_fast=False`.
+(Worker pid=25781) [transformers] The `use_fast` parameter is deprecated and will be removed in a future version. Use `backend="torchvision"` instead of `use_fast=True`, or `backend="pil"` instead of `use_fast=False`.
+(Worker_TP0 pid=25779) INFO 09-23 17:40:32 [gpu_model_runner.py:10153] Starting to load model /srv/models/qwen3.8-vllm/Qwen3.8-27B-QUASAR-NVFP4...
+(Worker_TP0 pid=25779) INFO 09-23 17:40:33 [mm_encoder_attention.py:372] Using AttentionBackendEnum.TORCH_SDPA for MMEncoderAttention.
+(Worker_TP0 pid=25779) INFO 09-23 17:40:34 [qwen_gdn_linear_attn.py:1783] Using FlashQLA-SM70 GDN prefill kernel (requested=auto, head_k_dim=128, model_dtype=torch.float16).
+(Worker_TP0 pid=25779) INFO 09-23 17:40:34 [qwen_gdn_linear_attn.py:2511] SM70 GDN/FLA schedule gates enabled: kkt=True delta_h=True chunk_o=True recurrent=True sigmoid_gating=True.
+(Worker_TP0 pid=25779) INFO 09-23 17:40:34 [qwen_gdn_linear_attn.py:2528] SM70 FlashQLA GDN decode route enabled.
+(Worker_TP0 pid=25779) INFO 09-23 17:40:34 [cuda.py:349] Using AttentionBackendEnum.FLASH_ATTN_V100 backend.
+(Worker_TP0 pid=25779) INFO 09-23 17:40:34 [flash_attn_v100.py:793] SM70 Flash-V100 is using explicit E5M2 KV cache. This controls KV storage only; model weight quantization is configured separately.
+(Worker_TP1 pid=25781) INFO 09-23 17:40:34 [cuda.py:349] Using AttentionBackendEnum.FLASH_ATTN_V100 backend.
+(Worker_TP1 pid=25781) INFO 09-23 17:40:34 [flash_attn_v100.py:793] SM70 Flash-V100 is using explicit E5M2 KV cache. This controls KV storage only; model weight quantization is configured separately.
+(Worker_TP0 pid=25779) INFO 09-23 17:40:34 [attention.py:192] Using explicit fp8_e5m2 KV cache with a quantized checkpoint on SM70 Flash-V100; checkpoint KV/q/prob scales, when present, will be ignored and unit scales will be used.
+(Worker_TP0 pid=25779) INFO 09-23 17:40:34 [weight_utils.py:945] Restricting safetensors loading to 2687 tensor entries assigned by the checkpoint index across 5 shards.
+(Worker_TP0 pid=25779) INFO 09-23 17:40:34 [weight_utils.py:960] Filesystem type for checkpoints: EXT4. Checkpoint size: 19.15 GiB. Available RAM: 54.30 GiB.
+(Worker_TP0 pid=25779) INFO 09-23 17:40:34 [weight_utils.py:983] Auto-prefetch is disabled because the filesystem (EXT4) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+(Worker_TP0 pid=25779) Loading safetensors checkpoint shards:   0% Completed | 0/5 [00:00<?, ?it/s]
+(Worker_TP0 pid=25779) Loading safetensors checkpoint shards:  20% Completed | 1/5 [00:02<00:09,  2.49s/it]
+(Worker_TP0 pid=25779) Loading safetensors checkpoint shards:  40% Completed | 2/5 [00:06<00:10,  3.61s/it]
+(Worker_TP0 pid=25779) Loading safetensors checkpoint shards:  60% Completed | 3/5 [00:10<00:06,  3.48s/it]
+(Worker_TP0 pid=25779) Loading safetensors checkpoint shards:  80% Completed | 4/5 [00:13<00:03,  3.41s/it]
+(Worker_TP0 pid=25779) Loading safetensors checkpoint shards: 100% Completed | 5/5 [00:15<00:00,  2.72s/it]
+(Worker_TP0 pid=25779) Loading safetensors checkpoint shards: 100% Completed | 5/5 [00:15<00:00,  3.00s/it]
+(Worker_TP0 pid=25779) 
+(Worker_TP0 pid=25779) INFO 09-23 17:40:49 [default_loader.py:430] Loading weights took 15.03 seconds
+(Worker_TP0 pid=25779) INFO 09-23 17:40:49 [compressed_tensors_w4a4_nvfp4.py:316] SM70 compressed-tensors NVFP4 TurboMind W4A16 dense path enabled.
+(Worker_TP0 pid=25779) INFO 09-23 17:40:50 [vocab_parallel_embedding.py:369] SM70 LM head top1 layout prepared.
+(Worker_TP0 pid=25779) INFO 09-23 17:40:51 [gpu_model_runner.py:10248] Model loading took 11.49 GiB memory and 17.835514 seconds
+(Worker_TP0 pid=25779) INFO 09-23 17:40:51 [interface.py:683] Setting attention block size to 1568 tokens to ensure that attention page size is >= mamba page size.
+(Worker_TP0 pid=25779) INFO 09-23 17:40:51 [interface.py:707] Padding mamba page size by 0.13% to ensure that mamba page size and attention page size are exactly equal.
+(Worker_TP1 pid=25781) INFO 09-23 17:40:51 [interface.py:683] Setting attention block size to 1568 tokens to ensure that attention page size is >= mamba page size.
+(Worker_TP1 pid=25781) INFO 09-23 17:40:51 [interface.py:707] Padding mamba page size by 0.13% to ensure that mamba page size and attention page size are exactly equal.
+(Worker_TP0 pid=25779) INFO 09-23 17:40:52 [gpu_model_runner.py:11453] Encoder cache will be initialized with a budget of 16384 tokens, and profiled with 1 image items of the maximum feature size.
+(Worker_TP0 pid=25779) INFO 09-23 17:41:17 [qwen_gdn_linear_attn.py:373] Using original FlashQLA-SM70 TileLang GDN prefill path (indexed_state=False, direct_output=True).
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796] GDN prefill kernel warmup (T=64) failed for layer language_model.model.layers.0.linear_attn. First inference may OOM due to autotuner.
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796] Traceback (most recent call last):
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py", line 4781, in _warmup_prefill_kernels
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     self.chunk_gated_delta_rule(
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     return self._call_impl(*args, **kwargs)
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     return forward_call(*args, **kwargs)
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/custom_op.py", line 136, in forward
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     return self._forward_method(*args, **kwargs)
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py", line 2154, in forward_flashqla_sm70
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     o, final_state = flashqla_sm70_chunk_gated_delta_rule(
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py", line 1942, in flashqla_sm70_chunk_gated_delta_rule
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     _, _, out, _, final_state = chunk_gated_delta_rule_fwd_sm70_tilelang(
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/flash_qla/ops/gated_delta_rule/chunk/__init__.py", line 158, in chunk_gated_delta_rule_fwd_sm70_tilelang
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     g = chunk_local_cumsum(
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]         ^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/flash_qla/ops/utils/cumsum.py", line 161, in chunk_local_cumsum
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     tilelang_chunk_local_cumsum_kernel = tilelang_chunk_local_cumsum(
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/tilelang/jit/__init__.py", line 461, in __call__
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     kernel = self.compile(*args, **kwargs)
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/tilelang/jit/__init__.py", line 391, in compile
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     kernel_result = compile(
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]                     ^^^^^^^^
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/tilelang/jit/__init__.py", line 111, in compile
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     return cached(
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]            ^^^^^^^
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/tilelang/cache/__init__.py", line 57, in cached
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     norm_target = _determine_target(target, return_object=True)
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/tilelang/utils/target.py", line 263, in determine_target
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     raise ValueError("No CUDA or HIP or MPS available on this system.")
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796] ValueError: No CUDA or HIP or MPS available on this system.
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796] GDN prefill kernel warmup (T=64) failed for layer language_model.model.layers.0.linear_attn. First inference may OOM due to autotuner.
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796] Traceback (most recent call last):
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py", line 4781, in _warmup_prefill_kernels
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     self.chunk_gated_delta_rule(
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     return self._call_impl(*args, **kwargs)
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     return forward_call(*args, **kwargs)
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/custom_op.py", line 136, in forward
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     return self._forward_method(*args, **kwargs)
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py", line 2154, in forward_flashqla_sm70
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     o, final_state = flashqla_sm70_chunk_gated_delta_rule(
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py", line 1942, in flashqla_sm70_chunk_gated_delta_rule
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     _, _, out, _, final_state = chunk_gated_delta_rule_fwd_sm70_tilelang(
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/flash_qla/ops/gated_delta_rule/chunk/__init__.py", line 158, in chunk_gated_delta_rule_fwd_sm70_tilelang
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     g = chunk_local_cumsum(
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]         ^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/flash_qla/ops/utils/cumsum.py", line 161, in chunk_local_cumsum
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     tilelang_chunk_local_cumsum_kernel = tilelang_chunk_local_cumsum(
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/tilelang/jit/__init__.py", line 461, in __call__
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     kernel = self.compile(*args, **kwargs)
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/tilelang/jit/__init__.py", line 391, in compile
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     kernel_result = compile(
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]                     ^^^^^^^^
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/tilelang/jit/__init__.py", line 111, in compile
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     return cached(
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]            ^^^^^^^
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/tilelang/cache/__init__.py", line 57, in cached
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     norm_target = _determine_target(target, return_object=True)
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/tilelang/utils/target.py", line 263, in determine_target
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796]     raise ValueError("No CUDA or HIP or MPS available on this system.")
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:21 [qwen_gdn_linear_attn.py:4796] ValueError: No CUDA or HIP or MPS available on this system.
+SM70 exact mixed-dtype Gemma RMSNorm long-prefill op reached tokens=2048
+(Worker_TP0 pid=25779) INFO 09-23 17:41:21 [layernorm.py:495] SM70 exact mixed-dtype Gemma RMSNorm long-prefill path active.
+SM70 exact mixed-dtype Gemma RMSNorm long-prefill op reached tokens=2048
+(Worker_TP0 pid=25779) INFO 09-23 17:41:23 [gpu_worker.py:578] Available KV cache memory: 1.19 GiB
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346] EngineCore failed to start.
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346] Traceback (most recent call last):
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1320, in run_engine_core
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]     engine_core = EngineCoreProc(*args, engine_index=dp_rank, **kwargs)
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]     return func(*args, **kwargs)
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1086, in __init__
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]     super().__init__(
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 131, in __init__
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]     kv_cache_config = self._initialize_kv_caches(vllm_config)
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]     return func(*args, **kwargs)
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 270, in _initialize_kv_caches
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]     kv_cache_configs = get_kv_cache_configs(
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]                        ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/core/kv_cache_utils.py", line 2744, in get_kv_cache_configs
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]     _check_enough_kv_cache_memory(
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/core/kv_cache_utils.py", line 720, in _check_enough_kv_cache_memory
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346]     raise ValueError(
+(EngineCore pid=25567) ERROR 09-23 17:41:23 [core.py:1346] ValueError: To serve at least one request with the model's max seq len (131072), (2.15 GiB KV cache is needed, which is larger than the available KV cache memory (1.19 GiB). Based on the available memory, the estimated maximum model length is 67424. Try increasing `gpu_memory_utilization` (which also controls CPU memory on the CPU backend) or decreasing `max_model_len` when initializing the engine. See https://docs.vllm.ai/en/latest/configuration/conserving_memory/ for more details.
+(Worker_TP1 pid=25781) WARNING 09-23 17:41:23 [multiproc_executor.py:894] WorkerProc was terminated
+(Worker_TP0 pid=25779) WARNING 09-23 17:41:23 [multiproc_executor.py:894] WorkerProc was terminated
+(EngineCore pid=25567) ERROR 09-23 17:41:27 [multiproc_executor.py:284] Worker proc VllmWorker-0 died unexpectedly, shutting down executor.
+(EngineCore pid=25567) Process EngineCore:
+(EngineCore pid=25567) Traceback (most recent call last):
+(EngineCore pid=25567)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+(EngineCore pid=25567)     self.run()
+(EngineCore pid=25567)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/multiprocessing/process.py", line 108, in run
+(EngineCore pid=25567)     self._target(*self._args, **self._kwargs)
+(EngineCore pid=25567)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1350, in run_engine_core
+(EngineCore pid=25567)     raise e
+(EngineCore pid=25567)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1320, in run_engine_core
+(EngineCore pid=25567)     engine_core = EngineCoreProc(*args, engine_index=dp_rank, **kwargs)
+(EngineCore pid=25567)                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=25567)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=25567)     return func(*args, **kwargs)
+(EngineCore pid=25567)            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=25567)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1086, in __init__
+(EngineCore pid=25567)     super().__init__(
+(EngineCore pid=25567)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 131, in __init__
+(EngineCore pid=25567)     kv_cache_config = self._initialize_kv_caches(vllm_config)
+(EngineCore pid=25567)                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=25567)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=25567)     return func(*args, **kwargs)
+(EngineCore pid=25567)            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=25567)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 270, in _initialize_kv_caches
+(EngineCore pid=25567)     kv_cache_configs = get_kv_cache_configs(
+(EngineCore pid=25567)                        ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=25567)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/core/kv_cache_utils.py", line 2744, in get_kv_cache_configs
+(EngineCore pid=25567)     _check_enough_kv_cache_memory(
+(EngineCore pid=25567)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/core/kv_cache_utils.py", line 720, in _check_enough_kv_cache_memory
+(EngineCore pid=25567)     raise ValueError(
+(EngineCore pid=25567) ValueError: To serve at least one request with the model's max seq len (131072), (2.15 GiB KV cache is needed, which is larger than the available KV cache memory (1.19 GiB). Based on the available memory, the estimated maximum model length is 67424. Try increasing `gpu_memory_utilization` (which also controls CPU memory on the CPU backend) or decreasing `max_model_len` when initializing the engine. See https://docs.vllm.ai/en/latest/configuration/conserving_memory/ for more details.
+(APIServer pid=25378) Traceback (most recent call last):
+(APIServer pid=25378)   File "<frozen runpy>", line 198, in _run_module_as_main
+(APIServer pid=25378)   File "<frozen runpy>", line 88, in _run_code
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 718, in <module>
+(APIServer pid=25378)     uvloop.run(run_server(args))
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/uvloop/__init__.py", line 96, in run
+(APIServer pid=25378)     return __asyncio.run(
+(APIServer pid=25378)            ^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 195, in run
+(APIServer pid=25378)     return runner.run(main)
+(APIServer pid=25378)            ^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 118, in run
+(APIServer pid=25378)     return self._loop.run_until_complete(task)
+(APIServer pid=25378)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/uvloop/__init__.py", line 48, in wrapper
+(APIServer pid=25378)     return await main
+(APIServer pid=25378)            ^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 678, in run_server
+(APIServer pid=25378)     await run_server_worker(listen_address, sock, args, **uvicorn_kwargs)
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 692, in run_server_worker
+(APIServer pid=25378)     async with build_async_engine_client(
+(APIServer pid=25378)                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 210, in __aenter__
+(APIServer pid=25378)     return await anext(self.gen)
+(APIServer pid=25378)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 100, in build_async_engine_client
+(APIServer pid=25378)     async with build_async_engine_client_from_engine_args(
+(APIServer pid=25378)                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 210, in __aenter__
+(APIServer pid=25378)     return await anext(self.gen)
+(APIServer pid=25378)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 136, in build_async_engine_client_from_engine_args
+(APIServer pid=25378)     async_llm = AsyncLLM.from_vllm_config(
+(APIServer pid=25378)                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/async_llm.py", line 217, in from_vllm_config
+(APIServer pid=25378)     return cls(
+(APIServer pid=25378)            ^^^^
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/async_llm.py", line 146, in __init__
+(APIServer pid=25378)     self.engine_core = EngineCoreClient.make_async_mp_client(
+(APIServer pid=25378)                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(APIServer pid=25378)     return func(*args, **kwargs)
+(APIServer pid=25378)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 131, in make_async_mp_client
+(APIServer pid=25378)     return AsyncMPClient(*client_args)
+(APIServer pid=25378)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(APIServer pid=25378)     return func(*args, **kwargs)
+(APIServer pid=25378)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 932, in __init__
+(APIServer pid=25378)     super().__init__(
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 567, in __init__
+(APIServer pid=25378)     with launch_core_engines(
+(APIServer pid=25378)          ^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=25378)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 144, in __exit__
+(APIServer pid=25378)     next(self.gen)
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/utils.py", line 1150, in launch_core_engines
+(APIServer pid=25378)     wait_for_engine_startup(
+(APIServer pid=25378)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/utils.py", line 1209, in wait_for_engine_startup
+(APIServer pid=25378)     raise RuntimeError(
+(APIServer pid=25378) RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}
+/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 2 leaked shared_memory objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
