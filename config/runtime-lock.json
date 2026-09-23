@@ -2,7 +2,7 @@
   "schema_version": 1,
   "provenance": {
     "source_repository": "loopwhile/qwen3.8-bench",
-    "note": "Known runtime identities are imported as bootstrap pins and must be freshly verified on p520-llm before measured execution."
+    "note": "Bootstrap pins; fresh host verification is mandatory."
   },
   "runtimes": {
     "llama.cpp": {
@@ -25,13 +25,16 @@
       "status": "bootstrap_pin_requires_fresh_verification"
     },
     "1Cat-vLLM+v100-skinny": {
-      "base_runtime": "1Cat-vLLM",
       "family": "dnv2003/v100-skinny",
       "required": true,
-      "revision": null,
-      "patch_identity": null,
-      "status": "pending_turn4_pin_and_compatibility_verification",
-      "note": "Mandatory lane. Do not silently substitute stock 1Cat if skinny is unsupported or fails capacity."
+      "version": "v1.1",
+      "revision": "5b589c0dc81223e0ba65bcb3e755874723f8b515",
+      "base_1cat_version": "1.2.2",
+      "base_1cat_wheel": "1cat_vllm-1.2.2-cp312-cp312-linux_x86_64.whl",
+      "base_1cat_wheel_sha256": "8a628983ad9d675559910372643220c418b307ddc7fd52ac65a7f5fbcb104bc6",
+      "upstream_reference_topology": "TP4",
+      "project_topology": "TP2 experimental compatibility lane",
+      "status": "pinned_for_preflight; no 2x16GB PASS inherited"
     }
   }
 }

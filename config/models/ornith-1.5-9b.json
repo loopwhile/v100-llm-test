@@ -3,8 +3,8 @@
   "model_id": "Ornith-1.5-9B",
   "context_target": 131072,
   "topology_candidates": [
-    "2xV100-TP2",
-    "1xV100x2-independent"
+    "tp2-shared",
+    "1gpu-x2-independent"
   ],
   "llama_cpp": {
     "status": "bootstrap_artifact_pin_requires_fresh_verification",
@@ -15,10 +15,11 @@
       "FP16"
     ],
     "required_spec_lanes": [
+      "target-only",
+      "ngram",
       "native-mtp",
       "mtp+ngram"
-    ],
-    "note": "Imported from qwen3.8-bench Phase 5.5.1R1 identity; repository/revision was not encoded in that config and is intentionally not invented here."
+    ]
   },
   "onecat_vllm": {
     "status": "pending_artifact_and_v100_compatibility_verification",

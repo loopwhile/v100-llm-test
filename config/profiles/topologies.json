@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "context_tokens_per_agent": 131072,
+  "topologies": {
+    "tp2-shared": {
+      "gpu_count": 2,
+      "description": "one model instance across GPU0+GPU1",
+      "C1": {
+        "parallel_or_max_num_seqs": 1,
+        "shared_kv_pool_context": 131072,
+        "per_slot_context": 131072
+      },
+      "C2": {
+        "parallel_or_max_num_seqs": 2,
+        "shared_kv_pool_context": 262144,
+        "per_slot_context": 131072
+      },
+      "acceptance_note": "C2 deliberately requests a 256K logical aggregate envelope; do not silently shrink after OOM/capacity failure."
+    },
+    "1gpu-x2-independent": {
+      "gpu_count": 2,
+      "description": "two independent one-GPU servers",
+      "C2": {
+        "servers": 2,
+        "gpu_assignment": [
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ],
+        "per_server_parallel": 1,
+        "per_server_context": 131072,
+        "ports": [
+          18080,
+          18081
+        ]
+      }
+    }
+  }
+}

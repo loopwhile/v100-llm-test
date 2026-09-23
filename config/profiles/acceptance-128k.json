@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "profile_id": "ACCEPTANCE-128K-C1-C2-v1",
+  "profile_id": "ACCEPTANCE-128K-C1-C2-v2",
   "context_tokens_per_agent": 131072,
   "output_reservation_tokens": 512,
   "min_context_utilization": 0.99,
@@ -27,7 +27,14 @@
   ],
   "runtime_requirements": {
     "llama_cpp": {
-      "ngram_required": true
+      "required_lanes": [
+        "TARGET",
+        "NGRAM",
+        "MTP",
+        "MTP_NGRAM"
+      ],
+      "target_ngram_pair_required": true,
+      "mtp_ngram_pair_required": true
     },
     "onecat_vllm": {
       "stock_required": true,

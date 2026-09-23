@@ -3,7 +3,7 @@
   "model_id": "Ornith-1.5-35B-A3B",
   "context_target": 131072,
   "topology_candidates": [
-    "2xV100-TP2"
+    "tp2-shared"
   ],
   "llama_cpp": {
     "status": "bootstrap_artifact_pin_requires_fresh_verification",
@@ -15,10 +15,10 @@
     ],
     "required_spec_lanes": [
       "target-only",
+      "ngram",
       "native-mtp",
       "mtp+ngram"
-    ],
-    "note": "Target-only artifact identity is imported from qwen3.8-bench Phase 5.5.2; MTP/ngram support still requires fresh verification."
+    ]
   },
   "onecat_vllm": {
     "status": "pending_artifact_and_v100_compatibility_verification",

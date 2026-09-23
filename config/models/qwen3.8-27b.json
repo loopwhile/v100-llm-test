@@ -3,7 +3,7 @@
   "model_id": "Qwen3.8-27B",
   "context_target": 131072,
   "topology_candidates": [
-    "2xV100-TP2"
+    "tp2-shared"
   ],
   "llama_cpp": {
     "status": "bootstrap_artifact_pin_requires_fresh_verification",
@@ -19,6 +19,7 @@
     ],
     "required_spec_lanes": [
       "target-only",
+      "ngram",
       "native-mtp",
       "mtp+ngram"
     ]
@@ -39,5 +40,14 @@
     "speculative_candidates": [
       "target-only"
     ]
+  },
+  "skinny_v11": {
+    "status": "requires_local_path_and_fresh_verification",
+    "repository": "RadixArk/Qwen3.8-27B-NVFP4",
+    "revision": "554ebba9b5f1b79dc11246341960360e6ef05ef4",
+    "local_path_env": "V100_SKINNY_MODEL",
+    "weight_quant": "mixed NVFP4/FP8 published representation",
+    "kv_cache": "FP16",
+    "speculative": "MTP k=3 long-context profile"
   }
 }

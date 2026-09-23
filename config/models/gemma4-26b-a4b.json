@@ -3,7 +3,7 @@
   "model_id": "Gemma4-26B-A4B-IT-QAT",
   "context_target": 131072,
   "topology_candidates": [
-    "2xV100-TP2"
+    "tp2-shared"
   ],
   "llama_cpp": {
     "status": "pending_exact_artifact_and_support_verification",
@@ -11,6 +11,7 @@
     "desired_kv": "FP16",
     "required_spec_lanes": [
       "target-only",
+      "ngram",
       "native-mtp",
       "mtp+ngram"
     ],
@@ -31,6 +32,5 @@
     "repository": null,
     "revision": null,
     "path": null
-  },
-  "note": "Previous repository only defined this as a candidate; exact fresh artifact identity must be established before execution."
+  }
 }

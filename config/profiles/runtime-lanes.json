@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "llama_cpp": {
+    "required_lanes": [
+      {
+        "id": "TARGET",
+        "speculative": "target-only",
+        "ngram": "off",
+        "args": [
+          "--spec-type",
+          "none"
+        ]
+      },
+      {
+        "id": "NGRAM",
+        "speculative": "ngram",
+        "ngram": "ngram-simple",
+        "args": [
+          "--spec-type",
+          "ngram-simple"
+        ]
+      },
+      {
+        "id": "MTP",
+        "speculative": "native-mtp",
+        "ngram": "off",
+        "args": [
+          "--spec-type",
+          "draft-mtp",
+          "--spec-draft-n-max",
+          "3"
+        ]
+      },
+      {
+        "id": "MTP_NGRAM",
+        "speculative": "mtp+ngram",
+        "ngram": "ngram-simple",
+        "args": [
+          "--spec-type",
+          "draft-mtp,ngram-simple",
+          "--spec-draft-n-max",
+          "3"
+        ]
+      }
+    ],
+    "policy": "TARGET/NGRAM are mandatory for every llama.cpp candidate. MTP/MTP_NGRAM remain explicit result rows; unsupported combinations are UNSUPPORTED, never omitted.",
+    "ngram_reference": "ngram-simple is fixed because the inherited pinned build already exercised draft-mtp,ngram-simple."
+  },
+  "onecat_vllm": {
+    "required_lanes": [
+      {
+        "id": "STOCK",
+        "backend_variant": "stock",
+        "runtime_key": "1Cat-vLLM"
+      },
+      {
+        "id": "SKINNY",
+        "backend_variant": "v100-skinny-v1.1",
+        "runtime_key": "1Cat-vLLM+v100-skinny"
+      }
+    ],
+    "policy": "Both rows are mandatory. Unsupported skinny/model/topology combinations remain explicit UNSUPPORTED results."
+  }
+}
