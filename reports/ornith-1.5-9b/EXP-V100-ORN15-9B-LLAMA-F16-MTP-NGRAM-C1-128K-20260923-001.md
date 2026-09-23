@@ -39,7 +39,7 @@
 - accepted: **291**
 - acceptance: **45.116%**
 - mean draft length: **2.35**
-- MTP-only와 counters/output가 동일하며 이번 요청에서 NGRAM 추가 기여를 보여주는 evidence는 없다.
+- MTP-only와 counters/output가 동일하다. C1에서는 NGRAM의 추가 가속 기여를 판정하지 않으며, composite `draft-mtp,ngram-simple` 상태에서 128K capacity/correctness가 유지되는지만 acceptance 대상으로 본다. 추가 성능 효과는 Phase 5에서 평가한다.
 
 ## Acceptance 검토
 
