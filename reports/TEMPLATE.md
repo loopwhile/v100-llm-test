@@ -27,6 +27,8 @@
 - v100-skinny revision/path (해당 시):
 - 정확한 실행 명령어:
 - 환경 변수/override:
+- Gateway (1GPU×2 해당 시): LiteLLM version/commit/image:
+- Gateway endpoint / routing strategy / backend max_parallel_requests:
 
 ## 서빙 설정
 

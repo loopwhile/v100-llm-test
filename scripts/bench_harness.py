@@ -58,6 +58,9 @@ class HTTPAdapter:
  def health(self):
   try:self.call("/health",raw=True);return {"healthy":True,"at_utc":utc()}
   except Exception as e:return {"healthy":False,"error":str(e),"at_utc":utc()}
+ def liveness(self):
+  try:self.call("/health/liveliness",raw=True);return {"healthy":True,"at_utc":utc(),"route":"/health/liveliness"}
+  except Exception as e:return {"healthy":False,"error":str(e),"at_utc":utc(),"route":"/health/liveliness"}
  def snapshot(self):
   out={};routes=["/metrics","/props"]+(["/slots"] if self.runtime=="llama.cpp" else [])
   for route in routes:
@@ -72,8 +75,12 @@ class HTTPAdapter:
   return {"source":"vllm tokenizer","prompt_tokens":self.call("/tokenize",body|{"add_generation_prompt":True})["count"]}
  def stream_complete(self,payload):
   body=dict(payload,stream=True);body.setdefault("stream_options",{"include_usage":True});req=urllib.request.Request(self.base+"/v1/chat/completions",data=canon(body),headers={"Content-Type":"application/json","Accept":"text/event-stream"})
-  start=time.monotonic();first=None;parts=[];usage=None;timings=None;finish=None
+  start=time.monotonic();first=None;parts=[];usage=None;timings=None;finish=None;response_headers={}
   with urllib.request.urlopen(req,timeout=self.timeout) as r:
+   hdr=getattr(r,"headers",{})
+   for key in ("x-litellm-model-id","x-litellm-model-api-base","x-litellm-call-id","x-litellm-version"):
+    value=hdr.get(key) if hasattr(hdr,"get") else None
+    if value:response_headers[key]=value
    for raw in r:
     line=raw.decode("utf-8",errors="replace").strip()
     if not line.startswith("data:"):continue
@@ -88,7 +95,7 @@ class HTTPAdapter:
   end=time.monotonic();res={"choices":[{"finish_reason":finish or "stop","message":{"content":"".join(parts)}}]}
   if usage:res["usage"]=usage
   if timings:res["timings"]=timings
-  return res,{"start":start,"first":first,"end":end,"wall_s":end-start,"ttft_ms":None if first is None else (first-start)*1000}
+  return res,{"start":start,"first":first,"end":end,"wall_s":end-start,"ttft_ms":None if first is None else (first-start)*1000,"response_headers":response_headers}
  def _probe_once(self):
   sample={"monotonic_s":time.monotonic(),"processing":None,"waiting":None,"resident_slots":None,"kv_usage":None,"error":None}
   try:
@@ -114,6 +121,13 @@ class HTTPAdapter:
  def stop_overlap_probe(self):
   if self._probe_stop is not None:self._probe_stop.set()
   if self._probe_thread is not None:self._probe_thread.join(timeout=2)
+ def probe_summary(self,start=None,end=None):
+  samples=list(self._probe_samples)
+  if start is not None and end is not None:samples=[x for x in samples if start<=x.get("monotonic_s",-1)<=end]
+  processing=[x["processing"] for x in samples if isinstance(x.get("processing"),(int,float))]
+  waiting=[x["waiting"] for x in samples if isinstance(x.get("waiting"),(int,float))]
+  resident=[x["resident_slots"] for x in samples if isinstance(x.get("resident_slots"),(int,float))]
+  return {"peak_processing":max(processing) if processing else None,"peak_waiting":max(waiting) if waiting else None,"peak_resident_slots":max(resident) if resident else None,"sample_count":len(samples),"samples":samples}
  def overlap_evidence(self,records):
   samples=list(self._probe_samples);processing=[x["processing"] for x in samples if isinstance(x.get("processing"),(int,float))];waiting=[x["waiting"] for x in samples if isinstance(x.get("waiting"),(int,float))];resident=[x["resident_slots"] for x in samples if isinstance(x.get("resident_slots"),(int,float))]
   peak_processing=max(processing) if processing else None;peak_waiting=max(waiting) if waiting else None;peak_resident=max(resident) if resident else None
@@ -151,9 +165,53 @@ class MultiEndpointAdapter:
   if len(ok)==2 and all(r.get("first_abs") and r.get("end_abs") for r in ok):active=max(r["first_abs"] for r in ok)<min(r["end_abs"] for r in ok)
   return {"source":"independent endpoints: per-request routing plus overlapping decode lifetimes","resident":True if active else None,"active_overlap":active,"queue_only":False if active else None,"children":children}
 
-def make_adapter(endpoints,runtime,timeout_s=1800):
+class LiteLLMGatewayAdapter:
+ def __init__(self,gateway,backends):
+  if len(backends)!=2:raise ValueError("LiteLLMGatewayAdapter requires exactly two backends")
+  self.gateway=gateway;self.backends=list(backends)
+ def request_adapter(self,index):return self
+ def health(self):
+  gateway=self.gateway.liveness() if hasattr(self.gateway,"liveness") else self.gateway.health();children=[a.health() for a in self.backends]
+  return {"healthy":bool(gateway.get("healthy")) and all(x.get("healthy") for x in children),"gateway":gateway,"backends":children,"at_utc":utc()}
+ def snapshot(self):
+  gateway=self.gateway.liveness() if hasattr(self.gateway,"liveness") else self.gateway.health()
+  return {"gateway":{"liveness":gateway},"backends":{f"backend_{i}":a.snapshot() for i,a in enumerate(self.backends)}}
+ def receipt(self,payload):
+  return self.backends[0].receipt(payload)
+ def stream_complete(self,payload):
+  clean=dict(payload);template_kwargs=clean.pop("chat_template_kwargs",None)
+  if template_kwargs is not None:
+   extra=dict(clean.get("extra_body") or {});extra["chat_template_kwargs"]=template_kwargs;clean["extra_body"]=extra
+  return self.gateway.stream_complete(clean)
+ def start_overlap_probe(self,expected_concurrency=2,interval_s=.1):
+  for a in self.backends:a.start_overlap_probe(1,interval_s)
+ def stop_overlap_probe(self):
+  for a in self.backends:a.stop_overlap_probe()
+ def overlap_evidence(self,records):
+  ok=[r for r in records if r.get("verdict")==PASS];decode_start=decode_end=None
+  if len(ok)==2 and all(r.get("first_abs") and r.get("end_abs") for r in ok):
+   decode_start=max(r["first_abs"] for r in ok);decode_end=min(r["end_abs"] for r in ok)
+  decode_overlap=bool(decode_start is not None and decode_end is not None and decode_start<decode_end)
+  children=[a.probe_summary(decode_start,decode_end) if decode_overlap else a.probe_summary() for a in self.backends]
+  backend_active=decode_overlap and all((x.get("peak_processing") or 0)>=1 for x in children)
+  ids=[r.get("gateway_deployment_id") for r in ok if r.get("gateway_deployment_id")]
+  bases=[r.get("gateway_api_base") for r in ok if r.get("gateway_api_base")]
+  distinct_ids=(len(ids)==2 and len(set(ids))==2) if len(ok)==2 else None
+  distinct_bases=(len(bases)==2 and len(set(bases))==2) if len(ok)==2 else None
+  route_proven=distinct_bases is True or distinct_ids is True
+  active=True if decode_overlap and (backend_active or route_proven) else (False if len(ok)==2 and not decode_overlap else None)
+  resident=True if active is True else None
+  queue_only=True if len(ok)==2 and active is False else (False if active is True else None)
+  return {"source":"LiteLLM single gateway endpoint + backend runtime probes + deployment response headers","resident":resident,"active_overlap":active,"queue_only":queue_only,"gateway_distinct_deployment_ids":distinct_ids,"gateway_distinct_api_bases":distinct_bases,"gateway_deployment_ids":ids,"gateway_api_bases":bases,"backend_active_in_common_decode_window":backend_active,"children":children}
+
+def make_adapter(endpoints,runtime,timeout_s=1800,gateway_endpoint=None):
  adapters=[HTTPAdapter(x,runtime,timeout_s) for x in endpoints]
+ if gateway_endpoint is not None:return LiteLLMGatewayAdapter(HTTPAdapter(gateway_endpoint,"litellm",timeout_s),adapters)
  return adapters[0] if len(adapters)==1 else MultiEndpointAdapter(adapters)
+
+def make_plan_adapter(plan,timeout_s=1800):
+ if plan.get("gateway"):return make_adapter(plan["backend_endpoints"],plan["runtime"],timeout_s,plan["gateway"]["endpoint"])
+ return make_adapter(plan["endpoints"],plan["runtime"],timeout_s)
 
 class GPUPeakProbe:
  def __init__(self,interval_s=.5):
@@ -191,6 +249,11 @@ def validate(c):
  if type(c.get("context_tokens")) is not int or c["context_tokens"]<1:raise ValueError("bad context_tokens")
  for k in ("model","runtime","runtime_revision","model_identity","launch_command","weight_quant","kv_cache","speculative","ngram","topology","prefix_cache_lane","chat_template","tool_parser","thinking"):
   if k not in c:raise ValueError("missing identity: "+k)
+ if c.get("topology")=="1gpu-x2-independent":
+  g=c.get("gateway")
+  if not isinstance(g,dict) or g.get("runtime")!="LiteLLM":raise ValueError("1gpu-x2-independent requires LiteLLM gateway identity")
+  for k in ("runtime_revision","image","endpoint","routing_strategy","backend_max_parallel_requests"):
+   if k not in g:raise ValueError("missing gateway identity: "+k)
 
 def cases(workload,n):
  selected=workload.get("requests",[])[:n]
@@ -220,6 +283,7 @@ def worker(adapter,barrier,origin,rec,payload,case,receipt):
   elif not prompt_ok:rec["verdict"]="INCONCLUSIVE"
   else:rec["verdict"]=PASS
   first=t.get("first",t.get("first_token_s"));end=t.get("end",t.get("terminal_s"));rec["ttft_ms"]=t.get("ttft_ms");rec["first_abs"]=first;rec["end_abs"]=end;rec["wall_s"]=t.get("wall_s");tim=res.get("timings") or {};rec["prefill_tps"]=tim.get("prompt_per_second");rec["decode_tps"]=tim.get("predicted_per_second")
+  hdr=t.get("response_headers") or {};rec["gateway_deployment_id"]=hdr.get("x-litellm-model-id");rec["gateway_api_base"]=hdr.get("x-litellm-model-api-base");rec["gateway_call_id"]=hdr.get("x-litellm-call-id");rec["gateway_version"]=hdr.get("x-litellm-version")
   if rec["decode_tps"] is None and first and end and end>first and tokens_ok:rec["decode_tps"]=rec["actual_output_tokens"]/(end-first)
  except Exception as e:rec.update(verdict=classify(e),error=str(e),error_body=getattr(e,"evidence",None))
  rec["status"]="results_saved";rec["terminal_s"]=time.monotonic()-origin;return rec
@@ -232,6 +296,7 @@ def summarize(config,records,evidence,verdict,gpu_summary):
 
 def run_batch(output,config,workload,adapter):
  config=future_config(config);validate(config)
+ if config["topology"]=="1gpu-x2-independent" and not isinstance(adapter,LiteLLMGatewayAdapter):raise ValueError("1gpu-x2-independent acceptance requires LiteLLM single-gateway adapter")
  if config["measured_repetitions"]!=1:raise ValueError("one measured batch only")
  selected,hashes=cases(workload,config["concurrency"]);payloads=[body(config,workload,x) for x in selected];output=Path(output);output.mkdir(parents=True,exist_ok=True)
  unexpected=[x for x in output.iterdir() if x.name!="runtime"]

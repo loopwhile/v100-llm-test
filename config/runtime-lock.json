@@ -35,6 +35,14 @@
       "upstream_reference_topology": "TP4",
       "project_topology": "TP2 experimental compatibility lane",
       "status": "pinned_for_preflight; no 2x16GB PASS inherited"
+    },
+    "LiteLLM": {
+      "family": "BerriAI/litellm",
+      "version": "1.101.0",
+      "commit": "18243cd7af4c3325165ba68b21379e2719e051c7",
+      "image": "ghcr.io/berriai/litellm:v1.101.0",
+      "role": "required gateway for Ornith 1.5 9B 1GPUx2 topology",
+      "status": "pinned_for_preflight"
     }
   }
 }

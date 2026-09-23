@@ -9,7 +9,7 @@ C1 is tested first. C2 is executed only for viable lanes unless a deliberate fai
 | Qwen3.8-27B | UD-Q4_K_M | Q8_0 | TP2 shared | C1→C2 | C1→C2 | C1→C2 | C1→C2 |
 | Ornith 1.5 35B-A3B | Q4_K_M | Q8_0 | TP2 shared | C1→C2 | C1→C2 | C1→C2 or UNSUPPORTED | C1→C2 or UNSUPPORTED |
 | Ornith 1.5 9B | Q6_K | FP16 | TP2 shared | C1→C2 | C1→C2 | C1→C2 | C1→C2 |
-| Ornith 1.5 9B | Q6_K | FP16 | 1GPU×2 independent | verify→C2 | verify→C2 | verify→C2 | verify→C2 |
+| Ornith 1.5 9B | Q6_K | FP16 | 1GPU×2 + LiteLLM | verify→C1→C2 | verify→C1→C2 | verify→C1→C2 | verify→C1→C2 |
 | Gemma4 26B-A4B | UD-Q4_K_XL candidate | FP16 candidate | TP2 shared | verify→C1→C2 | verify→C1→C2 | verify→C1→C2 or UNSUPPORTED | verify→C1→C2 or UNSUPPORTED |
 
 Mandatory ngram pairing:
@@ -27,7 +27,7 @@ TARGET versus NGRAM remains required even when MTP is unusable.
 | Ornith 1.5 35B-A3B | STOCK | NVFP4 candidate | FP8 candidate | Target-only candidate | TP2 shared | verify support → C1/C2 or UNSUPPORTED |
 | Ornith 1.5 35B-A3B | SKINNY | no pinned v1.1 contract | — | — | TP2 | support resolution / UNSUPPORTED |
 | Ornith 1.5 9B | STOCK | NVFP4 candidate | FP16 candidate | MTP candidate | TP2 shared | verify support → C1/C2 or UNSUPPORTED |
-| Ornith 1.5 9B | STOCK | NVFP4 candidate | FP16 candidate | MTP candidate | 1GPU×2 independent | resolve exact artifact → two TP1 C1/128K servers → active C2 or UNSUPPORTED |
+| Ornith 1.5 9B | STOCK | NVFP4 candidate | FP16 candidate | MTP candidate | 1GPU×2 + LiteLLM | resolve exact artifact → two TP1 128K servers + LiteLLM → gateway C1/C2 or UNSUPPORTED |
 | Ornith 1.5 9B | SKINNY | no pinned v1.1 contract | — | — | TP2 | support resolution / UNSUPPORTED |
 | Gemma4 26B-A4B | STOCK | NVFP4 candidate | FP8 candidate | Target-only candidate | TP2 shared | verify support → C1/C2 or UNSUPPORTED |
 | Gemma4 26B-A4B | SKINNY | no pinned v1.1 contract | — | — | TP2 | support resolution / UNSUPPORTED |
@@ -73,6 +73,8 @@ Shared-server candidates need:
 
 Ornith 9B 1GPU×2 additionally needs:
 - each one-GPU server independently fits 128K
-- both servers run simultaneously
-- both remain healthy
-- aggregate and per-agent performance recorded
+- both servers and the pinned LiteLLM gateway run simultaneously
+- C1 and C2 measured requests use one LiteLLM client endpoint, never direct backend selection
+- C2 evidence proves distribution across both backends via backend processing samples and/or distinct LiteLLM deployment headers
+- all three services remain healthy
+- aggregate and per-agent end-to-end performance recorded with LiteLLM overhead included

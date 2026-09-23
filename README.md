@@ -37,7 +37,9 @@ v100-skinny is a separate pinned runtime identity, not a flag on the STOCK 1Cat 
 
 ## Topologies
 - tp2-shared: one model/server across both V100s
-- 1gpu-x2-independent: two one-GPU servers; a first-class Ornith 1.5 9B candidate for llama.cpp and, once the exact artifact is verified, STOCK 1Cat-vLLM
+- 1gpu-x2-independent: two one-GPU Ornith 1.5 9B servers behind one **mandatory LiteLLM gateway**; a first-class candidate for llama.cpp and, once the exact artifact is verified, STOCK 1Cat-vLLM
+
+For `1gpu-x2-independent`, both C1 and C2 acceptance requests must enter through the same LiteLLM endpoint. Direct client-to-backend routing is diagnostic only and cannot produce the final topology acceptance result. LiteLLM is pinned to v1.101.0 and uses a two-deployment model group with `least-busy` routing and `max_parallel_requests=1` per backend.
 
 Shared llama.cpp C2 explicitly requests a 256K logical aggregate KV pool with a 128K ceiling per slot.
 
@@ -56,7 +58,7 @@ Fresh runs write raw evidence under results/raw/<EXPERIMENT_ID>/, one Markdown r
 - results/summary.csv
 - reports/comparison.csv
 
-Historical results are not imported as acceptance evidence. C2 evidence is sampled from runtime metrics/slots during the measured window, and sampled peak VRAM is merged into the experiment metrics.
+Historical results are not imported as acceptance evidence. C2 evidence is sampled from runtime metrics/slots during the measured window, and sampled peak VRAM is merged into the experiment metrics. For Ornith 9B 1GPU×2, evidence additionally records LiteLLM deployment headers and backend activity so the result proves that the single gateway actually distributed the two active requests across GPU0/GPU1.
 
 ## Project status
 Repository implementation is complete through the runtime-lane/test-plan stage. Remaining work is measured execution according to:

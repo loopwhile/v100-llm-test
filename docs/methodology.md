@@ -14,7 +14,7 @@ Operating pattern:
 1. Fresh runtime/model/artifact compatibility.
 2. C1 128K capacity/correctness for every required lane.
 3. C2 128K residency/active overlap for C1 survivors, proven with runtime-side overlap evidence.
-4. Ornith 9B 1GPU×2 independent-server topology.
+4. Ornith 9B 1GPU×2 + LiteLLM end-to-end serving topology.
 5. Performance comparisons inside valid configurations.
 6. Final operational selection.
 
@@ -30,7 +30,7 @@ Performance is valid only after the exact configuration produces valid output an
 
 ## C2 meaning
 
-C2 is two independent projects released through a common barrier with different prompt material and hashes. Shared-server PASS_C2_ACTIVE requires sampled server state consistent with two running/processing requests during the overlapping decode window; client sockets alone are insufficient.
+C2 is two independent projects released through a common barrier with different prompt material and hashes. Shared-server PASS_C2_ACTIVE requires sampled server state consistent with two running/processing requests during the overlapping decode window; client sockets alone are insufficient. For Ornith 9B 1GPU×2, both requests must enter through the same LiteLLM endpoint and the evidence must show that both one-GPU backends participated; direct per-request backend routing is not an acceptance test.
 
 Verdicts include:
 - PASS_C1_128K
@@ -61,6 +61,8 @@ Default to one measured execution per configuration unless explicitly authorized
 llama.cpp uses TARGET, NGRAM, MTP and MTP_NGRAM. TARGET versus NGRAM is mandatory. MTP and MTP_NGRAM remain explicit rows even when UNSUPPORTED.
 
 STOCK 1Cat and v100-skinny are separate mandatory backend rows.
+
+LiteLLM v1.101.0 is a mandatory measured component of the Ornith 9B 1GPU×2 topology. Its routing overhead is intentionally included in end-to-end TTFT and throughput for that topology.
 
 ## Hardware policy
 

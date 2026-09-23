@@ -40,5 +40,13 @@
       "stock_required": true,
       "v100_skinny_required": true
     }
+  },
+  "topology_requirements": {
+    "1gpu-x2-independent": {
+      "gateway_required": "LiteLLM",
+      "single_client_endpoint_required": true,
+      "direct_backend_request_routing_allowed_for_acceptance": false,
+      "c1_and_c2_must_include_gateway": true
+    }
   }
 }

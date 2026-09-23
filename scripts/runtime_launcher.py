@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build/preflight/launch pinned V100 server lanes; never runs benchmark requests."""
 from __future__ import annotations
-import argparse,json,os,shutil,socket,subprocess,sys
+import argparse,json,os,shutil,socket,subprocess,sys,time
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -29,12 +29,24 @@ def spec(lanes,lane):
   if x["id"]==lane:return x
  raise ValueError("unknown llama lane")
 
-def llama_plan(lock,lanes,tops,m,lane,c,topology,port):
+def litellm_gateway(lock,m,backend_endpoints,port):
+ rt=lock["runtimes"]["LiteLLM"];model=m["model_id"]
+ deployments=[]
+ for endpoint in backend_endpoints:
+  deployments.append({"model_name":model,"litellm_params":{"model":"openai/"+model,"api_base":endpoint+"/v1","api_key":"local-no-key","max_parallel_requests":1,"timeout":1800,"stream_timeout":1800,"max_retries":0}})
+ cfg={"model_list":deployments,"router_settings":{"routing_strategy":"least-busy","num_retries":0}}
+ cmd=["docker","run","--rm","--pull=never","--name","v100-test-litellm","--label","project=v100-llm-test","--network","host","-v","{LITELLM_CONFIG}:/app/config.yaml:ro",rt["image"],"--config","/app/config.yaml","--host","127.0.0.1","--port",str(port)]
+ return {"runtime":"LiteLLM","runtime_revision":f"{rt['version']} / {rt['commit']}","image":rt["image"],"endpoint":f"http://127.0.0.1:{port}","routing_strategy":"least-busy","backend_max_parallel_requests":1,"config":cfg,"command":cmd}
+
+def attach_gateway(plan,lock,m,backend_endpoints,gateway_port):
+ plan["backend_endpoints"]=list(backend_endpoints);plan["gateway"]=litellm_gateway(lock,m,backend_endpoints,gateway_port);plan["endpoints"]=[plan["gateway"]["endpoint"]]
+ return plan
+
+def llama_plan(lock,lanes,tops,m,lane,c,topology,port,gateway_port=18079):
  mc=m["llama_cpp"]; s=spec(lanes,lane)
  if not mc.get("path"): return unsupported(m,"llama.cpp",lane,topology,"exact artifact path is not pinned")
  if topology not in m.get("topology_candidates",[]): return unsupported(m,"llama.cpp",lane,topology,"topology not declared")
  if LLAMA_KEYS[lane] not in mc.get("required_spec_lanes",[]): return unsupported(m,"llama.cpp",lane,topology,"lane not declared")
- if topology=="1gpu-x2-independent" and c!=2: raise ValueError("independent topology is C2 only")
  rt=lock["runtimes"]["llama.cpp"]; cache=kv(mc["kv_candidates"][0])
  def command(gpus,p,parallel,total,tp2):
   cmd=["docker","run","--rm","--pull=never","--name",f"v100-test-{p}",
@@ -54,13 +66,14 @@ def llama_plan(lock,lanes,tops,m,lane,c,topology,port):
  else:
   commands=[command("0",port,1,131072,False),command("1",port+1,1,131072,False)]
   endpoints=[f"http://127.0.0.1:{port}",f"http://127.0.0.1:{port+1}"]
- return {"supported_for_planning":True,"runtime":"llama.cpp",
+ plan={"supported_for_planning":True,"runtime":"llama.cpp",
   "runtime_revision":f"{rt['build']} / {rt['commit']}","model":m["model_id"],"model_identity":mc,
   "weight_quant":mc["weight_quant"],"kv_cache":mc["kv_candidates"][0],"lane":lane,
   "speculative":s["speculative"],"ngram":s["ngram"],"topology":topology,"concurrency":c,
   "context_tokens_per_agent":131072,"commands":commands,"environment":{},"command_environments":[{} for _ in commands],"endpoints":endpoints}
+ return attach_gateway(plan,lock,m,endpoints,gateway_port) if topology=="1gpu-x2-independent" else plan
 
-def onecat_plan(lock,m,lane,c,topology,port):
+def onecat_plan(lock,m,lane,c,topology,port,gateway_port=18079):
  if topology not in m.get("topology_candidates",[]):return unsupported(m,"1Cat-vLLM",lane,topology,"topology not declared")
  mc=m["onecat_vllm"]
  if lane=="STOCK":
@@ -76,9 +89,9 @@ def onecat_plan(lock,m,lane,c,topology,port):
    return [py,"-m","vllm.entrypoints.openai.api_server","--model",mc["path"],"--served-model-name",m["model_id"],"--trust-remote-code","--dtype","half","--attention-backend","FLASH_ATTN_V100","--tensor-parallel-size",str(tp),"--kv-cache-dtype",kv(kv_value),"--max-model-len","131072","--max-num-seqs",str(max_seqs),"--max-num-batched-tokens","2048","--gpu-memory-utilization","0.90","--enforce-eager",*spec_args,"--host","127.0.0.1","--port",str(p)]
   if topology=="tp2-shared":commands=[command(port,2,c)];envs=[{"CUDA_VISIBLE_DEVICES":"0,1"}];endpoints=[f"http://127.0.0.1:{port}"]
   else:
-   if c!=2:raise ValueError("independent topology is C2 only")
    commands=[command(port,1,1),command(port+1,1,1)];envs=[{"CUDA_VISIBLE_DEVICES":"0"},{"CUDA_VISIBLE_DEVICES":"1"}];endpoints=[f"http://127.0.0.1:{port}",f"http://127.0.0.1:{port+1}"]
-  return {"supported_for_planning":True,"runtime":"1Cat-vLLM","runtime_revision":f"{rt['version']} wheel sha256:{rt['sha256']}","model":m["model_id"],"model_identity":mc,"weight_quant":weight,"kv_cache":kv_value,"lane":lane,"speculative":spec_mode,"ngram":"N/A","topology":topology,"concurrency":c,"context_tokens_per_agent":131072,"commands":commands,"environment":{},"command_environments":envs,"endpoints":endpoints}
+  plan={"supported_for_planning":True,"runtime":"1Cat-vLLM","runtime_revision":f"{rt['version']} wheel sha256:{rt['sha256']}","model":m["model_id"],"model_identity":mc,"weight_quant":weight,"kv_cache":kv_value,"lane":lane,"speculative":spec_mode,"ngram":"N/A","topology":topology,"concurrency":c,"context_tokens_per_agent":131072,"commands":commands,"environment":{},"command_environments":envs,"endpoints":endpoints}
+  return attach_gateway(plan,lock,m,endpoints,gateway_port) if topology=="1gpu-x2-independent" else plan
  if lane!="SKINNY":raise ValueError("unknown onecat lane")
  if topology!="tp2-shared":return unsupported(m,"1Cat-vLLM+v100-skinny",lane,topology,"v100-skinny v1.1 is pinned only as an experimental TP2 compatibility lane")
  sm=m.get("skinny_v11")
@@ -89,10 +102,10 @@ def onecat_plan(lock,m,lane,c,topology,port):
  return {"supported_for_planning":True,"runtime":"1Cat-vLLM+v100-skinny","runtime_revision":f"skinny {rt['revision']} / 1Cat {rt['base_1cat_version']}","model":m["model_id"],"model_identity":sm,"weight_quant":sm["weight_quant"],"kv_cache":"FP16","lane":"SKINNY","speculative":"MTP-k3-long-context","ngram":"N/A","topology":topology,"concurrency":c,"context_tokens_per_agent":131072,"commands":[cmd],"environment":env,"command_environments":[env],"endpoints":[f"http://127.0.0.1:{port}"],"experimental_tp2":True,"upstream_reference_topology":"TP4"}
 
 
-def build_plan(root,model,lane,c,topology,port=18080):
+def build_plan(root,model,lane,c,topology,port=18080,gateway_port=18079):
  lock,lanes,tops,m=state(root,model)
- if lane in LLAMA_KEYS:return llama_plan(lock,lanes,tops,m,lane,c,topology,port)
- if lane in {"STOCK","SKINNY"}:return onecat_plan(lock,m,lane,c,topology,port)
+ if lane in LLAMA_KEYS:return llama_plan(lock,lanes,tops,m,lane,c,topology,port,gateway_port)
+ if lane in {"STOCK","SKINNY"}:return onecat_plan(lock,m,lane,c,topology,port,gateway_port)
  raise ValueError("unknown lane")
 
 def preflight(plan):
@@ -101,6 +114,15 @@ def preflight(plan):
  add("supported",plan.get("supported_for_planning") is True,plan.get("reason",""))
  add("host",socket.gethostname().split(".",1)[0]=="p520-llm",socket.gethostname())
  if not plan.get("supported_for_planning"):return {"pass":False,"checks":checks}
+ if plan.get("gateway"):
+  docker=shutil.which("docker");add("gateway:docker",docker is not None)
+  image=plan["gateway"]["image"]
+  if docker:
+   r=subprocess.run(["docker","image","inspect",image],capture_output=True,text=True);add("gateway:image",r.returncode==0,image)
+   if r.returncode==0:
+    code="import importlib.metadata as m; print(m.version('litellm'))"
+    v=subprocess.run(["docker","run","--rm","--pull=never","--entrypoint","python",image,"-c",code],capture_output=True,text=True,timeout=60)
+    add("gateway:litellm_version",v.returncode==0 and v.stdout.strip()==plan["gateway"]["runtime_revision"].split(" / ",1)[0],v.stdout.strip() or v.stderr.strip())
  if plan["runtime"]=="llama.cpp":
   add("docker",shutil.which("docker") is not None)
   path=plan["model_identity"].get("path");add("model_path",bool(path) and Path(path).is_file(),str(path))
@@ -142,14 +164,28 @@ def launch(plan,log_dir=None):
   print(json.dumps(check,indent=2),file=sys.stderr);raise RuntimeError("preflight failed")
  ps=[];handles=[];envs=plan.get("command_environments") or [plan.get("environment",{}) for _ in plan["commands"]]
  if len(envs)!=len(plan["commands"]):raise ValueError("command_environments length mismatch")
- if log_dir is not None:log_dir=Path(log_dir);log_dir.mkdir(parents=True,exist_ok=True)
+ if plan.get("gateway") and log_dir is None:raise ValueError("LiteLLM topology requires --log-dir so the generated gateway config and logs are preserved")
+ if log_dir is not None:log_dir=Path(log_dir).resolve();log_dir.mkdir(parents=True,exist_ok=True)
  try:
   for i,(cmd,extra) in enumerate(zip(plan["commands"],envs)):
    env=os.environ.copy();env.update({k:str(v) for k,v in extra.items()});stdout=None
    if log_dir is not None:
     handle=(log_dir/f"server-{i}.log").open("xb");handles.append(handle);stdout=handle
    ps.append(subprocess.Popen(cmd,env=env,stdout=stdout,stderr=subprocess.STDOUT if stdout is not None else None))
-  return max((p.wait() for p in ps),default=0)
+  if plan.get("gateway"):
+   config_path=log_dir/"litellm-config.yaml"
+   with config_path.open("x",encoding="utf-8") as stream:json.dump(plan["gateway"]["config"],stream,ensure_ascii=False,indent=2);stream.write("\n")
+   cmd=[x.replace("{LITELLM_CONFIG}",str(config_path)) for x in plan["gateway"]["command"]]
+   handle=(log_dir/"gateway.log").open("xb");handles.append(handle)
+   ps.append(subprocess.Popen(cmd,env=os.environ.copy(),stdout=handle,stderr=subprocess.STDOUT))
+  while True:
+   for p in ps:
+    rc=p.poll()
+    if rc is not None:
+     for q in ps:
+      if q.poll() is None:q.terminate()
+     return rc
+   time.sleep(1)
  except KeyboardInterrupt:
   for p in ps:
    if p.poll() is None:p.terminate()
@@ -163,9 +199,9 @@ def main():
  ap.add_argument("--lane",choices=tuple(LLAMA_KEYS)+("STOCK","SKINNY"),required=True)
  ap.add_argument("--concurrency",type=int,choices=(1,2),required=True)
  ap.add_argument("--topology",choices=("tp2-shared","1gpu-x2-independent"),default="tp2-shared")
- ap.add_argument("--port",type=int,default=18080);ap.add_argument("--log-dir",type=Path);g=ap.add_mutually_exclusive_group()
+ ap.add_argument("--port",type=int,default=18080);ap.add_argument("--gateway-port",type=int,default=18079);ap.add_argument("--log-dir",type=Path);g=ap.add_mutually_exclusive_group()
  g.add_argument("--preflight",action="store_true");g.add_argument("--execute",action="store_true");a=ap.parse_args()
- p=build_plan(a.root.resolve(),a.model,a.lane,a.concurrency,a.topology,a.port)
+ p=build_plan(a.root.resolve(),a.model,a.lane,a.concurrency,a.topology,a.port,a.gateway_port)
  if a.preflight:print(json.dumps({"plan":p,"preflight":preflight(p)},ensure_ascii=False,indent=2));return 0
  if a.execute:return launch(p,a.log_dir)
  print(json.dumps(p,ensure_ascii=False,indent=2));return 0

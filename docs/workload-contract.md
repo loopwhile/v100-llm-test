@@ -46,7 +46,7 @@ A C2 result must distinguish:
 - actual server-side active overlap;
 - queue-only behavior.
 
-Client socket overlap or `parallel=2` / `max_num_seqs=2` configuration alone does not prove active C2. Shared llama.cpp evidence samples `llamacpp:requests_processing`, `llamacpp:requests_deferred` and `/slots`; shared vLLM evidence samples `vllm:num_requests_running` and `vllm:num_requests_waiting`. For 1GPU×2, requests are explicitly routed to separate endpoints and overlapping decode lifetimes are recorded.
+Client socket overlap or `parallel=2` / `max_num_seqs=2` configuration alone does not prove active C2. Shared llama.cpp evidence samples `llamacpp:requests_processing`, `llamacpp:requests_deferred` and `/slots`; shared vLLM evidence samples `vllm:num_requests_running` and `vllm:num_requests_waiting`. For Ornith 9B 1GPU×2, both requests are sent to one LiteLLM endpoint. Acceptance requires overlapping decode lifetimes plus evidence that both backend deployments participated, using backend processing samples and/or distinct LiteLLM deployment response headers. Direct client routing to backend A/B is diagnostic only.
 
 ## 4. Required request and batch evidence
 
@@ -66,6 +66,7 @@ Per C2 batch, preserve:
 - common release timestamp and submission skew;
 - lifecycle timestamps for both requests;
 - server-side overlap evidence;
+- for 1GPU×2: LiteLLM deployment ID/API-base response headers when present and both backend probe summaries;
 - completion count;
 - aggregate decode throughput;
 - end-to-end output throughput;

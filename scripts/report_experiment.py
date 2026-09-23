@@ -15,13 +15,15 @@ SUMMARY_FIELDS = [
     "weight_quant","kv_cache","speculative","ngram","context_tokens","concurrency",
     "topology","verdict","ttft_ms","prefill_tps","mean_request_decode_tps",
     "aggregate_decode_tps","end_to_end_output_tps","batch_wall_s",
-    "peak_vram_gpu0_mib","peak_vram_gpu1_mib","notes",
+    "peak_vram_gpu0_mib","peak_vram_gpu1_mib","gateway_runtime","gateway_revision",
+    "gateway_routing","notes",
 ]
 COMPARISON_FIELDS = [
     "experiment_id","model","runtime","backend_variant","weight","kv","spec","ngram",
     "topology","context_per_agent","concurrency","c1_128k","c2_resident","c2_active",
     "queue_only","ttft_ms","request_decode_tps","aggregate_decode_tps",
-    "peak_vram_gpu0_mib","peak_vram_gpu1_mib","verdict","key_note",
+    "peak_vram_gpu0_mib","peak_vram_gpu1_mib","gateway_runtime","gateway_revision",
+    "gateway_routing","verdict","key_note",
 ]
 
 
@@ -85,6 +87,7 @@ def _bool_text(value):
 def _report(config, metrics, completion, raw_dir):
     verdict = completion["verdict"]
     overlap = metrics.get("server_overlap") or {}
+    gateway = config.get("gateway") or {}
     lines = [
         f"# {config['experiment_id']}",
         "",
@@ -95,6 +98,12 @@ def _report(config, metrics, completion, raw_dir):
         f"- 모델: {config['model']}",
         f"- 런타임: {config['runtime']}",
         f"- Runtime revision: {config['runtime_revision']}",
+        f"- Gateway runtime: {gateway.get('runtime','')}",
+        f"- Gateway revision: {gateway.get('runtime_revision','')}",
+        f"- Gateway image: {gateway.get('image','')}",
+        f"- Gateway endpoint: {gateway.get('endpoint','')}",
+        f"- Gateway routing: {gateway.get('routing_strategy','')}",
+        f"- Gateway backend max parallel: {gateway.get('backend_max_parallel_requests','')}",
         "",
         "## 서빙 설정",
         "",
@@ -160,6 +169,7 @@ def publish(root, raw_dir):
 
     peak0 = metrics.get("peak_vram_gpu0_mib")
     peak1 = metrics.get("peak_vram_gpu1_mib")
+    gateway = config.get("gateway") or {}
     summary_row = {
         "experiment_id": experiment_id,
         "date": completion.get("completed_at_utc", ""),
@@ -183,6 +193,9 @@ def publish(root, raw_dir):
         "batch_wall_s": metrics.get("batch_wall_s"),
         "peak_vram_gpu0_mib": peak0,
         "peak_vram_gpu1_mib": peak1,
+        "gateway_runtime": gateway.get("runtime", ""),
+        "gateway_revision": gateway.get("runtime_revision", ""),
+        "gateway_routing": gateway.get("routing_strategy", ""),
         "notes": config.get("notes", ""),
     }
     comparison_row = {
@@ -206,6 +219,9 @@ def publish(root, raw_dir):
         "aggregate_decode_tps": metrics.get("aggregate_decode_tps"),
         "peak_vram_gpu0_mib": peak0,
         "peak_vram_gpu1_mib": peak1,
+        "gateway_runtime": gateway.get("runtime", ""),
+        "gateway_revision": gateway.get("runtime_revision", ""),
+        "gateway_routing": gateway.get("routing_strategy", ""),
         "verdict": completion["verdict"],
         "key_note": config.get("notes", ""),
     }

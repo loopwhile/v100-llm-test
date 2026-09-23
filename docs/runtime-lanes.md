@@ -23,11 +23,11 @@ Shared TP2 C2 uses \`--ctx-size 262144 --parallel 2 --kv-unified --kv-unified-pe
 
 The C2 value intentionally asks for two independent 128K logical contexts. If it does not fit, preserve the OOM/capacity result.
 
-\`1gpu-x2-independent\` starts two separate C1/128K servers, one on each GPU. It is only available to models that declare that topology.
+\`1gpu-x2-independent\` starts two separate C1/128K Ornith 9B servers, one on each GPU, **plus a mandatory LiteLLM gateway**. Both C1 and C2 measured requests enter through the single gateway endpoint; direct backend selection is diagnostic only.
 
 ## 1Cat-vLLM stock
 
-Stock retains the imported 1Cat-vLLM 1.5.0 wheel identity, FLASH_ATTN_V100, TP2, 128K per sequence, and \`max_num_seqs=1|2\`. Ornith 1.5 9B additionally has a first-class 1GPU×2 STOCK topology once its exact NVFP4 artifact and exact MTP speculative launch configuration are resolved: two TP1 processes, one pinned to each V100, each with \`max_model_len=131072\` and \`max_num_seqs=1\`. A non-target speculative candidate without a pinned launch configuration fails closed as \`UNSUPPORTED\`.
+Stock retains the imported 1Cat-vLLM 1.5.0 wheel identity, FLASH_ATTN_V100, TP2, 128K per sequence, and \`max_num_seqs=1|2\`. Ornith 1.5 9B additionally has a first-class 1GPU×2 STOCK topology once its exact NVFP4 artifact and exact MTP speculative launch configuration are resolved: two TP1 processes, one pinned to each V100, each with \`max_model_len=131072\` and \`max_num_seqs=1\`, behind the same mandatory LiteLLM gateway used by the llama.cpp independent topology. A non-target speculative candidate without a pinned launch configuration fails closed as \`UNSUPPORTED\`.
 
 ## v100-skinny
 
@@ -58,3 +58,23 @@ python3 scripts/skinny_gate.py --log <server.log> --tp 2 --depth 3
 ```
 
 The TP2 census expectation is **256** protected FP8 module instances (128 per rank × 2 ranks), not the upstream TP4 script's hard-coded 512. The gate also requires the requested MTP depth, lm_head QPN route, no repack fallback, declined checkpoint FP8-KV directive, zero scalar-paged calls, XQA, QPN2 and QPN8 dispatch.
+
+
+## LiteLLM gateway for Ornith 9B 1GPU×2
+
+The independent topology pins LiteLLM v1.101.0 (`18243cd7af4c3325165ba68b21379e2719e051c7`) as part of the measured serving stack.
+
+- one client endpoint: `http://127.0.0.1:18079`
+- two local OpenAI-compatible deployments: backend ports 18080/18081
+- routing: `least-busy`
+- `max_parallel_requests=1` per deployment
+- backend `timeout=1800`, `stream_timeout=1800`, `max_retries=0`
+- router `num_retries=0` so hidden retries do not mask routing/capacity failures
+- no context-window pre-call filter is enabled at the gateway; the backend/live-tokenizer acceptance remains authoritative for the exact 128K budget
+- request-level `chat_template_kwargs` (including `enable_thinking=false`) are forwarded through LiteLLM as OpenAI `extra_body`, keeping the gateway request aligned with the direct backend tokenization receipt
+- C1 and C2 both include the gateway
+- LiteLLM response headers `x-litellm-model-id` and `x-litellm-model-api-base` are recorded when present
+- backend runtime metrics remain the authoritative corroboration that both GPU servers were active
+- gateway readiness evidence uses `/health/liveliness`; generic LiteLLM `/health` is not used because it can actively health-check configured model deployments and would contaminate a no-warmup acceptance run
+
+The generated LiteLLM config and `gateway.log` are preserved in the experiment runtime directory.

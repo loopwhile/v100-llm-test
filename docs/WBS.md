@@ -20,6 +20,7 @@
 - 1Cat-vLLM: STOCK.
 - v100-skinny: 필수 SKINNY lane.
 - Shared TP2 및 Ornith 9B 1GPU×2 topology 정의.
+- Ornith 9B 1GPU×2는 LiteLLM 단일 gateway endpoint를 포함한 실제 배포 topology로 고정한다. backend 직접 분배는 진단용일 뿐 정식 acceptance 경로가 아니다.
 
 ## 1. 신규 환경 및 artifact 검증 [TODO]
 
@@ -43,12 +44,15 @@
 - draft-mtp
 - composite draft-mtp,ngram-simple
 
-### 1.3 1Cat-vLLM STOCK 검증
+### 1.3 1Cat-vLLM STOCK 및 LiteLLM gateway 검증
 다음을 검증한다.
 - 1Cat-vLLM 1.5.0 exact wheel identity.
 - FLASH_ATTN_V100.
 - TP2 startup.
 - exact STOCK artifact가 확정된 경우 Ornith 9B의 GPU별 TP1 독립 server startup.
+- LiteLLM v1.101.0 exact image/version.
+- gateway 자체 상태 확인은 inference를 유발할 수 있는 `/health`가 아니라 `/health/liveliness`를 사용할 것.
+- Ornith 9B 1GPU×2에서 두 backend를 동일 model group으로 등록하고, least-busy + backend별 max_parallel_requests=1 설정으로 단일 client endpoint를 제공할 것.
 - 각 모델 profile의 tokenizer/template/tool/parser 요구사항.
 
 ### 1.4 v100-skinny 검증
@@ -155,14 +159,20 @@ workloads/concurrency/v1.json을 사용하며 다음을 보장한다.
 
 QUEUE_ONLY를 PASS_C2_ACTIVE로 판정해서는 안 된다.
 
-## 4. Ornith 1.5 9B — 1GPU×2 독립 topology [TODO]
+## 4. Ornith 1.5 9B — 1GPU×2 + LiteLLM 실배포 topology [TODO]
 
-이 topology는 단순 fallback이 아니라 정식 배포 후보로 취급한다.
+이 topology는 단순 fallback이 아니라 정식 배포 후보로 취급하며, **LiteLLM까지 포함한 전체 서빙 경로**를 테스트한다.
 
 1GPU에서 128K compatibility를 증명한 모든 런타임 lane(필수 llama.cpp lane 전체, exact Ornith 9B artifact가 확정된 STOCK 1Cat 포함)에 대해:
-- GPU0 → Server A → Project A.
-- GPU1 → Server B → Project B.
-- 두 server를 동시에 active 상태로 실행한다.
+- GPU0 → Server A.
+- GPU1 → Server B.
+- Server A/B → 동일 LiteLLM model group.
+- Project A/B의 measured request는 backend 주소를 직접 선택하지 않고 **동일한 LiteLLM endpoint**로만 전송한다.
+- LiteLLM은 least-busy routing, backend별 max_parallel_requests=1, num_retries=0을 사용한다.
+- backend 직접 호출은 tokenizer/health/diagnostic evidence 수집에만 허용한다.
+- backend tokenizer receipt에 사용한 `chat_template_kwargs`를 LiteLLM 경로에서도 `extra_body`로 동일하게 전달해 실제 measured prompt와 token receipt가 어긋나지 않게 한다.
+
+C1도 실제 운영 구조를 그대로 반영해 Server A/B와 LiteLLM을 모두 실행한 상태에서 단일 request를 gateway로 보낸다. C2는 독립적인 두 request를 같은 gateway endpoint로 동시에 release한다.
 
 llama.cpp lane이 1GPU에 적재 가능한 경우 다음을 모두 평가한다.
 - TARGET.
@@ -170,9 +180,14 @@ llama.cpp lane이 1GPU에 적재 가능한 경우 다음을 모두 평가한다.
 - MTP.
 - MTP_NGRAM.
 
-STOCK 1Cat은 TP1 server 2개를 GPU0/GPU1에 각각 격리하고, server당 max_model_len 131072 / max_num_seqs 1로 실행한다.
+STOCK 1Cat은 TP1 server 2개를 GPU0/GPU1에 각각 격리하고, server당 max_model_len 131072 / max_num_seqs 1로 실행한 뒤 동일 LiteLLM gateway 뒤에 둔다.
+
+C2 ACTIVE 판정에는 두 request의 overlapping decode lifetime과 함께 다음 중 하나 이상의 runtime-side routing evidence가 필요하다.
+- backend A/B가 공통 decode window에서 각각 processing>=1.
+- LiteLLM 응답의 x-litellm-model-id 또는 x-litellm-model-api-base가 두 request에서 서로 다른 deployment를 가리킴.
 
 Shared TP2와 다음 항목을 비교한다.
+- C1 128K end-to-end 성능(LiteLLM overhead 포함).
 - 두 개의 128K session 동시 수용 여부.
 - TTFT.
 - 에이전트별 decode 성능.
@@ -180,6 +195,7 @@ Shared TP2와 다음 항목을 비교한다.
 - peak VRAM.
 - failure isolation.
 - 운영 단순성.
+- raw config/report/CSV에 LiteLLM version/commit/image/routing identity가 보존되는지.
 
 ## 5. 성능 비교 및 lane 축소 [TODO]
 

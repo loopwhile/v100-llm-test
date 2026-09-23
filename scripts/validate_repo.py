@@ -31,6 +31,14 @@ def validate():
  check(tops["context_tokens_per_agent"]==131072,"topology context target mismatch")
  check(tops["topologies"]["tp2-shared"]["C2"]["shared_kv_pool_context"]==262144,"C2 shared pool must be 256K")
  check(tops["topologies"]["tp2-shared"]["C2"]["per_slot_context"]==131072,"C2 per-slot must be 128K")
+ independent=tops["topologies"]["1gpu-x2-independent"]
+ check(independent["gateway"]["required"] is True and independent["gateway"]["runtime"]=="LiteLLM","1GPUx2 must require LiteLLM")
+ check(independent["gateway"]["direct_backend_routing_is_acceptance"] is False,"direct backend routing must not be acceptance")
+ check(independent["C1"]["client_path"]=="single LiteLLM endpoint" and independent["C2"]["client_path"]=="single LiteLLM endpoint","C1/C2 must use LiteLLM client path")
+ check(accept["topology_requirements"]["1gpu-x2-independent"]["c1_and_c2_must_include_gateway"] is True,"acceptance must include LiteLLM for 1GPUx2")
+ litellm=lock["runtimes"]["LiteLLM"]
+ check(litellm["version"]=="1.101.0","LiteLLM version drift")
+ check(litellm["commit"]=="18243cd7af4c3325165ba68b21379e2719e051c7","LiteLLM commit drift")
  skinny=lock["runtimes"]["1Cat-vLLM+v100-skinny"]
  check(skinny["revision"]=="5b589c0dc81223e0ba65bcb3e755874723f8b515","skinny revision drift")
  check(skinny["base_1cat_version"]=="1.2.2","skinny base 1Cat drift")

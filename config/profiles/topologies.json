@@ -19,9 +19,18 @@
     },
     "1gpu-x2-independent": {
       "gpu_count": 2,
-      "description": "two independent one-GPU servers",
-      "C2": {
+      "description": "two independent one-GPU Ornith 9B servers behind one required LiteLLM gateway",
+      "gateway": {
+        "required": true,
+        "runtime": "LiteLLM",
+        "routing_strategy": "least-busy",
+        "client_endpoint_port": 18079,
+        "backend_max_parallel_requests": 1,
+        "direct_backend_routing_is_acceptance": false
+      },
+      "C1": {
         "servers": 2,
+        "active_requests": 1,
         "gpu_assignment": [
           [
             0
@@ -32,10 +41,30 @@
         ],
         "per_server_parallel": 1,
         "per_server_context": 131072,
-        "ports": [
+        "backend_ports": [
           18080,
           18081
-        ]
+        ],
+        "client_path": "single LiteLLM endpoint"
+      },
+      "C2": {
+        "servers": 2,
+        "active_requests": 2,
+        "gpu_assignment": [
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ],
+        "per_server_parallel": 1,
+        "per_server_context": 131072,
+        "backend_ports": [
+          18080,
+          18081
+        ],
+        "client_path": "single LiteLLM endpoint"
       }
     }
   }

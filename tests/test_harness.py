@@ -41,8 +41,30 @@ class HarnessTests(unittest.TestCase):
   for i,(e,want) in enumerate(cases):
    a=Mock(e); cfg=CONFIG|{"experiment_id":f"EXP-V100-Q38-LLAMA-Q8-NONE-C2-128K-00{i+1}","concurrency":2}; out,v=self.run_case(str(i),a,cfg); self.assertEqual(v,want); self.assertEqual(a.peak,2); self.assertEqual(len(json.loads((out/"requests.json").read_text())),2)
  def test_multi_endpoint_routes_independent_servers(self):
-  cfg=CONFIG|{"experiment_id":"EXP-V100-ORN9-LLAMA-F16-MTP-C2-128K-001","concurrency":2,"topology":"1gpu-x2-independent"}
-  self.assertEqual(self.run_case("independent",h.MultiEndpointAdapter([Mock(),Mock()]),cfg)[1],"PASS_C2_ACTIVE")
+  cfg=CONFIG|{"experiment_id":"EXP-V100-ORN9-LLAMA-F16-MTP-C2-128K-001","concurrency":2,"topology":"diagnostic-direct-backends"}
+  self.assertEqual(self.run_case("independent-diagnostic",h.MultiEndpointAdapter([Mock(),Mock()]),cfg)[1],"PASS_C2_ACTIVE")
+ def test_independent_acceptance_rejects_direct_backend_adapter(self):
+  cfg=CONFIG|{"experiment_id":"EXP-V100-ORN9-LLAMA-F16-MTP-C2-128K-002","concurrency":2,"topology":"1gpu-x2-independent","gateway":{"runtime":"LiteLLM","runtime_revision":"1.101.0 / test","image":"litellm:test","endpoint":"http://127.0.0.1:18079","routing_strategy":"least-busy","backend_max_parallel_requests":1}}
+  with self.assertRaisesRegex(ValueError,"LiteLLM"):self.run_case("reject-direct",h.MultiEndpointAdapter([Mock(),Mock()]),cfg)
+ def test_litellm_gateway_uses_single_client_path_and_backend_evidence(self):
+  class Gateway(Mock):
+   def __init__(self):
+    super().__init__();self.forwarded=[]
+   def stream_complete(self,payload):
+    self.forwarded.append(dict(payload));res,t=super().stream_complete(payload)
+    with self.lock:idx=self.active_toggle;self.active_toggle+=1
+    t["response_headers"]={"x-litellm-model-id":"dep-a" if idx==0 else "dep-b","x-litellm-model-api-base":"http://127.0.0.1:18080/v1" if idx==0 else "http://127.0.0.1:18081/v1"};return res,t
+  class Backend(Mock):
+   def start_overlap_probe(self,expected_concurrency=1,interval_s=.1):pass
+   def stop_overlap_probe(self):pass
+   def probe_summary(self,start=None,end=None):return {"peak_processing":1,"peak_waiting":0,"peak_resident_slots":1,"sample_count":1,"samples":[]}
+  g=Gateway();g.active_toggle=0
+  cfg=CONFIG|{"experiment_id":"EXP-V100-ORN9-LLAMA-F16-MTP-C2-128K-003","concurrency":2,"topology":"1gpu-x2-independent","gateway":{"runtime":"LiteLLM","runtime_revision":"1.101.0 / test","image":"litellm:test","endpoint":"http://127.0.0.1:18079","routing_strategy":"least-busy","backend_max_parallel_requests":1}}
+  adapter=h.LiteLLMGatewayAdapter(g,[Backend(),Backend()])
+  out,v=self.run_case("litellm",adapter,cfg);self.assertEqual(v,"PASS_C2_ACTIVE")
+  records=json.loads((out/"requests.json").read_text());self.assertEqual(len({x["gateway_api_base"] for x in records}),2)
+  self.assertTrue(all("chat_template_kwargs" not in x and x.get("extra_body",{}).get("chat_template_kwargs")=={"enable_thinking":False} for x in g.forwarded))
+  evidence=json.loads((out/"overlap-evidence.json").read_text());self.assertTrue(evidence["gateway_distinct_api_bases"])
  def test_prometheus_metric_parser(self):
   text='vllm:num_requests_running 1\nvllm:num_requests_running{model_name="x"} 2\nother_metric 9\n'
   self.assertEqual(h.metric_value(text,"vllm:num_requests_running"),2.0)

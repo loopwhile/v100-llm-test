@@ -18,11 +18,17 @@ class RuntimePlanTests(unittest.TestCase):
   self.assertEqual(a[a.index("--spec-type")+1],"none");self.assertEqual(b[b.index("--spec-type")+1],"ngram-simple")
  def test_ornith9_independent_servers(self):
   p=r.build_plan(ROOT,"ornith-1.5-9b","MTP_NGRAM",2,"1gpu-x2-independent")
-  self.assertEqual(len(p["commands"]),2);self.assertEqual(p["endpoints"],["http://127.0.0.1:18080","http://127.0.0.1:18081"])
+  self.assertEqual(len(p["commands"]),2);self.assertEqual(p["backend_endpoints"],["http://127.0.0.1:18080","http://127.0.0.1:18081"]);self.assertEqual(p["endpoints"],["http://127.0.0.1:18079"])
   self.assertIn("device=0",p["commands"][0]);self.assertIn("device=1",p["commands"][1])
+  self.assertEqual(p["gateway"]["runtime"],"LiteLLM");self.assertEqual(p["gateway"]["routing_strategy"],"least-busy");self.assertEqual(len(p["gateway"]["config"]["model_list"]),2)
+  self.assertTrue(all(x["litellm_params"]["max_parallel_requests"]==1 for x in p["gateway"]["config"]["model_list"]))
+  self.assertTrue(all(x["litellm_params"]["max_retries"]==0 and x["litellm_params"]["timeout"]==1800 and x["litellm_params"]["stream_timeout"]==1800 for x in p["gateway"]["config"]["model_list"]))
+ def test_ornith9_independent_c1_still_uses_full_gateway_topology(self):
+  p=r.build_plan(ROOT,"ornith-1.5-9b","TARGET",1,"1gpu-x2-independent")
+  self.assertEqual(len(p["commands"]),2);self.assertEqual(p["endpoints"],["http://127.0.0.1:18079"]);self.assertEqual(p["concurrency"],1)
  def test_ornith9_stock_independent_when_artifact_resolves(self):
   lock,_,_,m=r.state(ROOT,"ornith-1.5-9b");m=copy.deepcopy(m);m["onecat_vllm"].update(path="/srv/models/mock-ornith9",weight_quant="NVFP4",kv_candidates=["FP16"],speculative_candidates=["MTP"],speculative_config={"method":"mtp","num_speculative_tokens":3})
-  p=r.onecat_plan(lock,m,"STOCK",2,"1gpu-x2-independent",18080);self.assertTrue(p["supported_for_planning"]);self.assertEqual(len(p["commands"]),2);self.assertEqual(p["command_environments"],[{"CUDA_VISIBLE_DEVICES":"0"},{"CUDA_VISIBLE_DEVICES":"1"}])
+  p=r.onecat_plan(lock,m,"STOCK",2,"1gpu-x2-independent",18080);self.assertTrue(p["supported_for_planning"]);self.assertEqual(len(p["commands"]),2);self.assertEqual(p["command_environments"],[{"CUDA_VISIBLE_DEVICES":"0"},{"CUDA_VISIBLE_DEVICES":"1"}]);self.assertEqual(p["endpoints"],["http://127.0.0.1:18079"])
   for c in p["commands"]:self.assertEqual(c[c.index("--tensor-parallel-size")+1],"1");self.assertEqual(c[c.index("--max-num-seqs")+1],"1");self.assertIn("--speculative-config",c)
  def test_ornith9_stock_fails_closed_without_spec_config(self):
   lock,_,_,m=r.state(ROOT,"ornith-1.5-9b");m=copy.deepcopy(m);m["onecat_vllm"].update(path="/srv/models/mock-ornith9",weight_quant="NVFP4",kv_candidates=["FP16"],speculative_candidates=["MTP"])
