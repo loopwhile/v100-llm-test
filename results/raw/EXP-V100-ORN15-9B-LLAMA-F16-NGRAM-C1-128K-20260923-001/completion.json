@@ -1,0 +1,9 @@
+{
+  "experiment_id": "EXP-V100-ORN15-9B-LLAMA-F16-NGRAM-C1-128K-20260923-001",
+  "verdict": "PASS_C1_128K",
+  "completed_at_utc": "2026-09-23T14:43:33.597967+00:00",
+  "post_health": {
+    "healthy": true,
+    "at_utc": "2026-09-23T14:43:33.571060+00:00"
+  }
+}

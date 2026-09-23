@@ -1,0 +1,56 @@
+[
+  {
+    "request_id": "project-a",
+    "project_id": "A",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "7eb8fba6a85337dadebcd49bce83334812e159fae96d669e3e24abeb74612535",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.0013942639998276718,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "## Correctness Risk\n\nThe most concrete risk in this snapshot is a **version/snapshot consistency bug** in `PageIndex.snapshot()`.\n\nThe test `test_snapshot_is_stable` asserts:\n\n```python\nindex.put(\"alpha\", 10)\nversion, snapshot = index.snapshot()\nindex.put(\"beta\", 20)\nassert version == 1\nassert snapshot == {\"alpha\": 10}\n```\n\nBut the implementation returns `self.version` **by value** (an int, immutable) while returning `dict(self.pages)` as a **live reference** to the backing store. After the second `put`, the snapshot dict is mutated in place, so `snapshot` would actually equal `{\"alpha\": 10, \"beta\": 20}`. The `version` assertion passes only because ints are immutable, which masks the real defect. The name `snapshot` promises an immutable copy; the current code delivers a view.\n\n## Minimal Verification Plan\n\n1. **Reproduce the latent failure.** Add a mutation after `snapshot()` and re-check:\n   ```python\n   index.put(\"beta\", 20)\n   index.pages[\"beta\"] = 999          # simulate later mutation\n   assert snapshot == {\"alpha\": 10}   # currently FAILS\n   ```\n   If it fails, the \"stable snapshot\" contract is violated.\n\n2. **Confirm the intended contract.** Verify that `snapshot` is meant to be a point-in-time copy (the method name and the test's intent both imply immutability), not a live reference.\n\n3. **Apply the fix.** Return a defensive copy of the version too, so the tuple is fully immutable:\n   ```python\n   def snapshot(self):\n       return self.version, dict(self.pages)\n   ```\n   (The dict copy is the essential part; the version is already safe.)\n\n4. **Re-run the suite.** Confirm `test_snapshot_is_stable` still passes and that the reproduction from step 1 now holds.\n\n5. **Add a regression test** that mutates `index.pages` after `snapshot()` and asserts the returned dict is unchanged, to prevent reintroduction of the bug.\n\nNote: `Transaction.commit()` is also worth a quick scan, since it writes through to `index.put` and could interact with snapshot stability, but the primary defect above is the one to fix first."
+          }
+        }
+      ],
+      "usage": {
+        "completion_tokens": 507,
+        "prompt_tokens": 129023,
+        "total_tokens": 129530,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 129023,
+        "prompt_ms": 177718.149,
+        "prompt_per_token_ms": 1.3774144842392442,
+        "prompt_per_second": 725.9978833112874,
+        "predicted_n": 507,
+        "predicted_ms": 9700.133,
+        "predicted_per_token_ms": 19.1702233201581,
+        "predicted_per_second": 52.16423321206008,
+        "draft_n": 645,
+        "draft_n_accepted": 291
+      }
+    },
+    "actual_output_tokens": 507,
+    "post_template_prompt_tokens": 129023,
+    "ttft_ms": 177973.2734479985,
+    "first_abs": 33786.002149258,
+    "end_abs": 33795.706517066,
+    "wall_s": 187.67764125599933,
+    "prefill_tps": 725.9978833112874,
+    "decode_tps": 52.16423321206008,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 187.68857285000558
+  }
+]
