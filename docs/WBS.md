@@ -160,11 +160,16 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - 네 lane 모두 prompt 129,023 + output reserve 2,048 = 131,071 / 131,072 token budget을 사용했고, 정상 stop / post-health / cleanup / exit 0을 확인했다.
 - 모델 응답의 semantic caveat는 serving/output-integrity acceptance와 분리해 각 `acceptance-review.json`에 기록했다.
 
-#### 2.1.4 Gemma4 26B-A4B [TODO]
+#### 2.1.4 Gemma4 26B-A4B [IN_PROGRESS]
 - artifact: `UD-Q4_K_XL`.
 - KV: `FP16`.
 - 실행 lane: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
 - 각 lane에서 C1 128K capacity/correctness를 판정한다.
+- base GGUF SHA256: `a7c5bc715f5ff8e99a3e8901ce7d2b42b402c669bf24f7c5250747633d0f5891`.
+- MTP/MTP_NGRAM은 별도 Q8_0 Gemma4 assistant GGUF `mtp-gemma-4-26B-A4B-it.gguf`를 explicit `--model-draft /model/draft.gguf`로 사용한다.
+- companion SHA256: `7272d97595f0d4c74bd7b623492b7dbdaafd8b7c72f329a8270ba4eca68f768a`.
+- MTP depth는 upstream QAT MTP contract에 맞춰 `--spec-draft-n-max 4`로 고정하고, TP2에서 drafter device는 `CUDA0`로 고정한다.
+- runner는 MTP lane에서 target과 companion SHA256을 모두 검증한다.
 
 ### 2.2 1Cat-vLLM STOCK
 
