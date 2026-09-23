@@ -134,11 +134,16 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - NGRAM: `EXP-V100-Q38-LLAMA-Q80-NGRAM-C1-128K-20260923-002` — `PASS_C1_128K`. 실제 slot에서 ngram-simple 활성 확인; draft 토큰은 0.
 - TARGET/NGRAM의 `20260923-001` 시도는 inference 전 사전 검사 종료(`INCONCLUSIVE`)이며 capacity 실패나 measured repetition으로 계산하지 않는다.
 
-#### 2.1.2 Ornith 1.5 9B [IN_PROGRESS]
+#### 2.1.2 Ornith 1.5 9B [DONE]
 - artifact: `Q6_K`.
 - KV: `FP16`.
 - 실행 lane: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
-- 각 lane에서 C1 128K capacity/correctness를 판정한다.
+- TARGET: `EXP-V100-ORN15-9B-LLAMA-F16-TARGET-C1-128K-20260923-001` — `PASS_C1_128K`; prefill 918.69 tok/s, decode 49.23 tok/s.
+- NGRAM: `EXP-V100-ORN15-9B-LLAMA-F16-NGRAM-C1-128K-20260923-001` — `PASS_C1_128K`; prefill 918.66 tok/s, decode 48.13 tok/s. `ngram-simple` 활성은 확인됐으나 이번 request에서 draft/accepted-token 가속 evidence는 관측되지 않았다.
+- MTP: `EXP-V100-ORN15-9B-LLAMA-F16-MTP-C1-128K-20260923-001` — `PASS_C1_128K`; prefill 725.93 tok/s, decode 52.12 tok/s; draft 645, accepted 291, acceptance 45.116%.
+- MTP_NGRAM: `EXP-V100-ORN15-9B-LLAMA-F16-MTP-NGRAM-C1-128K-20260923-001` — `PASS_C1_128K`; prefill 726.00 tok/s, decode 52.16 tok/s; draft/accepted counters가 MTP-only와 동일해 이번 request에서 NGRAM 추가 기여는 입증되지 않았다.
+- 네 lane 모두 prompt 129,023 + output reserve 2,048 = 131,071 / 131,072 token budget을 사용했고, 정상 stop / post-health / cleanup / exit 0을 확인했다.
+- 출력 의미 품질 caveat: TARGET/NGRAM의 일부 verification assertion은 live state와 snapshot state를 혼동했고, MTP 계열은 `dict(self.pages)`를 live reference로 오인했다. 이는 serving/output-integrity acceptance와 분리해 각 `acceptance-review.json`에 기록한다.
 
 #### 2.1.3 Ornith 1.5 35B-A3B [TODO]
 - artifact: `Q4_K_M`.
