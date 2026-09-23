@@ -60,6 +60,8 @@ Default to one measured execution per configuration unless explicitly authorized
 
 llama.cpp uses TARGET, NGRAM, MTP and MTP_NGRAM. TARGET versus NGRAM is mandatory. MTP and MTP_NGRAM remain explicit rows even when UNSUPPORTED.
 
+For C1/C2, NGRAM is an acceptance/compatibility lane: prove that the declared NGRAM configuration starts, remains healthy, preserves output integrity, and meets the requested context/concurrency capacity. Draft/accepted-token activity or a throughput gain is not required for C1/C2 PASS. NGRAM performance effectiveness is evaluated only in Phase 5 with the sustained performance workload.
+
 STOCK 1Cat and v100-skinny are separate mandatory backend rows.
 
 LiteLLM v1.101.0 is a mandatory measured component of the Ornith 9B 1GPU×2 topology. Its routing overhead is intentionally included in end-to-end TTFT and throughput for that topology.
