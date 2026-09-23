@@ -59,6 +59,6 @@
         "runtime_key": "1Cat-vLLM+v100-skinny"
       }
     ],
-    "policy": "Both rows are mandatory. Unsupported skinny/model/topology combinations remain explicit UNSUPPORTED results."
+    "policy": "Both rows remain mandatory result rows. On the current 2x16GB P520, Qwen3.8 SKINNY is a terminal FAIL_OOM_MODEL_LOAD preflight result and is not scheduled for C1/C2. Unsupported skinny/model/topology combinations remain explicit UNSUPPORTED results."
   }
 }

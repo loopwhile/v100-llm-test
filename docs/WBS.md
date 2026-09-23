@@ -55,15 +55,20 @@
 - Ornith 9B 1GPU×2에서 두 backend를 동일 model group으로 등록하고, least-busy + backend별 max_parallel_requests=1 설정으로 단일 client endpoint를 제공할 것.
 - 각 모델 profile의 tokenizer/template/tool/parser 요구사항.
 
-### 1.4 v100-skinny 검증
-필수 확인 항목:
-- exact skinny commit 5b589c0dc81223e0ba65bcb3e755874723f8b515.
-- exact 1Cat-vLLM 1.2.2 wheel.
-- exact Qwen3.8 RadixArk revision.
-- TP2 experimental boot.
-- TP2, depth 3 조건의 skinny_gate.py PASS.
+### 1.4 v100-skinny 검증 [DONE — FAIL_OOM_MODEL_LOAD]
+확인 결과:
+- exact skinny commit `5b589c0dc81223e0ba65bcb3e755874723f8b515`: PASS.
+- exact 1Cat-vLLM 1.2.2 wheel 및 SHA256: PASS.
+- TileLang / apache-tvm-ffi 0.1.10 SM70 bootstrap: PASS.
+- SM70 skinny kernel JIT 및 entry-point 확인: PASS.
+- exact `RadixArk/Qwen3.8-27B-NVFP4@554ebba9b5f1b79dc11246341960360e6ef05ef4`: PASS.
+- TP2 experimental launcher adaptation: PASS.
+- 현재 P520 `2× Tesla V100-SXM2-16GB` model load: `FAIL_OOM_MODEL_LOAD`.
+- 실패 위치: `process_weights_after_loading -> _qpn_stash -> _qpn_prepack`.
+- 실패 시 각 GPU는 약 15.21 GiB PyTorch allocation 상태였고 18 MiB 추가 allocation에서 OOM.
+- server boot 및 TP2 depth-3 skinny gate: NOT_REACHED.
 
-TP2 실패는 UNSUPPORTED, FAIL_STARTUP, FAIL_OOM, FAIL_CAPACITY 중 실제 결과로 유지한다. 공개된 TP4 결과로 대체해서는 안 된다.
+따라서 현재 2×16GB 하드웨어에서는 Qwen3.8-27B SKINNY lane을 C1/C2 측정 대상으로 예약하지 않는다. 공개된 TP4 결과나 Issue #1의 2×V100-32GB TP2 성공 결과를 2×16GB PASS로 대체하지 않는다.
 
 ### 1.5 모델 artifact 확정
 기존에 고정된 다음 artifact를 새 환경에서 다시 검증한다.
@@ -114,17 +119,17 @@ C1 PASS 조건:
 - 선언된 KV format.
 - 신규 C1 128K acceptance 수행.
 
-### 2.3 v100-skinny SKINNY
-필수 Qwen3.8 TP2 실험:
+### 2.3 v100-skinny SKINNY [CLOSED BY 1.4 PRECHECK]
+Qwen3.8 SKINNY는 WBS 1.4에서 현재 P520 2×V100-16GB 구성의 model-load 단계에서 `FAIL_OOM_MODEL_LOAD`가 확정됐다. server boot 및 boot gate 이전 실패이므로 128K C1/C2는 실행하지 않는다.
+
+고정된 실험 identity는 보존한다:
 - v100-skinny v1.1.
 - 1Cat 1.2.2.
 - RadixArk mixed NVFP4/FP8 checkpoint.
-- FP16 KV.
-- MTP k=3.
-- 128K.
-- TP2 skinny boot gate 결과를 evidence로 보존.
+- experimental TP2.
+- MTP k=3 contract.
 
-non-Qwen skinny row는 실제 실행 가능한 지원 상태로 확정하거나 UNSUPPORTED로 판정한다.
+non-Qwen skinny row도 standalone v1.1 contract가 없으므로 실제 지원 contract가 별도로 확정되지 않는 한 `UNSUPPORTED`로 유지한다.
 
 ## 3. C2 — 독립적인 128K 에이전트 2개 [TODO]
 

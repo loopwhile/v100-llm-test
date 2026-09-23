@@ -23,7 +23,7 @@ TARGET versus NGRAM remains required even when MTP is unusable.
 | Model | Backend | Weight | KV | Spec | Topology | Required result |
 | --- | --- | --- | --- | --- | --- | --- |
 | Qwen3.8-27B | STOCK 1Cat 1.5.0 | QUASAR NVFP4 | FP8 E5M2 | Target-only | TP2 shared | C1 128K → C2 128K |
-| Qwen3.8-27B | SKINNY v1.1 / 1Cat 1.2.2 | RadixArk mixed NVFP4/FP8 | FP16 | MTP k=3 | TP2 experimental | C1 128K → C2 128K or explicit failure |
+| Qwen3.8-27B | SKINNY v1.1 / 1Cat 1.2.2 | RadixArk mixed NVFP4/FP8 | FP16 contract | MTP k=3 contract | TP2 experimental | PRECHECK `FAIL_OOM_MODEL_LOAD`; boot gate NOT_REACHED; no C1/C2 scheduling |
 | Ornith 1.5 35B-A3B | STOCK | NVFP4 candidate | FP8 candidate | Target-only candidate | TP2 shared | verify support → C1/C2 or UNSUPPORTED |
 | Ornith 1.5 35B-A3B | SKINNY | no pinned v1.1 contract | — | — | TP2 | support resolution / UNSUPPORTED |
 | Ornith 1.5 9B | STOCK | NVFP4 candidate | FP16 candidate | MTP candidate | TP2 shared | verify support → C1/C2 or UNSUPPORTED |
@@ -46,10 +46,12 @@ Shared llama.cpp C2:
 - per-slot ceiling: 131072
 - parallel: 2
 
-Shared STOCK/SKINNY C2:
+Shared STOCK C2:
 - max_model_len: 131072
 - max_num_seqs: 2
 - TP: 2
+
+SKINNY is excluded from C2 on the current P520 because WBS 1.4 failed during model-load QPN prepack before server boot.
 
 ## Sustained C2 performance workload
 

@@ -1,0 +1,60 @@
+============================================================
+[1] LIKELY SKINNY / 1CAT DIRECTORIES
+============================================================
+/home/loopwhile/1cat-vllm-wheel
+/home/loopwhile/qwen3.8-bench-runtime/phase5/EXP-Q38-PI-1CAT-NVFP4-FP8E5M2-NONE-C4-32K-PCACHE-TASK001-533
+/home/loopwhile/qwen3.8-bench-runtime/phase5/EXP-Q38-PI-1CAT-NVFP4-FP8E5M2-NONE-C4-32K-PCACHE-TASK001-534
+/home/loopwhile/qwen3.8-bench-runtime/phase5/EXP-Q38-PI-1CAT-NVFP4-FP8E5M2-NONE-C4-32K-PCACHE-TASK001-535
+/home/loopwhile/qwen3.8-bench-runtime/phase5/EXP-Q38-PI-1CAT-NVFP4-FP8E5M2-NONE-C4-32K-PCACHE-TASK001-535R1
+/home/loopwhile/qwen3.8-bench-runtime/phase5/EXP-Q38-PI-1CAT-NVFP4-FP8E5M2-NONE-C4-32K-PCACHE-TASK001-536
+/home/loopwhile/qwen3.8-bench-runtime/runs/1cat-phase0-001
+/home/loopwhile/qwen3.8-bench-runtime/runs/1cat-phase0-002
+/home/loopwhile/qwen3.8-bench-runtime/runs/1cat-phase0-002/EXP-Q38-1CAT-NVFP4-FP16-NONE-C1-2K-021
+/home/loopwhile/qwen3.8-bench-runtime/runs/1cat-phase0-003
+/home/loopwhile/qwen3.8-bench-runtime/runs/1cat-phase0-003/EXP-Q38-1CAT-NVFP4-FP16-NONE-C1-2K-031
+/home/loopwhile/qwen3.8-bench-runtime/runs/1cat-phase0-003/EXP-Q38-1CAT-NVFP4-FP16-NONE-C1-2K-032
+/home/loopwhile/qwen3.8-bench-runtime/runs/1cat-phase0-003/EXP-Q38-1CAT-NVFP4-FP16-NONE-C1-2K-033
+/home/loopwhile/qwen3.8-bench-runtime/runs/1cat-phase0-004
+/home/loopwhile/qwen3.8-bench-runtime/runs/1cat-phase0-004/EXP-Q38-1CAT-NVFP4-FP16-NONE-C1-2K-041
+/home/loopwhile/qwen3.8-bench-runtime/runs/1cat-phase0-004/EXP-Q38-1CAT-NVFP4-FP16-NONE-C1-2K-042
+/home/loopwhile/qwen3.8-bench-runtime/runs/1cat-phase0-004/EXP-Q38-1CAT-NVFP4-FP16-NONE-C1-2K-043
+/home/loopwhile/qwen3.8-bench-runtime/runs/1cat-phase0-005
+/home/loopwhile/qwen3.8-bench-runtime/runs/1cat-phase0-005/EXP-Q38-1CAT-NVFP4-FP16-DFLASH2-C1-2K-051
+
+============================================================
+[2] 1CAT 1.2.2 WHEELS
+============================================================
+
+============================================================
+[3] SKINNY FILES
+============================================================
+
+============================================================
+[4] MODEL PATHS
+============================================================
+/srv/models/ornith-1.5-35b-a3b-nvfp4
+/srv/models/ornith-1.5-9b-nvfp4
+/srv/models/qwen3.8-vllm/Qwen3.8-27B-QUASAR-NVFP4
+
+============================================================
+[5] HF CACHE REPOS
+============================================================
+
+============================================================
+[6] HF MAIN REFS
+============================================================
+
+============================================================
+[7] GIT REPOS + HEAD
+============================================================
+
+============================================================
+[8] PYTHON ENVIRONMENTS
+============================================================
+/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python
+
+============================================================
+[9] HISTORY: SKINNY
+============================================================
+find /srv/models/p520-lab-candidates/qwen3.8   /srv/models/p520-lab-candidates/track-v   -maxdepth 3 -type f   -printf '%s %p\n' | sort -n
+find /srv/models/qwen3.8-vllm   -maxdepth 3 -type f   -printf '%s %p\n' | sort -n

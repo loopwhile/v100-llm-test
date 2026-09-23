@@ -1,0 +1,234 @@
+Cloning into '/home/loopwhile/v100-skinny'...
+HEAD is now at 5b589c0 v1.1: native mixed NVFP4/FP8 LLM inference on NVIDIA Volta
+
+============================================================
+[1] SOURCE IDENTITY
+============================================================
+HEAD=5b589c0dc81223e0ba65bcb3e755874723f8b515
+origin	https://github.com/dnv2003/v100-skinny.git (fetch)
+origin	https://github.com/dnv2003/v100-skinny.git (push)
+
+============================================================
+[2] TOP LEVEL
+============================================================
+benchmarks/aime_ground_truth.py
+benchmarks/aime_score.py
+benchmarks/argmax_equiv.py
+benchmarks/kernel_matched_bench.py
+benchmarks/ninfer_repro.py
+benchmarks/qpn8_chunk_validate.py
+benchmarks/qpn8_graph_sweep.py
+benchmarks/qpn8_m_sweep.py
+benchmarks/qpn8_mt2_eval.py
+benchmarks/v11_suite.py
+CITATION.cff
+docs/qpn_race_notes.md
+fork_patches/attention.py
+fork_patches/custom_all_reduce.py
+fork_patches/gdn_attn.py
+fork_patches/gpu_model_runner.py
+fork_patches/marlin.py
+fork_patches/modelopt.py
+fork_patches/README.md
+fork_patches/torch_utils.py
+.git/config
+.git/description
+.git/HEAD
+.gitignore
+.git/index
+.git/packed-refs
+kernels/skinny_kernels.cu
+LICENSE
+LICENSE-APACHE-2.0
+NOTICE
+README.md
+requirements.txt
+results/aime_partfix_20260819.md
+results/ctx_depth_20260819.md
+results/depth_curve_ours_20260819.md
+results/headtohead_5090_20260819.md
+results/kernel_matched_20260819.csv
+results/mixed_regression_closed_20260818.md
+results/mml_ceiling_20260819.csv
+results/mml_speed_20260819.csv
+results/partition_fix_20260819.md
+results/qpn_race_20260810.csv
+results/v11_shipped_table_20260819.md
+scripts/bootstrap-sm70.sh
+scripts/ckpt_dtype_census.py
+scripts/qpn8_test.py
+scripts/serve-qwen38-native.sh
+
+============================================================
+[3] BOOTSTRAP PIN REFERENCES
+============================================================
+4:# Installs the pinned 1Cat-vLLM wheel into a fresh environment, deploys the
+11:#   VLLM_WHEEL     OPTIONAL. Defaults to the pinned 1Cat-vLLM 1.2.2 release
+12:#                  URL, whose SHA256 is pinned below and verified before
+14:#                  VLLM_WHEEL_SHA256 -- an unverified wheel is refused.
+15:#   VLLM_WHEEL_SHA256  required alongside a custom VLLM_WHEEL
+16:#                  1cat-vllm 1.2.2 — 1Cat AI's SM70/Volta fork of vLLM,
+20:#   ENV_PREFIX     conda env prefix to create/use   (default: ./.venv-sm70)
+21:#   PYTHON_VERSION default 3.12
+27:ENV_PREFIX="${ENV_PREFIX:-$REPO_ROOT/.venv-sm70}"
+28:PYTHON_VERSION="${PYTHON_VERSION:-3.12}"
+63:# The exact wheel every published number was measured on. Digest verified
+65:PINNED_WHEEL_URL="https://github.com/1CatAI/1Cat-vLLM/releases/download/v1.2.2/1cat_vllm-1.2.2-cp312-cp312-linux_x86_64.whl"
+66:PINNED_WHEEL_SHA256="8a628983ad9d675559910372643220c418b307ddc7fd52ac65a7f5fbcb104bc6"
+67:VLLM_WHEEL="${VLLM_WHEEL:-$PINNED_WHEEL_URL}"
+68:VLLM_WHEEL_SHA256="${VLLM_WHEEL_SHA256:-}"
+69:[ -n "$VLLM_WHEEL_SHA256" ] || \
+70:  { [ "$VLLM_WHEEL" = "$PINNED_WHEEL_URL" ] && VLLM_WHEEL_SHA256="$PINNED_WHEEL_SHA256"; } || true
+79:# ------------------------------------------------------------------- python
+81:  say "creating environment at $ENV_PREFIX (python $PYTHON_VERSION)"
+82:  conda create -y -p "$ENV_PREFIX" "python=$PYTHON_VERSION" >/dev/null
+83:  PY="$ENV_PREFIX/bin/python"
+85:  say "conda not found; using python -m venv at $ENV_PREFIX"
+86:  python3 -m venv "$ENV_PREFIX"
+87:  PY="$ENV_PREFIX/bin/python"
+91:say "installing pinned vLLM wheel"
+92:# The README pins 1.2.2 and every published number was measured on it; 1Cat
+93:# has since released 1.3.0, so an unchecked wheel silently changes the engine
+95:# Fetch a remote wheel to a local file FIRST, so the digest is checked against
+98:WHEEL_LOCAL="$VLLM_WHEEL"
+99:case "$VLLM_WHEEL" in
+101:    WHEEL_LOCAL="$(mktemp -d)/$(basename "${VLLM_WHEEL%%\?*}")"
+102:    say "downloading wheel"
+103:    curl -fL --retry 3 -o "$WHEEL_LOCAL" "$VLLM_WHEEL" || die "wheel download failed: $VLLM_WHEEL" ;;
+105:[ -f "$WHEEL_LOCAL" ] || die "wheel not found: $WHEEL_LOCAL"
+108:if [ -z "${VLLM_WHEEL_SHA256:-}" ]; then
+109:  [ "${ALLOW_UNVERIFIED_WHEEL:-0}" = 1 ] || die \
+110:    "no SHA256 for $VLLM_WHEEL
+111:   Pin one:   VLLM_WHEEL_SHA256=<digest> ...
+112:   Or waive:  ALLOW_UNVERIFIED_WHEEL=1 ...  (not reproducible)"
+113:  echo "    WARNING: installing an unverified wheel" >&2
+115:  got=$(sha256sum "$WHEEL_LOCAL" 2>/dev/null | cut -d" " -f1) \
+116:    || got=$(shasum -a 256 "$WHEEL_LOCAL" | cut -d" " -f1)
+117:  [ "$got" = "$VLLM_WHEEL_SHA256" ] || die \
+118:    "wheel digest mismatch
+119:   expected $VLLM_WHEEL_SHA256
+121:  echo "    wheel sha256 verified"
+123:"$PY" -m pip install "$WHEEL_LOCAL"
+125:# Trust installed metadata, not the filename: a renamed wheel passes any
+138:[ "$INSTALLED" = "1.2.2" ] || { [ "${ALLOW_WHEEL_MISMATCH:-0}" = 1 ] && \
+139:    echo "    WARNING: installed 1cat-vllm $INSTALLED, not 1.2.2" >&2; } || die \
+140:  "installed 1cat-vllm is '${INSTALLED:-<none>}', not 1.2.2
+141:   Every published number was measured on 1.2.2. Override with
+142:   ALLOW_WHEEL_MISMATCH=1 if you intend a different engine."
+145:# tilelang must be pinned. The SM70 TileLang compile is fixed only in 0.1.10
+149:# apache-tvm-ffi MUST be pinned with it. tilelang 0.1.10 does not pin its own
+150:# tvm-ffi, and current releases (0.1.13.post3 as of 2026-08) abort on import:
+151:#   terminate called after throwing an instance of 'tvm::ffi::Error'
+156:say "pinning tilelang 0.1.10 + apache-tvm-ffi 0.1.10 (required for SM70)"
+157:"$PY" -m pip install "tilelang==0.1.10" "apache-tvm-ffi==0.1.10"
+159:# pip WILL print a red dependency-conflict block here: the 1cat-vllm 1.2.2 wheel
+160:# declares tilelang==0.1.9 and apache-tvm-ffi==0.1.9. Overriding it is
+163:echo "    NOTE: pip reported a dependency conflict against the wheel's declared"
+164:echo "          tilelang/apache-tvm-ffi 0.1.9 pins. That is EXPECTED: 0.1.9 does"
+168:# tvm-ffi abort above scrolled past and the bootstrap carried on with a broken
+170:"$PY" -c "import tilelang; print('    tilelang', tilelang.__version__)" \
+171:  || die "tilelang failed to import -- the environment is broken.
+172:   This is usually an apache-tvm-ffi version mismatch; expected 0.1.10.
+173:   Check: $PY -m pip show apache-tvm-ffi"
+187:  [ -f "$dst" ] || die "install path not found (wheel version mismatch?): $dst"
+
+============================================================
+[4] QWEN38 SERVE CONTRACT
+============================================================
+2:# Serve Qwen3.8-27B NVFP4 on 4x V100 (SM70), k=7 chain-MTP, native NVFP4
+8:# Overridable: ENV_PREFIX K GMU MML MNS MBT PORT DECODE_PARTITION THINKING
+10:# The boot is GATED on OBSERVED EXECUTION, not on configuration strings: the
+11:# script refuses to report success unless the server
+15:#   1. GPUs must be free first. Booting over an occupied GPU yields a server
+18:#   3. lm_head is served by the skinny kernel from the checkpoint's OWN
+20:#      (VLLM_SKINNY_LMHEAD_NATIVE is inert for ModelOpt checkpoints whose
+24:#   4. kv_cache_dtype == auto. A ModelOpt checkpoint may declare
+26:#      honouring it below SM80 loses the tensor-core decode route and costs
+28:#   5. decode route == qpn (the skinny tensor-core path), not a scalar
+33:CKPT="${1:-}"
+34:[ -n "$CKPT" ] || { echo "usage: $0 <checkpoint-dir>" >&2; exit 2; }
+35:[ -f "$CKPT/config.json" ] || { echo "ERROR: no config.json in $CKPT" >&2; exit 2; }
+36:CKPT="$(cd "$CKPT" && pwd)"
+42:K="${K:-7}"; K1=$((K + 1)); K2=$((K1 * 2))
+44:# can reach the port can use the model, read any prompt in flight, and drive
+73:MML="${MML:-32768}"
+76:PORT="${PORT:-8000}"
+79:# max_model_len >= 32768, and the MTP verify path (which arrives as q>1) has
+80:# no active-partition skip, so a large MML taxes every round for capacity it
+86:# ---- 1. never boot over occupied GPUs ------------------------------------
+87:USED=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits | sort -n | tail -1)
+89:  echo "ABORT: GPUs are occupied (${USED} MiB in use). Finish the teardown first." >&2
+94:# NUMA pin is part of the launch config, not an optimisation: all four GPUs
+96:# +/-3% round-time lottery -- larger than the entire parity margin we report.
+97:# SKINNY_NUMA=0 disables it for experiments.
+98:if [ "${SKINNY_NUMA:-1}" = "1" ] && command -v numactl >/dev/null; then
+102:  [ "${SKINNY_NUMA:-1}" = "1" ] && echo "WARNING: numactl not found; boots will vary ~3% run to run" >&2
+105:# Any exit before READY must not strand a server holding four GPUs.
+107:export PIDFILE
+112:  echo "==> tearing down the server (pid $pid) so it does not hold the GPUs" >&2
+121:echo "==> serving $CKPT  (k=$K, GMU=$GMU, MML=$MML, partition=$DECODE_PARTITION)"
+123:CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0,1,2,3}" \
+128:VLLM_1CAT_ENABLE_SM70_MTP_DEFAULTS=1 \
+129:VLLM_SKINNY_NVFP4=1 \
+130:VLLM_SKINNY_QPN=1 \
+131:VLLM_SKINNY_QPN2=1 \
+132:VLLM_SKINNY_LMHEAD=1 \
+133:VLLM_SKINNY_LMHEAD_NATIVE=1 \
+134:VLLM_SKINNY_DROP_CT=1 \
+135:VLLM_SKINNY_NVFP4_SRC="$REPO_ROOT/kernels/skinny_kernels.cu" \
+136:VLLM_SM70_MTP_DYNAMIC_DRAFT_VOCAB_DEFAULT=0 \
+141:  --model "$CKPT" \
+142:  --served-model-name qwen3.8-27b \
+144:  --dtype float16 \
+146:  --tensor-parallel-size 4 \
+147:  --gpu-memory-utilization "$GMU" \
+148:  --max-model-len "$MML" \
+156:  --speculative-config "{\"method\":\"mtp\",\"num_speculative_tokens\":$K,\"draft_sample_method\":\"greedy\",\"use_local_argmax_reduction\":true}" \
+157:  --host "$HOST" --port "$PORT" > "$LOG" 2>&1 < /dev/null &
+164:  if curl -sf -o /dev/null --max-time 2 "http://$PROBE:$PORT/v1/models"; then UP=1; break; fi
+172:# logits call, so gate 3 is not decidable until something has been served.
+173:WARM=$(curl -sf --max-time 300 "http://$PROBE:$PORT/v1/chat/completions" \
+175:  -d '{"model":"qwen3.8-27b","messages":[{"role":"user","content":"Say ready."}],"temperature":0,"max_completion_tokens":8,"chat_template_kwargs":{"enable_thinking":false}}' 2>/dev/null) || WARM=""
+178:# ---- boot gate -----------------------------------------------------------
+180:gate() { if [ "$2" = ok ]; then echo "    PASS  $1"; else echo "    FAIL  $1 — $3"; FAIL=1; fi; }
+181:echo "==> boot gate"
+185:if printf '%s' "$WARM" | "$PY" -c 'import json,sys
+190:  gate "warm request returned a valid completion" ok
+192:  gate "warm request returned a valid completion" fail "HTTP error or malformed JSON"
+195:SERVED_K=$(grep -o "num_speculative_tokens[^,}]*" "$LOG" | head -1 | grep -o "[0-9]*$")
+196:[ "${SERVED_K:-}" = "$K" ] && gate "served depth == $K" ok \
+197:  || gate "served depth == $K" fail "log says '${SERVED_K:-<none>}'"
+199:# lm_head is [vocab, hidden]; at TP4 each rank owns vocab/4 rows. Any GEMM
+203:LMHEAD_ROUTE=$(grep -ohE "route map: M=[0-9]+ N=[0-9]{5,} K=[0-9]+ -> [a-z0-9]+" "$LOG" \
+206:  *qpn*) gate "lm_head served from checkpoint codes (qpn)" ok ;;
+207:  "")    gate "lm_head served from checkpoint codes (qpn)" fail "no vocab-shaped GEMM observed" ;;
+208:  *)     gate "lm_head served from checkpoint codes (qpn)" fail "routed to: $LMHEAD_ROUTE" ;;
+211:grep -q "falling back to requant pack\|packing from the model's own weights" "$LOG" \
+212:  && gate "no lm_head repack fallback" fail "silent lm_head downgrade" \
+213:  || gate "no lm_head repack fallback" ok
+215:# kv_cache_dtype == auto is NOT sufficient and used to be the whole check.
+220:KVD=$(grep -o "kv_cache_dtype=[a-z0-9_]*" "$LOG" | head -1 | cut -d= -f2)
+221:[ "${KVD:-auto}" = "auto" ] && gate "kv_cache_dtype == auto" ok \
+222:  || gate "kv_cache_dtype == auto" fail "got '$KVD' — checkpoint KV directive was honoured"
+225:  && gate "FP16 KV resolved (checkpoint FP8-KV directive declined)" ok \
+226:  || gate "FP16 KV resolved (checkpoint FP8-KV directive declined)" fail \
+232:[ "${SCALAR:-0}" = 0 ] && gate "zero scalar_paged attention calls" ok \
+233:  || gate "zero scalar_paged attention calls" fail "$SCALAR call(s) — decode fell off the tensor-core route"
+235:# The tensor-core decode-attention path announces itself once, on first use.
+236:# Only meaningful when speculation is on; k=0 has no verifier.
+239:    && gate "XQA tensor-core decode attention active" ok \
+240:    || gate "XQA tensor-core decode attention active" fail "XQA path never announced"
+246:grep -qE "route map: M=[0-9]+ N=[0-9]+ K=[0-9]+ -> qpn2" "$LOG" \
+247:  && gate "QPN2 dispatched (NVFP4 trunk/lm_head)" ok \
+248:  || gate "QPN2 dispatched (NVFP4 trunk/lm_head)" fail "no '-> qpn2' route-map line"
+257:# dropped modules, which is the failure this gate exists to catch.
+260:  && gate "QPN8 census exactly $CENSUS_EXPECTED, 0 ineligible" ok \
+261:  || gate "QPN8 census exactly $CENSUS_EXPECTED" fail "census=$CENSUS ineligible=$INELIGIBLE"
+264:  && gate "QPN8 dispatched at run time" ok \
+265:  || gate "QPN8 dispatched at run time" fail "no qpn8 route observed"
+268:  echo "==> READY on port $PORT (pid $(cat "$PIDFILE")) — all gates passed"
+270:  echo "==> BOOT GATE FAILED — measurements from this server are NOT quotable." >&2
+
+============================================================
+[5] GATE FILES
+============================================================

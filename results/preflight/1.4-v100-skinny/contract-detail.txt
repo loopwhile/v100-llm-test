@@ -1,0 +1,612 @@
+============================================================
+[1] SERVE VARIABLES / FULL LAUNCH BLOCK
+============================================================
+[ -f "$CKPT/config.json" ] || { echo "ERROR: no config.json in $CKPT" >&2; exit 2; }
+CKPT="$(cd "$CKPT" && pwd)"
+
+ENV_PREFIX="${ENV_PREFIX:-$REPO_ROOT/.venv-sm70}"
+PY="$ENV_PREFIX/bin/python"
+[ -x "$PY" ] || { echo "ERROR: no environment at $ENV_PREFIX — run scripts/bootstrap-sm70.sh first" >&2; exit 2; }
+
+K="${K:-7}"; K1=$((K + 1)); K2=$((K1 * 2))
+# Bind to loopback by default. This server has NO authentication: anything that
+# can reach the port can use the model, read any prompt in flight, and drive
+# the box. Exposing it is a deliberate act, so it needs an explicit HOST and an
+# acknowledgement -- and even then it belongs behind a firewall or a proxy that
+# terminates auth. vLLM's own security guidance is that its API keys do not
+# protect every endpoint.
+HOST="${HOST:-127.0.0.1}"
+# Probe the address we actually bound. A fixed 127.0.0.1 probe silently times
+# out under HOST=::1, and 0.0.0.0 is not a connect address at all.
+case "$HOST" in
+  ::1)     PROBE="[::1]" ;;
+  0.0.0.0) PROBE="127.0.0.1" ;;
+  ::)      PROBE="[::1]" ;;
+  *)       PROBE="$HOST" ;;
+esac
+case "$HOST" in
+  127.0.0.1|localhost|::1) ;;
+  *)
+    [ "${I_UNDERSTAND_THIS_IS_UNAUTHENTICATED:-0}" = 1 ] || {
+      echo "REFUSING to bind $HOST: this server is unauthenticated." >&2
+      echo "  Keep the default (127.0.0.1) and use an SSH tunnel:" >&2
+      echo "    ssh -N -L 8000:127.0.0.1:8000 <user>@<host>" >&2
+      echo "  Or, if you really intend to expose it on a trusted network:" >&2
+      echo "    HOST=$HOST I_UNDERSTAND_THIS_IS_UNAUTHENTICATED=1 $0 ..." >&2
+      exit 2; }
+    echo "==> WARNING: binding $HOST with no authentication. Firewall this." >&2 ;;
+esac
+# GMU 0.88, not the 0.93 of the all-NVFP4 profile: verbatim mixed FP8+NVFP4
+# weights alongside an fp16 KV cache do not fit at 0.93 on 16 GB cards.
+GMU="${GMU:-0.88}"
+MML="${MML:-32768}"
+MNS="${MNS:-1}"
+MBT="${MBT:-4096}"
+PORT="${PORT:-8000}"
+THINKING="${THINKING:-true}"
+# Pin the decode partition size. The default selector switches to 1024 at
+# max_model_len >= 32768, and the MTP verify path (which arrives as q>1) has
+# no active-partition skip, so a large MML taxes every round for capacity it
+# never uses. 256 recovers it. Raise this for genuinely long contexts
+# (>32k actual), where 1024 is the default for a reason.
+DECODE_PARTITION="${DECODE_PARTITION:-256}"
+LOG="${LOG:-$REPO_ROOT/serve.log}"
+
+# ---- 1. never boot over occupied GPUs ------------------------------------
+USED=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits | sort -n | tail -1)
+if [ "${USED:-0}" -ge 200 ]; then
+  echo "ABORT: GPUs are occupied (${USED} MiB in use). Finish the teardown first." >&2
+  nvidia-smi --query-compute-apps=pid,used_memory --format=csv >&2
+  exit 1
+fi
+
+# NUMA pin is part of the launch config, not an optimisation: all four GPUs
+# sit on socket 0 and an unpinned boot re-rolls thread/page placement for a
+# +/-3% round-time lottery -- larger than the entire parity margin we report.
+# SKINNY_NUMA=0 disables it for experiments.
+if [ "${SKINNY_NUMA:-1}" = "1" ] && command -v numactl >/dev/null; then
+  NUMA_PREFIX="numactl --cpunodebind=0 --membind=0"
+else
+  NUMA_PREFIX=""
+  [ "${SKINNY_NUMA:-1}" = "1" ] && echo "WARNING: numactl not found; boots will vary ~3% run to run" >&2
+fi
+
+# Any exit before READY must not strand a server holding four GPUs.
+PIDFILE="${PIDFILE:-$REPO_ROOT/serve.pid}"
+export PIDFILE
+cleanup_on_fail() {
+  [ -s "$PIDFILE" ] || return 0
+  local pid; pid=$(cat "$PIDFILE")
+  kill -0 "$pid" 2>/dev/null || return 0
+  echo "==> tearing down the server (pid $pid) so it does not hold the GPUs" >&2
+  kill -TERM "-$(ps -o pgid= "$pid" 2>/dev/null | tr -d " ")" 2>/dev/null \
+    || kill -TERM "$pid" 2>/dev/null || true
+  for _ in $(seq 1 30); do kill -0 "$pid" 2>/dev/null || break; sleep 1; done
+  rm -f "$PIDFILE"
+}
+trap 'cleanup_on_fail' INT TERM
+
+rm -f "$LOG"
+echo "==> serving $CKPT  (k=$K, GMU=$GMU, MML=$MML, partition=$DECODE_PARTITION)"
+
+CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0,1,2,3}" \
+CUDA_HOME="${CUDA_HOME:-/usr/local/cuda-12.8}" \
+TORCH_CUDA_ARCH_LIST=7.0 \
+VLLM_SM70_NVFP4_TURBOMIND=0 \
+VLLM_SM70_QUANT_BACKEND=marlin \
+VLLM_1CAT_ENABLE_SM70_MTP_DEFAULTS=1 \
+VLLM_SKINNY_NVFP4=1 \
+VLLM_SKINNY_QPN=1 \
+VLLM_SKINNY_QPN2=1 \
+VLLM_SKINNY_LMHEAD=1 \
+VLLM_SKINNY_LMHEAD_NATIVE=1 \
+VLLM_SKINNY_DROP_CT=1 \
+VLLM_SKINNY_NVFP4_SRC="$REPO_ROOT/kernels/skinny_kernels.cu" \
+VLLM_SM70_MTP_DYNAMIC_DRAFT_VOCAB_DEFAULT=0 \
+VLLM_SM70_GDN_CHAIN_SPEC_FAST_BUILD=1 \
+VLLM_SM70_QPN8_MT2=1 \
+VLLM_FLASH_V100_DECODE_PARTITION_SIZE="$DECODE_PARTITION" \
+setsid $NUMA_PREFIX "$PY" -m vllm.entrypoints.openai.api_server \
+  --model "$CKPT" \
+  --served-model-name qwen3.8-27b \
+  --trust-remote-code \
+  --dtype float16 \
+  --attention-backend FLASH_ATTN_V100 \
+  --tensor-parallel-size 4 \
+  --gpu-memory-utilization "$GMU" \
+  --max-model-len "$MML" \
+  --max-num-seqs "$MNS" \
+  --max-num-batched-tokens "$MBT" \
+  --limit-mm-per-prompt '{"image":0,"video":0}' \
+  --default-chat-template-kwargs "{\"enable_thinking\":$THINKING}" \
+  --reasoning-parser qwen3 \
+  --enable-auto-tool-choice --tool-call-parser hermes \
+  --compilation-config "{\"cudagraph_capture_sizes\":[$K1,$K2]}" \
+  --speculative-config "{\"method\":\"mtp\",\"num_speculative_tokens\":$K,\"draft_sample_method\":\"greedy\",\"use_local_argmax_reduction\":true}" \
+  --host "$HOST" --port "$PORT" > "$LOG" 2>&1 < /dev/null &
+SERVER_PID=$!
+echo "$SERVER_PID" > "$PIDFILE"
+
+echo "==> waiting for the server (first boot compiles graphs; several minutes)"
+UP=0
+for i in $(seq 1 600); do
+  if curl -sf -o /dev/null --max-time 2 "http://$PROBE:$PORT/v1/models"; then UP=1; break; fi
+  kill -0 "$SERVER_PID" 2>/dev/null || { echo "SERVER DIED — last lines:" >&2; tail -30 "$LOG" >&2; exit 1; }
+  sleep 2
+done
+[ "$UP" = 1 ] || { echo "TIMEOUT waiting for the server" >&2; tail -30 "$LOG" >&2
+                   cleanup_on_fail; exit 1; }
+
+# Warm one request: the native-lm_head line is emitted lazily by the first
+# logits call, so gate 3 is not decidable until something has been served.
+WARM=$(curl -sf --max-time 300 "http://$PROBE:$PORT/v1/chat/completions" \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"qwen3.8-27b","messages":[{"role":"user","content":"Say ready."}],"temperature":0,"max_completion_tokens":8,"chat_template_kwargs":{"enable_thinking":false}}' 2>/dev/null) || WARM=""
+
+============================================================
+[2] FULL BOOT GATE
+============================================================
+
+
+# ---- boot gate -----------------------------------------------------------
+FAIL=0
+gate() { if [ "$2" = ok ]; then echo "    PASS  $1"; else echo "    FAIL  $1 — $3"; FAIL=1; fi; }
+echo "==> boot gate"
+
+# A 4xx/5xx or malformed body must not reach READY: everything downstream
+# reads log lines that only exist because a real completion happened.
+if printf '%s' "$WARM" | "$PY" -c 'import json,sys
+d=json.load(sys.stdin)
+c=d["choices"][0]["message"].get("content")
+assert isinstance(c,str), "no string content"
+assert d.get("usage",{}).get("completion_tokens",0)>0, "zero completion tokens"' 2>/dev/null; then
+  gate "warm request returned a valid completion" ok
+else
+  gate "warm request returned a valid completion" fail "HTTP error or malformed JSON"
+fi
+
+SERVED_K=$(grep -o "num_speculative_tokens[^,}]*" "$LOG" | head -1 | grep -o "[0-9]*$")
+[ "${SERVED_K:-}" = "$K" ] && gate "served depth == $K" ok \
+  || gate "served depth == $K" fail "log says '${SERVED_K:-<none>}'"
+
+# lm_head is [vocab, hidden]; at TP4 each rank owns vocab/4 rows. Any GEMM
+# whose N is far larger than a trunk projection is the vocab shard, and it
+# must route to a qpn kernel -- that is lm_head being served from the
+# checkpoint's own 4-bit codes rather than repacked.
+LMHEAD_ROUTE=$(grep -ohE "route map: M=[0-9]+ N=[0-9]{5,} K=[0-9]+ -> [a-z0-9]+" "$LOG" \
+               | grep -oE "\-> [a-z0-9]+$" | sed 's/-> //' | sort -u | tr '\n' ' ')
+case "$LMHEAD_ROUTE" in
+  *qpn*) gate "lm_head served from checkpoint codes (qpn)" ok ;;
+  "")    gate "lm_head served from checkpoint codes (qpn)" fail "no vocab-shaped GEMM observed" ;;
+  *)     gate "lm_head served from checkpoint codes (qpn)" fail "routed to: $LMHEAD_ROUTE" ;;
+esac
+
+grep -q "falling back to requant pack\|packing from the model's own weights" "$LOG" \
+  && gate "no lm_head repack fallback" fail "silent lm_head downgrade" \
+  || gate "no lm_head repack fallback" ok
+
+# kv_cache_dtype == auto is NOT sufficient and used to be the whole check.
+# `auto` means "take the checkpoint's word for it", and this checkpoint asks
+# for fp8_e4m3 -- `auto` is the very path through which the wrong FP8-KV route
+# was selected before the loader fix. The load-bearing witness is the loader
+# explicitly DECLINING the directive.
+KVD=$(grep -o "kv_cache_dtype=[a-z0-9_]*" "$LOG" | head -1 | cut -d= -f2)
+[ "${KVD:-auto}" = "auto" ] && gate "kv_cache_dtype == auto" ok \
+  || gate "kv_cache_dtype == auto" fail "got '$KVD' — checkpoint KV directive was honoured"
+
+grep -q "Ignoring the checkpoint's kv_cache quantization directive" "$LOG" \
+  && gate "FP16 KV resolved (checkpoint FP8-KV directive declined)" ok \
+  || gate "FP16 KV resolved (checkpoint FP8-KV directive declined)" fail \
+       "no decline line — KV storage is NOT proven FP16"
+
+# Honouring the FP8-KV directive on SM70 silently drops decode onto the scalar
+# paged route and costs 4.82 ms/round. Zero is the only acceptable count.
+SCALAR=$(grep -c "scalar_paged" "$LOG" || true)
+[ "${SCALAR:-0}" = 0 ] && gate "zero scalar_paged attention calls" ok \
+  || gate "zero scalar_paged attention calls" fail "$SCALAR call(s) — decode fell off the tensor-core route"
+
+# The tensor-core decode-attention path announces itself once, on first use.
+# Only meaningful when speculation is on; k=0 has no verifier.
+if [ "$K" -gt 0 ] 2>/dev/null; then
+  grep -q "XQA path active" "$LOG" \
+    && gate "XQA tensor-core decode attention active" ok \
+    || gate "XQA tensor-core decode attention active" fail "XQA path never announced"
+fi
+
+# `route=qpn*` matches a QPN8 line, so on its own it does NOT prove the NVFP4
+# trunk/lm_head went through QPN2. NVFP4 dispatch is logged as "-> qpn2" in the
+# route map, a different spelling entirely. Prove each side with its own witness.
+grep -qE "route map: M=[0-9]+ N=[0-9]+ K=[0-9]+ -> qpn2" "$LOG" \
+  && gate "QPN2 dispatched (NVFP4 trunk/lm_head)" ok \
+  || gate "QPN2 dispatched (NVFP4 trunk/lm_head)" fail "no '-> qpn2' route-map line"
+
+# Route census: every protected FP8 module must be QPN8-eligible at load, and
+# QPN8 must actually be dispatched at run time. `eligible=NO` is the failure
+# this catches -- a module silently falling back to the reference path.
+CENSUS=$(grep -c "QPN8_CENSUS_LOAD" "$LOG" || true)
+INELIGIBLE=$(grep -c "QPN8_CENSUS_LOAD.*eligible=NO" "$LOG" || true)
+# The launch claim is an EXACT number: 2 protected modules per layer x 64
+# layers x 4 ranks = 512. "Any positive count" would pass a boot that silently
+# dropped modules, which is the failure this gate exists to catch.
+CENSUS_EXPECTED=$((128 * 4))
+[ "${CENSUS:-0}" = "$CENSUS_EXPECTED" ] && [ "${INELIGIBLE:-0}" = 0 ] \
+  && gate "QPN8 census exactly $CENSUS_EXPECTED, 0 ineligible" ok \
+  || gate "QPN8 census exactly $CENSUS_EXPECTED" fail "census=$CENSUS ineligible=$INELIGIBLE"
+
+grep -q "route=qpn8" "$LOG" \
+  && gate "QPN8 dispatched at run time" ok \
+  || gate "QPN8 dispatched at run time" fail "no qpn8 route observed"
+
+if [ "$FAIL" = 0 ]; then
+  echo "==> READY on port $PORT (pid $(cat "$PIDFILE")) — all gates passed"
+else
+  echo "==> BOOT GATE FAILED — measurements from this server are NOT quotable." >&2
+  echo "    stop it with:  kill -TERM \$(cat $PIDFILE)" >&2
+  cleanup_on_fail
+  exit 1
+fi
+
+============================================================
+[3] TP / CENSUS / EXPECTED CONSTANTS
+============================================================
+8:# Overridable: ENV_PREFIX K GMU MML MNS MBT PORT DECODE_PARTITION THINKING
+42:K="${K:-7}"; K1=$((K + 1)); K2=$((K1 * 2))
+72:GMU="${GMU:-0.88}"
+73:MML="${MML:-32768}"
+74:MNS="${MNS:-1}"
+75:MBT="${MBT:-4096}"
+83:DECODE_PARTITION="${DECODE_PARTITION:-256}"
+94:# NUMA pin is part of the launch config, not an optimisation: all four GPUs
+105:# Any exit before READY must not strand a server holding four GPUs.
+121:echo "==> serving $CKPT  (k=$K, GMU=$GMU, MML=$MML, partition=$DECODE_PARTITION)"
+139:VLLM_FLASH_V100_DECODE_PARTITION_SIZE="$DECODE_PARTITION" \
+146:  --tensor-parallel-size 4 \
+195:SERVED_K=$(grep -o "num_speculative_tokens[^,}]*" "$LOG" | head -1 | grep -o "[0-9]*$")
+199:# lm_head is [vocab, hidden]; at TP4 each rank owns vocab/4 rows. Any GEMM
+203:LMHEAD_ROUTE=$(grep -ohE "route map: M=[0-9]+ N=[0-9]{5,} K=[0-9]+ -> [a-z0-9]+" "$LOG" \
+246:grep -qE "route map: M=[0-9]+ N=[0-9]+ K=[0-9]+ -> qpn2" "$LOG" \
+253:CENSUS=$(grep -c "QPN8_CENSUS_LOAD" "$LOG" || true)
+254:INELIGIBLE=$(grep -c "QPN8_CENSUS_LOAD.*eligible=NO" "$LOG" || true)
+258:CENSUS_EXPECTED=$((128 * 4))
+259:[ "${CENSUS:-0}" = "$CENSUS_EXPECTED" ] && [ "${INELIGIBLE:-0}" = 0 ] \
+260:  && gate "QPN8 census exactly $CENSUS_EXPECTED, 0 ineligible" ok \
+261:  || gate "QPN8 census exactly $CENSUS_EXPECTED" fail "census=$CENSUS ineligible=$INELIGIBLE"
+
+============================================================
+[4] BOOTSTRAP PATCH TARGETS
+============================================================
+   got      $got"
+  echo "    wheel sha256 verified"
+fi
+"$PY" -m pip install "$WHEEL_LOCAL"
+
+# Trust installed metadata, not the filename: a renamed wheel passes any
+# filename check ever written.
+INSTALLED=$("$PY" - <<'EOF'
+import importlib.metadata as md
+for n in ("1cat-vllm", "1cat_vllm"):
+    try:
+        print(md.distribution(n).version); break
+    except Exception:
+        pass
+else:
+    print("")
+EOF
+)
+[ "$INSTALLED" = "1.2.2" ] || { [ "${ALLOW_WHEEL_MISMATCH:-0}" = 1 ] && \
+    echo "    WARNING: installed 1cat-vllm $INSTALLED, not 1.2.2" >&2; } || die \
+  "installed 1cat-vllm is '${INSTALLED:-<none>}', not 1.2.2
+   Every published number was measured on 1.2.2. Override with
+   ALLOW_WHEEL_MISMATCH=1 if you intend a different engine."
+echo "    1cat-vllm $INSTALLED (from installed metadata)"
+
+# tilelang must be pinned. The SM70 TileLang compile is fixed only in 0.1.10
+# (upstream commit 0bb5cc4132); whatever pip resolves by default does not
+# build on Volta, and the failure surfaces later inside GDN attention where it
+# reads like a kernel bug rather than a dependency problem.
+# apache-tvm-ffi MUST be pinned with it. tilelang 0.1.10 does not pin its own
+# tvm-ffi, and current releases (0.1.13.post3 as of 2026-08) abort on import:
+#   terminate called after throwing an instance of 'tvm::ffi::Error'
+#     what(): TypeAttr `__ffi_repr__` is already registered for type index 132
+# That is a hard crash, not a warning, and it only appears on a machine built
+# today -- reference machines resolved 0.1.10 back when it was current. Found
+# by the clean-clone run; without this pin the published command does not work.
+say "pinning tilelang 0.1.10 + apache-tvm-ffi 0.1.10 (required for SM70)"
+"$PY" -m pip install "tilelang==0.1.10" "apache-tvm-ffi==0.1.10"
+
+# pip WILL print a red dependency-conflict block here: the 1cat-vllm 1.2.2 wheel
+# declares tilelang==0.1.9 and apache-tvm-ffi==0.1.9. Overriding it is
+# deliberate -- 0.1.9 does not build on Volta. Say so, because otherwise every
+# user reasonably assumes the install broke.
+echo "    NOTE: pip reported a dependency conflict against the wheel's declared"
+echo "          tilelang/apache-tvm-ffi 0.1.9 pins. That is EXPECTED: 0.1.9 does"
+echo "          not build on SM70. The versions installed above are correct."
+
+# Verify the import actually works. This previously ran unchecked, so the
+# tvm-ffi abort above scrolled past and the bootstrap carried on with a broken
+# environment.
+"$PY" -c "import tilelang; print('    tilelang', tilelang.__version__)" \
+  || die "tilelang failed to import -- the environment is broken.
+   This is usually an apache-tvm-ffi version mismatch; expected 0.1.10.
+   Check: $PY -m pip show apache-tvm-ffi"
+
+SP="$("$PY" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
+[ -d "$SP/vllm" ] || die "vllm did not install into $SP"
+say "site-packages: $SP"
+
+# ------------------------------------------------------------- fork patches
+# Copy tracked files over the installed package, keeping a .pre_bootstrap
+# backup of whatever was there. Never hand-edit the installed file: the
+# tracked copy in fork_patches/ is the reviewable source of truth.
+say "deploying fork patches"
+deploy() {  # $1 = tracked file, $2 = path under site-packages
+  local src="$REPO_ROOT/fork_patches/$1" dst="$SP/$2"
+  [ -f "$src" ] || die "missing tracked patch: $src"
+  [ -f "$dst" ] || die "install path not found (wheel version mismatch?): $dst"
+  [ -f "$dst.pre_bootstrap" ] || cp -p "$dst" "$dst.pre_bootstrap"
+  cp -p "$src" "$dst"
+  echo "    $1 -> $2"
+}
+deploy gdn_attn.py          vllm/v1/attention/backends/gdn_attn.py
+deploy gpu_model_runner.py  vllm/v1/worker/gpu_model_runner.py
+deploy marlin.py            vllm/model_executor/kernels/linear/nvfp4/marlin.py
+deploy modelopt.py          vllm/model_executor/layers/quantization/modelopt.py
+deploy torch_utils.py       vllm/utils/torch_utils.py
+deploy attention.py         vllm/model_executor/layers/attention/attention.py
+deploy custom_all_reduce.py vllm/distributed/device_communicators/custom_all_reduce.py
+# sm70_native_round.py is deliberately NOT installed — experimental, inert.
+
+# ------------------------------------------------------------------ kernels
+KERNEL_SRC="$REPO_ROOT/kernels/skinny_kernels.cu"
+[ -f "$KERNEL_SRC" ] || die "kernel source missing: $KERNEL_SRC"
+say "warming the skinny-kernel JIT build (first build takes a few minutes)"
+# Build through the DEPLOYED shim, not a hand-rolled ext.load(). The server
+# loads name="skinny_nvfp4_v11" with -O3 --use_fast_math -lineinfo
+# (fork_patches/marlin.py:150). torch.utils.cpp_extension keys its build
+# directory on the name, and differing flags force a rebuild anyway, so
+# building a differently-named extension here warms nothing and validates
+# nothing -- the real nvcc build would then land inside the server's boot
+# wait. Calling the shim also proves the fork-patch deploy above landed.
+CUDA_HOME="${CUDA_HOME:-$(dirname "$(dirname "$NVCC")")}" \
+VLLM_SKINNY_NVFP4_SRC="$KERNEL_SRC" TORCH_CUDA_ARCH_LIST=7.0 "$PY" - <<'PYEOF'
+import sys
+from vllm.model_executor.kernels.linear.nvfp4.marlin import _get_skinny_ext
+mod = _get_skinny_ext()
+if mod is None:
+    sys.exit("skinny extension failed to build (see nvcc output above)")
+missing = [f for f in ("gemm_qpn2", "gemm_qpn8", "gemm_qpn8_mt2")
+           if not hasattr(mod, f)]
+if missing:
+    sys.exit(f"kernel built but missing entry points: {missing}")
+print("    kernels built and all entry points present")
+PYEOF
+
+cat <<EOF
+
+Bootstrap complete.
+
+  environment : $ENV_PREFIX
+
+============================================================
+[5] README MODEL / CHECKPOINT CONTRACT
+============================================================
+35-| Tokens committed / round | 5.89 | 4.27 |
+36-| Round latency | 26.9 ms | 19.9 ms |
+37-| Time to correct answer | 6.90 ± 0.30 s | **6.56 ± 1.34 s** |
+38-| Completion tokens | 1,513 ± 44 | 1,403 ± 253 |
+39-| Correct answer (277) | **5/5** | **5/5** |
+40:| Published quantization | RadixArk | NInfer artifact, Unsloth-derived |
+41-
+42-This is a **same-lab system comparison on the same Qwen3.8 base model**, not a
+43-same-weight causal engine A/B: the two engines use different published NVFP4
+44-artifacts. NInfer depth 5 is its maximum exposed depth and its best measured
+45-setting on this fixture; v100-skinny's best measured setting is k=7.
+46-
+47-**This is parity — 1.02×, intervals overlapping.** We do not claim a win, and
+48-the result is not universal: their prefill is roughly 4× ours. The decode
+--
+69-those protected FP8 layers to FP4 and served the resulting derivative through
+70-the new W4A16 stack. **v1.1 adds QPN8, lowers the mixed-path gate to SM70, and
+71-retires the conversion that v1.0 had made necessary.** The boot gate verifies
+72-the QPN2/QPN8 route census and zero reference fallbacks on every start.
+73-Across four ranks, all **512/512 protected FP8 module instances** are eligible
+74:for QPN8, the checkpoint's own `lm_head` routes to QPN2, and reference fallback
+75-calls remain zero.
+76-
+77-Also in v1.1:
+78-
+79:- **QPN8 (W8A16 FP8)** — the FP8 half of the checkpoint, 718.6 GB/s at M=1,
+80-  82% of read roofline. Packed QPN8 routes cover M≤96; above that, the
+81-  v100-skinny dispatch uses a transient prefill reconstruction rather than a
+82-  persistent FP16 representation. Its MT=2 two-tile dispatch ships default-on
+83-  for M 9–16. **MT=2 exists for FP8 only** — the NVFP4 M 9–16 band still
+84-  runs the first-generation QPN kernel; see the gap noted under kernel
+85-  benchmarks.
+86:- **FP16-KV policy.** The checkpoint declares FP8 KV cache, which is sensible
+87-  on hardware with an efficient FP8-attention path. On SM70, honouring that
+88-  directive silently forced scalar paged attention. The measured cost was
+89-  **+4.82 ms/round**, so v1.1 deliberately uses FP16 KV.
+90-- **GDN speculative-state contract.** Boolean-mask indexing on the target
+91-  verify path cost 21 device syncs and ~70 copies per step; the fast path
+92-  removes them with byte-identical output. (Landed pre-v1.1 and measured on
+93-  the previous model generation — the mechanism carries forward, the step
+94-  times do not, so they are not quoted here.)
+--
+252-```bash
+253-# Reproducible path: no overrides. The wheel URL and its SHA256 are pinned in
+254-# the script, and the digest is verified before installation.
+255-bash scripts/bootstrap-sm70.sh
+256-
+257:# The checkpoint is pinned to an immutable revision. Any other revision is a
+258-# different set of weights and the published numbers do not describe it.
+259:hf download RadixArk/Qwen3.8-27B-NVFP4 \
+260:  --revision 554ebba9b5f1b79dc11246341960360e6ef05ef4 \
+261:  --local-dir ./Qwen3.8-27B-NVFP4
+262-
+263:bash scripts/serve-qwen38-native.sh ./Qwen3.8-27B-NVFP4
+264-```
+265-
+266-Supplying your own `VLLM_WHEEL` requires `VLLM_WHEEL_SHA256` with it — the
+267-bootstrap fails closed on an unverified wheel rather than installing it. The
+268-serve script accepts any directory containing a `config.json`, which is a
+269-convenience for local experiments; **it is not the reproducible path**, and
+270:results from an unpinned checkpoint are not comparable to the ones here.
+271-
+272-### Depth profiles
+273-
+274-Speculation depth is a **boot-time** setting in v1.1 (per-request selection is
+275-v1.2 work). `K` and `MML` are environment overrides the launcher already
+276-honours, so each profile below is a real command rather than a suggestion —
+277-and the boot gate verifies that the depth you asked for is the depth the
+278-engine served, so a profile that fails to take exits non-zero instead of
+279-quietly serving k=7:
+280-
+281-```bash
+282:CKPT=/path/to/Qwen3.8-27B-NVFP4
+283-
+284-# general, short/medium context — the default, and what the benchmarks use
+285:bash scripts/serve-qwen38-native.sh $CKPT
+286-
+287-# long context — k=3 measures 76.3 tok/s at ~65k against k=7's 54.7 (+39%),
+288-# and beats speculation-off (65.5) too. Declaring the larger window is free.
+289:K=3 MML=196608 bash scripts/serve-qwen38-native.sh $CKPT
+290-
+291-# structured extraction, short context only — k=15 wins on high-acceptance
+292-# cells (doc2json 392.1 tok/s) and loses badly on prose. Do not use it as a
+293-# general default, and do not use it at long context.
+294:K=15 bash scripts/serve-qwen38-native.sh $CKPT
+295-```
+296-
+297-**Pick k by context length, not by taste.** The drafter runs k sequential
+298-steps per round and each one reads the whole KV cache, so a step costs ~0.817
+299-ms at short context but ~3.65 ms at 65k — while the tokens it wins barely
+300-improve (1.55 accepted/round at k=3 against 1.63 at k=7). Deep speculation
+301-stops paying as context grows, which is why the long-context profile is
+302-shallower rather than off.
+--
+304-`bootstrap-sm70.sh` installs the pinned engine, deploys the fork patches with
+305-backups, and builds the kernels. It refuses a wheel that is not 1Cat-vLLM
+306-1.2.2 — every published number here was measured on it — and verifies
+307-`VLLM_WHEEL_SHA256`. Overriding the wheel without a digest is refused.
+308-
+309:`serve-qwen38-native.sh` starts an OpenAI-compatible server on port 8000,
+310-**bound to 127.0.0.1**. The server has no authentication, so reaching it from
+311-another machine should be an SSH tunnel:
+312-
+313-```bash
+314-ssh -N -L 8000:127.0.0.1:8000 you@your-box
+315-```
+316-
+317-Binding a public interface requires saying so explicitly
+318-(`HOST=0.0.0.0 I_UNDERSTAND_THIS_IS_UNAUTHENTICATED=1 …`), and even then it
+319-belongs behind a firewall — vLLM's own security guidance is that its API keys
+320-do not protect every endpoint. It aborts before boot if the GPUs are
+321-occupied, then **refuses to report success unless the release gates pass**:
+322:served depth equals requested `k`; `lm_head` is served from the checkpoint's own codes; no
+323-`lm_head` repack fallback occurs; the resolved KV storage is FP16; the fast
+324-XQA/tensor-core decode-attention route is observed with zero `scalar_paged`
+325-calls; and the expected QPN2/QPN8 decode routes are present. A mis-booted
+326-server exits non-zero rather than quietly producing unquotable numbers.
+327-
+328----
+329-
+330-## How QPN works
+--
+364-it. The fix folds the global scale into the group scales in-kernel with a
+365-per-16-element FP32 flush.
+366-
+367----
+368-
+369:## Native mixed-precision checkpoint path
+370-
+371:The checkpoint is served as published, which requires the loader to do three
+372-things it previously would not:
+373-
+374-1. **Dispatch per region, and the two regions have different reach.**
+375-
+376-   | M | NVFP4 regions (MLP trunk) | FP8 regions (attention projections) |
+377-   |---|---|---|
+378-   | 1–8 | `qpn2` | `qpn8` |
+379-   | 9–16 | `qpn` | `qpn8-mt2` (two 8-row tiles, one weight pass) |
+--
+387-   all the way to M≈112 — by 3.1× on all three protected shapes — so the
+388-   boundary sits at 96. Above it, weights are reconstructed transiently from
+389-   the packed codes and never persisted.
+390-
+391-   For NVFP4 the WMMA path that nominally covers 17–64 requires the
+392:   checkpoint-native code stash, and production drops that stash
+393-   (`VLLM_SKINNY_DROP_CT=1`) once the QPN prepack exists, to reclaim its
+394-   memory. So M ≥ 17 falls to Marlin — a memory decision with a routing
+395-   consequence, not a designed handoff at 17. Decode and speculative verify
+396-   never enter that band.
+397-
+398-   Every route is logged and counted, and the census is checked for fallbacks
+399-   after every boot.
+400-   The FP8 regions are **the attention projections of every layer, two per
+--
+403-   full-attention layers contributing `self_attn.qkv_proj` and
+404-   `self_attn.o_proj`. They are not 128 transformer layers — the model has 64.
+405-   Everything else, the MLP trunk and `lm_head`, is NVFP4.
+406-
+407-2. **Lower the capability gate.** `ModelOptMixedPrecisionConfig` — the config
+408:   that governs this checkpoint — declares a minimum compute capability of
+409-   **89**, and `ModelOptFp8Config` the same; a V100 reports 70. QPN8 is what
+410-   makes SM70 admissible, and the prepack is verified invertible and
+411-   byte-identical against the source weights per shape before the original is
+412-   freed.
+413:3. **Override the KV directive for SM70.** The checkpoint requests FP8 KV
+414-   cache. On this Volta backend that selects scalar paged attention rather
+415-   than the tensor-core XQA route, costing 4.82 ms per round — more than four
+416-   times the measured cost of preserving the FP8 weight regions themselves.
+417-   v1.1 therefore resolves the KV cache to FP16 on SM70.
+418-
+419:`lm_head` is served by QPN2 straight from the checkpoint's own 4-bit codes;
+420-there is no separate FP16 head and nothing is borrowed from another
+421:checkpoint.
+422-
+423-**What is actually resident.** NVFP4 layers hold two packed 4-bit copies — the
+424-QPN prepack in fragment order for M≤16 and the Marlin repack that serves
+425:prefill; the checkpoint-native staging copy is freed once the prepack exists
+426-(`VLLM_SKINNY_DROP_CT=1`). FP8 layers hold one persistent packed 8-bit copy,
+427-with the source tensor freed after the prepack is verified invertible. **There
+428-is no persistent FP16 weight representation.** Decode and verification expand
+429-weights only on-chip; M>96 FP8 prefill may materialize a transient FP16
+430-workspace for the duration of that call.
+431-
+432----
+433-
+--
+554-  prefill is the compute-bound large-M GEMM regime and Volta has no FP4 or FP8
+555-  Tensor Cores. The large-M software path also retains headroom documented
+556-  below, so v1.1 does not claim the entire 4× gap is irreducible. The release
+557-  claims are about single-user decode.
+558-- **Domain benchmark cells are n=1**; the AIME results are n=5.
+559:- **Checkpoints are not matched in the head-to-head** — we serve RadixArk,
+560-  NInfer's artifact is built from an unsloth NVFP4 revision that no longer
+561-  exists upstream and cannot be reproduced.
+562-
+563-### Known headroom
+564-
+565-Not caveats — these do not qualify any figure above. They are measured gaps
+566-between what the stack does and what it could do, and the numbers reported
+567-here would *improve* if they were closed.
+--
+570-  M, because `gemm_qpn2_mt2` does not exist. M=16 is the k=15 verification
+571-  width, so this is the band k=15 runs in: porting MT=2 to QPN2 is estimated
+572-  at ~3.7 ms/round at k=15. The k=7 results are untouched — they verify at
+573-  M=8. Largest identified gap in the stack.
+574-- **NVFP4 above M = 16 runs on Marlin.** The WMMA path covering 17–64 needs
+575:  the checkpoint-native code stash, which production frees rather than hold
+576-  two packed copies of every weight. Prefill band only; the V100 WMMA plateau
+577-  there is structural anyway. FP8 is unaffected — `qpn8-chunked` covers 17–96.
+578-- **The FP8 chunked path re-reads the weight stream once per 8 rows**, so
+579-  useful bandwidth at M=32 is about a quarter of the M ≤ 8 figure — time is
+580-  linear in M (113.1 µs at M=32, 223.5 at M=64, i.e. 4 and 8
+581-  chunks). Prefill band, not decode. Extending MT=2 up the M range is the same lever as the first item.
+582-
+583----
+--
+599-| decode vs live context | [`results/ctx_depth_20260819.md`](results/ctx_depth_20260819.md) | [llama-benchy](https://github.com/eugr/llama-benchy) |
+600-| FP16-KV policy (+4.82 ms/round) | [`results/mixed_regression_closed_20260818.md`](results/mixed_regression_closed_20260818.md) | [`benchmarks/v11_suite.py`](benchmarks/v11_suite.py) |
+601-
+602-The harnesses above are portable and take their paths from the environment.

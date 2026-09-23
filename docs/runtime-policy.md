@@ -20,11 +20,11 @@ Pin the exact 1Cat wheel/runtime identity and verify the V100/SM70 backend. Reco
 
 ## 1Cat-vLLM plus v100-skinny
 
-v100-skinny is mandatory and is a separate runtime identity from STOCK 1Cat.
+v100-skinny remains a mandatory explicit result row and is a separate runtime identity from STOCK 1Cat.
 
 Pin both the 1Cat base identity and skinny revision. Record QPN/skinny routes, TP topology, graph settings and memory overhead.
 
-A skinny failure on 2×16GB remains FAIL_OOM, FAIL_CAPACITY, UNSUPPORTED or the observed runtime verdict. Do not substitute STOCK 1Cat.
+On the current 2×V100-16GB P520, WBS 1.4 produced `FAIL_OOM_MODEL_LOAD` during QPN prepack before server boot. This terminal preflight result is preserved and the lane is not scheduled for C1/C2. Do not substitute STOCK 1Cat, TP4 results, or 2×32GB TP2 results.
 
 ## Candidate models
 - Qwen3.8-27B

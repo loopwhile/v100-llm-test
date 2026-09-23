@@ -31,9 +31,9 @@ TARGET versus NGRAM is mandatory. MTP versus MTP_NGRAM remains an explicit suppo
 
 vLLM family:
 - 1Cat-vLLM STOCK
-- v100-skinny SKINNY, mandatory
+- v100-skinny SKINNY, mandatory explicit result row
 
-v100-skinny is a separate pinned runtime identity, not a flag on the STOCK 1Cat environment.
+v100-skinny is a separate pinned runtime identity, not a flag on the STOCK 1Cat environment. On the current 2×V100-16GB P520, WBS 1.4 ends at `FAIL_OOM_MODEL_LOAD` during QPN prepack before server boot, so SKINNY is retained as evidence but not scheduled for C1/C2.
 
 ## Topologies
 - tp2-shared: one model/server across both V100s

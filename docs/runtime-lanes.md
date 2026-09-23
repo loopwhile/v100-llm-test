@@ -31,7 +31,7 @@ Stock retains the imported 1Cat-vLLM 1.5.0 wheel identity, FLASH_ATTN_V100, TP2,
 
 ## v100-skinny
 
-v100-skinny is mandatory but is a separate runtime identity, not a switch on stock 1Cat 1.5.0. Its pinned v1.1 contract remains the experimental shared TP2 lane; it is not silently reused for the independent TP1×2 topology.
+v100-skinny remains a mandatory result row but is a separate runtime identity, not a switch on stock 1Cat 1.5.0. Its pinned v1.1 contract was evaluated as an experimental shared TP2 lane; it is not silently reused for the independent TP1×2 topology.
 
 Pinned upstream v1.1 contract:
 
@@ -43,15 +43,15 @@ Pinned upstream v1.1 contract:
 - QPN2/QPN8
 - MTP
 
-The upstream v1.1 serving script hard-codes TP4. This repository therefore treats TP2 as an **experimental mandatory compatibility lane** and builds a direct TP2 command from the pinned v1.1 environment. No TP4 result is inherited as a 2×16GB PASS.
+The upstream v1.1 serving script hard-codes TP4. WBS 1.4 adapted the pinned environment to TP2 and tested it directly on the current 2×V100-16GB P520. Model loading failed during QPN prepack (`process_weights_after_loading -> _qpn_stash -> _qpn_prepack`) after approximately 15.21 GiB of PyTorch allocation per GPU. The server and boot gate were therefore not reached.
 
-For 128K live context the project uses MTP k=3 and decode partition 1024. The upstream README recommends shallower k=3 for long live context; our result still requires fresh measurement.
+The current-hardware verdict is `FAIL_OOM_MODEL_LOAD`. No TP4 result and no Issue #1 2×V100-32GB TP2 result is inherited as a 2×16GB PASS. Consequently the SKINNY row remains explicit evidence but is not scheduled for 128K C1/C2 on this machine.
 
 The standalone v1.1 contract is Qwen3.8-specific. Other models keep a mandatory skinny row but may resolve to \`UNSUPPORTED\`.
 
 ## Skinny TP2 boot gate
 
-After the compatibility warm request, run:
+If a future hardware/configuration change reaches server boot and the compatibility warm request, run:
 
 ```bash
 python3 scripts/skinny_gate.py --log <server.log> --tp 2 --depth 3
