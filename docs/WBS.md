@@ -153,7 +153,7 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - 실행 lane: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
 - 각 lane에서 C1 128K capacity/correctness를 판정한다.
 - base GGUF SHA256: `42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f`.
-- native MTP는 target GGUF에 내장된 NextN predictor를 사용하는 기존 검증 경로를 유지한다. 별도 `mtp_companion` artifact는 identity evidence로 보존하되 이 native-MTP lane의 `--model-draft`로 주입하지 않는다.
+- native MTP는 target GGUF에 내장된 1-layer NextN predictor를 사용하는 기존 검증 경로를 유지하며 `--spec-draft-n-max 1`로 고정한다. 별도 `mtp_companion` artifact는 identity evidence로 보존하되 이 native-MTP lane의 `--model-draft`로 주입하지 않는다.
 
 #### 2.1.4 Gemma4 26B-A4B [TODO]
 - artifact: `UD-Q4_K_XL`.
