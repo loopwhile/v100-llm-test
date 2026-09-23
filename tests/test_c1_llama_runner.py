@@ -26,6 +26,23 @@ class LlamaC1RunnerTests(unittest.TestCase):
             self.assertEqual(plan['context_tokens_per_agent'], 131072)
             self.assertEqual(plan['concurrency'], 1)
 
+    def test_ornith35_contract_exposes_all_four_c1_lanes(self):
+        for lane in ('TARGET', 'NGRAM', 'MTP', 'MTP_NGRAM'):
+            plan = runtime_launcher.build_plan(
+                ROOT, 'ornith-1.5-35b-a3b', lane, 1, 'tp2-shared', 18080
+            )
+            self.assertTrue(plan['supported_for_planning'])
+            self.assertEqual(plan['weight_quant'], 'Q4_K_M')
+            self.assertEqual(plan['kv_cache'], 'Q8_0')
+            self.assertEqual(plan['context_tokens_per_agent'], 131072)
+            self.assertEqual(plan['concurrency'], 1)
+            self.assertEqual(
+                plan['model_identity']['sha256'],
+                '42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f',
+            )
+            self.assertNotIn('--model-draft', plan['commands'][0])
+            self.assertNotIn('--spec-draft-model', plan['commands'][0])
+
     def test_preflight_failure_is_durable_and_cannot_be_reused(self):
         plan = runtime_launcher.build_plan(
             ROOT, 'ornith-1.5-9b', 'TARGET', 1, 'tp2-shared', 0
