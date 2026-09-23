@@ -1,0 +1,1 @@
+LABELS={"com.github.containers.toolbox":"true","maintainer":"NVIDIA CORPORATION <cudatools@nvidia.com>","org.opencontainers.image.ref.name":"ubuntu","org.opencontainers.image.version":"22.04","summary":"Nvidia V100 (sm_70) Llama.cpp toolbox","usage":"This image is meant to be used with the toolbox command"}

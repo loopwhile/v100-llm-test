@@ -1,0 +1,2 @@
+=== possible build metadata ===
+/etc/cloud/build.info

@@ -1,0 +1,33 @@
+=== kv-unified ===
+426:--kv-unified-per-slot N                 context limit per parallel slot (default: unset, behavior unchanged).
+441:-kvu,  --kv-unified, -no-kvu, --no-kv-unified
+
+=== kv-unified-per-slot ===
+426:--kv-unified-per-slot N                 context limit per parallel slot (default: unset, behavior unchanged).
+
+=== spec-type ===
+378---spec-draft-model, -md, --model-draft FNAME
+379-                                        draft model for speculative decoding (default: unused)
+380-                                        (env: LLAMA_ARG_SPEC_DRAFT_MODEL)
+381:--spec-type none,draft-simple,draft-eagle3,draft-mtp,draft-dflash,draft-dspark,ngram-simple,ngram-map-k,ngram-map-k4v,ngram-mod,ngram-cache
+382-                                        comma-separated list of types of speculative decoding to use (default:
+383-                                        none)
+384-                                        
+385-                                        (env: LLAMA_ARG_SPEC_TYPE)
+386---spec-ngram-mod-n-min N                minimum number of ngram tokens to use for ngram-based speculative
+387-                                        decoding (default: 48)
+388---spec-ngram-mod-n-max N                maximum number of ngram tokens to use for ngram-based speculative
+389-                                        decoding (default: 64)
+
+=== ngram-simple ===
+381:--spec-type none,draft-simple,draft-eagle3,draft-mtp,draft-dflash,draft-dspark,ngram-simple,ngram-map-k,ngram-map-k4v,ngram-mod,ngram-cache
+391:--spec-ngram-simple-size-n N            ngram size N for ngram-simple speculative decoding, length of lookup
+393:--spec-ngram-simple-size-m N            ngram size M for ngram-simple speculative decoding, length of draft
+395:--spec-ngram-simple-min-hits N          minimum hits for ngram-simple speculative decoding (default: 1)
+
+=== draft-mtp ===
+381:--spec-type none,draft-simple,draft-eagle3,draft-mtp,draft-dflash,draft-dspark,ngram-simple,ngram-map-k,ngram-map-k4v,ngram-mod,ngram-cache
+
+=== spec-draft-n-max ===
+351:--spec-draft-n-max N                    number of tokens to draft for speculative decoding (default: 3)
+406:--draft, --draft-n, --draft-max N       the argument has been removed. use --spec-draft-n-max or

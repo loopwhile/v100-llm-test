@@ -35,7 +35,7 @@
 
 벤치마크 자동화는 하드웨어 정책을 변경해서는 안 된다.
 
-### 1.2 llama.cpp 런타임 검증
+### 1.2 llama.cpp 런타임 검증 [DONE]
 고정된 image/build/commit을 검증하고 다음 기능 지원 여부를 확인한다.
 - kv-unified
 - kv-unified-per-slot
