@@ -351,6 +351,131 @@ Qwen3.8 SKINNY는 WBS 1.4에서 `FAIL_OOM_MODEL_LOAD`로 종료됐으므로 현�
 - clocks.
 - speculative acceptance evidence.
 
+### 5.4 Qwen3.8-27B 1Cat-vLLM 추가 최적화 특성화
+
+이 섹션은 기존 C1/C2 acceptance scope를 변경하지 않는 supplemental experiment다.
+WBS 2.2.1 및 3.2.1의 STOCK target-only 결과는 그대로 유지하며,
+해당 결과가 완료된 이후 Qwen3.8-27B의 추가적인 speculative/runtime 최적화 가능성을 별도로 측정한다.
+
+참고 사례:
+- `skrodahl/qwen38-27B-dual-rtx5060`
+- 2× RTX 5060 Ti 16GB / TP2 / Qwen3.8-27B NVFP4
+- FP8 KV, MTP k sweep, long-context decode, KV-capacity 및 CUDA Graph 영향 측정
+
+이 사례의 수치는 Blackwell 환경의 결과이므로 V100 성능 기대값으로 사용하지 않는다.
+실험 설계 참고자료로만 사용한다.
+
+#### 5.4.1 MTP sweep
+
+기존 STOCK target-only 결과를 baseline(k=0)으로 보존한다.
+
+1Cat-vLLM에서 현재 Qwen3.8-27B artifact/runtime 조합이 Native MTP를 지원하고
+추가 VRAM budget 안에서 실행 가능한 경우에만 다음 supplemental configuration을 수행한다.
+
+- MTP k=2
+- MTP k=4
+
+필요한 경우 최적점 확인을 위해 k=3을 추가할 수 있다.
+
+측정:
+- decode tok/s
+- speculative acceptance
+- accepted tokens/step
+- peak VRAM
+- KV capacity
+- TTFT
+- prefill tok/s
+- output validity
+
+MTP configuration은 기존 C1/C2 STOCK PASS/FAIL을 대체하거나 수정하지 않는다.
+
+#### 5.4.2 Context-depth decode profile
+
+target-only와 WBS 5.4.1에서 가장 유효했던 MTP configuration을 대상으로
+live context 증가에 따른 decode degradation을 측정한다.
+
+고정 checkpoint:
+- near-empty / short context
+- 32K live context
+- 128K live context
+
+각 depth에서 동일한 output workload를 사용한다.
+
+측정:
+- target decode tok/s
+- effective speculative decode tok/s
+- acceptance
+- VRAM
+- KV usage
+- power / clocks
+
+목적은 128K capacity PASS 여부를 다시 판정하는 것이 아니라,
+실제 long-running coding-agent session에서 context 증가에 따른 성능 저하를 정량화하는 것이다.
+
+#### 5.4.3 Runtime memory / KV budget characterization
+
+각 추가 configuration의 server startup evidence에서 가능한 경우 다음을 기록한다.
+
+- model weight allocation
+- non-model/runtime allocation
+- CUDA Graph allocation
+- speculative decoding allocation
+- available KV cache
+- KV token capacity
+
+최소 비교:
+- target-only
+- MTP k=2
+- MTP k=4
+
+`max_num_seqs`와 `max_model_len` 선언값만으로 동시 수용 capacity를 추정하지 않고,
+실제 KV token capacity 및 measured C1/C2 결과와 구분한다.
+
+#### 5.4.4 Batched-token sensitivity
+
+현재 1Cat-vLLM runtime에서 대응 옵션이 지원되는 경우에만 수행한다.
+
+baseline runtime configuration을 유지한 채:
+- current/default value
+- 4096
+
+를 비교한다.
+
+측정:
+- startup VRAM
+- KV capacity
+- prefill tok/s
+- decode tok/s
+- 128K request viability
+
+5060 Ti 사례의 4096 값을 V100의 정답으로 간주하지 않는다.
+
+#### 5.4.5 Output integrity / CUDA Graph 확인
+
+추가 speculative 또는 graph configuration에서는 throughput뿐 아니라
+실제 출력 정상성을 함께 검증한다.
+
+다음을 FAIL로 취급한다.
+- empty response
+- truncated response
+- malformed tool call / structured output
+- obvious repetition loop
+- silent corruption
+- server process는 생존했으나 요청 결과가 invalid한 경우
+
+CUDA Graph mode 변경이 필요한 경우에는 새로운 experiment ID를 사용하고
+기존 STOCK 결과와 별도 configuration으로 기록한다.
+
+#### 5.4.6 Supplemental 결과 판정
+
+이 섹션의 결과는 기존 C1/C2 verdict를 변경하지 않는다.
+
+결과는 다음 용도로만 사용한다.
+- production STOCK configuration의 후속 최적화 후보 선정
+- long-context performance degradation 파악
+- speculative decoding의 VRAM/throughput trade-off 파악
+- 최종 배포 설정에서 target-only와 MTP 중 선택할 근거 제공
+
 ## 6. 최종 배포 결정 [TODO]
 
 최종 보고서는 다음 세 가지 질문에 답해야 한다.
