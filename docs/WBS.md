@@ -147,11 +147,13 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - 네 lane 모두 prompt 129,023 + output reserve 2,048 = 131,071 / 131,072 token budget을 사용했고, 정상 stop / post-health / cleanup / exit 0을 확인했다.
 - 출력 의미 품질 caveat: TARGET/NGRAM의 일부 verification assertion은 live state와 snapshot state를 혼동했고, MTP 계열은 `dict(self.pages)`를 live reference로 오인했다. 이는 serving/output-integrity acceptance와 분리해 각 `acceptance-review.json`에 기록한다.
 
-#### 2.1.3 Ornith 1.5 35B-A3B [TODO]
+#### 2.1.3 Ornith 1.5 35B-A3B [IN_PROGRESS]
 - artifact: `Q4_K_M`.
 - KV: `Q8_0`.
 - 실행 lane: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
 - 각 lane에서 C1 128K capacity/correctness를 판정한다.
+- base GGUF SHA256: `42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f`.
+- native MTP는 target GGUF에 내장된 NextN predictor를 사용하는 기존 검증 경로를 유지한다. 별도 `mtp_companion` artifact는 identity evidence로 보존하되 이 native-MTP lane의 `--model-draft`로 주입하지 않는다.
 
 #### 2.1.4 Gemma4 26B-A4B [TODO]
 - artifact: `UD-Q4_K_XL`.
