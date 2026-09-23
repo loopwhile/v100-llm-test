@@ -43,7 +43,7 @@
         ]
       }
     ],
-    "policy": "TARGET/NGRAM are mandatory for every llama.cpp candidate. MTP/MTP_NGRAM remain explicit result rows; unsupported combinations are UNSUPPORTED, never omitted.",
+    "policy": "TARGET/NGRAM are mandatory for every llama.cpp candidate. MTP/MTP_NGRAM are required only for models whose required_spec_lanes declare native-mtp and mtp+ngram; those two lanes remain a mandatory pair. Qwen3.8-27B intentionally declares only TARGET/NGRAM.",
     "ngram_reference": "ngram-simple is fixed because the inherited pinned build already exercised draft-mtp,ngram-simple."
   },
   "onecat_vllm": {

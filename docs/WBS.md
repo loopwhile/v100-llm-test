@@ -70,37 +70,61 @@
 
 따라서 현재 2×16GB 하드웨어에서는 Qwen3.8-27B SKINNY lane을 C1/C2 측정 대상으로 예약하지 않는다. 공개된 TP4 결과나 Issue #1의 2×V100-32GB TP2 성공 결과를 2×16GB PASS로 대체하지 않는다.
 
-### 1.5 모델 artifact 확정
-기존에 고정된 다음 artifact를 새 환경에서 다시 검증한다.
-- Qwen3.8-27B llama.cpp.
-- Qwen3.8-27B STOCK 1Cat.
-- Qwen3.8-27B SKINNY.
-- Ornith 1.5 9B llama.cpp.
-- Ornith 1.5 35B-A3B llama.cpp.
+### 1.5 모델 artifact 확정 [DONE]
 
-다음 항목은 실제 지원 여부를 확인해 artifact를 확정하거나 unsupported/pending으로 명시한다.
-- Ornith 9B STOCK 1Cat NVFP4.
-- Ornith 35B STOCK 1Cat NVFP4.
-- Gemma4 26B llama.cpp exact artifact.
-- Gemma4 26B STOCK 1Cat NVFP4.
-- non-Qwen v100-skinny contract.
+확정 결과:
 
-repository, revision, path를 추정해서 채우는 것은 금지한다.
+- Qwen3.8-27B llama.cpp:
+  - `unsloth/Qwen3.8-27B-GGUF`
+  - exact revision/path/SHA256 확인.
+  - benchmark scope는 `TARGET` + `NGRAM`만 사용한다.
+- Qwen3.8-27B STOCK 1Cat:
+  - `QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4`
+  - exact revision/path 확인.
+  - WBS 1.3 TP2 runtime preflight PASS.
+- Qwen3.8-27B SKINNY:
+  - exact RadixArk artifact/revision 확인.
+  - WBS 1.4에서 현재 2×V100-16GB에 `FAIL_OOM_MODEL_LOAD`.
+  - local RadixArk checkpoint는 preflight 종료 후 삭제.
+- Ornith 1.5 9B llama.cpp:
+  - exact local path/SHA256/revision 확인.
+  - source repository identity는 unresolved로 명시하며 추정하지 않는다.
+- Ornith 1.5 9B STOCK:
+  - `ornith-ai/Ornith-1.5-9B-NVFP4`
+  - exact revision/path 확인.
+  - artifact는 확정했으나 V100 runtime compatibility는 PENDING.
+- Ornith 1.5 35B-A3B llama.cpp:
+  - base GGUF repository/revision/path/SHA256 확인.
+  - MTP companion revision/path/SHA256 확인.
+  - MTP companion repository identity는 unresolved로 유지.
+- Ornith 1.5 35B-A3B STOCK:
+  - `ornith-ai/Ornith-1.5-35B-A3B-NVFP4`
+  - exact revision/path 확인.
+  - artifact는 확정했으나 V100 runtime compatibility는 PENDING.
+- Gemma4 26B-A4B llama.cpp:
+  - `unsloth/gemma-4-26B-A4B-it-qat-GGUF`
+  - base 및 MTP companion exact revision/path/SHA256 확인.
+- Gemma4 26B-A4B STOCK:
+  - exact local NVFP4 artifact가 없으므로 PENDING.
+- non-Qwen v100-skinny:
+  - pinned v1.1 model contract가 없으므로 `UNSUPPORTED`.
 
+repository identity가 검증되지 않은 항목은 unresolved 상태를 유지하며 추정값으로 채우지 않는다.
 ## 2. C1 — 128K capacity 및 correctness [TODO]
 
 workloads/capacity/v1.json을 사용하며, 정확한 live tokenizer 기준으로 materialize한다.
 
 ### 2.1 llama.cpp 필수 lane
-검증된 모든 llama.cpp artifact에 대해 다음을 실행한다.
-1. TARGET
-2. NGRAM
-3. MTP
-4. MTP_NGRAM
+모든 검증된 llama.cpp artifact에서 `TARGET`과 `NGRAM`을 실행한다.
+
+MTP 범위:
+- Qwen3.8-27B: `TARGET` + `NGRAM`만 실행한다.
+- Ornith 1.5 9B, Ornith 1.5 35B-A3B, Gemma4 26B-A4B: `MTP` + `MTP_NGRAM`도 실행한다.
+- MTP 대상 모델에서 MTP 또는 MTP_NGRAM이 지원되지 않으면 해당 결과를 `UNSUPPORTED`로 명시한다.
 
 규칙:
 - TARGET vs NGRAM 비교는 필수다.
-- MTP 또는 MTP_NGRAM이 UNSUPPORTED이더라도 두 항목은 결과 행으로 명시적으로 남긴다.
+- MTP 대상 모델에서는 MTP vs MTP_NGRAM pair를 유지한다.
 - 처음부터 128K로 테스트한다.
 - 96K/64K는 128K capacity 실패 이후 원인 확인용 diagnostic으로만 사용한다.
 

@@ -34,7 +34,9 @@
         "MTP_NGRAM"
       ],
       "target_ngram_pair_required": true,
-      "mtp_ngram_pair_required": true
+      "mtp_ngram_pair_required": true,
+      "model_required_spec_lanes_are_authoritative": true,
+      "mtp_ngram_pair_scope": "models whose config declares native-mtp and mtp+ngram"
     },
     "onecat_vllm": {
       "stock_required": true,

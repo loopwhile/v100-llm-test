@@ -22,12 +22,13 @@ A server merely configured for 128K is not a 128K PASS. Two accepted HTTP reques
 ## Required runtime lanes
 
 llama.cpp:
+Global llama.cpp lane catalog:
 - TARGET
 - NGRAM
 - MTP
 - MTP_NGRAM
 
-TARGET versus NGRAM is mandatory. MTP versus MTP_NGRAM remains an explicit support/result pair; unsupported combinations are recorded as UNSUPPORTED.
+TARGET versus NGRAM is mandatory for every llama.cpp candidate. MTP versus MTP_NGRAM applies only to model artifacts that explicitly declare the MTP pair. Qwen3.8-27B intentionally uses TARGET + NGRAM only; Ornith/Gemma candidates retain the MTP pair.
 
 vLLM family:
 - 1Cat-vLLM STOCK

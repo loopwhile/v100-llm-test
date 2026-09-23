@@ -6,7 +6,7 @@
     "tp2-shared"
   ],
   "llama_cpp": {
-    "status": "bootstrap_artifact_pin_requires_fresh_verification",
+    "status": "verified_local_artifact",
     "path": "/srv/models/ornith-1.5-35b-a3b-gguf/Ornith-1.5-35B-Q4_K_M.gguf",
     "sha256": "42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f",
     "weight_quant": "Q4_K_M",
@@ -18,19 +18,30 @@
       "ngram",
       "native-mtp",
       "mtp+ngram"
-    ]
+    ],
+    "repository": "ornith-ai/Ornith-1.5-35B-A3B-GGUF",
+    "revision": "12393612fd4f730ff5aadc23e9b8f9648aa49ceb",
+    "filename": "Ornith-1.5-35B-Q4_K_M.gguf",
+    "mtp_companion": {
+      "status": "verified_local_artifact_repository_unresolved",
+      "repository": null,
+      "revision": "04eb5f9915607c840716ae817717431f0ba6df07",
+      "path": "/srv/models/ornith-1.5-35b-a3b-gguf/mtp-Ornith-1.5-35B-A3B-Abliterated-MTPv2-Q8_0.gguf",
+      "sha256": "7d58b16ecab1a30884f76f1372680405a52a30547d94fb6b61cef802a7311ab6"
+    }
   },
   "onecat_vllm": {
-    "status": "pending_artifact_and_v100_compatibility_verification",
-    "desired_weight_quant": "NVFP4",
+    "status": "verified_local_artifact_runtime_compatibility_pending",
+    "planning_ready": false,
+    "repository": "ornith-ai/Ornith-1.5-35B-A3B-NVFP4",
+    "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa",
+    "path": "/srv/models/ornith-1.5-35b-a3b-nvfp4",
+    "weight_quant": "NVFP4",
     "desired_kv": "FP8",
     "speculative_candidate": "target-only",
     "required_backend_lanes": [
       "stock",
       "v100-skinny"
-    ],
-    "repository": null,
-    "revision": null,
-    "path": null
+    ]
   }
 }

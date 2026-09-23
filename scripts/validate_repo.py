@@ -7,7 +7,12 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 EXPECTED_MODELS={"qwen3.8-27b.json","ornith-1.5-9b.json","ornith-1.5-35b-a3b.json","gemma4-26b-a4b.json"}
 LLAMA_LANES=["TARGET","NGRAM","MTP","MTP_NGRAM"]
-MODEL_SPEC=["target-only","ngram","native-mtp","mtp+ngram"]
+MODEL_SPEC_BY_FILE={
+ "qwen3.8-27b.json":["target-only","ngram"],
+ "ornith-1.5-9b.json":["target-only","ngram","native-mtp","mtp+ngram"],
+ "ornith-1.5-35b-a3b.json":["target-only","ngram","native-mtp","mtp+ngram"],
+ "gemma4-26b-a4b.json":["target-only","ngram","native-mtp","mtp+ngram"],
+}
 
 def read(path): return json.loads((ROOT/path).read_text())
 
@@ -48,7 +53,7 @@ def validate():
  for path in sorted(model_dir.glob("*.json")):
   model=json.loads(path.read_text())
   check(model["context_target"]==131072,f"{path.name}: context target mismatch")
-  check(model["llama_cpp"]["required_spec_lanes"]==MODEL_SPEC,f"{path.name}: llama spec lanes mismatch")
+  check(model["llama_cpp"]["required_spec_lanes"]==MODEL_SPEC_BY_FILE[path.name],f"{path.name}: llama spec lanes mismatch")
   check(model["onecat_vllm"]["required_backend_lanes"]==["stock","v100-skinny"],f"{path.name}: backend lanes mismatch")
 
  check(cap["context_tokens"]==131072 and len(cap["requests"])==1,"capacity workload mismatch")

@@ -43,6 +43,10 @@ def attach_gateway(plan,lock,m,backend_endpoints,gateway_port):
  return plan
 
 def llama_plan(lock,lanes,tops,m,lane,c,topology,port,gateway_port=18079):
+ lane_to_spec={"TARGET":"target-only","NGRAM":"ngram","MTP":"native-mtp","MTP_NGRAM":"mtp+ngram"}
+ declared_specs=set(m.get("llama_cpp",{}).get("required_spec_lanes",[]))
+ requested_spec=lane_to_spec.get(lane)
+ if requested_spec not in declared_specs:return unsupported(m,"llama.cpp",lane,topology,"lane is outside this model artifact contract")
  mc=m["llama_cpp"]; s=spec(lanes,lane)
  if not mc.get("path"): return unsupported(m,"llama.cpp",lane,topology,"exact artifact path is not pinned")
  if topology not in m.get("topology_candidates",[]): return unsupported(m,"llama.cpp",lane,topology,"topology not declared")
@@ -77,6 +81,7 @@ def onecat_plan(lock,m,lane,c,topology,port,gateway_port=18079):
  if topology not in m.get("topology_candidates",[]):return unsupported(m,"1Cat-vLLM",lane,topology,"topology not declared")
  mc=m["onecat_vllm"]
  if lane=="STOCK":
+  if mc.get("planning_ready") is False:return unsupported(m,"1Cat-vLLM",lane,topology,"exact artifact is recorded but V100 runtime compatibility is not yet verified")
   if not mc.get("path"):return unsupported(m,"1Cat-vLLM",lane,topology,"exact 1Cat artifact is pending")
   rt=lock["runtimes"]["1Cat-vLLM"];py=os.environ.get("V100_1CAT_PYTHON","V100_1CAT_PYTHON_NOT_SET");kv_candidates=mc.get("kv_candidates") or [mc.get("desired_kv")];kv_value=kv_candidates[0] if kv_candidates else None;weight=mc.get("weight_quant") or mc.get("desired_weight_quant");specs=mc.get("speculative_candidates") or [mc.get("speculative_candidate","target-only")];spec_mode=specs[0]
   if not kv_value:return unsupported(m,"1Cat-vLLM",lane,topology,"KV candidate unresolved")
