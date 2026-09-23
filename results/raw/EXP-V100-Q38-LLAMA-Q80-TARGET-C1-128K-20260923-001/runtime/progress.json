@@ -1,0 +1,32 @@
+{
+  "phase": "results_saved",
+  "updated_at_utc": "2026-09-23T13:18:54.966499+00:00",
+  "experiment_id": "EXP-V100-Q38-LLAMA-Q80-TARGET-C1-128K-20260923-001",
+  "lane": "TARGET",
+  "host": "p520-llm",
+  "remote_path": "/home/loopwhile/v100-llm-test-wbs211-20260923/results/raw/EXP-V100-Q38-LLAMA-Q80-TARGET-C1-128K-20260923-001",
+  "started_at_utc": "2026-09-23T13:18:53.882814+00:00",
+  "boot_id": "3f722f59-6d45-4390-949c-9891cfe5eb11",
+  "pid": 71868,
+  "process_start_ticks": "2788385",
+  "measurement_timeout_s": 2400,
+  "startup_timeout_s": 300,
+  "scope": "WBS 2.1.1: one C1 128K request for this lane",
+  "cleanup_policy": "only cidfile container with matching experiment label",
+  "planned_config_sha256": "bb8d5ff83cb8f2773c2dfb14ee5dc314fd59a86ac398fd9a03b618145fd8154f",
+  "source_sha256": {
+    "scripts/bench_harness.py": "36e6cb8ef0c4a8403560ad2561ce6fbf0bdeebd8216b12f32f498f81676c3aa0",
+    "scripts/build_128k_workload.py": "c5960a916759c0bd83dd315eef88051a7aeb7e3392749d78a7315c28b0dea514",
+    "scripts/gpu_telemetry.py": "c3813564d18a1e6f98ed04b1b66a21ce0133617913cc9bc9cad7c512242e088f",
+    "scripts/measurement_policy.py": "19f9f74bb44fcbc14cc49a15cd6e13e03b00ba9e4d1f63a2d2f0d62694e35244",
+    "scripts/report_experiment.py": "b5562883e627cf82e3e2bb88d603799ef4a1e90c3174a552ee6cc4d4fb9628c6",
+    "scripts/run_c1_qwen.py": "63dc09501c874361855c83d69eab6b078b74431602c4d27522f6dac4589b2bc2",
+    "scripts/runtime_launcher.py": "eea494125bd021bf249cbc96b24622fceb4b97c4586088baa5baa14a9075832c",
+    "scripts/skinny_gate.py": "a372c564281b6afdbd8425df783daf2a4c1c116a53c0466beff9a7a6b30eddf6",
+    "scripts/validate_repo.py": "b7b5aee386846fae8f19643a73fe4cd8184b481471bc823690d20418e8e10b3f"
+  },
+  "step": "finished",
+  "verdict": "INCONCLUSIVE",
+  "error": "runtime preflight failed",
+  "exit_code": 1
+}

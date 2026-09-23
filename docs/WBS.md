@@ -124,12 +124,15 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 
 ### 2.1 llama.cpp
 
-#### 2.1.1 Qwen3.8-27B [TODO]
+#### 2.1.1 Qwen3.8-27B [DONE]
 - artifact: `UD-Q4_K_M`.
 - KV: `Q8_0`.
 - 실행 lane: `TARGET`, `NGRAM`.
 - Qwen3.8-27B에는 `MTP`, `MTP_NGRAM`을 계획하지 않는다.
 - 각 lane에서 C1 128K capacity/correctness를 판정한다.
+- TARGET: `EXP-V100-Q38-LLAMA-Q80-TARGET-C1-128K-20260923-002` — `PASS_C1_128K`.
+- NGRAM: `EXP-V100-Q38-LLAMA-Q80-NGRAM-C1-128K-20260923-002` — `PASS_C1_128K`. 실제 slot에서 ngram-simple 활성 확인; draft 토큰은 0.
+- TARGET/NGRAM의 `20260923-001` 시도는 inference 전 사전 검사 종료(`INCONCLUSIVE`)이며 capacity 실패나 measured repetition으로 계산하지 않는다.
 
 #### 2.1.2 Ornith 1.5 9B [TODO]
 - artifact: `Q6_K`.

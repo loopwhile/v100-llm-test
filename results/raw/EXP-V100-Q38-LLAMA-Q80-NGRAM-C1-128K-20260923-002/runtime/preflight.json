@@ -1,0 +1,60 @@
+{
+  "pass": true,
+  "checks": [
+    {
+      "name": "supported",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "host",
+      "ok": true,
+      "detail": "p520-llm"
+    },
+    {
+      "name": "docker",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "model_path",
+      "ok": true,
+      "detail": "/srv/models/qwen3.8-unsloth/Qwen3.8-27B-UD-Q4_K_M.gguf"
+    },
+    {
+      "name": "image",
+      "ok": true,
+      "detail": "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149"
+    },
+    {
+      "name": "help:exit",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "help:--spec-type",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "help:--kv-unified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "help:--kv-unified-per-slot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "help:--slots",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "help:ngram-simple",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

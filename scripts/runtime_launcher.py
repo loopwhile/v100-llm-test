@@ -54,7 +54,7 @@ def llama_plan(lock,lanes,tops,m,lane,c,topology,port,gateway_port=18079):
  rt=lock["runtimes"]["llama.cpp"]; cache=kv(mc["kv_candidates"][0])
  def command(gpus,p,parallel,total,tp2):
   cmd=["docker","run","--rm","--pull=never","--name",f"v100-test-{p}",
-       "--label","project=v100-llm-test","--gpus",f"device={gpus}",
+       "--label","project=v100-llm-test","--gpus",(f'"device={gpus}"' if "," in gpus else f"device={gpus}"),
        "-p",f"127.0.0.1:{p}:8080","-v",f"{mc['path']}:/model/target.gguf:ro",
        "--entrypoint","llama-server",rt["image"],"-m","/model/target.gguf",
        "--host","0.0.0.0","--port","8080","-ngl","all"]
@@ -133,8 +133,9 @@ def preflight(plan):
    r=subprocess.run(["docker","image","inspect",image],capture_output=True,text=True)
    add("image",r.returncode==0,image)
    if r.returncode==0:
-    h=subprocess.run(["docker","run","--rm","--pull=never","--entrypoint","llama-server",image,"--help"],
+    h=subprocess.run(["docker","run","--rm","--pull=never","--gpus","all","--entrypoint","llama-server",image,"--help"],
                      capture_output=True,text=True,timeout=60);txt=h.stdout+h.stderr
+    add("help:exit",h.returncode==0,txt[:2000] if h.returncode else "")
     for token in ("--spec-type","--kv-unified","--kv-unified-per-slot","--slots"):add("help:"+token,token in txt)
     if plan["lane"] in ("NGRAM","MTP_NGRAM"):add("help:ngram-simple","ngram-simple" in txt)
     if plan["lane"] in ("MTP","MTP_NGRAM"):add("help:draft-mtp","draft-mtp" in txt)

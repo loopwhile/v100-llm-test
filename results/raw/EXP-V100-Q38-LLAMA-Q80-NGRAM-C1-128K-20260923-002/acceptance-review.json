@@ -1,0 +1,14 @@
+{
+  "reviewed_at_utc": "2026-09-23T13:53:48.221304+00:00",
+  "verdict": "PASS_C1_128K",
+  "prompt_tokens": 129023,
+  "reserved_output_tokens": 2048,
+  "completion_tokens": 733,
+  "finish_reason": "stop",
+  "truncated": false,
+  "post_health_healthy": true,
+  "effective_speculative_types": "none,ngram-simple",
+  "speculative_enabled": true,
+  "draft_tokens": 0,
+  "content_review": "Coherent shallow-copy aliasing risk and mutation/isolation test; acknowledges integer values are unaffected. No obvious corruption or repetition loop. Serving acceptance, not general coding quality."
+}

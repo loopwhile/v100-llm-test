@@ -1,0 +1,13 @@
+{
+  "reviewed_at_utc": "2026-09-23T13:33:21.533500+00:00",
+  "verdict": "PASS_C1_128K",
+  "prompt_receipt_matches_usage": true,
+  "reserved_budget_tokens": 131071,
+  "completion_tokens": 733,
+  "finish_reason": "stop",
+  "runtime_truncated": 0,
+  "post_health_healthy": true,
+  "content_review": "Coherent response identifies shallow-copy aliasing when mutable page values are allowed and supplies a concrete mutation/isolation test. It acknowledges the provided integer-value case is unaffected. No obvious repetition loop, malformed text or truncation. This is serving/output integrity acceptance, not a model-quality benchmark.",
+  "runtime_errors": [],
+  "cleanup": "owned container stopped; exit 0"
+}
