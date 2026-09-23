@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "workload_id": "V100-CAPACITY-128K-v1",
+  "mode": "capacity",
+  "context_tokens": 131072,
+  "output_tokens": 512,
+  "min_context_utilization": 0.99,
+  "source": "adapted deterministic synthetic capacity method from loopwhile/qwen3.8-bench",
+  "sampling": {
+    "temperature": 0,
+    "top_p": 1,
+    "seed": 520
+  },
+  "requests": [
+    {
+      "id": "project-a",
+      "project_id": "A",
+      "title": "Project A - storage engine refactor",
+      "final_instruction": "Review the supplied project snapshot. Identify one concrete correctness risk and describe a minimal verification plan. Keep the answer concise.",
+      "seed_blocks": [
+        "# Project A / storage/index.py\nclass PageIndex:\n    def __init__(self):\n        self.pages = {}\n        self.version = 0\n\n    def put(self, key, page_id):\n        self.pages[key] = page_id\n        self.version += 1\n\n    def get(self, key):\n        return self.pages.get(key)\n\n    def snapshot(self):\n        return self.version, dict(self.pages)\n",
+        "# Project A / storage/transaction.py\nclass Transaction:\n    def __init__(self, index):\n        self.index = index\n        self.pending = []\n\n    def stage(self, key, page_id):\n        self.pending.append((key, page_id))\n\n    def commit(self):\n        for key, page_id in self.pending:\n            self.index.put(key, page_id)\n        self.pending.clear()\n",
+        "# Project A / tests/test_snapshot.py\ndef test_snapshot_is_stable(index):\n    index.put(\"alpha\", 10)\n    version, snapshot = index.snapshot()\n    index.put(\"beta\", 20)\n    assert version == 1\n    assert snapshot == {\"alpha\": 10}\n"
+      ]
+    }
+  ]
+}

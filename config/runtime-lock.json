@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "provenance": {
+    "source_repository": "loopwhile/qwen3.8-bench",
+    "note": "Known runtime identities are imported as bootstrap pins and must be freshly verified on p520-llm before measured execution."
+  },
+  "runtimes": {
+    "llama.cpp": {
+      "family": "kyuz0/nvidia-v100-ai-toolboxes",
+      "image": "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149",
+      "build": 10775,
+      "commit": "67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
+      "cuda_cudart": "12.6.77-1",
+      "cuda_cublas": "12.6.4.1-1",
+      "status": "bootstrap_pin_requires_fresh_verification"
+    },
+    "1Cat-vLLM": {
+      "family": "1CatAI/1Cat-vLLM",
+      "version": "1.5.0",
+      "wheel": "1cat_vllm-1.5.0-cp312-cp312-linux_x86_64.whl",
+      "sha256": "2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b",
+      "torch": "2.10.0+cu128",
+      "cuda_userspace": "12.8",
+      "flash_attn_v100": "1.2.0",
+      "status": "bootstrap_pin_requires_fresh_verification"
+    },
+    "1Cat-vLLM+v100-skinny": {
+      "base_runtime": "1Cat-vLLM",
+      "family": "dnv2003/v100-skinny",
+      "required": true,
+      "revision": null,
+      "patch_identity": null,
+      "status": "pending_turn4_pin_and_compatibility_verification",
+      "note": "Mandatory lane. Do not silently substitute stock 1Cat if skinny is unsupported or fails capacity."
+    }
+  }
+}

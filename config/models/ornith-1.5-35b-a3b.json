@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "model_id": "Ornith-1.5-35B-A3B",
+  "context_target": 131072,
+  "topology_candidates": [
+    "2xV100-TP2"
+  ],
+  "llama_cpp": {
+    "status": "bootstrap_artifact_pin_requires_fresh_verification",
+    "path": "/srv/models/ornith-1.5-35b-a3b-gguf/Ornith-1.5-35B-Q4_K_M.gguf",
+    "sha256": "42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f",
+    "weight_quant": "Q4_K_M",
+    "kv_candidates": [
+      "Q8_0"
+    ],
+    "required_spec_lanes": [
+      "target-only",
+      "native-mtp",
+      "mtp+ngram"
+    ],
+    "note": "Target-only artifact identity is imported from qwen3.8-bench Phase 5.5.2; MTP/ngram support still requires fresh verification."
+  },
+  "onecat_vllm": {
+    "status": "pending_artifact_and_v100_compatibility_verification",
+    "desired_weight_quant": "NVFP4",
+    "desired_kv": "FP8",
+    "speculative_candidate": "target-only",
+    "required_backend_lanes": [
+      "stock",
+      "v100-skinny"
+    ],
+    "repository": null,
+    "revision": null,
+    "path": null
+  }
+}

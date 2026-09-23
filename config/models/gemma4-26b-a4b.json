@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "model_id": "Gemma4-26B-A4B-IT-QAT",
+  "context_target": 131072,
+  "topology_candidates": [
+    "2xV100-TP2"
+  ],
+  "llama_cpp": {
+    "status": "pending_exact_artifact_and_support_verification",
+    "desired_weight_quant": "UD-Q4_K_XL",
+    "desired_kv": "FP16",
+    "required_spec_lanes": [
+      "target-only",
+      "native-mtp",
+      "mtp+ngram"
+    ],
+    "repository": null,
+    "revision": null,
+    "path": null,
+    "sha256": null
+  },
+  "onecat_vllm": {
+    "status": "pending_artifact_and_v100_compatibility_verification",
+    "desired_weight_quant": "NVFP4",
+    "desired_kv": "FP8",
+    "speculative_candidate": "target-only",
+    "required_backend_lanes": [
+      "stock",
+      "v100-skinny"
+    ],
+    "repository": null,
+    "revision": null,
+    "path": null
+  },
+  "note": "Previous repository only defined this as a candidate; exact fresh artifact identity must be established before execution."
+}

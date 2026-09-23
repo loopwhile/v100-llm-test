@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "model_id": "Qwen3.8-27B",
+  "context_target": 131072,
+  "topology_candidates": [
+    "2xV100-TP2"
+  ],
+  "llama_cpp": {
+    "status": "bootstrap_artifact_pin_requires_fresh_verification",
+    "repository": "unsloth/Qwen3.8-27B-GGUF",
+    "revision": "4ca720788d1e01f1bff70c033e0d0028fd02e502",
+    "path": "/srv/models/qwen3.8-unsloth/Qwen3.8-27B-UD-Q4_K_M.gguf",
+    "filename": "Qwen3.8-27B-UD-Q4_K_M.gguf",
+    "sha256": "322e194ff79741c7baa497c240f677f54b201b0efab44ca8e50f122b39123482",
+    "size": 16464440224,
+    "weight_quant": "UD-Q4_K_M",
+    "kv_candidates": [
+      "Q8_0"
+    ],
+    "required_spec_lanes": [
+      "target-only",
+      "native-mtp",
+      "mtp+ngram"
+    ]
+  },
+  "onecat_vllm": {
+    "status": "bootstrap_artifact_pin_requires_fresh_verification",
+    "repository": "QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4",
+    "revision": "15d2e47bffe5d8ad23928879f8f7d2f74909e259",
+    "path": "/srv/models/qwen3.8-vllm/Qwen3.8-27B-QUASAR-NVFP4",
+    "weight_quant": "NVFP4",
+    "kv_candidates": [
+      "fp8_e5m2"
+    ],
+    "required_backend_lanes": [
+      "stock",
+      "v100-skinny"
+    ],
+    "speculative_candidates": [
+      "target-only"
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "model_id": "Ornith-1.5-9B",
+  "context_target": 131072,
+  "topology_candidates": [
+    "2xV100-TP2",
+    "1xV100x2-independent"
+  ],
+  "llama_cpp": {
+    "status": "bootstrap_artifact_pin_requires_fresh_verification",
+    "path": "/srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf",
+    "sha256": "79a9925bb7771dea3530d57b185e97b9713a73a7c06bdb9804f7d019aa42f480",
+    "weight_quant": "Q6_K",
+    "kv_candidates": [
+      "FP16"
+    ],
+    "required_spec_lanes": [
+      "native-mtp",
+      "mtp+ngram"
+    ],
+    "note": "Imported from qwen3.8-bench Phase 5.5.1R1 identity; repository/revision was not encoded in that config and is intentionally not invented here."
+  },
+  "onecat_vllm": {
+    "status": "pending_artifact_and_v100_compatibility_verification",
+    "desired_weight_quant": "NVFP4",
+    "desired_kv": "FP16",
+    "speculative_candidate": "MTP",
+    "required_backend_lanes": [
+      "stock",
+      "v100-skinny"
+    ],
+    "repository": null,
+    "revision": null,
+    "path": null
+  }
+}
