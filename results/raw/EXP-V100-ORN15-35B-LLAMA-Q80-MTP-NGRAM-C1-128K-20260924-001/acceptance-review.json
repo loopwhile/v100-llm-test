@@ -1,0 +1,15 @@
+{
+  "reviewed_at_utc": "2026-09-23T16:30:00+00:00",
+  "verdict": "PASS_C1_128K",
+  "prompt_receipt_matches_usage": true,
+  "reserved_budget_tokens": 131071,
+  "completion_tokens": 831,
+  "finish_reason": "stop",
+  "runtime_truncated": 0,
+  "post_health_healthy": true,
+  "content_review": "Coherent, non-truncated response. Its alternative suggestion that returning (self.version, dict(self.pages)) is itself an atomic solution is not sufficient to guarantee cross-thread atomicity; locking or another explicit synchronization contract would be required. This is a model-quality caveat only.",
+  "speculative_evidence": "composite draft-mtp,ngram-simple active with native MTP n=1; draft_n=512, draft_n_accepted=364, acceptance=0.71094, mean len=1.78",
+  "ngram_acceptance_scope": "C1 validates the composite NGRAM-on configuration for 128K compatibility/capacity and output integrity. Additional NGRAM performance is not judged here and is deferred to Phase 5.",
+  "runtime_errors": [],
+  "cleanup": "owned container stopped; server exit 0"
+}
