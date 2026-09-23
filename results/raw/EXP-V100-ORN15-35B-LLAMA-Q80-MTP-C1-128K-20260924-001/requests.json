@@ -1,0 +1,56 @@
+[
+  {
+    "request_id": "project-a",
+    "project_id": "A",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "7eb8fba6a85337dadebcd49bce83334812e159fae96d669e3e24abeb74612535",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.0012454200041247532,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "# Correctness Risk Analysis: Project A Storage Engine\n\n## The Identified Risk: Snapshot/Version Divergence Under Concurrent Mutation\n\nThe core correctness risk lies in the interaction between `PageIndex.snapshot()` and the version counter, specifically around **snapshot isolation semantics**.\n\nLooking at the implementation:\n\n```python\ndef snapshot(self):\n    return self.version, dict(self.pages)\n```\n\nThe `snapshot()` method returns the *current* `self.version` alongside a *shallow copy* of the pages dict. This creates a subtle but real inconsistency:\n\n1. **Version/snapshot coupling is implicit, not guaranteed.** The test `test_snapshot_is_stable` asserts `version == 1` after a single `put`, which passes in isolation. But there is no guarantee that the returned version corresponds to the state captured in the returned dict if `put()` is called concurrently (no locking exists).\n\n2. **Shallow copy is not a true immutable snapshot.** `dict(self.pages)` copies the dict structure but not the values. If any `page_id` value were a mutable object, external mutation would corrupt the \"snapshot.\" (Currently `page_id` appears to be an int, so this is latent rather than active.)\n\n3. **The `Transaction` class compounds the risk.** `commit()` iterates `self.pending` and calls `self.index.put()` in a loop, incrementing `version` once per entry. If `snapshot()` is called mid-commit, observers see a torn state (partial commits with inconsistent version numbers).\n\n## Minimal Verification Plan\n\n**Step 1 — Isolation test (single-threaded):**\n```python\ndef test_snapshot_isolation():\n    index = PageIndex()\n    index.put(\"a\", 1)\n    v1, snap1 = index.snapshot()\n    index.put(\"b\", 2)\n    v2, snap2 = index.snapshot()\n    assert snap1 == {\"a\": 1} and v1 == 1   # snap1 must not reflect \"b\"\n    assert snap2 == {\"a\": 1, \"b\": 2} and v2 == 2\n```\n\n**Step 2 — Immutability of returned snapshot:**\n```python\ndef test_snapshot_is_immutable():\n    index = PageIndex()\n    index.put(\"a\", 1)\n    _, snap = index.snapshot()\n    snap[\"a\"] = 999          # mutate the copy\n    assert index.get(\"a\") == 1   # original must be unaffected\n```\n\n**Step 3 — Version monotonicity under commit:**\n```python\ndef test_version_tracks_commit():\n    index = PageIndex()\n    tx = Transaction(index)\n    tx.stage(\"x\", 10)\n    tx.stage(\"y\", 20)\n    tx.commit()\n    v, _ = index.snapshot()\n    assert v == 2   # two puts during commit\n```\n\n**Step 4 — Concurrency stress (detects torn reads):**\n```python\nimport threading\ndef test_concurrent_snapshot():\n    index = PageIndex()\n    errors = []\n    def writer():\n        for i in range(1000):\n            index.put(f\"k{i}\", i)\n    def reader():\n        for _ in range(1000):\n            v, snap = index.snapshot()\n            if v != len(snap):\n                errors.append((v, len(snap)))\n    threads = [threading.Thread(target=writer)] + \\\n              [threading.Thread(target=reader) for _ in range(4)]\n    for t in threads: t.start()\n    for t in threads: t.join()\n    assert not errors, f\"torn snapshots detected: {errors[:5]}\"\n```\n\n## Expected Outcome\n\nIf Step 4 fails, the risk is confirmed: `snapshot()` is not atomic with respect to `put()`. The minimal fix would be to guard `put()` and `snapshot()` with a `threading.Lock`, ensuring the version and dict are read as a single atomic unit.\n\n**Recommendation:** Add a re-entrant lock around both `put()` and `snapshot()`. This is the smallest change that restores the version/snapshot coupling invariant the tests implicitly assume."
+          }
+        }
+      ],
+      "usage": {
+        "completion_tokens": 906,
+        "prompt_tokens": 129023,
+        "total_tokens": 129929,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 129023,
+        "prompt_ms": 505709.599,
+        "prompt_per_token_ms": 3.9195306185718826,
+        "prompt_per_second": 255.13259043358596,
+        "predicted_n": 906,
+        "predicted_ms": 15533.715,
+        "predicted_per_token_ms": 17.16432596685083,
+        "predicted_per_second": 58.260371070281636,
+        "draft_n": 505,
+        "draft_n_accepted": 401
+      }
+    },
+    "actual_output_tokens": 906,
+    "post_template_prompt_tokens": 129023,
+    "ttft_ms": 505964.81681199657,
+    "first_abs": 38110.174849027,
+    "end_abs": 38125.712827375,
+    "wall_s": 521.5027951599986,
+    "prefill_tps": 255.13259043358596,
+    "decode_tps": 58.260371070281636,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 521.5139194700023
+  }
+]

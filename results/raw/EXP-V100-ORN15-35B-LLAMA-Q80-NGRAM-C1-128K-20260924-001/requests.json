@@ -1,0 +1,56 @@
+[
+  {
+    "request_id": "project-a",
+    "project_id": "A",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "7eb8fba6a85337dadebcd49bce83334812e159fae96d669e3e24abeb74612535",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.0014112759963609278,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "# Correctness Risk Analysis: Project A Storage Engine\n\n## The Identified Risk: Snapshot Aliasing / Version Drift\n\nThe most concrete correctness risk in this project is a **snapshot isolation bug** rooted in the interaction between `PageIndex.snapshot()` and the mutation semantics of `put()`.\n\n### Why this is a real risk\n\nConsider the test fixture:\n\n```python\ndef test_snapshot_is_stable(index):\n    index.put(\"alpha\", 10)\n    version, snapshot = index.snapshot()\n    index.put(\"beta\", 20)\n    assert version == 1\n    assert snapshot == {\"alpha\": 10}\n```\n\nThe `snapshot()` method returns `dict(self.pages)`, which is a **shallow copy**. This works correctly *only if* the values are immutable (ints, in this case). The shallow copy breaks the isolation guarantee the test asserts:\n\n- `version == 1` holds because `snapshot()` reads `self.version` at call time (a value, not a reference).\n- `snapshot == {\"alpha\": 10}` holds *today* because `put(\"beta\", 20)` adds a new key and the shallow copy already captured the old key set.\n\nHowever, the design has no **versioning of snapshots**. If the engine ever stored *mutable* page objects as values, a later `put` that mutates a shared page object in place would corrupt an already-returned snapshot. The shallow copy provides a false sense of immutability. The test only exercises immutable int values, so this latent defect is never exercised.\n\nAdditionally, `Transaction.commit()` mutates the shared `index` directly via `self.index.put(...)`. There is no isolation between a staged transaction and concurrent readers, so a partially-committed transaction could be observed mid-flight.\n\n---\n\n## Minimal Verification Plan\n\n### 1. Confirm the shallow-copy assumption with a mutable-value probe\nReplace the int value with a mutable container and assert snapshot stability:\n\n```python\ndef test_snapshot_isolation_with_mutable_value(index):\n    index.put(\"alpha\", [10])\n    version, snapshot = index.snapshot()\n    index.put(\"alpha\", [99])          # overwrite\n    assert snapshot[\"alpha\"] == [10]  # must NOT be [99]\n```\n\nIf this fails, the shallow copy is insufficient for the engine's contract.\n\n### 2. Add a version-monotonicity assertion\n```python\ndef test_version_is_monotonic(index):\n    v0 = index.snapshot()[0]\n    index.put(\"x\", 1)\n    v1 = index.snapshot()[0]\n    assert v1 == v0 + 1\n```\n\n### 3. Add a transaction isolation probe\n```python\ndef test_uncommitted_transaction_is_invisible(index):\n    tx = Transaction(index)\n    tx.stage(\"gamma\", 30)\n    assert index.get(\"gamma\") is None   # staged, not committed\n    tx.commit()\n    assert index.get(\"gamma\") == 30\n```\n\n### 4. Add a snapshot-stability-after-mutation probe\n```python\ndef test_snapshot_not_mutated_by_subsequent_puts(index):\n    index.put(\"a\", 1)\n    _, snap = index.snapshot()\n    index.put(\"b\", 2)\n    assert list(snap.keys()) == [\"a\"]\n```\n\n---\n\n## Summary\n\n| Aspect | Detail |\n|---|---|\n| **Risk** | Snapshot isolation relies on a shallow copy of `self.pages`; correctness is unproven for mutable values and unversioned snapshots. |\n| **Explosion surface** | Any future change storing mutable page objects, or concurrent readers during `commit()`. |\n| **Minimal fix direction** | Deep-copy values in `snapshot()`, or snapshot an immutable versioned view; isolate `commit()` writes. |\n| **Verification** | 4 targeted tests above (mutable-value probe, monotonicity, transaction isolation, post-mutation stability). |\n\nThis plan is deliberately minimal: the mutable-value probe (Test 1) is the decisive experiment that either validates or invalidates the current snapshot contract."
+          }
+        }
+      ],
+      "usage": {
+        "completion_tokens": 886,
+        "prompt_tokens": 129023,
+        "total_tokens": 129909,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 129023,
+        "prompt_ms": 485132.81,
+        "prompt_per_token_ms": 3.760049061020128,
+        "prompt_per_second": 265.95397660281935,
+        "predicted_n": 886,
+        "predicted_ms": 18008.228,
+        "predicted_per_token_ms": 20.3482802259887,
+        "predicted_per_second": 49.14420230574602,
+        "draft_n": 96,
+        "draft_n_accepted": 49
+      }
+    },
+    "actual_output_tokens": 886,
+    "post_template_prompt_tokens": 129023,
+    "ttft_ms": 485385.01169400115,
+    "first_abs": 36971.424994109,
+    "end_abs": 36989.437373659,
+    "wall_s": 503.39739124399784,
+    "prefill_tps": 265.95397660281935,
+    "decode_tps": 49.14420230574602,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 503.40907958299795
+  }
+]

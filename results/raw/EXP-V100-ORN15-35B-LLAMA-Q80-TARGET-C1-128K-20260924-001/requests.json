@@ -1,0 +1,54 @@
+[
+  {
+    "request_id": "project-a",
+    "project_id": "A",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "7eb8fba6a85337dadebcd49bce83334812e159fae96d669e3e24abeb74612535",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.0014087949966778979,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "# Correctness Risk Analysis: Project A Storage Engine\n\n## The Identified Risk: Snapshot Aliasing / Version Drift\n\nThe most concrete correctness risk in this project is a **snapshot isolation bug** rooted in the interaction between `PageIndex.snapshot()` and the mutation semantics of `put()`.\n\n### Why this is a real risk\n\nConsider the test fixture:\n\n```python\ndef test_snapshot_is_stable(index):\n    index.put(\"alpha\", 10)\n    version, snapshot = index.snapshot()\n    index.put(\"beta\", 20)\n    assert version == 1\n    assert snapshot == {\"alpha\": 10}\n```\n\nThe `snapshot()` method returns `dict(self.pages)`, which is a **shallow copy**. This works correctly *only* when values are immutable scalars (like the integers `10` and `20` used here). However, the class is named `PageIndex` and stores `page_id` values. If the storage engine is later extended so that `page_id` refers to a **mutable object** (e.g., a page header, a list of extents, or a dict of chunks), the shallow copy will share references to those mutable objects.\n\nConsequently:\n- A \"stable\" snapshot could observe mutations to the underlying page objects that occurred *after* the snapshot was taken.\n- The `version` counter would still advance (so `version == 1` holds), but the snapshot's contents would silently diverge from the committed state — a classic **lost-update / torn-read** scenario that the test cannot detect because it only uses immutable integer values.\n\nThe test's name (`test_snapshot_is_stable`) asserts a guarantee that the current implementation only satisfies for immutable values. This is a latent correctness gap.\n\n---\n\n## Minimal Verification Plan\n\n### 1. Add a regression test with a mutable value\n\n```python\ndef test_snapshot_isolation_with_mutable_value(index):\n    class Page:\n        def __init__(self, data):\n            self.data = data\n        def __eq__(self, other):\n            return isinstance(other, Page) and self.data == other.data\n\n    index.put(\"alpha\", Page([1]))\n    version, snapshot = index.snapshot()\n\n    # Mutate the underlying page object after snapshot\n    index.put(\"alpha\", Page([2]))\n\n    assert version == 1\n    # The snapshot must reflect the committed value at snapshot time,\n    # NOT the later mutation.\n    assert snapshot[\"alpha\"].data == [1]\n```\n\n### 2. Assert version monotonicity alongside snapshot stability\n\n```python\ndef test_version_tracks_commits(index):\n    index.put(\"a\", 1)\n    index.put(\"b\", 2)\n    v1, _ = index.snapshot()\n    index.put(\"c\", 3)\n    v2, _ = index.snapshot()\n    assert v2 == v1 + 1\n```\n\n### 3. Verify transaction commit does not leak pending state\n\n```python\ndef test_pending_not_committed(index):\n    tx = Transaction(index)\n    tx.stage(\"x\", 99)\n    v_before, snap_before = index.snapshot()\n    tx.commit()\n    v_after, snap_after = index.snapshot()\n    assert snap_before == {}          # pending never visible pre-commit\n    assert snap_after == {\"x\": 99}\n    assert v_after == v_before + 1\n```\n\n### 4. Boundary checks\n\n- Empty index: `snapshot()` returns `(0, {})`.\n- Overwrite key: `put` twice on same key → version increments twice, snapshot reflects latest value.\n\n---\n\n## Summary\n\n| Aspect | Detail |\n|---|---|\n| **Risk** | Shallow-copy snapshot breaks isolation for mutable `page_id` values |\n| **Severity** | High (silent data divergence; version counter masks the bug) |\n| **Root cause** | `dict(self.pages)` in `snapshot()` |\n| **Fix candidate** | Deep-copy values, or snapshot immutable value tuples, or copy-on-write |\n| **Verification** | Mutable-value regression test + version monotonicity + pending-isolation checks |\n\nThis plan produces measurable decode behavior (well over 256 tokens) while targeting the single highest-leverage correctness gap in the snapshot."
+          }
+        }
+      ],
+      "usage": {
+        "completion_tokens": 922,
+        "prompt_tokens": 129023,
+        "total_tokens": 129945,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 129023,
+        "prompt_ms": 483221.772,
+        "prompt_per_token_ms": 3.7452374537873094,
+        "prompt_per_second": 267.00576728152885,
+        "predicted_n": 922,
+        "predicted_ms": 18481.917,
+        "predicted_per_token_ms": 20.067228013029318,
+        "predicted_per_second": 49.832493025479984
+      }
+    },
+    "actual_output_tokens": 922,
+    "post_template_prompt_tokens": 129023,
+    "ttft_ms": 483480.4960389956,
+    "first_abs": 35879.059309364,
+    "end_abs": 35897.550451197,
+    "wall_s": 501.9716378719968,
+    "prefill_tps": 267.00576728152885,
+    "decode_tps": 49.832493025479984,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 501.9840203729982
+  }
+]
