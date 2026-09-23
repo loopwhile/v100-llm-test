@@ -58,6 +58,15 @@ class RuntimePlanTests(unittest.TestCase):
  def test_non_qwen_skinny_is_explicit_unsupported(self):
   p=r.build_plan(ROOT,"ornith-1.5-9b","SKINNY",1,"tp2-shared")
   self.assertFalse(p["supported_for_planning"]);self.assertEqual(p["verdict_if_executed_without_new_support"],"UNSUPPORTED")
+ def test_ornith35_native_mtp_uses_one_draft_token(self):
+  for lane in ("MTP","MTP_NGRAM"):
+   p=r.build_plan(ROOT,"ornith-1.5-35b-a3b",lane,1,"tp2-shared")
+   cmd=p["commands"][0]
+   self.assertEqual(cmd[cmd.index("--spec-draft-n-max")+1],"1")
+ def test_ornith9_native_mtp_keeps_default_three(self):
+  p=r.build_plan(ROOT,"ornith-1.5-9b","MTP",1,"tp2-shared")
+  cmd=p["commands"][0]
+  self.assertEqual(cmd[cmd.index("--spec-draft-n-max")+1],"3")
  def test_gemma_verified_llama_pending_stock(self):
   self.assertTrue(r.build_plan(ROOT,"gemma4-26b-a4b","NGRAM",1,"tp2-shared")["supported_for_planning"])
   self.assertFalse(r.build_plan(ROOT,"gemma4-26b-a4b","STOCK",1,"tp2-shared")["supported_for_planning"])
