@@ -139,12 +139,17 @@ def preflight(plan):
   key="V100_SKINNY_PYTHON" if plan["lane"]=="SKINNY" else "V100_1CAT_PYTHON"
   py=os.environ.get(key);add(key,bool(py) and Path(py).is_file(),str(py))
   if py and Path(py).is_file():
-   r=subprocess.run([py,"-c","import vllm; print(vllm.__version__)"],capture_output=True,text=True,timeout=30)
-   add("vllm_import",r.returncode==0,r.stdout.strip() or r.stderr.strip())
+   code="import importlib.metadata as m\nfor n in ('1cat-vllm','1cat_vllm'):\n try:\n  print(m.version(n)); break\n except m.PackageNotFoundError: pass\nelse: raise SystemExit(2)"
+   r=subprocess.run([py,"-c",code],capture_output=True,text=True,timeout=30)
+   version=r.stdout.strip()
+   expected="1.2.2" if plan["lane"]=="SKINNY" else "1.5.0"
+   add("1cat_version",r.returncode==0 and version==expected,version or r.stderr.strip())
   if plan["lane"]=="SKINNY":
    root=os.environ.get("V100_SKINNY_ROOT");model=os.environ.get("V100_SKINNY_MODEL")
+   model_rev=os.environ.get("V100_SKINNY_MODEL_REVISION")
    add("V100_SKINNY_ROOT",bool(root) and Path(root).is_dir(),str(root))
    add("V100_SKINNY_MODEL",bool(model) and Path(model).is_dir(),str(model))
+   add("V100_SKINNY_MODEL_REVISION",model_rev=="554ebba9b5f1b79dc11246341960360e6ef05ef4",str(model_rev))
    if root and Path(root).is_dir() and shutil.which("git"):
     r=subprocess.run(["git","-C",root,"rev-parse","HEAD"],capture_output=True,text=True,timeout=10)
     add("skinny_revision",r.returncode==0 and r.stdout.strip()=="5b589c0dc81223e0ba65bcb3e755874723f8b515",r.stdout.strip())

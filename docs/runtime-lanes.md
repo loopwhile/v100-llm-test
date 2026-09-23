@@ -48,3 +48,13 @@ The upstream v1.1 serving script hard-codes TP4. This repository therefore treat
 For 128K live context the project uses MTP k=3 and decode partition 1024. The upstream README recommends shallower k=3 for long live context; our result still requires fresh measurement.
 
 The standalone v1.1 contract is Qwen3.8-specific. Other models keep a mandatory skinny row but may resolve to \`UNSUPPORTED\`.
+
+## Skinny TP2 boot gate
+
+After the compatibility warm request, run:
+
+```bash
+python3 scripts/skinny_gate.py --log <server.log> --tp 2 --depth 3
+```
+
+The TP2 census expectation is **256** protected FP8 module instances (128 per rank × 2 ranks), not the upstream TP4 script's hard-coded 512. The gate also requires the requested MTP depth, lm_head QPN route, no repack fallback, declined checkpoint FP8-KV directive, zero scalar-paged calls, XQA, QPN2 and QPN8 dispatch.
