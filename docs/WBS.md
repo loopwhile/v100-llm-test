@@ -24,7 +24,7 @@
 
 ## 1. 신규 환경 및 artifact 검증 [TODO]
 
-### 1.1 호스트 스냅샷
+### 1.1 호스트 스냅샷 [DONE]
 다음을 수집한다.
 - NVIDIA driver 및 CUDA compatibility.
 - V100 2장의 identity 및 VRAM.
