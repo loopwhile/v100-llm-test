@@ -28,7 +28,10 @@
       "revision": "7b92b5b28818151e8669af2e45e88d6086f490dd",
       "path": "/srv/models/gemma-4-26b-a4b-it-qat-gguf/mtp-gemma-4-26B-A4B-it.gguf",
       "sha256": "7272d97595f0d4c74bd7b623492b7dbdaafd8b7c72f329a8270ba4eca68f768a"
-    }
+    },
+    "mtp_draft_n_max": 4,
+    "mtp_companion_required": true,
+    "mtp_draft_device": "CUDA0"
   },
   "onecat_vllm": {
     "status": "pending_exact_local_artifact_and_v100_compatibility",
