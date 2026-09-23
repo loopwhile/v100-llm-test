@@ -67,6 +67,18 @@ class RuntimePlanTests(unittest.TestCase):
   p=r.build_plan(ROOT,"ornith-1.5-9b","MTP",1,"tp2-shared")
   cmd=p["commands"][0]
   self.assertEqual(cmd[cmd.index("--spec-draft-n-max")+1],"3")
+ def test_gemma_mtp_uses_explicit_companion(self):
+  for lane in ("MTP","MTP_NGRAM"):
+   p=r.build_plan(ROOT,"gemma4-26b-a4b",lane,1,"tp2-shared")
+   c=p["commands"][0]
+   self.assertEqual(c[c.index("--spec-draft-n-max")+1],"4")
+   self.assertEqual(c[c.index("--model-draft")+1],"/model/draft.gguf")
+   self.assertEqual(c[c.index("--spec-draft-device")+1],"CUDA0")
+   self.assertTrue(any("mtp-gemma-4-26B-A4B-it.gguf:/model/draft.gguf:ro" in x for x in c))
+ def test_gemma_target_does_not_mount_companion(self):
+  c=r.build_plan(ROOT,"gemma4-26b-a4b","TARGET",1,"tp2-shared")["commands"][0]
+  self.assertNotIn("--model-draft",c)
+  self.assertFalse(any("/model/draft.gguf" in x for x in c))
  def test_gemma_verified_llama_pending_stock(self):
   self.assertTrue(r.build_plan(ROOT,"gemma4-26b-a4b","NGRAM",1,"tp2-shared")["supported_for_planning"])
   self.assertFalse(r.build_plan(ROOT,"gemma4-26b-a4b","STOCK",1,"tp2-shared")["supported_for_planning"])
