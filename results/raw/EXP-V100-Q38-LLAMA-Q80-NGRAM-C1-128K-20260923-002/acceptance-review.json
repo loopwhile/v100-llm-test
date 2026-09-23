@@ -10,5 +10,6 @@
   "effective_speculative_types": "none,ngram-simple",
   "speculative_enabled": true,
   "draft_tokens": 0,
-  "content_review": "Coherent shallow-copy aliasing risk and mutation/isolation test; acknowledges integer values are unaffected. No obvious corruption or repetition loop. Serving acceptance, not general coding quality."
+  "content_review": "Coherent shallow-copy aliasing risk and mutation/isolation test; acknowledges integer values are unaffected. No obvious corruption or repetition loop. Serving acceptance, not general coding quality.",
+  "ngram_acceptance_scope": "C1 validates NGRAM-on 128K compatibility/capacity and output integrity; draft activity or speedup is not required. Performance effectiveness is deferred to Phase 5."
 }
