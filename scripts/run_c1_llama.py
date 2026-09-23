@@ -7,6 +7,7 @@ launches a follow-up experiment automatically.
 import argparse
 import fcntl
 import json
+import os
 from pathlib import Path
 import shlex
 import socket
