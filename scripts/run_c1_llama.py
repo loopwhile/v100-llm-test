@@ -200,16 +200,26 @@ def run_locked(args):
 
         artifact = plan['model_identity']
         checksum = command(['sha256sum', artifact['path']], 300).split()[0]
-        h.save(
-            runtime / 'artifact-check.json',
-            dict(
-                path=artifact['path'],
-                sha256=checksum,
-                expected=artifact['sha256'],
-            ),
+        artifact_check = dict(
+            path=artifact['path'],
+            sha256=checksum,
+            expected=artifact['sha256'],
         )
         if checksum != artifact['sha256']:
             raise RuntimeError('model SHA256 mismatch')
+        if args.lane in ('MTP', 'MTP_NGRAM') and artifact.get('mtp_companion_required'):
+            companion = artifact.get('mtp_companion') or {}
+            companion_checksum = command(
+                ['sha256sum', companion['path']], 300
+            ).split()[0]
+            artifact_check['mtp_companion'] = dict(
+                path=companion['path'],
+                sha256=companion_checksum,
+                expected=companion['sha256'],
+            )
+            if companion_checksum != companion['sha256']:
+                raise RuntimeError('MTP companion SHA256 mismatch')
+        h.save(runtime / 'artifact-check.json', artifact_check)
 
         image = cmd[cmd.index('--entrypoint') + 2]
         (runtime / 'runtime-version.txt').write_text(
