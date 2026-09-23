@@ -43,6 +43,22 @@ class LlamaC1RunnerTests(unittest.TestCase):
             self.assertNotIn('--model-draft', plan['commands'][0])
             self.assertNotIn('--spec-draft-model', plan['commands'][0])
 
+    def test_gemma_contract_exposes_explicit_mtp_companion(self):
+        target = runtime_launcher.build_plan(
+            ROOT, 'gemma4-26b-a4b', 'TARGET', 1, 'tp2-shared', 18080
+        )
+        mtp = runtime_launcher.build_plan(
+            ROOT, 'gemma4-26b-a4b', 'MTP', 1, 'tp2-shared', 18080
+        )
+        self.assertTrue(target['supported_for_planning'])
+        self.assertTrue(mtp['supported_for_planning'])
+        self.assertEqual(mtp['weight_quant'], 'UD-Q4_K_XL')
+        self.assertEqual(mtp['kv_cache'], 'FP16')
+        self.assertTrue(mtp['model_identity']['mtp_companion_required'])
+        self.assertEqual(mtp['model_identity']['mtp_draft_n_max'], 4)
+        self.assertNotIn('--model-draft', target['commands'][0])
+        self.assertIn('--model-draft', mtp['commands'][0])
+
     def test_preflight_failure_is_durable_and_cannot_be_reused(self):
         plan = runtime_launcher.build_plan(
             ROOT, 'ornith-1.5-9b', 'TARGET', 1, 'tp2-shared', 0
