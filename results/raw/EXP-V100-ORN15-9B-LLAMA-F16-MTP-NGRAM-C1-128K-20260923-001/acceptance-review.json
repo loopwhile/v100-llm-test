@@ -1,0 +1,14 @@
+{
+  "reviewed_at_utc": "2026-09-23T15:00:00+00:00",
+  "verdict": "PASS_C1_128K",
+  "prompt_receipt_matches_usage": true,
+  "reserved_budget_tokens": 131071,
+  "completion_tokens": 507,
+  "finish_reason": "stop",
+  "runtime_truncated": 0,
+  "post_health_healthy": true,
+  "content_review": "Structurally coherent and non-truncated, but repeats the MTP semantic error that dict(self.pages) is a live reference. The supplied code creates a defensive dict copy. Recorded as a model-quality caveat only.",
+  "speculative_evidence": "composite draft-mtp,ngram-simple configured; observed counters exactly match MTP-only: draft_n=645, accepted=291, acceptance=0.45116, mean draft length=2.35; no evidence of additional NGRAM contribution in this request",
+  "runtime_errors": [],
+  "cleanup": "owned container stopped; server exit 0"
+}
