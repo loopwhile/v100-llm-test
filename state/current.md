@@ -9,4 +9,3 @@
 - 원격 runner 및 측정 컨테이너 종료 확인. GPU 메모리 0 MiB.
 - Raw evidence, 개별 보고서, summary/comparison CSV 보존.
 - 후속 측정은 시작하지 않음.
-- Commit/push 미수행.
