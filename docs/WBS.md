@@ -118,6 +118,8 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - 처음부터 128K로 테스트한다.
 - 96K/64K는 128K capacity 실패 이후 원인 확인용 diagnostic으로만 사용한다.
 - TARGET vs NGRAM 비교는 모든 llama.cpp 모델에서 필수다.
+- C1/C2의 NGRAM lane 목적은 `ngram-simple`이 활성화된 상태에서 해당 context/concurrency를 정상 수용하고 output integrity를 유지하는지 확인하는 것이다. C1/C2 PASS에 draft/accepted token 발생이나 TARGET 대비 속도 향상을 요구하지 않는다.
+- NGRAM의 실제 가속 효과는 Phase 5의 performance workload에서 TARGET vs NGRAM, MTP vs MTP_NGRAM으로 판정한다. Capacity workload에서 draft counter가 0이거나 성능 향상이 관측되지 않아도 NGRAM acceptance 실패로 해석하지 않는다.
 - MTP 대상 모델에서는 MTP vs MTP_NGRAM pair를 유지한다.
 - MTP 대상 모델에서 MTP 또는 MTP_NGRAM이 지원되지 않으면 해당 결과를 `UNSUPPORTED`로 명시한다.
 - C1 PASS는 요청한 output 정상 완료, 유효한 출력, OOM/truncation/corruption 없음, 실행 후 server 정상 상태를 모두 요구한다.
@@ -131,7 +133,7 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - Qwen3.8-27B에는 `MTP`, `MTP_NGRAM`을 계획하지 않는다.
 - 각 lane에서 C1 128K capacity/correctness를 판정한다.
 - TARGET: `EXP-V100-Q38-LLAMA-Q80-TARGET-C1-128K-20260923-002` — `PASS_C1_128K`.
-- NGRAM: `EXP-V100-Q38-LLAMA-Q80-NGRAM-C1-128K-20260923-002` — `PASS_C1_128K`. 실제 slot에서 ngram-simple 활성 확인; draft 토큰은 0.
+- NGRAM: `EXP-V100-Q38-LLAMA-Q80-NGRAM-C1-128K-20260923-002` — `PASS_C1_128K`. 실제 slot에서 `ngram-simple` 활성 확인; draft 토큰은 0이었으나 C1은 가속 효과가 아니라 NGRAM-on capacity/correctness를 판정하므로 PASS에 영향이 없다.
 - TARGET/NGRAM의 `20260923-001` 시도는 inference 전 사전 검사 종료(`INCONCLUSIVE`)이며 capacity 실패나 measured repetition으로 계산하지 않는다.
 
 #### 2.1.2 Ornith 1.5 9B [DONE]
@@ -139,9 +141,9 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - KV: `FP16`.
 - 실행 lane: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
 - TARGET: `EXP-V100-ORN15-9B-LLAMA-F16-TARGET-C1-128K-20260923-001` — `PASS_C1_128K`; prefill 918.69 tok/s, decode 49.23 tok/s.
-- NGRAM: `EXP-V100-ORN15-9B-LLAMA-F16-NGRAM-C1-128K-20260923-001` — `PASS_C1_128K`; prefill 918.66 tok/s, decode 48.13 tok/s. `ngram-simple` 활성은 확인됐으나 이번 request에서 draft/accepted-token 가속 evidence는 관측되지 않았다.
+- NGRAM: `EXP-V100-ORN15-9B-LLAMA-F16-NGRAM-C1-128K-20260923-001` — `PASS_C1_128K`; prefill 918.66 tok/s, decode 48.13 tok/s. `ngram-simple` 활성 상태에서 128K capacity/correctness를 통과했다. Draft/accepted-token 발생 및 속도 향상은 C1 acceptance 기준이 아니며 Phase 5에서 평가한다.
 - MTP: `EXP-V100-ORN15-9B-LLAMA-F16-MTP-C1-128K-20260923-001` — `PASS_C1_128K`; prefill 725.93 tok/s, decode 52.12 tok/s; draft 645, accepted 291, acceptance 45.116%.
-- MTP_NGRAM: `EXP-V100-ORN15-9B-LLAMA-F16-MTP-NGRAM-C1-128K-20260923-001` — `PASS_C1_128K`; prefill 726.00 tok/s, decode 52.16 tok/s; draft/accepted counters가 MTP-only와 동일해 이번 request에서 NGRAM 추가 기여는 입증되지 않았다.
+- MTP_NGRAM: `EXP-V100-ORN15-9B-LLAMA-F16-MTP-NGRAM-C1-128K-20260923-001` — `PASS_C1_128K`; prefill 726.00 tok/s, decode 52.16 tok/s; composite `draft-mtp,ngram-simple` 상태에서 128K capacity/correctness를 통과했다. MTP counters는 645/291이며 NGRAM의 추가 성능 기여 여부는 C1에서 판정하지 않고 Phase 5로 이관한다.
 - 네 lane 모두 prompt 129,023 + output reserve 2,048 = 131,071 / 131,072 token budget을 사용했고, 정상 stop / post-health / cleanup / exit 0을 확인했다.
 - 출력 의미 품질 caveat: TARGET/NGRAM의 일부 verification assertion은 live state와 snapshot state를 혼동했고, MTP 계열은 `dict(self.pages)`를 live reference로 오인했다. 이는 serving/output-integrity acceptance와 분리해 각 `acceptance-review.json`에 기록한다.
 
