@@ -44,7 +44,7 @@ def atomic_text(path, text):
 
 def _csv_text(fields, rows):
     buf = io.StringIO(newline="")
-    writer = csv.DictWriter(buf, fieldnames=fields, extrasaction="ignore")
+    writer = csv.DictWriter(buf, fieldnames=fields, extrasaction="ignore", lineterminator="\n")
     writer.writeheader()
     writer.writerows(rows)
     return buf.getvalue()
