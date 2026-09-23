@@ -59,9 +59,13 @@ def llama_plan(lock,lanes,tops,m,lane,c,topology,port,gateway_port=18079):
        "--entrypoint","llama-server",rt["image"],"-m","/model/target.gguf",
        "--host","0.0.0.0","--port","8080","-ngl","all"]
   if tp2: cmd+=["--split-mode","layer","--tensor-split","1,1"]
+  spec_args=list(s["args"])
+  if lane in ("MTP","MTP_NGRAM") and mc.get("mtp_draft_n_max") is not None:
+   i=spec_args.index("--spec-draft-n-max")
+   spec_args[i+1]=str(mc["mtp_draft_n_max"])
   cmd+=["--ctx-size",str(total),"--parallel",str(parallel),"--kv-unified",
         "--kv-unified-per-slot","131072","--batch-size","512","--ubatch-size","128",
-        "--cache-type-k",cache,"--cache-type-v",cache,"--flash-attn","on",*s["args"],
+        "--cache-type-k",cache,"--cache-type-v",cache,"--flash-attn","on",*spec_args,
         "--jinja","--reasoning","off","--metrics","--slots","--no-warmup"]
   return cmd
  if topology=="tp2-shared":
