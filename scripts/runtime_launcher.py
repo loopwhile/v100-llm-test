@@ -63,6 +63,13 @@ def llama_plan(lock,lanes,tops,m,lane,c,topology,port,gateway_port=18079):
   if lane in ("MTP","MTP_NGRAM") and mc.get("mtp_draft_n_max") is not None:
    i=spec_args.index("--spec-draft-n-max")
    spec_args[i+1]=str(mc["mtp_draft_n_max"])
+  if lane in ("MTP","MTP_NGRAM") and mc.get("mtp_companion_required"):
+   companion=mc.get("mtp_companion") or {}
+   if not companion.get("path"): raise ValueError("MTP companion path is required but not pinned")
+   insert_at=cmd.index("--entrypoint")
+   cmd[insert_at:insert_at]=["-v",f"{companion['path']}:/model/draft.gguf:ro"]
+   spec_args+=["--model-draft","/model/draft.gguf"]
+   if mc.get("mtp_draft_device"): spec_args+=["--spec-draft-device",str(mc["mtp_draft_device"])]
   cmd+=["--ctx-size",str(total),"--parallel",str(parallel),"--kv-unified",
         "--kv-unified-per-slot","131072","--batch-size","512","--ubatch-size","128",
         "--cache-type-k",cache,"--cache-type-v",cache,"--flash-attn","on",*spec_args,
@@ -142,7 +149,14 @@ def preflight(plan):
     add("help:exit",h.returncode==0,txt[:2000] if h.returncode else "")
     for token in ("--spec-type","--kv-unified","--kv-unified-per-slot","--slots"):add("help:"+token,token in txt)
     if plan["lane"] in ("NGRAM","MTP_NGRAM"):add("help:ngram-simple","ngram-simple" in txt)
-    if plan["lane"] in ("MTP","MTP_NGRAM"):add("help:draft-mtp","draft-mtp" in txt)
+    if plan["lane"] in ("MTP","MTP_NGRAM"):
+     add("help:draft-mtp","draft-mtp" in txt)
+     companion=plan["model_identity"].get("mtp_companion")
+     if plan["model_identity"].get("mtp_companion_required"):
+      add("help:spec-draft-model","--spec-draft-model" in txt or "--model-draft" in txt)
+      add("help:spec-draft-device","--spec-draft-device" in txt)
+      path=(companion or {}).get("path")
+      add("mtp_companion_path",bool(path) and Path(path).is_file(),str(path))
  else:
   key="V100_SKINNY_PYTHON" if plan["lane"]=="SKINNY" else "V100_1CAT_PYTHON"
   py=os.environ.get(key);add(key,bool(py) and Path(py).is_file(),str(py))
