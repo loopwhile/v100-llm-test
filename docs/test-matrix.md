@@ -18,6 +18,8 @@ Mandatory ngram pairing:
 
 TARGET versus NGRAM remains required for every llama.cpp model. Qwen3.8-27B intentionally has no MTP/MTP_NGRAM benchmark lane; the MTP pair applies to Ornith/Gemma candidates that declare it.
 
+C1/C2 NGRAM rows are compatibility/capacity checks, not acceleration benchmarks. A row can PASS with zero/unavailable draft counters or without a TARGET-relative speedup if NGRAM is configured, the requested capacity succeeds, output is valid, and the server remains healthy. Actual NGRAM speedup is judged in Phase 5 using `workloads/performance/v1.json`.
+
 ## 1Cat-vLLM / v100-skinny matrix
 
 | Model | Backend | Weight | KV | Spec | Topology | Required result |
