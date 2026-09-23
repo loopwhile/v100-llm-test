@@ -27,12 +27,11 @@ def output_ok(case,res):
 
 def metric_value(text,name):
  vals=[]
- pattern=re.compile(rf"^{re.escape(name)}(?:\\{{[^}}]*\\}})?\\s+([-+0-9.eE]+)(?:\\s|$)")
- for line in text.splitlines():
-  m=pattern.match(line.strip())
-  if m:
-   try:vals.append(float(m.group(1)))
-   except ValueError:pass
+ for raw in text.splitlines():
+  line=raw.strip()
+  if not (line.startswith(name+" ") or line.startswith(name+"{")):continue
+  try:vals.append(float(line.rsplit(None,1)[1]))
+  except (ValueError,IndexError):pass
  return max(vals) if vals else None
 
 def resident_slots(slots):

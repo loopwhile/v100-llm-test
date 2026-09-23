@@ -27,7 +27,7 @@ The C2 value intentionally asks for two independent 128K logical contexts. If it
 
 ## 1Cat-vLLM stock
 
-Stock retains the imported 1Cat-vLLM 1.5.0 wheel identity, FLASH_ATTN_V100, TP2, 128K per sequence, and \`max_num_seqs=1|2\`. Ornith 1.5 9B additionally has a first-class 1GPU×2 STOCK topology once its exact NVFP4 artifact is resolved: two TP1 processes, one pinned to each V100, each with \`max_model_len=131072\` and \`max_num_seqs=1\`.
+Stock retains the imported 1Cat-vLLM 1.5.0 wheel identity, FLASH_ATTN_V100, TP2, 128K per sequence, and \`max_num_seqs=1|2\`. Ornith 1.5 9B additionally has a first-class 1GPU×2 STOCK topology once its exact NVFP4 artifact and exact MTP speculative launch configuration are resolved: two TP1 processes, one pinned to each V100, each with \`max_model_len=131072\` and \`max_num_seqs=1\`. A non-target speculative candidate without a pinned launch configuration fails closed as \`UNSUPPORTED\`.
 
 ## v100-skinny
 

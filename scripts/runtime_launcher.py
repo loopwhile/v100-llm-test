@@ -65,15 +65,20 @@ def onecat_plan(lock,m,lane,c,topology,port):
  mc=m["onecat_vllm"]
  if lane=="STOCK":
   if not mc.get("path"):return unsupported(m,"1Cat-vLLM",lane,topology,"exact 1Cat artifact is pending")
-  rt=lock["runtimes"]["1Cat-vLLM"];py=os.environ.get("V100_1CAT_PYTHON","V100_1CAT_PYTHON_NOT_SET");kv_candidates=mc.get("kv_candidates") or [mc.get("desired_kv")];kv_value=kv_candidates[0] if kv_candidates else None;weight=mc.get("weight_quant") or mc.get("desired_weight_quant");specs=mc.get("speculative_candidates") or [mc.get("speculative_candidate","target-only")]
+  rt=lock["runtimes"]["1Cat-vLLM"];py=os.environ.get("V100_1CAT_PYTHON","V100_1CAT_PYTHON_NOT_SET");kv_candidates=mc.get("kv_candidates") or [mc.get("desired_kv")];kv_value=kv_candidates[0] if kv_candidates else None;weight=mc.get("weight_quant") or mc.get("desired_weight_quant");specs=mc.get("speculative_candidates") or [mc.get("speculative_candidate","target-only")];spec_mode=specs[0]
   if not kv_value:return unsupported(m,"1Cat-vLLM",lane,topology,"KV candidate unresolved")
+  spec_args=[]
+  if spec_mode!="target-only":
+   spec_cfg=mc.get("speculative_config")
+   if not isinstance(spec_cfg,dict):return unsupported(m,"1Cat-vLLM",lane,topology,"exact speculative launch config is unresolved")
+   spec_args=["--speculative-config",json.dumps(spec_cfg,separators=(",",":"))]
   def command(p,tp,max_seqs):
-   return [py,"-m","vllm.entrypoints.openai.api_server","--model",mc["path"],"--served-model-name",m["model_id"],"--trust-remote-code","--dtype","half","--attention-backend","FLASH_ATTN_V100","--tensor-parallel-size",str(tp),"--kv-cache-dtype",kv(kv_value),"--max-model-len","131072","--max-num-seqs",str(max_seqs),"--max-num-batched-tokens","2048","--gpu-memory-utilization","0.90","--enforce-eager","--host","127.0.0.1","--port",str(p)]
+   return [py,"-m","vllm.entrypoints.openai.api_server","--model",mc["path"],"--served-model-name",m["model_id"],"--trust-remote-code","--dtype","half","--attention-backend","FLASH_ATTN_V100","--tensor-parallel-size",str(tp),"--kv-cache-dtype",kv(kv_value),"--max-model-len","131072","--max-num-seqs",str(max_seqs),"--max-num-batched-tokens","2048","--gpu-memory-utilization","0.90","--enforce-eager",*spec_args,"--host","127.0.0.1","--port",str(p)]
   if topology=="tp2-shared":commands=[command(port,2,c)];envs=[{"CUDA_VISIBLE_DEVICES":"0,1"}];endpoints=[f"http://127.0.0.1:{port}"]
   else:
    if c!=2:raise ValueError("independent topology is C2 only")
    commands=[command(port,1,1),command(port+1,1,1)];envs=[{"CUDA_VISIBLE_DEVICES":"0"},{"CUDA_VISIBLE_DEVICES":"1"}];endpoints=[f"http://127.0.0.1:{port}",f"http://127.0.0.1:{port+1}"]
-  return {"supported_for_planning":True,"runtime":"1Cat-vLLM","runtime_revision":f"{rt['version']} wheel sha256:{rt['sha256']}","model":m["model_id"],"model_identity":mc,"weight_quant":weight,"kv_cache":kv_value,"lane":lane,"speculative":specs[0],"ngram":"N/A","topology":topology,"concurrency":c,"context_tokens_per_agent":131072,"commands":commands,"environment":{},"command_environments":envs,"endpoints":endpoints}
+  return {"supported_for_planning":True,"runtime":"1Cat-vLLM","runtime_revision":f"{rt['version']} wheel sha256:{rt['sha256']}","model":m["model_id"],"model_identity":mc,"weight_quant":weight,"kv_cache":kv_value,"lane":lane,"speculative":spec_mode,"ngram":"N/A","topology":topology,"concurrency":c,"context_tokens_per_agent":131072,"commands":commands,"environment":{},"command_environments":envs,"endpoints":endpoints}
  if lane!="SKINNY":raise ValueError("unknown onecat lane")
  if topology!="tp2-shared":return unsupported(m,"1Cat-vLLM+v100-skinny",lane,topology,"v100-skinny v1.1 is pinned only as an experimental TP2 compatibility lane")
  sm=m.get("skinny_v11")
@@ -164,5 +169,4 @@ def main():
  if a.preflight:print(json.dumps({"plan":p,"preflight":preflight(p)},ensure_ascii=False,indent=2));return 0
  if a.execute:return launch(p,a.log_dir)
  print(json.dumps(p,ensure_ascii=False,indent=2));return 0
-if __name__=="__main__":raise SystemExit(main())
 if __name__=="__main__":raise SystemExit(main())

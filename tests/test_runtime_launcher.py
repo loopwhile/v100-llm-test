@@ -21,9 +21,12 @@ class RuntimePlanTests(unittest.TestCase):
   self.assertEqual(len(p["commands"]),2);self.assertEqual(p["endpoints"],["http://127.0.0.1:18080","http://127.0.0.1:18081"])
   self.assertIn("device=0",p["commands"][0]);self.assertIn("device=1",p["commands"][1])
  def test_ornith9_stock_independent_when_artifact_resolves(self):
-  lock,_,_,m=r.state(ROOT,"ornith-1.5-9b");m=copy.deepcopy(m);m["onecat_vllm"].update(path="/srv/models/mock-ornith9",weight_quant="NVFP4",kv_candidates=["FP16"],speculative_candidates=["MTP"])
+  lock,_,_,m=r.state(ROOT,"ornith-1.5-9b");m=copy.deepcopy(m);m["onecat_vllm"].update(path="/srv/models/mock-ornith9",weight_quant="NVFP4",kv_candidates=["FP16"],speculative_candidates=["MTP"],speculative_config={"method":"mtp","num_speculative_tokens":3})
   p=r.onecat_plan(lock,m,"STOCK",2,"1gpu-x2-independent",18080);self.assertTrue(p["supported_for_planning"]);self.assertEqual(len(p["commands"]),2);self.assertEqual(p["command_environments"],[{"CUDA_VISIBLE_DEVICES":"0"},{"CUDA_VISIBLE_DEVICES":"1"}])
-  for c in p["commands"]:self.assertEqual(c[c.index("--tensor-parallel-size")+1],"1");self.assertEqual(c[c.index("--max-num-seqs")+1],"1")
+  for c in p["commands"]:self.assertEqual(c[c.index("--tensor-parallel-size")+1],"1");self.assertEqual(c[c.index("--max-num-seqs")+1],"1");self.assertIn("--speculative-config",c)
+ def test_ornith9_stock_fails_closed_without_spec_config(self):
+  lock,_,_,m=r.state(ROOT,"ornith-1.5-9b");m=copy.deepcopy(m);m["onecat_vllm"].update(path="/srv/models/mock-ornith9",weight_quant="NVFP4",kv_candidates=["FP16"],speculative_candidates=["MTP"])
+  p=r.onecat_plan(lock,m,"STOCK",2,"1gpu-x2-independent",18080);self.assertFalse(p["supported_for_planning"]);self.assertIn("speculative",p["reason"])
  def test_stock_tp2_c2(self):
   p=r.build_plan(ROOT,"qwen3.8-27b","STOCK",2,"tp2-shared");c=p["commands"][0]
   self.assertEqual(c[c.index("--tensor-parallel-size")+1],"2");self.assertEqual(c[c.index("--max-num-seqs")+1],"2")

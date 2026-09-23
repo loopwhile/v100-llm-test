@@ -10,7 +10,7 @@ from pathlib import Path
 
 from bench_harness import HTTPAdapter, canon, sha
 
-IDENTIFIER = re.compile(r"\\b[A-Za-z_][A-Za-z0-9_]*\\b")
+IDENTIFIER = re.compile(r"\b[A-Za-z_][A-Za-z0-9_]*\b")
 KEEP_IDENTIFIERS = set(keyword.kwlist) | {"True", "False", "None", "self", "cls"}
 
 

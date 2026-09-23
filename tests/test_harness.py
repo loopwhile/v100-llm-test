@@ -43,6 +43,9 @@ class HarnessTests(unittest.TestCase):
  def test_multi_endpoint_routes_independent_servers(self):
   cfg=CONFIG|{"experiment_id":"EXP-V100-ORN9-LLAMA-F16-MTP-C2-128K-001","concurrency":2,"topology":"1gpu-x2-independent"}
   self.assertEqual(self.run_case("independent",h.MultiEndpointAdapter([Mock(),Mock()]),cfg)[1],"PASS_C2_ACTIVE")
+ def test_prometheus_metric_parser(self):
+  text='vllm:num_requests_running 1\nvllm:num_requests_running{model_name="x"} 2\nother_metric 9\n'
+  self.assertEqual(h.metric_value(text,"vllm:num_requests_running"),2.0)
  def test_server_metric_overlap_classification(self):
   a=h.HTTPAdapter("http://mock","1Cat-vLLM");a._probe_samples=[{"monotonic_s":11.0,"processing":2.0,"waiting":0.0,"resident_slots":None},{"monotonic_s":12.0,"processing":2.0,"waiting":0.0,"resident_slots":None}]
   e=a.overlap_evidence([{"verdict":h.PASS,"first_abs":10.0,"end_abs":13.0},{"verdict":h.PASS,"first_abs":10.5,"end_abs":14.0}]);self.assertTrue(e["resident"]);self.assertTrue(e["active_overlap"]);self.assertFalse(e["queue_only"])
