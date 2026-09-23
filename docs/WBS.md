@@ -18,11 +18,11 @@
 ### 0.3 런타임 lane [DONE]
 - llama.cpp: TARGET / NGRAM / MTP / MTP_NGRAM.
 - 1Cat-vLLM: STOCK.
-- v100-skinny: 필수 SKINNY lane.
+- v100-skinny: 필수 SKINNY 결과 row. 현재 2×V100-16GB에서는 WBS 1.4의 `FAIL_OOM_MODEL_LOAD`가 terminal preflight 결과다.
 - Shared TP2 및 Ornith 9B 1GPU×2 topology 정의.
 - Ornith 9B 1GPU×2는 LiteLLM 단일 gateway endpoint를 포함한 실제 배포 topology로 고정한다. backend 직접 분배는 진단용일 뿐 정식 acceptance 경로가 아니다.
 
-## 1. 신규 환경 및 artifact 검증 [TODO]
+## 1. 신규 환경 및 artifact 검증 [DONE]
 
 ### 1.1 호스트 스냅샷 [DONE]
 다음을 수집한다.
@@ -112,81 +112,173 @@
 repository identity가 검증되지 않은 항목은 unresolved 상태를 유지하며 추정값으로 채우지 않는다.
 ## 2. C1 — 128K capacity 및 correctness [TODO]
 
-workloads/capacity/v1.json을 사용하며, 정확한 live tokenizer 기준으로 materialize한다.
+`workloads/capacity/v1.json`을 사용하며, 정확한 live tokenizer 기준으로 materialize한다.
 
-### 2.1 llama.cpp 필수 lane
-모든 검증된 llama.cpp artifact에서 `TARGET`과 `NGRAM`을 실행한다.
-
-MTP 범위:
-- Qwen3.8-27B: `TARGET` + `NGRAM`만 실행한다.
-- Ornith 1.5 9B, Ornith 1.5 35B-A3B, Gemma4 26B-A4B: `MTP` + `MTP_NGRAM`도 실행한다.
-- MTP 대상 모델에서 MTP 또는 MTP_NGRAM이 지원되지 않으면 해당 결과를 `UNSUPPORTED`로 명시한다.
-
-규칙:
-- TARGET vs NGRAM 비교는 필수다.
-- MTP 대상 모델에서는 MTP vs MTP_NGRAM pair를 유지한다.
+공통 규칙:
 - 처음부터 128K로 테스트한다.
 - 96K/64K는 128K capacity 실패 이후 원인 확인용 diagnostic으로만 사용한다.
+- TARGET vs NGRAM 비교는 모든 llama.cpp 모델에서 필수다.
+- MTP 대상 모델에서는 MTP vs MTP_NGRAM pair를 유지한다.
+- MTP 대상 모델에서 MTP 또는 MTP_NGRAM이 지원되지 않으면 해당 결과를 `UNSUPPORTED`로 명시한다.
+- C1 PASS는 요청한 output 정상 완료, 유효한 출력, OOM/truncation/corruption 없음, 실행 후 server 정상 상태를 모두 요구한다.
 
-C1 PASS 조건:
-- live tokenizer 기준 전체 context budget이 128K에 근접할 것.
-- 요청한 output이 정상 완료될 것.
-- 출력이 유효할 것.
-- OOM, truncation, corruption이 없을 것.
-- 실행 후 server가 정상 상태일 것.
+### 2.1 llama.cpp
+
+#### 2.1.1 Qwen3.8-27B [TODO]
+- artifact: `UD-Q4_K_M`.
+- KV: `Q8_0`.
+- 실행 lane: `TARGET`, `NGRAM`.
+- Qwen3.8-27B에는 `MTP`, `MTP_NGRAM`을 계획하지 않는다.
+- 각 lane에서 C1 128K capacity/correctness를 판정한다.
+
+#### 2.1.2 Ornith 1.5 9B [TODO]
+- artifact: `Q6_K`.
+- KV: `FP16`.
+- 실행 lane: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
+- 각 lane에서 C1 128K capacity/correctness를 판정한다.
+
+#### 2.1.3 Ornith 1.5 35B-A3B [TODO]
+- artifact: `Q4_K_M`.
+- KV: `Q8_0`.
+- 실행 lane: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
+- 각 lane에서 C1 128K capacity/correctness를 판정한다.
+
+#### 2.1.4 Gemma4 26B-A4B [TODO]
+- artifact: `UD-Q4_K_XL`.
+- KV: `FP16`.
+- 실행 lane: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
+- 각 lane에서 C1 128K capacity/correctness를 판정한다.
 
 ### 2.2 1Cat-vLLM STOCK
-검증된 모든 STOCK artifact에 대해:
+
+공통 실행 조건:
 - TP2.
-- max_model_len 131072.
-- max_num_seqs 1.
-- 선언된 KV format.
-- 신규 C1 128K acceptance 수행.
+- `max_model_len=131072`.
+- `max_num_seqs=1`.
+- model profile에 선언된 KV format과 speculative configuration을 사용한다.
+- artifact identity와 runtime compatibility를 별도로 판정한다.
 
-### 2.3 v100-skinny SKINNY [CLOSED BY 1.4 PRECHECK]
-Qwen3.8 SKINNY는 WBS 1.4에서 현재 P520 2×V100-16GB 구성의 model-load 단계에서 `FAIL_OOM_MODEL_LOAD`가 확정됐다. server boot 및 boot gate 이전 실패이므로 128K C1/C2는 실행하지 않는다.
+#### 2.2.1 Qwen3.8-27B STOCK [TODO]
+- artifact: `QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4`.
+- WBS 1.3 TP2 runtime preflight: PASS.
+- KV: `fp8_e5m2`.
+- speculative: target-only.
+- 신규 C1 128K acceptance를 수행한다.
 
-고정된 실험 identity는 보존한다:
-- v100-skinny v1.1.
-- 1Cat 1.2.2.
-- RadixArk mixed NVFP4/FP8 checkpoint.
-- experimental TP2.
-- MTP k=3 contract.
+#### 2.2.2 Ornith 1.5 9B STOCK [BLOCKED — runtime compatibility pending]
+- artifact: `ornith-ai/Ornith-1.5-9B-NVFP4` exact revision/path 확인 완료.
+- artifact identity는 확정됐지만 V100 runtime compatibility는 아직 미검증이다.
+- runtime compatibility를 먼저 검증하고 PASS한 경우에만 C1 128K로 진행한다.
+- TP2 외에 Phase 4의 1GPU×2 + LiteLLM topology도 별도로 검증한다.
 
-non-Qwen skinny row도 standalone v1.1 contract가 없으므로 실제 지원 contract가 별도로 확정되지 않는 한 `UNSUPPORTED`로 유지한다.
+#### 2.2.3 Ornith 1.5 35B-A3B STOCK [BLOCKED — runtime compatibility pending]
+- artifact: `ornith-ai/Ornith-1.5-35B-A3B-NVFP4` exact revision/path 확인 완료.
+- artifact identity는 확정됐지만 V100 runtime compatibility는 아직 미검증이다.
+- runtime compatibility를 먼저 검증하고 PASS한 경우에만 C1 128K로 진행한다.
+
+#### 2.2.4 Gemma4 26B-A4B STOCK [BLOCKED — exact artifact pending]
+- exact local NVFP4 artifact가 아직 확정되지 않았다.
+- exact artifact를 확정하고 V100 runtime compatibility를 검증한 뒤 C1 128K 진행 여부를 결정한다.
+- 검증되지 않은 repository/revision/path를 추정해서 채우지 않는다.
+
+### 2.3 v100-skinny SKINNY
+
+#### 2.3.1 Qwen3.8-27B SKINNY [CLOSED — FAIL_OOM_MODEL_LOAD]
+- WBS 1.4에서 현재 P520 2×V100-16GB 구성의 model-load 단계에서 `FAIL_OOM_MODEL_LOAD`가 확정됐다.
+- 실패 위치: `process_weights_after_loading -> _qpn_stash -> _qpn_prepack`.
+- server boot 및 depth-3 boot gate: `NOT_REACHED`.
+- 따라서 C1 128K를 실행하지 않는다.
+- v100-skinny v1.1 / 1Cat 1.2.2 / RadixArk mixed NVFP4/FP8 / experimental TP2 / MTP k=3 identity는 evidence로만 보존한다.
+
+#### 2.3.2 Ornith 1.5 9B SKINNY [UNSUPPORTED]
+- pinned v100-skinny v1.1 standalone model contract가 없다.
+- current project에서는 C1/C2 실행 대상으로 예약하지 않는다.
+
+#### 2.3.3 Ornith 1.5 35B-A3B SKINNY [UNSUPPORTED]
+- pinned v100-skinny v1.1 standalone model contract가 없다.
+- current project에서는 C1/C2 실행 대상으로 예약하지 않는다.
+
+#### 2.3.4 Gemma4 26B-A4B SKINNY [UNSUPPORTED]
+- pinned v100-skinny v1.1 standalone model contract가 없다.
+- current project에서는 C1/C2 실행 대상으로 예약하지 않는다.
 
 ## 3. C2 — 독립적인 128K 에이전트 2개 [TODO]
 
-선행 조건:
+공통 선행 조건:
 - 동일한 exact lane이 C1 128K를 PASS해야 한다.
 - 단, C2 capacity 한계 자체를 확인하기 위한 의도적인 failure-boundary 실험은 예외로 한다.
-
-workloads/concurrency/v1.json을 사용하며 다음을 보장한다.
-- Project A와 Project B는 서로 무관한 프로젝트다.
-- prompt hash가 서로 다르다.
+- `workloads/concurrency/v1.json`을 사용한다.
+- Project A와 Project B는 서로 무관한 프로젝트이며 prompt hash가 달라야 한다.
 - 인위적으로 큰 shared prefix를 만들지 않는다.
 
 ### 3.1 Shared TP2 llama.cpp
-다음 설정을 사용한다.
-- parallel 2.
-- ctx-size 262144.
-- kv-unified.
-- kv-unified-per-slot 131072.
 
-### 3.2 Shared TP2 1Cat / skinny
-다음 설정을 사용한다.
+공통 설정:
+- `parallel=2`.
+- `ctx-size=262144`.
+- `kv-unified`.
+- `kv-unified-per-slot=131072`.
+
+#### 3.1.1 Qwen3.8-27B [TODO after 2.1.1]
+- C1을 PASS한 `TARGET`, `NGRAM` lane만 C2로 승격한다.
+- `MTP`, `MTP_NGRAM`은 범위 밖이다.
+
+#### 3.1.2 Ornith 1.5 9B [TODO after 2.1.2]
+- C1을 PASS한 `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM` lane만 C2로 승격한다.
+
+#### 3.1.3 Ornith 1.5 35B-A3B [TODO after 2.1.3]
+- C1을 PASS한 `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM` lane만 C2로 승격한다.
+
+#### 3.1.4 Gemma4 26B-A4B [TODO after 2.1.4]
+- C1을 PASS한 `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM` lane만 C2로 승격한다.
+
+### 3.2 Shared TP2 1Cat-vLLM STOCK
+
+공통 설정:
 - TP2.
-- max_model_len 131072.
-- max_num_seqs 2.
+- `max_model_len=131072`.
+- `max_num_seqs=2`.
+- C1에서 검증된 exact artifact/runtime configuration을 그대로 사용한다.
 
-다음 항목을 각각 분리해서 기록한다.
+#### 3.2.1 Qwen3.8-27B STOCK [TODO after 2.2.1]
+- C1 128K PASS 후 동일 STOCK lane을 C2로 승격한다.
+
+#### 3.2.2 Ornith 1.5 9B STOCK [BLOCKED by 2.2.2]
+- V100 runtime compatibility와 C1 128K를 먼저 PASS해야 한다.
+- PASS 전에는 C2를 예약하지 않는다.
+
+#### 3.2.3 Ornith 1.5 35B-A3B STOCK [BLOCKED by 2.2.3]
+- V100 runtime compatibility와 C1 128K를 먼저 PASS해야 한다.
+- PASS 전에는 C2를 예약하지 않는다.
+
+#### 3.2.4 Gemma4 26B-A4B STOCK [BLOCKED by 2.2.4]
+- exact artifact, V100 runtime compatibility, C1 128K를 순서대로 확정해야 한다.
+- PASS 전에는 C2를 예약하지 않는다.
+
+### 3.3 v100-skinny SKINNY
+
+#### 3.3.1 Qwen3.8-27B SKINNY [CLOSED BY WBS 1.4]
+- `FAIL_OOM_MODEL_LOAD`가 server boot 이전에 확정됐으므로 C2를 실행하지 않는다.
+
+#### 3.3.2 Ornith 1.5 9B SKINNY [UNSUPPORTED]
+- WBS 2.3.2의 unsupported verdict를 유지하며 C2를 실행하지 않는다.
+
+#### 3.3.3 Ornith 1.5 35B-A3B SKINNY [UNSUPPORTED]
+- WBS 2.3.3의 unsupported verdict를 유지하며 C2를 실행하지 않는다.
+
+#### 3.3.4 Gemma4 26B-A4B SKINNY [UNSUPPORTED]
+- WBS 2.3.4의 unsupported verdict를 유지하며 C2를 실행하지 않는다.
+
+### 3.4 공통 C2 판정 및 측정
+
+runnable한 3.1/3.2 lane에서 다음 항목을 각각 분리해서 기록한다.
 - 두 request가 모두 admission 되었는가.
 - 두 context가 동시에 resident 상태였는가.
 - sampled runtime state 기준 실제 active decode overlap이 있었는가.
 - queue/preemption 동작(llama.cpp requests_processing/requests_deferred + slots, vLLM num_requests_running/num_requests_waiting).
 - request별 성능 및 aggregate 성능.
 
-QUEUE_ONLY를 PASS_C2_ACTIVE로 판정해서는 안 된다.
+`QUEUE_ONLY`를 `PASS_C2_ACTIVE`로 판정해서는 안 된다.
 
 ## 4. Ornith 1.5 9B — 1GPU×2 + LiteLLM 실배포 topology [TODO]
 
@@ -237,10 +329,13 @@ capacity/correctness가 유효한 설정만 성능 비교 대상으로 포함한
 - 지원되는 경우 TARGET vs MTP.
 - C1 대비 C2 성능 저하.
 
-### 5.2 1Cat
-Qwen3.8에 대해 STOCK과 SKINNY를 실제 서빙 구성 관점에서 비교한다.
+### 5.2 1Cat-vLLM
 
-checkpoint, KV, speculative, runtime identity가 서로 다름을 명시하며, 이를 단순 kernel-only causal A/B 테스트처럼 해석하지 않는다.
+현재 하드웨어에서 성능 비교 대상으로 승격할 수 있는 것은 C1/C2를 PASS한 STOCK lane이다.
+
+Qwen3.8 SKINNY는 WBS 1.4에서 `FAIL_OOM_MODEL_LOAD`로 종료됐으므로 현재 2×V100-16GB에서는 throughput A/B 대상으로 포함하지 않는다. SKINNY 결과는 runtime/kernel bootstrap PASS와 model-load OOM이라는 terminal preflight evidence로 보존한다.
+
+향후 다른 하드웨어에서 SKINNY가 실제 서빙에 성공하더라도 checkpoint, KV, speculative, runtime identity 차이를 명시하며 STOCK과의 차이를 단순 kernel-only causal A/B로 해석하지 않는다.
 
 ### 5.3 Metrics
 가능한 경우 다음 항목을 보존한다.
