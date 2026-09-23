@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Secrets / local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Temporary benchmark artifacts
+results/tmp/
+results/**/cache/
+results/**/bin/
+results/**/node_modules/
+*.large.log
+*.pid
+*.lock
+runs/
+scratch/
+
+# Model artifacts
+*.gguf
+*.safetensors
+*.bin
+models/
+
+# Generated workload/cache material
+.cache/
+workloads/generated/

@@ -1,0 +1,2 @@
+# Preserve raw evidence bytes, including terminal CRs and command-output spaces.
+results/raw/** -text -whitespace

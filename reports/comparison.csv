@@ -1,0 +1,1 @@
+experiment_id,model,runtime,backend_variant,weight,kv,spec,ngram,topology,context_per_agent,concurrency,c1_128k,c2_resident,c2_active,queue_only,ttft_ms,request_decode_tps,aggregate_decode_tps,peak_vram_gpu0_mib,peak_vram_gpu1_mib,verdict,key_note
