@@ -2,91 +2,66 @@
 
 ## Mission
 
-Determine a practical final serving configuration for independent single-agent coding projects on 2× Tesla V100 16GB.
+Find a practical final serving configuration for independent single-agent coding projects on 2× Tesla V100 16GB.
 
-Primary operating pattern:
-
-- one project active most of the time (C1);
-- occasionally two independent projects active together (C2);
-- C3+ is out of scope.
-
-The primary context target is 128K per agent.
+Operating pattern:
+- C1 normally
+- C2 occasionally
+- C3+ out of scope
+- 128K target per agent
 
 ## Measurement order
+1. Fresh runtime/model/artifact compatibility.
+2. C1 128K capacity/correctness for every required lane.
+3. C2 128K residency/active overlap for C1 survivors.
+4. Ornith 9B 1GPU×2 independent-server topology.
+5. Performance comparisons inside valid configurations.
+6. Final operational selection.
 
-The project optimizes in this order:
-
-1. runtime/model compatibility and correctness;
-2. C1 128K capacity;
-3. C2 128K residency and active-overlap capacity;
-4. C1/C2 latency and throughput;
-5. required speculative/backend lanes, including llama.cpp ngram and v100-skinny;
-6. final operational selection.
-
-Do not expand back into broad 8K→16K→32K→64K sweeps by default. If direct 128K fails for a clearly memory-related reason, 96K/64K may be measured as diagnostics.
+Do not broaden into large context sweeps. 96K/64K is diagnostic only after a clear 128K capacity failure.
 
 ## Fresh evidence
 
-Historical repositories are implementation references only. Do not copy historical raw results or reports into this repository as current evidence.
-
-One experiment has one immutable ID, one config identity, one raw evidence directory and one final report. A retry receives a new ID and preserves the failed predecessor.
+Historical repositories are implementation references only. One experiment has one immutable ID, config identity, raw directory and final report. Retries use new IDs.
 
 ## Correctness before performance
 
-Performance is valid only after the exact configuration produces readable/protocol-valid output and the server remains healthy. Tool/reasoning/chat-template correctness is recorded when the serving lane requires it.
+Performance is valid only after the exact configuration produces valid output and remains healthy.
 
 ## C2 meaning
 
-C2 is two independent projects. Use synchronized release but different project material and prompt hashes. Preserve both intended requests even when one fails or queues.
+C2 is two independent projects released through a common barrier with different prompt material and hashes.
 
-The report must distinguish:
+Verdicts include:
+- PASS_C1_128K
+- PASS_C2_RESIDENT
+- PASS_C2_ACTIVE
+- QUEUE_ONLY
+- FAIL_STARTUP
+- FAIL_OOM
+- FAIL_CAPACITY
+- FAIL_TIMEOUT
+- FAIL_CRASH
+- FAIL_OUTPUT
+- UNSUPPORTED
+- INCONCLUSIVE
 
-- `PASS_C1_128K`;
-- `PASS_C2_RESIDENT`;
-- `PASS_C2_ACTIVE`;
-- `QUEUE_ONLY`;
-- `FAIL_STARTUP`;
-- `FAIL_OOM`;
-- `FAIL_CAPACITY`;
-- `FAIL_TIMEOUT`;
-- `FAIL_CRASH`;
-- `FAIL_OUTPUT`;
-- `UNSUPPORTED`;
-- `INCONCLUSIVE`.
+QUEUE_ONLY is not PASS_C2_ACTIVE.
 
-A queue-only server may still be operationally useful, but it is not an active-C2 PASS.
+## Metrics
 
-## Metric definitions
-
-Keep these names separate:
-
-- TTFT;
-- ITL when true token timestamps exist;
-- prompt/prefill throughput;
-- per-request decode throughput;
-- mean request decode throughput;
-- aggregate decode throughput over a declared common interval;
-- end-to-end output throughput;
-- request wall time;
-- batch wall time;
-- peak VRAM/power/temperature and observed clocks.
-
-Do not call all of them simply `tok/s`. Do not sum per-request decode rates and relabel that value as aggregate throughput.
+Keep TTFT, ITL, prefill throughput, request decode throughput, aggregate decode throughput, end-to-end output throughput, request/batch wall time and GPU telemetry distinct. Never label all of them simply tok/s.
 
 ## Repetition and warmup
 
-Default to one measured execution per declared configuration unless a later WBS explicitly requests repetitions. Lightweight readiness/JIT checks are allowed, but do not run a duplicate full 128K workload merely as warmup without a documented reason.
+Default to one measured execution per configuration unless explicitly authorized otherwise. Readiness/JIT probes are allowed; duplicate full 128K warmups require a documented reason.
 
-## Required optimization lanes
+## Required lanes
 
-### llama.cpp
+llama.cpp uses TARGET, NGRAM, MTP and MTP_NGRAM. TARGET versus NGRAM is mandatory. MTP and MTP_NGRAM remain explicit rows even when UNSUPPORTED.
 
-The final llama.cpp test program must explicitly cover its declared target-only/native-MTP baselines and the required ngram lane. Unsupported ngram is a recorded result, not a skipped row.
-
-### 1Cat-vLLM
-
-Stock 1Cat and 1Cat + v100-skinny are separate mandatory lanes. Do not treat skinny as an informal post-benchmark tweak.
+STOCK 1Cat and v100-skinny are separate mandatory backend rows.
 
 ## Hardware policy
 
-All benchmark scripts are read-only with respect to power limits, clocks, persistence, drivers, kernel and CPU power policy. Capture current state before runs; do not normalize it by silently changing the host.
+Benchmark scripts observe but do not change power limits, clocks, persistence, drivers, kernel or CPU power policy.

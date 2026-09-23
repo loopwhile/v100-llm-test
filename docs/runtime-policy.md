@@ -1,78 +1,57 @@
 # Runtime Policy
 
-This repository compares pinned, reproducible V100/SM70 serving lanes. Mutable labels such as `latest` may be used for discovery, but not as the only benchmark identity.
+This repository compares pinned V100/SM70 serving lanes. Mutable labels such as latest may be used for discovery, but not as the benchmark identity.
 
-## 1. Mandatory runtime families
+## llama.cpp
 
-### llama.cpp
+Record image digest, build/commit, CUDA userspace, exact launch command, topology, artifact hash, KV and speculative mode.
 
-Primary V100 lane: a pinned CUDA/SM70 build, with `kyuz0/nvidia-v100-ai-toolboxes` as the preferred reproducible packaging source unless the WBS later pins a different explicitly approved build.
+Every verified llama.cpp candidate has four explicit rows:
+- TARGET — target-only
+- NGRAM — ngram-only
+- MTP — native MTP
+- MTP_NGRAM — native MTP plus ngram
 
-Record:
+TARGET versus NGRAM is mandatory. MTP versus MTP_NGRAM is also preserved as an explicit support/result pair. Unsupported exact model/build combinations are recorded as UNSUPPORTED, never silently deleted or source-patched into a different benchmark.
 
-- image tag and digest when containerized;
-- actual llama.cpp version/commit;
-- CUDA userspace identity;
-- exact launch command;
-- multi-GPU topology;
-- model artifact hash;
-- KV format;
-- speculative mode.
+## 1Cat-vLLM STOCK
 
-**ngram is mandatory in the llama.cpp test program.** For every llama.cpp candidate, the test matrix must include the declared ngram lane (normally MTP+ngram where that model uses native MTP). If the exact pinned model/build does not support it, record `UNSUPPORTED`; do not silently delete the lane or source-patch it into a different benchmark.
+Pin the exact 1Cat wheel/runtime identity and verify the V100/SM70 backend. Record TP, max_model_len, max_num_seqs, scheduler/batch settings, KV dtype, CUDA Graph settings, attention backend and speculative configuration.
 
-### 1Cat-vLLM stock
+## 1Cat-vLLM plus v100-skinny
 
-Pin the exact 1Cat-vLLM revision/build/container or wheel identity and verify the V100/SM70 backend actually used. Record TP, `max_model_len`, `max_num_seqs`, scheduler/batch settings, KV dtype, CUDA Graph settings, attention backend and speculative configuration.
+v100-skinny is mandatory and is a separate runtime identity from STOCK 1Cat.
 
-### 1Cat-vLLM + v100-skinny
+Pin both the 1Cat base identity and skinny revision. Record QPN/skinny routes, TP topology, graph settings and memory overhead.
 
-**v100-skinny is a mandatory test lane, not an optional optimization.**
+A skinny failure on 2×16GB remains FAIL_OOM, FAIL_CAPACITY, UNSUPPORTED or the observed runtime verdict. Do not substitute STOCK 1Cat.
 
-Pin both the 1Cat-vLLM base identity and the v100-skinny revision/patch identity. Record which QPN/skinny paths are active, TP topology, prepack/graph settings and any memory overhead that changes available KV capacity.
-
-A skinny failure on 2×16GB is still a valid benchmark result. Preserve `FAIL_OOM`, `FAIL_CAPACITY`, `UNSUPPORTED` or other observed verdict rather than substituting stock 1Cat.
-
-## 2. Candidate models
-
-Current model scope:
-
+## Candidate models
 - Qwen3.8-27B
 - Ornith 1.5 35B-A3B
 - Ornith 1.5 9B
 - Gemma4 26B-A4B
 
-Each runtime/model pair gets a fresh compatibility check. Do not infer support from another model or an older repository run.
+Every runtime/model pair requires fresh compatibility evidence.
 
-## 3. Artifact identity
+## Artifact identity
 
-Record repository/path, revision, quantization, file identity/size and SHA256 where practical. Draft/MTP artifacts receive their own identity.
+Record repository/path, revision, quantization, file identity/size and SHA256 where practical. Same model name with different bytes is a different benchmark artifact.
 
-Same model name with different bytes is a different benchmark artifact.
+## Host CUDA vs runtime CUDA
 
-## 4. Host CUDA vs runtime CUDA
+Keep separate:
+- host NVIDIA driver
+- host nvidia-smi CUDA compatibility
+- runtime CUDA userspace
+- runtime build/revision
 
-Keep these separate:
+## Cross-runtime comparisons
 
-- host NVIDIA driver;
-- CUDA compatibility shown by host `nvidia-smi`;
-- container/runtime CUDA userspace;
-- runtime build/revision.
+Hold workload objective, per-agent context, concurrency and output objective constant where possible, while disclosing weight quantization, KV, speculative implementation, scheduler/batching, prefix-cache state, template/parser and memory-management differences.
 
-## 5. Cross-runtime comparisons
+The project selects practical serving configurations, not synthetic identical-kernel comparisons.
 
-Do not force implementation details to be artificially identical. Hold the workload objective, per-agent context target, concurrency and output objective constant where possible, while disclosing:
+## No historical acceptance inheritance
 
-- weight quantization;
-- KV format;
-- speculative implementation;
-- scheduler/batching;
-- prefix-cache state;
-- chat/tool/reasoning configuration;
-- memory-management differences.
-
-The project selects practical serving configurations, not a synthetic claim that all runtimes execute identical kernels.
-
-## 6. No historical acceptance inheritance
-
-Results from `qwen3.8-bench` or `p520-inference-lab` may inform implementation, but they do not count as a fresh `v100-llm-test` acceptance PASS. This repository generates its own runtime identity, raw evidence and verdicts.
+qwen3.8-bench and p520-inference-lab may inform implementation but never count as fresh acceptance PASS here.

@@ -1,40 +1,72 @@
 # v100-llm-test
 
-Final serving acceptance tests for a Lenovo P520 with **2× Tesla V100 16GB**.
+Final serving acceptance tests for a Lenovo P520 with 2× Tesla V100 16GB.
 
 ## Goal
 
 Determine which model/runtime/topology can reliably serve independent single-agent coding projects with:
+- per-agent context ceiling: 128K
+- normal concurrency: C1
+- required peak concurrency: C2
+- C3+ out of scope
+- C2 requests are independent projects, not cooperating agents
 
-- per-agent context ceiling: **128K**
-- normal concurrency: **C1**
-- required peak concurrency: **C2**
-- C3+ concurrency: out of scope
-- C2 requests: independent project contexts, not shared-agent branches
+A server merely configured for 128K is not a 128K PASS. Two accepted HTTP requests are not automatically an active C2 PASS.
 
-The project measures capacity first, then useful performance. A server starting with a 128K setting is not a 128K PASS, and accepting two HTTP requests is not a C2 concurrency PASS.
-
-## Candidate model scope
-
+## Candidate models
 - Qwen3.8-27B
 - Ornith 1.5 35B-A3B
 - Ornith 1.5 9B
 - Gemma4 26B-A4B
 
-## Runtime lanes
+## Required runtime lanes
 
-- llama.cpp on the V100/SM70 lane
-- 1Cat-vLLM stock V100 lane
-- **1Cat-vLLM + v100-skinny — mandatory test lane**
+llama.cpp:
+- TARGET
+- NGRAM
+- MTP
+- MTP_NGRAM
 
-For llama.cpp, **ngram is a mandatory test axis**. A candidate may not silently skip it. If the pinned model/build cannot execute the declared ngram mode, preserve that fact as `UNSUPPORTED`.
+TARGET versus NGRAM is mandatory. MTP versus MTP_NGRAM remains an explicit support/result pair; unsupported combinations are recorded as UNSUPPORTED.
+
+vLLM family:
+- 1Cat-vLLM STOCK
+- v100-skinny SKINNY, mandatory
+
+v100-skinny is a separate pinned runtime identity, not a flag on the STOCK 1Cat environment.
+
+## Topologies
+- tp2-shared: one model/server across both V100s
+- 1gpu-x2-independent: two one-GPU servers; currently a first-class Ornith 1.5 9B candidate
+
+Shared llama.cpp C2 explicitly requests a 256K logical aggregate KV pool with a 128K ceiling per slot.
+
+## Workloads
+Compact deterministic manifests:
+- workloads/capacity/v1.json
+- workloads/concurrency/v1.json
+
+scripts/build_128k_workload.py materializes them with the exact live tokenizer so prompt plus reserved output stays within 131072 tokens while filling at least 99% of the budget.
+
+C2 uses unrelated Project A and Project B material with distinct hashes.
 
 ## Evidence
+Fresh runs write raw evidence under results/raw/<EXPERIMENT_ID>/, one Markdown report under reports/, and normalized rows in:
+- results/summary.csv
+- reports/comparison.csv
 
-Fresh runs write bounded raw evidence under `results/raw/<EXPERIMENT_ID>/`, one Markdown report under `reports/`, and normalized rows in `results/summary.csv` and `reports/comparison.csv`.
+Historical results are not imported as acceptance evidence.
 
-Historical benchmark results are not imported into this repository as acceptance evidence.
+## Project status
+Repository implementation is complete through the runtime-lane/test-plan stage. Remaining work is measured execution according to:
+- docs/WBS.md
+- docs/test-matrix.md
+- docs/runtime-lanes.md
+- docs/workload-contract.md
 
-## Bootstrap status
+Before execution:
 
-Turn 1 imports and adapts the reusable repository foundation from `loopwhile/qwen3.8-bench`: host inventory, GPU telemetry, report/result contracts, and core methodology/runtime/workload documents. The benchmark harness, workloads, runtime launchers, and new WBS are added in later turns.
+    python3 scripts/validate_repo.py
+    python3 -m unittest discover -s tests -v
+
+Exact runtime/model compatibility and local artifact identities still require fresh verification on p520-llm before measured GPU runs.
