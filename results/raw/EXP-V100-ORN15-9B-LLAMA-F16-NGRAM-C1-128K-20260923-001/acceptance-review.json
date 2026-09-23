@@ -1,0 +1,14 @@
+{
+  "reviewed_at_utc": "2026-09-23T15:00:00+00:00",
+  "verdict": "PASS_C1_128K",
+  "prompt_receipt_matches_usage": true,
+  "reserved_budget_tokens": 131071,
+  "completion_tokens": 522,
+  "finish_reason": "stop",
+  "runtime_truncated": 0,
+  "post_health_healthy": true,
+  "content_review": "Coherent, non-truncated response with no repetition/corruption. It repeats the TARGET semantic mistake in the proposed verification assertions after a later put(). This is a model-quality caveat only.",
+  "speculative_evidence": "ngram-simple configured and preflight-verified; request/server evidence contains no draft/accepted-token counters demonstrating useful NGRAM speculation for this workload",
+  "runtime_errors": [],
+  "cleanup": "owned container stopped; server exit 0"
+}
