@@ -28,7 +28,8 @@
       "revision": "04eb5f9915607c840716ae817717431f0ba6df07",
       "path": "/srv/models/ornith-1.5-35b-a3b-gguf/mtp-Ornith-1.5-35B-A3B-Abliterated-MTPv2-Q8_0.gguf",
       "sha256": "7d58b16ecab1a30884f76f1372680405a52a30547d94fb6b61cef802a7311ab6"
-    }
+    },
+    "mtp_draft_n_max": 1
   },
   "onecat_vllm": {
     "status": "verified_local_artifact_runtime_compatibility_pending",
