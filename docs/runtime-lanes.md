@@ -15,6 +15,8 @@ Every llama.cpp candidate has four explicit rows:
 
 TARGET↔NGRAM is mandatory even when MTP is not usable. Unsupported MTP/composite support is recorded as \`UNSUPPORTED\`, not deleted.
 
+For C1/C2, the NGRAM requirement is operational compatibility/capacity: the lane must launch with \`ngram-simple\`, survive the requested context/concurrency, preserve output integrity, and remain healthy. Draft/accepted-token activity and TARGET-relative acceleration are not C1/C2 acceptance gates. Those are Phase 5 performance questions.
+
 ### 128K topology
 
 Shared TP2 C1 uses \`--ctx-size 131072 --parallel 1 --kv-unified --kv-unified-per-slot 131072\`.
