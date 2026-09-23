@@ -22,6 +22,7 @@ def validate():
  lock=read("config/runtime-lock.json")
  cap=read("workloads/capacity/v1.json")
  c2=read("workloads/concurrency/v1.json")
+ perf=read("workloads/performance/v1.json")
 
  check([x["id"] for x in lanes["llama_cpp"]["required_lanes"]]==LLAMA_LANES,"llama lane contract mismatch")
  check(accept["runtime_requirements"]["llama_cpp"]["required_lanes"]==LLAMA_LANES,"acceptance lane mismatch")
@@ -43,12 +44,18 @@ def validate():
   check(model["onecat_vllm"]["required_backend_lanes"]==["stock","v100-skinny"],f"{path.name}: backend lanes mismatch")
 
  check(cap["context_tokens"]==131072 and len(cap["requests"])==1,"capacity workload mismatch")
+ check(cap.get("output_tokens")==2048 and cap.get("min_output_tokens")==256,"capacity output objective mismatch")
  check(c2["context_tokens"]==131072 and len(c2["requests"])==2,"C2 workload mismatch")
+ check(c2.get("output_tokens")==2048 and c2.get("min_output_tokens")==256,"C2 output objective mismatch")
  check(c2.get("independent_projects_required") is True,"C2 independence flag missing")
  ids=[x["project_id"] for x in c2["requests"]]
  check(len(set(ids))==2,"C2 project IDs must differ")
  material=["".join(x["seed_blocks"]) for x in c2["requests"]]
  check(material[0]!=material[1],"C2 seed material must differ")
+ check(perf["context_tokens"]==131072 and len(perf["requests"])==2,"performance workload mismatch")
+ check(perf.get("output_tokens")==4096 and perf.get("min_output_tokens")==1024,"performance output objective mismatch")
+ check(perf.get("diversify_identifiers") is True,"performance workload must diversify repeated identifiers")
+ check(perf.get("independent_projects_required") is True,"performance workload independence flag missing")
 
  for path in ("docs/WBS.md","docs/test-matrix.md","docs/runtime-lanes.md","docs/workload-contract.md"):
   check((ROOT/path).is_file(),f"missing document: {path}")

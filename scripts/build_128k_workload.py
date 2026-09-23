@@ -4,9 +4,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import keyword
+import re
 from pathlib import Path
 
 from bench_harness import HTTPAdapter, canon, sha
+
+IDENTIFIER = re.compile(r"\\b[A-Za-z_][A-Za-z0-9_]*\\b")
+KEEP_IDENTIFIERS = set(keyword.kwlist) | {"True", "False", "None", "self", "cls"}
 
 
 def load_manifest(path: Path) -> dict:
@@ -17,6 +22,9 @@ def load_manifest(path: Path) -> dict:
         raise ValueError("primary manifests must target 131072 tokens")
     if type(manifest.get("output_tokens")) is not int or manifest["output_tokens"] < 1:
         raise ValueError("invalid output_tokens")
+    minimum_output = manifest.get("min_output_tokens", 1)
+    if type(minimum_output) is not int or minimum_output < 1 or minimum_output > manifest["output_tokens"]:
+        raise ValueError("invalid min_output_tokens")
     requests = manifest.get("requests")
     if not isinstance(requests, list) or len(requests) not in (1, 2):
         raise ValueError("manifest must contain one or two requests")
@@ -28,25 +36,32 @@ def load_manifest(path: Path) -> dict:
     return manifest
 
 
-def render(spec: dict, units: int, pad_units: int = 0) -> str:
+def diversify_block(block: str, project_id: str, section: int) -> str:
+    suffix = f"_{project_id.lower()}_{section:06d}"
+    def replace(match):
+        word = match.group(0)
+        if word in KEEP_IDENTIFIERS or word.startswith("__"):
+            return word
+        return word + suffix
+    return IDENTIFIER.sub(replace, block)
+
+
+def render(spec: dict, units: int, pad_units: int = 0, *, diversify_identifiers: bool = False) -> str:
     if units < 1 or pad_units < 0:
         raise ValueError("invalid render size")
     blocks = spec["seed_blocks"]
-    parts = [
-        f"# {spec['title']}\n",
-        f"# project_id={spec['project_id']}\n",
-        "# Synthetic deterministic capacity material follows.\n",
-    ]
+    parts = [f"# {spec['title']}\n", f"# project_id={spec['project_id']}\n", "# Synthetic deterministic benchmark material follows.\n"]
     for i in range(units):
         block = blocks[i % len(blocks)]
-        parts.append(
-            f"\n# --- {spec['project_id']} SECTION {i + 1:06d} ---\n{block.rstrip()}\n"
-        )
+        if diversify_identifiers:
+            block = diversify_block(block, spec["project_id"], i + 1)
+        parts.append(f"\n# --- {spec['project_id']} SECTION {i + 1:06d} ---\n{block.rstrip()}\n")
     if pad_units:
         marker = f" {spec['project_id']}_PAD"
         parts.append("\n# deterministic calibration padding\n" + marker * pad_units + "\n")
     parts.append("\n# FINAL REQUEST\n" + spec["final_instruction"].strip() + "\n")
     return "".join(parts)
+
 
 
 def payload_for(model: str, thinking: bool, content: str, output_tokens: int, sampling: dict) -> dict:
@@ -71,80 +86,48 @@ def count(adapter, model, thinking, content, output_tokens, sampling):
 def calibrate(adapter, manifest: dict, spec: dict, model: str, thinking: bool) -> tuple[dict, dict]:
     context = manifest["context_tokens"]
     output_tokens = manifest["output_tokens"]
+    minimum_output_tokens = spec.get("min_output_tokens", manifest.get("min_output_tokens", 1))
     target = context - output_tokens
     minimum_total = int(context * manifest.get("min_context_utilization", 0.99))
     sampling = manifest.get("sampling", {})
+    diversify = bool(manifest.get("diversify_identifiers", False))
 
     low, high = 1, 1
     while True:
-        text = render(spec, high)
+        text = render(spec, high, diversify_identifiers=diversify)
         tokens, _ = count(adapter, model, thinking, text, output_tokens, sampling)
-        if tokens > target:
-            break
-        low = high
-        high *= 2
-        if high > 131072:
-            raise ValueError("unable to bracket target prompt length")
+        if tokens > target: break
+        low = high; high *= 2
+        if high > 131072: raise ValueError("unable to bracket target prompt length")
 
-    best_units = low
-    lo, hi = low, high - 1
+    best_units = low; lo, hi = low, high - 1
     while lo <= hi:
         mid = (lo + hi) // 2
-        text = render(spec, mid)
+        text = render(spec, mid, diversify_identifiers=diversify)
         tokens, _ = count(adapter, model, thinking, text, output_tokens, sampling)
-        if tokens <= target:
-            best_units = mid
-            lo = mid + 1
-        else:
-            hi = mid - 1
+        if tokens <= target: best_units = mid; lo = mid + 1
+        else: hi = mid - 1
 
-    base = render(spec, best_units)
+    base = render(spec, best_units, diversify_identifiers=diversify)
     base_tokens, _ = count(adapter, model, thinking, base, output_tokens, sampling)
-
-    best_pad = 0
-    lo, hi = 0, max(256, (target - base_tokens) * 4 + 256)
+    best_pad = 0; lo, hi = 0, max(256, (target - base_tokens) * 4 + 256)
     while lo <= hi:
         mid = (lo + hi) // 2
-        text = render(spec, best_units, mid)
+        text = render(spec, best_units, mid, diversify_identifiers=diversify)
         tokens, _ = count(adapter, model, thinking, text, output_tokens, sampling)
-        if tokens <= target:
-            best_pad = mid
-            lo = mid + 1
-        else:
-            hi = mid - 1
+        if tokens <= target: best_pad = mid; lo = mid + 1
+        else: hi = mid - 1
 
-    content = render(spec, best_units, best_pad)
-    prompt_tokens, receipt = count(
-        adapter, model, thinking, content, output_tokens, sampling
-    )
+    content = render(spec, best_units, best_pad, diversify_identifiers=diversify)
+    prompt_tokens, receipt = count(adapter, model, thinking, content, output_tokens, sampling)
     total = prompt_tokens + output_tokens
-    if total > context:
-        raise ValueError("calibration exceeded context budget")
-    if total < minimum_total:
-        raise ValueError(
-            f"calibration underfilled context: total={total}, minimum={minimum_total}"
-        )
+    if total > context: raise ValueError("calibration exceeded context budget")
+    if total < minimum_total: raise ValueError(f"calibration underfilled context: total={total}, minimum={minimum_total}")
 
-    request = {
-        "id": spec["id"],
-        "project_id": spec["project_id"],
-        "messages": [{"role": "user", "content": content}],
-        "max_tokens": output_tokens,
-        "check": "nonempty",
-    }
-    evidence = {
-        "request_id": spec["id"],
-        "project_id": spec["project_id"],
-        "section_units": best_units,
-        "padding_units": best_pad,
-        "prompt_tokens": prompt_tokens,
-        "reserved_output_tokens": output_tokens,
-        "total_budget_used": total,
-        "utilization": total / context,
-        "raw_prompt_sha256": sha(canon(request["messages"])),
-        "tokenizer_receipt": receipt,
-    }
+    request = {"id": spec["id"], "project_id": spec["project_id"], "messages": [{"role": "user", "content": content}], "max_tokens": output_tokens, "min_output_tokens": minimum_output_tokens, "check": "nonempty"}
+    evidence = {"request_id": spec["id"], "project_id": spec["project_id"], "section_units": best_units, "padding_units": best_pad, "prompt_tokens": prompt_tokens, "reserved_output_tokens": output_tokens, "minimum_output_tokens": minimum_output_tokens, "total_budget_used": total, "utilization": total / context, "diversify_identifiers": diversify, "raw_prompt_sha256": sha(canon(request["messages"])), "tokenizer_receipt": receipt}
     return request, evidence
+
 
 
 def build(manifest: dict, adapter, model: str, thinking: bool = False) -> dict:
@@ -160,6 +143,7 @@ def build(manifest: dict, adapter, model: str, thinking: bool = False) -> dict:
 
     return {
         "version": manifest["workload_id"],
+        "mode": manifest.get("mode"),
         "source_manifest_sha256": sha(canon(manifest)),
         "context_tokens": manifest["context_tokens"],
         "sampling": manifest.get("sampling", {}),

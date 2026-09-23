@@ -18,8 +18,13 @@ class WorkloadBuilderTests(unittest.TestCase):
     def test_manifests_load_and_shape(self):
         capacity = builder.load_manifest(ROOT / "workloads/capacity/v1.json")
         concurrency = builder.load_manifest(ROOT / "workloads/concurrency/v1.json")
+        performance = builder.load_manifest(ROOT / "workloads/performance/v1.json")
         self.assertEqual(len(capacity["requests"]), 1)
         self.assertEqual(len(concurrency["requests"]), 2)
+        self.assertEqual(len(performance["requests"]), 2)
+        self.assertEqual(capacity["min_output_tokens"], 256)
+        self.assertEqual(performance["min_output_tokens"], 1024)
+        self.assertTrue(performance["diversify_identifiers"])
         self.assertTrue(concurrency["independent_projects_required"])
         self.assertNotEqual(
             concurrency["requests"][0]["project_id"],
@@ -43,6 +48,14 @@ class WorkloadBuilderTests(unittest.TestCase):
         for item in result["build_evidence"]:
             self.assertLessEqual(item["total_budget_used"], 131072)
             self.assertGreaterEqual(item["utilization"], 0.99)
+
+    def test_performance_diversification_changes_repeated_block(self):
+        manifest = builder.load_manifest(ROOT / "workloads/performance/v1.json")
+        spec = manifest["requests"][0]
+        plain = builder.render(spec, 2, diversify_identifiers=False)
+        diverse = builder.render(spec, 2, diversify_identifiers=True)
+        self.assertNotEqual(plain, diverse)
+        self.assertIn("PageIndex_a_000001", diverse)
 
     def test_duplicate_c2_project_id_rejected(self):
         manifest = json.loads((ROOT / "workloads/concurrency/v1.json").read_text())

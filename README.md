@@ -37,7 +37,7 @@ v100-skinny is a separate pinned runtime identity, not a flag on the STOCK 1Cat 
 
 ## Topologies
 - tp2-shared: one model/server across both V100s
-- 1gpu-x2-independent: two one-GPU servers; currently a first-class Ornith 1.5 9B candidate
+- 1gpu-x2-independent: two one-GPU servers; a first-class Ornith 1.5 9B candidate for llama.cpp and, once the exact artifact is verified, STOCK 1Cat-vLLM
 
 Shared llama.cpp C2 explicitly requests a 256K logical aggregate KV pool with a 128K ceiling per slot.
 
@@ -45,17 +45,18 @@ Shared llama.cpp C2 explicitly requests a 256K logical aggregate KV pool with a 
 Compact deterministic manifests:
 - workloads/capacity/v1.json
 - workloads/concurrency/v1.json
+- workloads/performance/v1.json
 
 scripts/build_128k_workload.py materializes them with the exact live tokenizer so prompt plus reserved output stays within 131072 tokens while filling at least 99% of the budget.
 
-C2 uses unrelated Project A and Project B material with distinct hashes.
+C2 uses unrelated Project A and Project B material with distinct hashes. Capacity/C2 reserve 2048 output tokens and require at least 256 actual completion tokens. The performance workload reserves 4096 and requires at least 1024; it diversifies repeated identifiers so NGRAM performance is not dominated by trivial exact repetition.
 
 ## Evidence
 Fresh runs write raw evidence under results/raw/<EXPERIMENT_ID>/, one Markdown report under reports/, and normalized rows in:
 - results/summary.csv
 - reports/comparison.csv
 
-Historical results are not imported as acceptance evidence.
+Historical results are not imported as acceptance evidence. C2 evidence is sampled from runtime metrics/slots during the measured window, and sampled peak VRAM is merged into the experiment metrics.
 
 ## Project status
 Repository implementation is complete through the runtime-lane/test-plan stage. Remaining work is measured execution according to:

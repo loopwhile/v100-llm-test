@@ -19,7 +19,7 @@ TARGET↔NGRAM is mandatory even when MTP is not usable. Unsupported MTP/composi
 
 Shared TP2 C1 uses \`--ctx-size 131072 --parallel 1 --kv-unified --kv-unified-per-slot 131072\`.
 
-Shared TP2 C2 uses \`--ctx-size 262144 --parallel 2 --kv-unified --kv-unified-per-slot 131072\`.
+Shared TP2 C2 uses \`--ctx-size 262144 --parallel 2 --kv-unified --kv-unified-per-slot 131072\`. The launcher also enables the slots endpoint so C2 residency/processing can be sampled during the run.
 
 The C2 value intentionally asks for two independent 128K logical contexts. If it does not fit, preserve the OOM/capacity result.
 
@@ -27,11 +27,11 @@ The C2 value intentionally asks for two independent 128K logical contexts. If it
 
 ## 1Cat-vLLM stock
 
-Stock retains the imported 1Cat-vLLM 1.5.0 wheel identity, FLASH_ATTN_V100, TP2, 128K per sequence, and \`max_num_seqs=1|2\`.
+Stock retains the imported 1Cat-vLLM 1.5.0 wheel identity, FLASH_ATTN_V100, TP2, 128K per sequence, and \`max_num_seqs=1|2\`. Ornith 1.5 9B additionally has a first-class 1GPU×2 STOCK topology once its exact NVFP4 artifact is resolved: two TP1 processes, one pinned to each V100, each with \`max_model_len=131072\` and \`max_num_seqs=1\`.
 
 ## v100-skinny
 
-v100-skinny is mandatory but is a separate runtime identity, not a switch on stock 1Cat 1.5.0.
+v100-skinny is mandatory but is a separate runtime identity, not a switch on stock 1Cat 1.5.0. Its pinned v1.1 contract remains the experimental shared TP2 lane; it is not silently reused for the independent TP1×2 topology.
 
 Pinned upstream v1.1 contract:
 

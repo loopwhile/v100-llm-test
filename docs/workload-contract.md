@@ -24,6 +24,8 @@ The primary target is **128K per agent**, where K = 1024.
 
 `post_template_prompt_tokens + requested_output_tokens <= 131072`.
 
+Primary capacity/C2 workloads reserve 2048 output tokens and require at least 256 actual completion tokens. The sustained C2 performance workload reserves 4096 and requires at least 1024 actual completion tokens.
+
 A small prompt sent to a server configured for 128K is not a 128K test. Startup, KV allocation, slot creation or scheduler admission alone is not a context PASS. The request must fill the vast majority of the declared budget and complete its declared output objective.
 
 The normal acceptance path goes directly to 128K. 96K/64K may be used only as diagnostic fallback points after a 128K failure.
@@ -44,7 +46,7 @@ A C2 result must distinguish:
 - actual server-side active overlap;
 - queue-only behavior.
 
-Client socket overlap or `parallel=2` / `max_num_seqs=2` configuration alone does not prove active C2.
+Client socket overlap or `parallel=2` / `max_num_seqs=2` configuration alone does not prove active C2. Shared llama.cpp evidence samples `llamacpp:requests_processing`, `llamacpp:requests_deferred` and `/slots`; shared vLLM evidence samples `vllm:num_requests_running` and `vllm:num_requests_waiting`. For 1GPU×2, requests are explicitly routed to separate endpoints and overlapping decode lifetimes are recorded.
 
 ## 4. Required request and batch evidence
 
@@ -83,7 +85,7 @@ Capacity and usability are separate. A configuration can fit 128K while falling 
 
 Target-only, MTP, MTP+ngram and other speculative implementations are distinct configurations. Record exact flags and acceptance definitions.
 
-For llama.cpp, ngram is a required test axis. Unsupported model/build combinations are recorded as `UNSUPPORTED`, not silently omitted or patched into a different test.
+For llama.cpp, ngram is a required test axis. Unsupported model/build combinations are recorded as `UNSUPPORTED`, not silently omitted or patched into a different test. Capacity fillers may contain repeated synthetic structure, so performance claims involving NGRAM use the dedicated diversified performance workload rather than the capacity filler alone.
 
 Prefix caching must be declared. C2 acceptance workloads should not depend on a large cross-project shared prefix. If cache instrumentation is unavailable, do not attribute performance differences to cache hits.
 
@@ -93,7 +95,7 @@ Capture per GPU at a declared interval where practical:
 
 `timestamp, temperature, power draw/limit, utilization, memory used/total, SM clock, memory clock`.
 
-Benchmark automation observes hardware policy; it does not set GPU power, clocks or persistence.
+Benchmark automation observes hardware policy; it does not set GPU power, clocks or persistence. The measured request window also samples `nvidia-smi` memory usage and merges GPU0/GPU1 sampled peak VRAM into normalized experiment metrics; this is a sampled peak and may miss between-sample transients.
 
 ## 8. Evidence lifecycle
 

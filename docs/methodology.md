@@ -13,7 +13,7 @@ Operating pattern:
 ## Measurement order
 1. Fresh runtime/model/artifact compatibility.
 2. C1 128K capacity/correctness for every required lane.
-3. C2 128K residency/active overlap for C1 survivors.
+3. C2 128K residency/active overlap for C1 survivors, proven with runtime-side overlap evidence.
 4. Ornith 9B 1GPU×2 independent-server topology.
 5. Performance comparisons inside valid configurations.
 6. Final operational selection.
@@ -30,7 +30,7 @@ Performance is valid only after the exact configuration produces valid output an
 
 ## C2 meaning
 
-C2 is two independent projects released through a common barrier with different prompt material and hashes.
+C2 is two independent projects released through a common barrier with different prompt material and hashes. Shared-server PASS_C2_ACTIVE requires sampled server state consistent with two running/processing requests during the overlapping decode window; client sockets alone are insufficient.
 
 Verdicts include:
 - PASS_C1_128K
@@ -50,7 +50,7 @@ QUEUE_ONLY is not PASS_C2_ACTIVE.
 
 ## Metrics
 
-Keep TTFT, ITL, prefill throughput, request decode throughput, aggregate decode throughput, end-to-end output throughput, request/batch wall time and GPU telemetry distinct. Never label all of them simply tok/s.
+Keep TTFT, ITL, prefill throughput, request decode throughput, aggregate decode throughput, end-to-end output throughput, request/batch wall time and GPU telemetry distinct. Never label all of them simply tok/s. Sustained C2 comparisons use workloads/performance/v1.json (4K reserved output, >=1K actual output, diversified identifiers), while capacity acceptance uses the shorter 2K/256-token objective.
 
 ## Repetition and warmup
 

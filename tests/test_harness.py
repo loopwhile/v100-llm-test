@@ -6,8 +6,8 @@ import bench_harness as h, report_experiment as report
 
 CONFIG={"experiment_id":"EXP-V100-Q38-LLAMA-Q8-NONE-C1-128K-001","model":"Qwen3.8-27B","runtime":"llama.cpp","runtime_revision":"mock","model_identity":"mock-sha","launch_command":"mock","backend_variant":"stock","weight_quant":"UD-Q4_K_M","kv_cache":"Q8_0","speculative":"target-only","ngram":"off","topology":"2xV100-TP2","prefix_cache_lane":"cold-independent","chat_template":"mock","tool_parser":"none","thinking":False,"context_tokens":131072,"concurrency":1,"context_test":True,"notes":"csv, newline\nquote"}
 WORKLOAD={"version":"mock-128k-v1","sampling":{"temperature":0},"requests":[
- {"id":"project-a","project_id":"A","messages":[{"role":"user","content":"project A unique material"}],"max_tokens":512,"check":"nonempty"},
- {"id":"project-b","project_id":"B","messages":[{"role":"user","content":"project B different material"}],"max_tokens":512,"check":"nonempty"}]}
+ {"id":"project-a","project_id":"A","messages":[{"role":"user","content":"project A unique material"}],"max_tokens":512,"min_output_tokens":256,"check":"nonempty"},
+ {"id":"project-b","project_id":"B","messages":[{"role":"user","content":"project B different material"}],"max_tokens":512,"min_output_tokens":256,"check":"nonempty"}]}
 def response(): return {"choices":[{"finish_reason":"stop","message":{"content":"ok"}}],"usage":{"prompt_tokens":130560,"completion_tokens":512,"total_tokens":131072},"timings":{"prompt_per_second":900.0,"predicted_per_second":30.0}}
 class Mock:
  def __init__(self, overlap=None, error=None, receipt=130560): self.overlap=overlap or {"source":"mock","resident":None,"active_overlap":None,"queue_only":None}; self.error=error; self.receipt_tokens=receipt; self.lock=threading.Lock(); self.active=0; self.peak=0
@@ -32,11 +32,23 @@ class HarnessTests(unittest.TestCase):
   out=self.root/"results/raw"/name; verdict=h.run_batch(out,config or CONFIG,workload or WORKLOAD,adapter or Mock()); return out,verdict
  def test_c1_pass_identity_and_underfill(self):
   out,v=self.run_case(); self.assertEqual(v,"PASS_C1_128K"); self.assertTrue(h.inspect_run(out)["config_valid"])
-  _,v=self.run_case("under",Mock(receipt=1000)); self.assertEqual(v,"FAIL_CAPACITY")
+  out2,v=self.run_case("under",Mock(receipt=1000)); self.assertEqual(v,"FAIL_CAPACITY"); self.assertFalse(json.loads((out2/"metrics.json").read_text())["c1_128k"])
+ def test_minimum_output_is_enforced(self):
+  w=json.loads(json.dumps(WORKLOAD)); w["requests"][0]["min_output_tokens"]=600
+  self.assertEqual(self.run_case("short",workload=w)[1],"FAIL_OUTPUT")
  def test_c2_verdicts_and_barrier(self):
   cases=[({"source":"m","resident":True,"active_overlap":True,"queue_only":False},"PASS_C2_ACTIVE"),({"source":"m","resident":True,"active_overlap":None,"queue_only":False},"PASS_C2_RESIDENT"),({"source":"m","resident":True,"active_overlap":False,"queue_only":True},"QUEUE_ONLY"),({"source":"m","resident":None,"active_overlap":None,"queue_only":None},"INCONCLUSIVE")]
   for i,(e,want) in enumerate(cases):
    a=Mock(e); cfg=CONFIG|{"experiment_id":f"EXP-V100-Q38-LLAMA-Q8-NONE-C2-128K-00{i+1}","concurrency":2}; out,v=self.run_case(str(i),a,cfg); self.assertEqual(v,want); self.assertEqual(a.peak,2); self.assertEqual(len(json.loads((out/"requests.json").read_text())),2)
+ def test_multi_endpoint_routes_independent_servers(self):
+  cfg=CONFIG|{"experiment_id":"EXP-V100-ORN9-LLAMA-F16-MTP-C2-128K-001","concurrency":2,"topology":"1gpu-x2-independent"}
+  self.assertEqual(self.run_case("independent",h.MultiEndpointAdapter([Mock(),Mock()]),cfg)[1],"PASS_C2_ACTIVE")
+ def test_server_metric_overlap_classification(self):
+  a=h.HTTPAdapter("http://mock","1Cat-vLLM");a._probe_samples=[{"monotonic_s":11.0,"processing":2.0,"waiting":0.0,"resident_slots":None},{"monotonic_s":12.0,"processing":2.0,"waiting":0.0,"resident_slots":None}]
+  e=a.overlap_evidence([{"verdict":h.PASS,"first_abs":10.0,"end_abs":13.0},{"verdict":h.PASS,"first_abs":10.5,"end_abs":14.0}]);self.assertTrue(e["resident"]);self.assertTrue(e["active_overlap"]);self.assertFalse(e["queue_only"])
+ def test_runtime_log_directory_may_preexist(self):
+  out=self.root/"results/raw"/"precreated";(out/"runtime").mkdir(parents=True);(out/"runtime/server-0.log").write_text("boot")
+  self.assertEqual(h.run_batch(out,CONFIG,WORKLOAD,Mock()),"PASS_C1_128K")
  def test_c2_independent_prompt_guard(self):
   w=json.loads(json.dumps(WORKLOAD)); w["requests"][1]["messages"]=w["requests"][0]["messages"]; cfg=CONFIG|{"experiment_id":"EXP-V100-Q38-LLAMA-Q8-NONE-C2-128K-010","concurrency":2}
   with self.assertRaisesRegex(ValueError,"independent"): h.run_batch(self.root/"same",cfg,w,Mock())

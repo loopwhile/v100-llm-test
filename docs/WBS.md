@@ -9,6 +9,7 @@
 
 ### 0.2 측정 하네스 [DONE]
 - C1/C2 barrier 동시 실행.
+- 런타임 측 C2 overlap 샘플링: llama.cpp processing/deferred + slots, vLLM running/waiting metrics.
 - live tokenizer receipt 기반 128K 예산 검증.
 - 독립적인 Project A/B prompt hash 검증.
 - raw evidence → report → summary/comparison CSV 발행 파이프라인.
@@ -29,6 +30,7 @@
 - 전력 제한, clock, persistence 상태.
 - CPU/RAM/kernel.
 - GPU 사용 중인 process와 listening port.
+- 런타임 stdout/stderr를 experiment runtime log 디렉터리에 보존한다.
 
 벤치마크 자동화는 하드웨어 정책을 변경해서는 안 된다.
 
@@ -46,6 +48,7 @@
 - 1Cat-vLLM 1.5.0 exact wheel identity.
 - FLASH_ATTN_V100.
 - TP2 startup.
+- exact STOCK artifact가 확정된 경우 Ornith 9B의 GPU별 TP1 독립 server startup.
 - 각 모델 profile의 tokenizer/template/tool/parser 요구사항.
 
 ### 1.4 v100-skinny 검증
@@ -146,8 +149,8 @@ workloads/concurrency/v1.json을 사용하며 다음을 보장한다.
 다음 항목을 각각 분리해서 기록한다.
 - 두 request가 모두 admission 되었는가.
 - 두 context가 동시에 resident 상태였는가.
-- 실제 active decode overlap이 있었는가.
-- queue/preemption 동작.
+- sampled runtime state 기준 실제 active decode overlap이 있었는가.
+- queue/preemption 동작(llama.cpp requests_processing/requests_deferred + slots, vLLM num_requests_running/num_requests_waiting).
 - request별 성능 및 aggregate 성능.
 
 QUEUE_ONLY를 PASS_C2_ACTIVE로 판정해서는 안 된다.
@@ -156,16 +159,18 @@ QUEUE_ONLY를 PASS_C2_ACTIVE로 판정해서는 안 된다.
 
 이 topology는 단순 fallback이 아니라 정식 배포 후보로 취급한다.
 
-1GPU에서 128K compatibility를 증명한 각 llama.cpp lane에 대해:
+1GPU에서 128K compatibility를 증명한 모든 런타임 lane(필수 llama.cpp lane 전체, exact Ornith 9B artifact가 확정된 STOCK 1Cat 포함)에 대해:
 - GPU0 → Server A → Project A.
 - GPU1 → Server B → Project B.
 - 두 server를 동시에 active 상태로 실행한다.
 
-각 lane이 1GPU에 적재 가능한 경우 다음을 모두 평가한다.
+llama.cpp lane이 1GPU에 적재 가능한 경우 다음을 모두 평가한다.
 - TARGET.
 - NGRAM.
 - MTP.
 - MTP_NGRAM.
+
+STOCK 1Cat은 TP1 server 2개를 GPU0/GPU1에 각각 격리하고, server당 max_model_len 131072 / max_num_seqs 1로 실행한다.
 
 Shared TP2와 다음 항목을 비교한다.
 - 두 개의 128K session 동시 수용 여부.
@@ -178,7 +183,7 @@ Shared TP2와 다음 항목을 비교한다.
 
 ## 5. 성능 비교 및 lane 축소 [TODO]
 
-capacity/correctness가 유효한 설정만 성능 비교 대상으로 포함한다.
+capacity/correctness가 유효한 설정만 성능 비교 대상으로 포함한다. 지속적인 C2 decode 측정에는 workloads/performance/v1.json을 사용한다. 이 workload는 output 4K를 예약하고 실제 1K 이상 출력을 요구하며, NGRAM 비교가 단순 반복 문자열에 과도하게 유리하지 않도록 section별 identifier를 다르게 만든다.
 
 ### 5.1 llama.cpp
 동일한 model/artifact/KV/topology 조건에서 비교한다.

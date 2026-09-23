@@ -27,6 +27,7 @@ TARGET versus NGRAM remains required even when MTP is unusable.
 | Ornith 1.5 35B-A3B | STOCK | NVFP4 candidate | FP8 candidate | Target-only candidate | TP2 shared | verify support → C1/C2 or UNSUPPORTED |
 | Ornith 1.5 35B-A3B | SKINNY | no pinned v1.1 contract | — | — | TP2 | support resolution / UNSUPPORTED |
 | Ornith 1.5 9B | STOCK | NVFP4 candidate | FP16 candidate | MTP candidate | TP2 shared | verify support → C1/C2 or UNSUPPORTED |
+| Ornith 1.5 9B | STOCK | NVFP4 candidate | FP16 candidate | MTP candidate | 1GPU×2 independent | resolve exact artifact → two TP1 C1/128K servers → active C2 or UNSUPPORTED |
 | Ornith 1.5 9B | SKINNY | no pinned v1.1 contract | — | — | TP2 | support resolution / UNSUPPORTED |
 | Gemma4 26B-A4B | STOCK | NVFP4 candidate | FP8 candidate | Target-only candidate | TP2 shared | verify support → C1/C2 or UNSUPPORTED |
 | Gemma4 26B-A4B | SKINNY | no pinned v1.1 contract | — | — | TP2 | support resolution / UNSUPPORTED |
@@ -35,7 +36,8 @@ TARGET versus NGRAM remains required even when MTP is unusable.
 
 Every primary request:
 - total context budget per agent: 131072
-- reserved output: 512
+- reserved output: 2048
+- minimum actual output: 256
 - prompt calibrated by live tokenizer
 - minimum total utilization: 99%
 
@@ -48,6 +50,10 @@ Shared STOCK/SKINNY C2:
 - max_model_len: 131072
 - max_num_seqs: 2
 - TP: 2
+
+## Sustained C2 performance workload
+
+`workloads/performance/v1.json` keeps the same 128K total sequence ceiling per request, reserves 4096 output tokens, requires at least 1024 actual completion tokens, and diversifies repeated identifiers per section. Use it for throughput comparisons, especially TARGET/NGRAM and MTP/MTP_NGRAM; do not use the repeated capacity filler alone to claim an NGRAM speedup.
 
 ## Fail-fast / diagnostics
 - Preserve a clear 128K OOM/capacity failure.
