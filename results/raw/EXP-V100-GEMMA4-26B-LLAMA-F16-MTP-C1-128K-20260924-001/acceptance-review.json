@@ -1,0 +1,19 @@
+{
+  "reviewed_at_utc": "2026-09-24T06:30:00+00:00",
+  "verdict": "FAIL_STARTUP",
+  "measured_request_started": false,
+  "target_sha256_match": true,
+  "mtp_companion_sha256_match": true,
+  "preflight_pass": true,
+  "server_exit_code": 139,
+  "failure_stage": "Gemma4 assistant speculative draft initialization during server startup",
+  "evidence": [
+    "memory-fit path logged: Gemma4Assistant requires ctx_other to be set (warning documented by runtime as normal during memory fitting)",
+    "runtime then logged loading draft model /model/draft.gguf",
+    "backtrace terminated inside common_speculative_init_result/common_speculative_init_from_params",
+    "no measured request was issued"
+  ],
+  "classification": "runtime/startup incompatibility or crash in the pinned llama.cpp Gemma4 assistant MTP path; not OOM and not artifact identity failure",
+  "upstream_similarity": "Failure signature is similar to ggml-org/llama.cpp issue #25828, which reports gemma4-assistant draft-mtp startup crashes on multiple llama.cpp builds. This is supporting evidence, not proof of identical root cause.",
+  "cleanup": "container had already exited; docker inspect cleanup lookup failed because --rm removed it; process exit code 139"
+}
