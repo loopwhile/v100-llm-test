@@ -101,4 +101,13 @@ class HarnessTests(unittest.TestCase):
   sse=b'data: {"choices":[{"delta":{"content":"Hello"}}]}\n\ndata: {"usage":{"prompt_tokens":10,"completion_tokens":2},"timings":{"predicted_per_second":40.0}}\n\ndata: [DONE]\n\n'; a=h.HTTPAdapter("http://mock","llama.cpp")
   with patch.object(h.urllib.request,"urlopen",return_value=io.BytesIO(sse)): r,t=a.stream_complete({"messages":[]})
   self.assertEqual(r["choices"][0]["message"]["content"],"Hello"); self.assertEqual(r["usage"]["completion_tokens"],2); self.assertIsNotNone(t["ttft_ms"])
+ def test_slug_standard_directories(self):
+  cases={"Qwen3.8-27B":"qwen3-8-27b","Ornith-1.5-9B":"ornith-1.5-9b","Ornith-1.5-35B-A3B":"ornith-1.5-35b-a3b","Gemma4-26B-A4B-IT-QAT":"gemma4-26b-a4b","gemma4-26b-a4b":"gemma4-26b-a4b"}
+  for name,want in cases.items(): self.assertEqual(report._slug(name),want)
+ def test_publication_overwrite_and_fail_output_metrics(self):
+  out,_=self.run_case("pub_overwrite"); metrics=json.loads((out/"metrics.json").read_text()); metrics["ttft_ms"]=None; metrics["mean_request_decode_tps"]=None; (out/"metrics.json").write_text(json.dumps(metrics))
+  completion=json.loads((out/"completion.json").read_text()); completion["verdict"]="FAIL_OUTPUT"; (out/"completion.json").write_text(json.dumps(completion))
+  records=json.loads((out/"requests.json").read_text()); records[0]["ttft_ms"]=500.0; records[0]["decode_tps"]=25.0; (out/"requests.json").write_text(json.dumps(records))
+  path=report.publish(self.root,out,overwrite=True); self.assertTrue((self.root/path).exists()); content=(self.root/path).read_text()
+  self.assertIn("TTFT: 500.0",content); self.assertIn("Mean request decode tok/s: 25.0",content); self.assertIn("Peak VRAM:",content); self.assertNotIn("Gateway runtime:",content); self.assertNotIn("C2 resident:",content)
 if __name__=="__main__": unittest.main()

@@ -9,6 +9,10 @@
   "finish_reason": "length",
   "runtime_truncated": 0,
   "post_health_healthy": true,
+  "capacity_summary": "PASS (129,023 tokens prefill + 2,048 tokens decode, Peak VRAM 15,287 MiB / 16,384 MiB로 OOM 없음, post-health 정상).",
+  "integrity_summary": "FAIL (동일 지시문 \"The user wants me to review...\"의 50회 이상 반복 루프 발생, 2,048 tokens에서 finish_reason=length로 강제 종료). WBS 2 및 WBS 5.4.5 acceptance 계약에 따라 최종 판정은 `FAIL_OUTPUT`으로 감사/정정됨.",
+  "diagnostic_summary": "1Cat-vLLM Qwen3.8-27B FP8E4M3 TP2에서 128K context 서빙은 OOM 없이 정상 완료(TTFT 742.61s, Peak VRAM 15,287 MiB)되었으나, greedy(temperature=0.0) 디코드 중 프롬프트 에코 반복 루프가 발생하여 출력 무결성 기준을 통과하지 못함.",
+  "key_note": "WBS 2.2.1; 128K capacity passed without OOM, but semantic audit failed due to degenerate repetition loop; finish_reason=length at 2048 tokens.",
   "content_review": "FAIL_OUTPUT: Obvious repetition loop detected. The model generated an identical prompt echo / instruction statement ('The user wants me to review the supplied project snapshot. Identify one concrete correctness risk and describe a minimal verification plan. Produce at least 256 tokens so decode behavior is measurable.') 50+ times until hitting the 2048 output token limit with finish_reason=length. While 128K capacity (no OOM, prefill 129,023 tokens, decode 2,048 tokens, peak VRAM 15,287 MiB) was achieved, output integrity failed under WBS 2 and WBS 5.4.5 contracts.",
   "runtime_errors": [],
   "cleanup": "owned process exited; exit 0"

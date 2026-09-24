@@ -1,0 +1,19 @@
+{
+  "reviewed_at_utc": "2026-09-24T14:15:00.000000+00:00",
+  "verdict": "FAIL_OUTPUT",
+  "capacity_verdict": "PASS_C1_128K",
+  "integrity_verdict": "FAIL_OUTPUT",
+  "prompt_receipt_matches_usage": true,
+  "reserved_budget_tokens": 131071,
+  "completion_tokens": 2048,
+  "finish_reason": "length",
+  "runtime_truncated": 0,
+  "post_health_healthy": true,
+  "capacity_summary": "PASS (129,023 tokens prefill + 2,048 tokens decode 성공, Peak VRAM GPU0 15,287 MiB / GPU1 15,287 MiB로 OOM 없음, post-health 정상).",
+  "integrity_summary": "FAIL (코드 스니펫 분석 텍스트 반복 루프 발생: `The storage/index.py file: ... The storage/transaction.py file: ... The tests/test_snapshot.py file: ...` 패턴이 14회 이상 반복되어 2,048 tokens에서 finish_reason=`length`로 강제 종료).",
+  "diagnostic_summary": "EXP-003과 동일한 기본 설정(greedy temperature=0.0) 재현 실험으로, 128K prefill 이후 디코드 단계에서 동일한 병리적 반복 루프가 재현됨. 128K serving capacity는 입증되었으나 WBS 2 및 WBS 5.4.5 acceptance 계약에 따라 최종 판정은 `FAIL_OUTPUT`임.",
+  "key_note": "WBS 2.2.1; 128K capacity passed without OOM, but repetition loop on code snippet analysis; finish_reason=length at 2048 tokens.",
+  "content_review": "FAIL_OUTPUT: Obvious repetition loop detected. The model generated repetitive structural code analysis blocks (PageIndex, Transaction, test_snapshot) 14+ times until hitting 2048 output token limit with finish_reason=length. 128K prefill and decode succeeded with peak VRAM 15,287 MiB, but output integrity failed.",
+  "runtime_errors": [],
+  "cleanup": "owned process exited; exit 0"
+}
