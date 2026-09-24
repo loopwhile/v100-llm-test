@@ -1,17 +1,11 @@
-# Gemma4 26B-A4B MTP_NGRAM — UNSUPPORTED on pinned llama.cpp runtime
+# Gemma4 26B-A4B MTP_NGRAM — previous disposition superseded
 
-The required composite row remains explicit, but no measured experiment is fabricated.
+The earlier `UNSUPPORTED` disposition was based on the CUDA0-only MTP startup failure and is no longer the active conclusion.
 
-- Model: Gemma4-26B-A4B-IT-QAT
-- Runtime: llama.cpp 10775 / 67a17c17caa95742186f8b1ecadd1b5abd6d5ebb
-- Required composite: `draft-mtp,ngram-simple`
-- MTP dependency: explicit `gemma4-assistant` companion GGUF
-- Disposition: **UNSUPPORTED**
-- Reason: the exact MTP dependency fails during server startup before a request can be measured.
+A same-build, same-artifact, same-TP2, same-128K diagnostic changed only:
 
-Parent evidence:
-`EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C1-128K-20260924-001` → `FAIL_STARTUP`, server exit 139.
+`--spec-draft-device CUDA0 -> CUDA0,CUDA1`
 
-NGRAM alone is supported and separately passed C1 128K. Adding NGRAM cannot bypass the failed assistant-model initialization that is required by the composite lane. Therefore a redundant MTP_NGRAM crash replay is not scheduled.
+and produced **PASS_STARTUP**. Therefore MTP_NGRAM is reopened and must be tested after the corrected MTP C1 lane completes successfully.
 
-This is an explicit support disposition, not a measured C1 PASS/FAIL row and not evidence about a future llama.cpp build.
+No measured MTP_NGRAM result exists yet. Do not treat this file as a PASS row.
