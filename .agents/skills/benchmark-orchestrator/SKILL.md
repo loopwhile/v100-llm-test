@@ -43,6 +43,9 @@ description: >-
 3. **`results/summary.csv`** — 기존 완료된 실험 목록
 4. **`config/profiles/acceptance-128k.json`** — 합격 기준
 5. 해당 모델의 설정 파일: `config/models/<model>.json`
+6. **WBS 2.2를 실행할 때는 반드시 `docs/WBS-2.2-execution-manifest.md`** — 이미 확정된 1Cat-vLLM artifact/KV/spec/backend/experiment ID와 stop condition
+
+WBS 2.2에서는 manifest에 이미 기록된 upstream 조사와 configuration 판단을 반복하지 않는다. 실제 host evidence가 manifest와 충돌할 때만 그 충돌을 보고한다.
 
 이 정보를 기반으로:
 
@@ -53,7 +56,11 @@ description: >-
 
 ### Step 2: 실험 파라미터 확정 (오케스트레이터)
 
-사용자에게 실험 계획을 요약하여 확인받는다:
+사용자에게 실험 계획을 요약하여 확인받는다.
+
+**예외:** 사용자가 명시적으로 "WBS 2.2 전체"를 위임한 경우 `docs/WBS-2.2-execution-manifest.md` 자체를 사전 승인된 실행 계획으로 취급한다. 2.2.1~2.2.4 사이에 반복 확인을 요구하거나 configuration을 다시 조사하지 않는다. 단, 실패한 item의 설정을 변경해 재시도하는 것은 별도 사용자 승인이 필요하며, WBS 2.2 밖의 작업은 자동 시작하지 않는다.
+
+일반적인 단일 실험 계획 형식:
 
 ```
 📋 실험 계획
@@ -107,13 +114,13 @@ python3 scripts/validate_repo.py 를 실행하여 레포 계약을 검증한다.
 오케스트레이터가 전달한 파라미터를 기반으로 적절한 러너 스크립트를 실행한다:
 - llama.cpp Qwen: python3 scripts/run_c1_qwen.py
 - llama.cpp 기타 모델: python3 scripts/run_c1_llama.py
-- 1Cat-vLLM: (향후 추가)
+- 1Cat-vLLM STOCK: python3 scripts/run_c1_onecat.py
 
 러너 스크립트에 전달할 인자:
---experiment-id {EXP_ID}
---model {model_key}
---lane {lane}
---port {port}
+- llama.cpp: `--experiment-id {EXP_ID} --model {model_key} --lane {lane} --port {port}`
+- 1Cat-vLLM STOCK: `--experiment-id {EXP_ID} --model {model_key} --port {port}`
+
+WBS 2.2의 exact experiment ID와 model key는 execution manifest를 그대로 사용한다.
 
 ### Phase C: 모니터링
 실행 중 다음을 주기적으로 확인한다:
@@ -194,12 +201,13 @@ Markdown 리포트와 CSV 요약을 생성한다.
 
 실험 완료 후:
 
-- **PASS**: WBS 다음 항목으로 진행할지 사용자에게 확인
-- **FAIL**: 실패 원인을 분석하고 재시도/스킵 여부를 사용자와 논의
-- **연속 실행 요청 시**: 다음 실험의 파라미터를 준비하고 Step 2로 돌아감
+- **PASS**: 일반 단일 실행 요청이면 다음 항목 진행 여부를 사용자에게 확인한다.
+- **FAIL**: 설정을 바꾸는 재시도는 자동 수행하지 않는다.
+- **사용자가 WBS 2.2 전체를 명시적으로 위임한 경우**: 현재 item의 결과를 먼저 완전히 closeout한 뒤, manifest에 고정된 다음 독립 item으로 진행할 수 있다. 실패한 item은 설정 변경 없이 종료하며 다음 item의 contract를 재설계하지 않는다.
+- **그 외 연속 실행 요청 시**: 다음 실험의 파라미터를 준비하고 Step 2로 돌아간다.
 
 > [!IMPORTANT]
-> 자동으로 다음 실험을 시작하지 않는다. 반드시 사용자 확인을 받는다.
+> 명시적인 다중-item 위임이 없는 경우 자동으로 다음 실험을 시작하지 않는다. WBS 2.2 전체 위임도 WBS 2.2 밖으로 확장되지 않는다.
 
 ---
 
@@ -230,7 +238,7 @@ EXP-V100-{MODEL}-{RUNTIME}-{KV}-{SPEC}-{CONCURRENCY}-{CONTEXT}-{DATE}-{SEQ}
 | Ornith 1.5 9B | llama.cpp | TARGET, NGRAM, MTP, MTP_NGRAM | `run_c1_llama.py` |
 | Ornith 1.5 35B-A3B | llama.cpp | TARGET, NGRAM, MTP, MTP_NGRAM | `run_c1_llama.py` |
 | Gemma4 26B-A4B | llama.cpp | TARGET, NGRAM, MTP, MTP_NGRAM | `run_c1_llama.py` |
-| 모든 모델 | 1Cat-vLLM | STOCK | *(향후 추가)* |
+| Qwen3.8 / Ornith 9B / Ornith 35B / Gemma4 26B | 1Cat-vLLM | STOCK | `run_c1_onecat.py` |
 
 ---
 
@@ -244,6 +252,7 @@ EXP-V100-{MODEL}-{RUNTIME}-{KV}-{SPEC}-{CONCURRENCY}-{CONTEXT}-{DATE}-{SEQ}
 - [워크로드 계약](./../../docs/workload-contract.md) — 프롬프트 구성 규칙
 - [테스트 매트릭스](./../../docs/test-matrix.md) — 전체 실험 목록
 - [WBS](./../../docs/WBS.md) — 작업 진행 상태
+- [WBS 2.2 실행 manifest](./../../docs/WBS-2.2-execution-manifest.md) — 1Cat STOCK 사전 확정 contract, experiment ID, gate/stop 규칙
 
 ---
 
