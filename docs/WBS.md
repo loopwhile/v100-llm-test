@@ -160,24 +160,21 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - 네 lane 모두 prompt 129,023 + output reserve 2,048 = 131,071 / 131,072 token budget을 사용했고, 정상 stop / post-health / cleanup / exit 0을 확인했다.
 - 모델 응답의 semantic caveat는 serving/output-integrity acceptance와 분리해 각 `acceptance-review.json`에 기록했다.
 
-#### 2.1.4 Gemma4 26B-A4B [IN_PROGRESS — MTP_NGRAM pending]
+#### 2.1.4 Gemma4 26B-A4B [DONE]
 - artifact: `UD-Q4_K_XL`.
 - KV: `FP16`.
 - 실행 lane: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
 - base GGUF SHA256: `a7c5bc715f5ff8e99a3e8901ce7d2b42b402c669bf24f7c5250747633d0f5891`.
-- MTP 계열은 별도 **smart Q4_0** Gemma4 assistant GGUF `mtp-gemma-4-26B-A4B-it.gguf`, `--spec-draft-n-max 4`를 사용한다. Unsloth 일반 문서는 multi-GPU 예시로 `--spec-draft-device CUDA0 -sm layer`를 제시하지만, pinned b10775 + 2×V100 layer-split 실측에서는 CUDA0-only drafter가 speculative context에서 CUDA1 KV/backend 충돌로 abort했고, `--spec-draft-device CUDA0,CUDA1`로 target placement와 정렬하면 동일 128K startup이 PASS했다. 따라서 이 프로젝트의 검증된 V100 contract는 `CUDA0,CUDA1`이다. companion SHA256은 `7272d97595f0d4c74bd7b623492b7dbdaafd8b7c72f329a8270ba4eca68f768a`.
-- TARGET: `EXP-V100-GEMMA4-26B-LLAMA-F16-TARGET-C1-128K-20260924-001` — `PASS_C1_128K`; prompt 129,024 + reserve 2,048 = 131,072 / 131,072; prefill 524.64 tok/s, decode 68.10 tok/s; peak VRAM 8,775 / 8,785 MiB.
-- NGRAM: `EXP-V100-GEMMA4-26B-LLAMA-F16-NGRAM-C1-128K-20260924-001` — `PASS_C1_128K`; prefill 526.51 tok/s, decode 64.39 tok/s; draft 96 / accepted 4. NGRAM 가속 효과는 Phase 5에서 판정한다.
-- MTP attempt 001: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C1-128K-20260924-001` — `FAIL_STARTUP` under the CUDA0-only drafter configuration. This result is preserved as configuration-specific evidence, not the final Gemma4 MTP verdict.
-- Root cause isolation: same b10775 / same artifacts / same TP2 layer split / same 128K / same MTP n=4 with only `--spec-draft-device CUDA0 -> CUDA0,CUDA1` changed produced `PASS_STARTUP`. The prior failure is therefore attributed operationally to draft/target device-placement incompatibility on this V100 topology.
-- Corrected MTP: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C1-128K-20260924-002` — `PASS_C1_128K`; prefill 526.99 tok/s, decode 45.49 tok/s; draft 1088 / accepted 548, acceptance 50.368%; peak VRAM 8,983 / 9,101 MiB. C1 performance effectiveness is deferred to Phase 5.
-- MTP_NGRAM is reopened and is the only remaining C1 lane for 2.1.4. It must use the corrected `--spec-draft-device CUDA0,CUDA1` contract.
-- C2 promotion currently includes TARGET, NGRAM, corrected MTP; MTP_NGRAM is added only if its corrected C1 run passes.
-- 모델 응답의 semantic caveat와 startup failure 분석은 각 report / `acceptance-review.json`에 분리 기록했다.
-- **Supplemental diagnostic D2.1.4A [DONE — FAIL_STARTUP]**: 동일 pinned b10775 / 동일 target+smart-Q4_0 drafter / 동일 TP2 / MTP n=4에 `--fit off`만 추가했다. server startup은 다시 exit 139로 실패했고 measured request는 없었다. 따라서 device-memory fitting 자체가 baseline crash의 원인이라는 가설은 기각한다.
-- **Supplemental diagnostic D2.1.4B [DONE — DIAGNOSTIC TOPOLOGY UNSUPPORTED]**: TP2 128K를 유지하고 `split-mode layer -> row`, `main-gpu=0`만 바꿔 KV placement를 진단하려 했으나 target model load 단계에서 `device CUDA0 does not support split buffers`로 종료됐다. 따라서 V100 CUDA backend의 row split 자체가 이 pinned runtime에서 사용할 수 없어 MTP 원인 판정에는 쓰지 않는다.
-- **Supplemental diagnostic D2.1.4C [DONE — INCONCLUSIVE]**: CUDA0 단일 GPU, context 8192, target `-ngl 20`, draft GPU offload `all`로 실행했으나 exit 132(SIGILL)로 종료됐다. CUDA1은 제거됐지만 target의 대규모 CPU partial-offload 경로를 동시에 새로 열었으므로 이 결과만으로 TP2/MTP placement 가설을 판정하지 않는다.
-- **Supplemental diagnostic D2.1.4D [DONE — PASS_STARTUP]**: baseline TP2/full-offload/128K/layer split을 유지하고 draft device만 `CUDA0`에서 `CUDA0,CUDA1`로 바꿨다. server가 정상 health 상태까지 올라왔고 cleanup exit 0이었다. 이 single-variable result를 근거로 corrected production candidate는 dual draft devices를 사용한다.
+- MTP 계열은 별도 **smart Q4_0** Gemma4 assistant GGUF `mtp-gemma-4-26B-A4B-it.gguf`, `--spec-draft-n-max 4`, `--spec-draft-device CUDA0,CUDA1` contract를 사용한다. companion SHA256은 `7272d97595f0d4c74bd7b623492b7dbdaafd8b7c72f329a8270ba4eca68f768a`.
+- TARGET: `EXP-V100-GEMMA4-26B-LLAMA-F16-TARGET-C1-128K-20260924-001` — `PASS_C1_128K`; prefill 524.64 tok/s, decode 68.10 tok/s; peak VRAM 8,775 / 8,785 MiB.
+- NGRAM: `EXP-V100-GEMMA4-26B-LLAMA-F16-NGRAM-C1-128K-20260924-001` — `PASS_C1_128K`; prefill 526.51 tok/s, decode 64.39 tok/s; 4/96 accepted. NGRAM 가속 효과는 Phase 5에서 판정한다.
+- MTP attempt 001: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C1-128K-20260924-001` — CUDA0-only drafter configuration에서 `FAIL_STARTUP`. configuration-specific failure evidence로 보존하며 final MTP verdict로 사용하지 않는다.
+- Root cause isolation: 동일 b10775 / artifact / TP2 layer split / 128K / MTP n=4에서 `--spec-draft-device CUDA0 -> CUDA0,CUDA1`만 변경하면 startup PASS. 따라서 이 프로젝트의 validated V100 contract는 dual draft devices다.
+- Corrected MTP: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C1-128K-20260924-002` — `PASS_C1_128K`; prefill 526.99 tok/s, decode 45.49 tok/s; 548/1088 accepted (50.368%); peak VRAM 8,983 / 9,101 MiB.
+- Corrected MTP_NGRAM: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-NGRAM-C1-128K-20260924-001` — `PASS_C1_128K`; prefill 518.28 tok/s, decode 45.53 tok/s; 548/1088 accepted (50.368%); peak VRAM 8,983 / 9,121 MiB. Composite compatibility/capacity는 PASS이며 NGRAM의 incremental acceleration effectiveness는 Phase 5로 이관한다.
+- corrected MTP_NGRAM은 MTP-only 대비 decode +0.10%, prefill -1.65%, TTFT +1.68%, wall +1.56%였고 MTP counters는 동일했다. 이 수치는 C1 성능 우열 판정에 사용하지 않는다.
+- 네 최종 lane 모두 128K capacity/correctness를 PASS했다. MTP 계열은 corrected `CUDA0,CUDA1` contract 결과만 final lane verdict로 사용한다.
+- 모델 응답 semantic caveat와 startup diagnostics는 각 report / `acceptance-review.json` / `MTP-DIAGNOSTICS-B10775.md`에 분리 기록했다.
 
 ### 2.2 1Cat-vLLM STOCK
 
@@ -260,8 +257,8 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - C1을 PASS한 `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM` lane만 C2로 승격한다.
 
 #### 3.1.4 Gemma4 26B-A4B [TODO after 2.1.4]
-- `TARGET`, `NGRAM`은 C1 PASS 상태다.
-- corrected `MTP` / `MTP_NGRAM`은 `--spec-draft-device CUDA0,CUDA1` 구성으로 C1을 다시 판정한 뒤 PASS한 lane만 C2로 승격한다.
+- C1을 PASS한 `TARGET`, `NGRAM`, corrected `MTP`, corrected `MTP_NGRAM` 네 lane을 C2로 승격한다.
+- MTP 계열은 반드시 validated `--spec-draft-device CUDA0,CUDA1` contract를 유지한다.
 
 ### 3.2 Shared TP2 1Cat-vLLM STOCK
 
