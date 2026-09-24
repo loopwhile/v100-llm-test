@@ -51,6 +51,12 @@ class RuntimePlanTests(unittest.TestCase):
  def test_stock_tp2_c2(self):
   p=r.build_plan(ROOT,"qwen3.8-27b","STOCK",2,"tp2-shared");c=p["commands"][0]
   self.assertEqual(c[c.index("--tensor-parallel-size")+1],"2");self.assertEqual(c[c.index("--max-num-seqs")+1],"2")
+  self.assertEqual(c[c.index("--kv-cache-dtype")+1],"fp8_e4m3")
+ def test_fp8_kv_subtypes_must_be_explicit(self):
+  self.assertEqual(r.kv("fp8_e4m3"),"fp8_e4m3")
+  self.assertEqual(r.kv("fp8_e5m2"),"fp8_e5m2")
+  with self.assertRaises(ValueError):r.kv("FP8")
+  with self.assertRaises(ValueError):r.kv("fp8")
  def test_skinny_closed_after_model_load_oom(self):
   p=r.build_plan(ROOT,"qwen3.8-27b","SKINNY",2,"tp2-shared")
   self.assertFalse(p["supported_for_planning"]);self.assertNotIn("commands",p)
