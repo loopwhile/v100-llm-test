@@ -10,6 +10,7 @@
 - D2.1.4A fit-off diagnostic: DONE — FAIL_STARTUP, exit 139. Memory fitting is not the sole cause.
 - CLI diagnostic on the same b10775 also exited 139. The decisive backend error was: pre-allocated tensor cache_k_l28 in CUDA1 buffer cannot run operation NONE, during speculative context graph reservation.
 - D2.1.4B row-split diagnostic: DONE — diagnostic topology unsupported. V100 CUDA0 rejected row split at target load with `device CUDA0 does not support split buffers`; this does not classify the MTP failure.
-- Supplemental diagnostic D2.1.4C: IN_PROGRESS — same b10775/artifacts/MTP n=4, CUDA0 only, 8K context, partial target GPU offload, startup-only. This removes CUDA1 entirely to isolate the multi-GPU placement dependency.
+- D2.1.4C single-GPU diagnostic: DONE — INCONCLUSIVE. CUDA0-only + 8K + target -ngl 20 exited 132(SIGILL); partial CPU offload was introduced simultaneously, so it does not isolate the TP2 placement variable cleanly.
+- Supplemental diagnostic D2.1.4D: IN_PROGRESS — restore baseline TP2/full-offload/128K/layer split and change only draft device CUDA0 -> CUDA0,CUDA1.
 - Baseline acceptance results are not overwritten by diagnostics.
 - No automatic next-lane launch.
