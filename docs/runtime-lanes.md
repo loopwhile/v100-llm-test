@@ -10,8 +10,8 @@ Every llama.cpp candidate has four explicit rows:
 | --- | --- | --- |
 | TARGET | \`--spec-type none\` | yes |
 | NGRAM | \`--spec-type ngram-simple\` | yes |
-| MTP | \`--spec-type draft-mtp --spec-draft-n-max 3\` | explicit result row |
-| MTP_NGRAM | \`--spec-type draft-mtp,ngram-simple --spec-draft-n-max 3\` | explicit result row |
+| MTP | \`--spec-type draft-mtp\` + model-profile draft contract | explicit result row |
+| MTP_NGRAM | \`--spec-type draft-mtp,ngram-simple\` + model-profile draft contract | explicit result row |
 
 TARGET↔NGRAM is mandatory even when MTP is not usable. Unsupported MTP/composite support is recorded as \`UNSUPPORTED\`, not deleted.
 
