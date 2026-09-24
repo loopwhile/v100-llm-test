@@ -47,11 +47,35 @@ class RuntimePlanTests(unittest.TestCase):
   for c in p["commands"]:self.assertEqual(c[c.index("--tensor-parallel-size")+1],"1");self.assertEqual(c[c.index("--max-num-seqs")+1],"1");self.assertIn("--speculative-config",c)
  def test_ornith9_stock_fails_closed_without_spec_config(self):
   lock,_,_,m=r.state(ROOT,"ornith-1.5-9b");m=copy.deepcopy(m);m["onecat_vllm"].update(planning_ready=True,path="/srv/models/mock-ornith9",weight_quant="NVFP4",kv_candidates=["FP16"],speculative_candidates=["MTP"])
+  m["onecat_vllm"].pop("speculative_config",None)
   p=r.onecat_plan(lock,m,"STOCK",2,"1gpu-x2-independent",18080);self.assertFalse(p["supported_for_planning"]);self.assertIn("speculative",p["reason"])
  def test_stock_tp2_c2(self):
   p=r.build_plan(ROOT,"qwen3.8-27b","STOCK",2,"tp2-shared");c=p["commands"][0]
   self.assertEqual(c[c.index("--tensor-parallel-size")+1],"2");self.assertEqual(c[c.index("--max-num-seqs")+1],"2")
   self.assertEqual(c[c.index("--kv-cache-dtype")+1],"fp8_e4m3")
+ def test_ornith9_stock_contract_is_pinned_for_host_gate(self):
+  p=r.build_plan(ROOT,"ornith-1.5-9b","STOCK",1,"tp2-shared");c=p["commands"][0]
+  self.assertTrue(p["supported_for_planning"])
+  self.assertEqual(c[c.index("--attention-backend")+1],"FLASH_ATTN_V100")
+  self.assertEqual(c[c.index("--kv-cache-dtype")+1],"f16")
+  self.assertIn("--speculative-config",c)
+  spec=__import__("json").loads(c[c.index("--speculative-config")+1])
+  self.assertEqual(spec["method"],"mtp");self.assertEqual(spec["num_speculative_tokens"],1)
+  self.assertEqual(spec["attention_backend"],"TRITON_ATTN")
+ def test_ornith35_stock_contract_uses_explicit_e5m2(self):
+  p=r.build_plan(ROOT,"ornith-1.5-35b-a3b","STOCK",1,"tp2-shared");c=p["commands"][0]
+  self.assertTrue(p["supported_for_planning"])
+  self.assertEqual(c[c.index("--attention-backend")+1],"FLASH_ATTN_V100")
+  self.assertEqual(c[c.index("--kv-cache-dtype")+1],"fp8_e5m2")
+  self.assertNotIn("--speculative-config",c)
+ def test_gemma_stock_contract_is_pinned_for_download_and_host_gate(self):
+  p=r.build_plan(ROOT,"gemma4-26b-a4b","STOCK",1,"tp2-shared");c=p["commands"][0]
+  self.assertTrue(p["supported_for_planning"])
+  self.assertEqual(p["model_identity"]["repository"],"nvidia/Gemma-4-26B-A4B-NVFP4")
+  self.assertEqual(p["model_identity"]["revision"],"a19cfe00be84568a6867111c9a68c9c44fdcffe6")
+  self.assertEqual(c[c.index("--attention-backend")+1],"TRITON_ATTN")
+  self.assertEqual(c[c.index("--kv-cache-dtype")+1],"f16")
+  self.assertNotIn("--speculative-config",c)
  def test_fp8_kv_subtypes_must_be_explicit(self):
   self.assertEqual(r.kv("fp8_e4m3"),"fp8_e4m3")
   self.assertEqual(r.kv("fp8_e5m2"),"fp8_e5m2")
@@ -85,7 +109,7 @@ class RuntimePlanTests(unittest.TestCase):
   c=r.build_plan(ROOT,"gemma4-26b-a4b","TARGET",1,"tp2-shared")["commands"][0]
   self.assertNotIn("--model-draft",c)
   self.assertFalse(any("/model/draft.gguf" in x for x in c))
- def test_gemma_verified_llama_pending_stock(self):
+ def test_gemma_verified_llama_and_pinned_stock_plan(self):
   self.assertTrue(r.build_plan(ROOT,"gemma4-26b-a4b","NGRAM",1,"tp2-shared")["supported_for_planning"])
-  self.assertFalse(r.build_plan(ROOT,"gemma4-26b-a4b","STOCK",1,"tp2-shared")["supported_for_planning"])
+  self.assertTrue(r.build_plan(ROOT,"gemma4-26b-a4b","STOCK",1,"tp2-shared")["supported_for_planning"])
 if __name__=="__main__":unittest.main()

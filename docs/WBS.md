@@ -178,36 +178,58 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 
 ### 2.2 1Cat-vLLM STOCK
 
+실행 세부 계약은 `docs/WBS-2.2-execution-manifest.md`를 authoritative manifest로 사용한다. WBS 2.2 전체가 사용자에 의해 명시적으로 위임된 경우 오케스트레이터는 이 manifest를 다시 설계하거나 upstream 조사를 반복하지 않고 순서대로 실행한다.
+
 공통 실행 조건:
-- TP2.
+- pinned 1Cat-vLLM 1.5.0.
+- TP2 shared.
 - `max_model_len=131072`.
 - `max_num_seqs=1`.
-- model profile에 선언된 KV format과 speculative configuration을 사용한다.
-- artifact identity와 runtime compatibility를 별도로 판정한다.
+- `scripts/run_c1_onecat.py`를 사용한다.
+- server startup 자체를 exact artifact/runtime compatibility gate로 취급한다. healthy startup 이후에만 C1 128K measured request를 1회 보낸다.
+- 실패 후 KV, quantization, speculative depth/method, context, topology를 자동 변경하지 않는다.
+- model profile에 선언된 explicit KV format과 speculative configuration을 사용한다.
+- artifact identity와 실제 P520 runtime compatibility를 별도로 판정한다.
 
-#### 2.2.1 Qwen3.8-27B STOCK [TODO]
-- artifact: `QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4`.
+#### 2.2.1 Qwen3.8-27B STOCK [READY]
+- artifact: `QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4@15d2e47bffe5d8ad23928879f8f7d2f74909e259`.
 - WBS 1.3 TP2 runtime preflight: PASS.
 - KV: `fp8_e4m3` (explicit).
 - 1Cat-vLLM 1.5.0의 QUASAR NVFP4 target-only long-context 검증 경로와 맞추기 위해 E4M3를 명시한다. SM70의 generic `fp8` alias는 사용하지 않는다.
 - speculative: target-only.
+- experiment ID: `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-C1-128K-20260924-001`.
 - 신규 C1 128K acceptance를 수행한다.
 
-#### 2.2.2 Ornith 1.5 9B STOCK [BLOCKED — runtime compatibility pending]
-- artifact: `ornith-ai/Ornith-1.5-9B-NVFP4` exact revision/path 확인 완료.
-- artifact identity는 확정됐지만 V100 runtime compatibility는 아직 미검증이다.
-- runtime compatibility를 먼저 검증하고 PASS한 경우에만 C1 128K로 진행한다.
-- TP2 외에 Phase 4의 1GPU×2 + LiteLLM topology도 별도로 검증한다.
+#### 2.2.2 Ornith 1.5 9B STOCK [READY — host compatibility gate pending]
+- artifact: `ornith-ai/Ornith-1.5-9B-NVFP4@155f200d85ad58464571c77d5e1122ea5d419d7b`.
+- 1Cat-vLLM 1.5.0의 Qwen3.5 + MTP model path 정적 지원을 확인했지만 exact Ornith checkpoint의 V100 compatibility PASS로 간주하지 않는다.
+- KV: `FP16`.
+- speculative compatibility profile: MTP `num_speculative_tokens=1`; draft attention backend `TRITON_ATTN`.
+- target attention backend: `FLASH_ATTN_V100`.
+- startup이 healthy해진 경우에만 동일 실행에서 C1 128K measured request를 진행한다.
+- startup 실패 시 exact failure를 terminal evidence로 보존하고 target-only/MTP depth/KV를 자동 변경하지 않는다.
+- experiment ID: `EXP-V100-ORN15-9B-1CAT-F16-MTP1-C1-128K-20260924-001`.
+- TP2 결과와 별도로 Phase 4의 1GPU×2 + LiteLLM topology는 후속 검증한다.
 
-#### 2.2.3 Ornith 1.5 35B-A3B STOCK [BLOCKED — runtime compatibility pending]
-- artifact: `ornith-ai/Ornith-1.5-35B-A3B-NVFP4` exact revision/path 확인 완료.
-- artifact identity는 확정됐지만 V100 runtime compatibility는 아직 미검증이다.
-- runtime compatibility를 먼저 검증하고 PASS한 경우에만 C1 128K로 진행한다.
+#### 2.2.3 Ornith 1.5 35B-A3B STOCK [READY — host compatibility gate pending]
+- artifact: `ornith-ai/Ornith-1.5-35B-A3B-NVFP4@94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa`.
+- 1Cat-vLLM 1.5.0의 Qwen3.5-MoE/NVFP4 정적 경로가 존재하지만 exact Ornith checkpoint의 P520 startup gate가 최종 compatibility 판정이다.
+- KV: `fp8_e5m2` (explicit). 기존 profile의 generic `FP8` 의도를 pinned 1Cat 1.5.0 SM70 alias 의미와 동일하게 명시화한 것이며 numerical format을 조용히 변경한 것이 아니다.
+- speculative: target-only.
+- attention backend: `FLASH_ATTN_V100`.
+- experiment ID: `EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C1-128K-20260924-001`.
 
-#### 2.2.4 Gemma4 26B-A4B STOCK [BLOCKED — exact artifact pending]
-- exact local NVFP4 artifact가 아직 확정되지 않았다.
-- exact artifact를 확정하고 V100 runtime compatibility를 검증한 뒤 C1 128K 진행 여부를 결정한다.
-- 검증되지 않은 repository/revision/path를 추정해서 채우지 않는다.
+#### 2.2.4 Gemma4 26B-A4B STOCK [READY AFTER DOWNLOAD — host compatibility gate pending]
+- exact artifact: `nvidia/Gemma-4-26B-A4B-NVFP4@a19cfe00be84568a6867111c9a68c9c44fdcffe6`.
+- target local path: `/srv/models/gemma-4-26b-a4b-nvfp4`.
+- local artifact download가 완료되어야 preflight가 PASS할 수 있다.
+- NVIDIA upstream model card의 일반 vLLM TP=1 제약은 그대로 1Cat TP2 verdict로 전이하지 않는다. pinned 1Cat-vLLM 1.5.0은 Gemma4 NVFP4를 SM70 TP2/TP4 release matrix에 포함하므로, 이 P520의 실제 TP2 startup gate로 compatibility를 판정한다.
+- weight: NVFP4.
+- KV: `FP16`.
+- speculative: target-only.
+- attention backend: `TRITON_ATTN`.
+- 1Cat SM70 release matrix의 Gemma4 NVFP4 + E5M2 KV diagnostic는 KV-cache quantization validation에 의해 거부되는 조합으로 기록돼 있으므로 FP8 KV를 자동 대체하지 않는다.
+- experiment ID: `EXP-V100-GEMMA4-26B-1CAT-F16-TARGET-C1-128K-20260924-001`.
 
 ### 2.3 v100-skinny SKINNY
 

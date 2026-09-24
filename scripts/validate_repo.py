@@ -56,6 +56,24 @@ def validate():
   check(model["llama_cpp"]["required_spec_lanes"]==MODEL_SPEC_BY_FILE[path.name],f"{path.name}: llama spec lanes mismatch")
   check(model["onecat_vllm"]["required_backend_lanes"]==["stock","v100-skinny"],f"{path.name}: backend lanes mismatch")
 
+ q38=read("config/models/qwen3.8-27b.json")["onecat_vllm"]
+ o9=read("config/models/ornith-1.5-9b.json")["onecat_vllm"]
+ o35=read("config/models/ornith-1.5-35b-a3b.json")["onecat_vllm"]
+ g4=read("config/models/gemma4-26b-a4b.json")["onecat_vllm"]
+ check(q38.get("planning_ready") is True and q38.get("kv_candidates")==["fp8_e4m3"] and q38.get("speculative_candidates")==["target-only"] and q38.get("attention_backend")=="FLASH_ATTN_V100","WBS 2.2.1 Qwen STOCK contract drift")
+ check(o9.get("planning_ready") is True and o9.get("kv_candidates")==["FP16"] and o9.get("speculative_candidates")==["MTP"],"WBS 2.2.2 Ornith9 STOCK identity drift")
+ check(o9.get("attention_backend")=="FLASH_ATTN_V100","WBS 2.2.2 target attention backend drift")
+ o9spec=o9.get("speculative_config") or {}
+ check(o9spec.get("method")=="mtp" and o9spec.get("num_speculative_tokens")==1 and o9spec.get("attention_backend")=="TRITON_ATTN","WBS 2.2.2 MTP1 contract drift")
+ check(o35.get("planning_ready") is True and o35.get("kv_candidates")==["fp8_e5m2"] and o35.get("speculative_candidates")==["target-only"],"WBS 2.2.3 Ornith35 STOCK contract drift")
+ check(o35.get("attention_backend")=="FLASH_ATTN_V100","WBS 2.2.3 attention backend drift")
+ check(g4.get("planning_ready") is True and g4.get("repository")=="nvidia/Gemma-4-26B-A4B-NVFP4","WBS 2.2.4 Gemma artifact drift")
+ check(g4.get("revision")=="a19cfe00be84568a6867111c9a68c9c44fdcffe6","WBS 2.2.4 Gemma revision drift")
+ check(g4.get("path")=="/srv/models/gemma-4-26b-a4b-nvfp4" and g4.get("kv_candidates")==["FP16"],"WBS 2.2.4 Gemma local/KV contract drift")
+ check(g4.get("attention_backend")=="TRITON_ATTN" and g4.get("speculative_candidates")==["target-only"],"WBS 2.2.4 Gemma runtime contract drift")
+ check((ROOT/"docs/WBS-2.2-execution-manifest.md").is_file(),"missing WBS 2.2 execution manifest")
+ check((ROOT/"scripts/run_c1_onecat.py").is_file(),"missing 1Cat C1 runner")
+
  check(cap["context_tokens"]==131072 and len(cap["requests"])==1,"capacity workload mismatch")
  check(cap.get("output_tokens")==2048 and cap.get("min_output_tokens")==256,"capacity output objective mismatch")
  check(c2["context_tokens"]==131072 and len(c2["requests"])==2,"C2 workload mismatch")
