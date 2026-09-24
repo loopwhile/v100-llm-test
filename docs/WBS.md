@@ -188,7 +188,8 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 #### 2.2.1 Qwen3.8-27B STOCK [TODO]
 - artifact: `QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4`.
 - WBS 1.3 TP2 runtime preflight: PASS.
-- KV: `fp8_e5m2`.
+- KV: `fp8_e4m3` (explicit).
+- 1Cat-vLLM 1.5.0의 QUASAR NVFP4 target-only long-context 검증 경로와 맞추기 위해 E4M3를 명시한다. SM70의 generic `fp8` alias는 사용하지 않는다.
 - speculative: target-only.
 - 신규 C1 128K acceptance를 수행한다.
 

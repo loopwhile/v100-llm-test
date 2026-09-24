@@ -18,7 +18,7 @@ def state(root,model):
  return (read(root/"config/runtime-lock.json"),read(root/"config/profiles/runtime-lanes.json"),
          read(root/"config/profiles/topologies.json"),read(root/"config/models"/MODELS[model]))
 def kv(value):
- table={"Q8_0":"q8_0","FP16":"f16","FP8":"fp8_e5m2","fp8_e5m2":"fp8_e5m2"}
+ table={"Q8_0":"q8_0","FP16":"f16","fp8_e4m3":"fp8_e4m3","fp8_e5m2":"fp8_e5m2"}
  if value not in table: raise ValueError("unsupported KV: "+value)
  return table[value]
 def unsupported(m,r,l,t,reason):
