@@ -218,16 +218,20 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
   - Post-health PASS, cleanup exit 0.
 - TP2 결과와 별도로 Phase 4의 1GPU×2 + LiteLLM topology는 후속 검증한다.
 
-#### 2.2.3 Ornith 1.5 35B-A3B STOCK [CLOSED — FAIL_STARTUP]
+#### 2.2.3 Ornith 1.5 35B-A3B STOCK [DONE — PASS_C1_128K]
 - artifact: `ornith-ai/Ornith-1.5-35B-A3B-NVFP4@94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa`.
-- 1Cat-vLLM 1.5.0의 Qwen3.5-MoE/NVFP4 정적 경로가 존재하지만 exact Ornith checkpoint의 P520 startup gate가 최종 compatibility 판정이다.
-- KV: `fp8_e5m2` (explicit). 기존 profile의 generic `FP8` 의도를 pinned 1Cat 1.5.0 SM70 alias 의미와 동일하게 명시화한 것이며 numerical format을 조용히 변경한 것이 아니다.
+- 1Cat-vLLM 1.5.0의 Qwen3.5-MoE/NVFP4 정적 경로 및 P520 TP2 startup gate 통과, C1 128K measured execution 통과.
+- KV: `fp8_e5m2` (explicit).
 - speculative: target-only.
 - attention backend: `FLASH_ATTN_V100`.
-- experiment ID: `EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C1-128K-20260924-001` — `FAIL_STARTUP`.
-- 1Cat-vLLM Mamba/Attention 캐시 초기화 단계에서 `AssertionError: In Mamba cache align mode, block_size (2096) must be <= max_num_batched_tokens (2048)`로 engine core 초기화 실패.
-- Peak VRAM: GPU0 14,515 MiB / GPU1 14,515 MiB.
-- Contract에 따라 설정을 임의로 변경하거나 재시도하지 않고 terminal evidence로 closeout했다.
+- max-num-batched-tokens: 4096 (Mamba align mode block_size 2096 <= 4096).
+- GDN prefill: native precompiled SM70 kernel (`VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL=0`).
+- experiment ID 001: `EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C1-128K-20260924-001` — `FAIL_STARTUP` (Mamba align block_size 2096 > max_num_batched_tokens 2048).
+- experiment ID 002: `EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C1-128K-20260924-002` — `PASS_C1_128K`.
+  - TTFT 62.05 s, Decode 10.45 tok/s, End-to-end 5.00 tok/s, Batch Wall 118.88 s.
+  - Prompt 129,023 tokens, Output 594 tokens.
+  - Peak VRAM: GPU0 14,565 MiB / GPU1 14,565 MiB.
+  - Post-health PASS, cleanup exit 0.
 
 #### 2.2.4 Gemma4 26B-A4B STOCK [READY AFTER DOWNLOAD — host compatibility gate pending]
 - exact artifact: `nvidia/Gemma-4-26B-A4B-NVFP4@a19cfe00be84568a6867111c9a68c9c44fdcffe6`.

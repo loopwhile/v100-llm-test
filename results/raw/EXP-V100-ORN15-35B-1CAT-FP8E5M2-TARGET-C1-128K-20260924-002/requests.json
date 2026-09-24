@@ -1,0 +1,40 @@
+[
+  {
+    "request_id": "project-a",
+    "project_id": "A",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "7eb8fba6a85337dadebcd49bce83334812e159fae96d669e3e24abeb74612535",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.0013210460001573665,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "## Correctness Risk Identified\n\n**`snapshot()` returns a shallow copy, but the test only guards against the *version* counter drifting — it does not verify that the snapshot dict is truly decoupled from later mutations.**\n\nLooking at the code:\n\n```python\ndef snapshot(self):\n    return self.version, dict(self.pages)\n```\n\n`dict(self.pages)` creates a new top-level dict, so *shallow* independence holds for the current test (string keys, int values). However, this is a **latent correctness risk**: if any `page_id` value were ever a mutable object (e.g., a list, a page object, or a nested structure), the snapshot would share references with the live index. A subsequent mutation of that nested object would silently corrupt the \"stable\" snapshot — violating the very contract the test name (`test_snapshot_is_stable`) asserts.\n\nThe test as written:\n\n```python\ndef test_snapshot_is_stable(index):\n    index.put(\"alpha\", 10)\n    version, snapshot = index.snapshot()\n    index.put(\"beta\", 20)\n    assert version == 1\n    assert snapshot == {\"alpha\": 10}\n```\n\nOnly exercises immutable scalar values, so it **passes even if the snapshot is only shallowly independent**. The risk is real but currently unexercised.\n\n## Minimal Verification Plan\n\n1. **Baseline reproduction (control):** Run the existing test to confirm it passes with scalar values — establishes the current contract.\n\n2. **Deep-independence probe:** Add a test where a value is mutable:\n   - `index.put(\"row\", [1, 2])`\n   - capture `snapshot`\n   - mutate the live object: `index.get(\"row\").append(3)` (or mutate via a re-`put` of the same list reference)\n   - assert `snapshot[\"row\"] == [1, 2]` still holds.\n   - If it fails, the snapshot is only shallowly independent → bug confirmed.\n\n3. **Identity check:** Assert `snapshot is not index.pages` and `snapshot[\"alpha\"] is not index.get(\"alpha\")` for object-valued entries, to guarantee no shared references.\n\n4. **Version monotonicity guard:** After several `put`s, assert `version` equals the number of successful puts (catches accidental version resets or double-counting).\n\n5. **Transaction interaction:** Stage a key, take a snapshot *before* commit, commit, then assert the pre-commit snapshot is unchanged — verifies snapshot stability across the staging/commit boundary.\n\nIf step 2 fails, the minimal fix is a **deep copy** (`copy.deepcopy(self.pages)`) or, if values are known to be immutable, document the shallow-independence contract and add a type guard in `put`."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 129023,
+        "total_tokens": 129617,
+        "completion_tokens": 594
+      }
+    },
+    "actual_output_tokens": 594,
+    "post_template_prompt_tokens": 129023,
+    "ttft_ms": 62048.710360999394,
+    "first_abs": 13590.874220417,
+    "end_abs": 13647.696910286,
+    "wall_s": 118.87140023000029,
+    "prefill_tps": null,
+    "decode_tps": 10.453570595996219,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 118.88238147399898
+  }
+]

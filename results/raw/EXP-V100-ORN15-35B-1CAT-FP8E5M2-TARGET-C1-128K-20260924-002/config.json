@@ -1,0 +1,100 @@
+{
+  "supported_for_planning": true,
+  "runtime": "1Cat-vLLM",
+  "runtime_revision": "1.5.0 wheel sha256:2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b",
+  "model": "Ornith-1.5-35B-A3B",
+  "model_identity": {
+    "status": "static_runtime_contract_ready_host_startup_pending",
+    "planning_ready": true,
+    "repository": "ornith-ai/Ornith-1.5-35B-A3B-NVFP4",
+    "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa",
+    "path": "/srv/models/ornith-1.5-35b-a3b-nvfp4",
+    "weight_quant": "NVFP4",
+    "kv_candidates": [
+      "fp8_e5m2"
+    ],
+    "speculative_candidates": [
+      "target-only"
+    ],
+    "attention_backend": "FLASH_ATTN_V100",
+    "kv_contract_note": "The previous generic FP8 intent is made explicit as fp8_e5m2 because pinned 1Cat-vLLM 1.5.0 resolves generic fp8 to E5M2 on SM70 Flash-V100. Host startup compatibility is still pending.",
+    "compatibility_note": "1Cat-vLLM 1.5.0 contains Qwen3.5-MoE and NVFP4 paths, but the exact Ornith checkpoint still requires a P520 startup compatibility gate.",
+    "required_backend_lanes": [
+      "stock",
+      "v100-skinny"
+    ]
+  },
+  "weight_quant": "NVFP4",
+  "kv_cache": "fp8_e5m2",
+  "lane": "STOCK",
+  "speculative": "target-only",
+  "speculative_config": null,
+  "attention_backend": "FLASH_ATTN_V100",
+  "ngram": "N/A",
+  "topology": "tp2-shared",
+  "concurrency": 1,
+  "context_tokens_per_agent": 131072,
+  "commands": [
+    [
+      "/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python",
+      "-m",
+      "vllm.entrypoints.openai.api_server",
+      "--model",
+      "/srv/models/ornith-1.5-35b-a3b-nvfp4",
+      "--served-model-name",
+      "Ornith-1.5-35B-A3B",
+      "--trust-remote-code",
+      "--dtype",
+      "half",
+      "--attention-backend",
+      "FLASH_ATTN_V100",
+      "--tensor-parallel-size",
+      "2",
+      "--kv-cache-dtype",
+      "fp8_e5m2",
+      "--max-model-len",
+      "131072",
+      "--max-num-seqs",
+      "1",
+      "--max-num-batched-tokens",
+      "4096",
+      "--gpu-memory-utilization",
+      "0.90",
+      "--enforce-eager",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18080"
+    ]
+  ],
+  "environment": {},
+  "command_environments": [
+    {
+      "CUDA_VISIBLE_DEVICES": "0,1",
+      "VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL": "0"
+    }
+  ],
+  "endpoints": [
+    "http://127.0.0.1:18080"
+  ],
+  "experiment_id": "EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C1-128K-20260924-002",
+  "launch_command": "/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python -m vllm.entrypoints.openai.api_server --model /srv/models/ornith-1.5-35b-a3b-nvfp4 --served-model-name Ornith-1.5-35B-A3B --trust-remote-code --dtype half --attention-backend FLASH_ATTN_V100 --tensor-parallel-size 2 --kv-cache-dtype fp8_e5m2 --max-model-len 131072 --max-num-seqs 1 --max-num-batched-tokens 4096 --gpu-memory-utilization 0.90 --enforce-eager --host 127.0.0.1 --port 18080",
+  "backend_variant": "stock",
+  "context_tokens": 131072,
+  "context_test": true,
+  "min_context_utilization": 0.99,
+  "prefix_cache_lane": "cold-independent",
+  "chat_template": "HF tokenizer chat template; enable_thinking=false",
+  "tool_parser": "none",
+  "thinking": false,
+  "endpoint": "http://127.0.0.1:18080",
+  "notes": "WBS 2.2.3; server startup is the compatibility gate; one measured request only after healthy startup; no full-size warmup; 2048 output reserve, minimum 256.",
+  "measurement_policy": "v100-c1-c2-single-execution-v1",
+  "measured_repetitions": 1,
+  "repetition_count": 1,
+  "warmup_count": 0,
+  "retry_of": "EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C1-128K-20260924-001",
+  "retry_reason": "configuration_fix",
+  "retry_evidence": "results/raw/EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C1-128K-20260924-001",
+  "workload_sha256": "5764058124e9095acba34e032487d4a915e03958e305b204d85e4ff8862c7e57"
+}
