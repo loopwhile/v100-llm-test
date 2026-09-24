@@ -160,16 +160,19 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - 네 lane 모두 prompt 129,023 + output reserve 2,048 = 131,071 / 131,072 token budget을 사용했고, 정상 stop / post-health / cleanup / exit 0을 확인했다.
 - 모델 응답의 semantic caveat는 serving/output-integrity acceptance와 분리해 각 `acceptance-review.json`에 기록했다.
 
-#### 2.1.4 Gemma4 26B-A4B [IN_PROGRESS]
+#### 2.1.4 Gemma4 26B-A4B [DONE]
 - artifact: `UD-Q4_K_XL`.
 - KV: `FP16`.
 - 실행 lane: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
-- 각 lane에서 C1 128K capacity/correctness를 판정한다.
 - base GGUF SHA256: `a7c5bc715f5ff8e99a3e8901ce7d2b42b402c669bf24f7c5250747633d0f5891`.
-- MTP/MTP_NGRAM은 별도 Q8_0 Gemma4 assistant GGUF `mtp-gemma-4-26B-A4B-it.gguf`를 explicit `--model-draft /model/draft.gguf`로 사용한다.
-- companion SHA256: `7272d97595f0d4c74bd7b623492b7dbdaafd8b7c72f329a8270ba4eca68f768a`.
-- MTP depth는 upstream QAT MTP contract에 맞춰 `--spec-draft-n-max 4`로 고정하고, TP2에서 drafter device는 `CUDA0`로 고정한다.
-- runner는 MTP lane에서 target과 companion SHA256을 모두 검증한다.
+- MTP 계열은 별도 Q8_0 Gemma4 assistant GGUF `mtp-gemma-4-26B-A4B-it.gguf`, `--spec-draft-n-max 4`, `--spec-draft-device CUDA0` contract로 검증했다. companion SHA256은 `7272d97595f0d4c74bd7b623492b7dbdaafd8b7c72f329a8270ba4eca68f768a`.
+- TARGET: `EXP-V100-GEMMA4-26B-LLAMA-F16-TARGET-C1-128K-20260924-001` — `PASS_C1_128K`; prompt 129,024 + reserve 2,048 = 131,072 / 131,072; prefill 524.64 tok/s, decode 68.10 tok/s; peak VRAM 8,775 / 8,785 MiB.
+- NGRAM: `EXP-V100-GEMMA4-26B-LLAMA-F16-NGRAM-C1-128K-20260924-001` — `PASS_C1_128K`; prefill 526.51 tok/s, decode 64.39 tok/s; draft 96 / accepted 4. NGRAM 가속 효과는 Phase 5에서 판정한다.
+- MTP: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C1-128K-20260924-001` — `FAIL_STARTUP`. preflight와 target/companion SHA256 검증은 PASS했으나 Gemma4 assistant speculative draft 초기화 중 native backtrace가 발생했고 server exit code 139로 종료됐다. measured request는 시작되지 않았다. OOM 또는 artifact identity 실패로 분류하지 않는다.
+- MTP_NGRAM: `UNSUPPORTED` on the pinned runtime. composite lane도 동일한 Gemma4 assistant draft initialization을 선행 조건으로 가지므로 MTP의 terminal startup blocker를 NGRAM이 우회할 수 없다. 중복 crash replay는 실행하지 않았고 가짜 experiment ID도 만들지 않았다.
+- MTP startup failure signature는 ggml-org/llama.cpp issue #25828의 보고와 유사하지만, 동일 root cause라고 단정하지 않는다.
+- C2 승격 대상은 C1을 PASS한 `TARGET`, `NGRAM` 두 lane뿐이다.
+- 모델 응답의 semantic caveat와 startup failure 분석은 각 report / `acceptance-review.json`에 분리 기록했다.
 
 ### 2.2 1Cat-vLLM STOCK
 
@@ -252,7 +255,8 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - C1을 PASS한 `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM` lane만 C2로 승격한다.
 
 #### 3.1.4 Gemma4 26B-A4B [TODO after 2.1.4]
-- C1을 PASS한 `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM` lane만 C2로 승격한다.
+- C1을 PASS한 `TARGET`, `NGRAM` lane만 C2로 승격한다.
+- `MTP`는 C1 `FAIL_STARTUP`, `MTP_NGRAM`은 pinned runtime에서 동일 draft-startup dependency 때문에 `UNSUPPORTED`이므로 C2 대상에서 제외한다.
 
 ### 3.2 Shared TP2 1Cat-vLLM STOCK
 
