@@ -175,7 +175,8 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - 모델 응답의 semantic caveat와 startup failure 분석은 각 report / `acceptance-review.json`에 분리 기록했다.
 - **Supplemental diagnostic D2.1.4A [DONE — FAIL_STARTUP]**: 동일 pinned b10775 / 동일 target+smart-Q4_0 drafter / 동일 TP2 / MTP n=4에 `--fit off`만 추가했다. server startup은 다시 exit 139로 실패했고 measured request는 없었다. 따라서 device-memory fitting 자체가 baseline crash의 원인이라는 가설은 기각한다.
 - **Supplemental diagnostic D2.1.4B [DONE — DIAGNOSTIC TOPOLOGY UNSUPPORTED]**: TP2 128K를 유지하고 `split-mode layer -> row`, `main-gpu=0`만 바꿔 KV placement를 진단하려 했으나 target model load 단계에서 `device CUDA0 does not support split buffers`로 종료됐다. 따라서 V100 CUDA backend의 row split 자체가 이 pinned runtime에서 사용할 수 없어 MTP 원인 판정에는 쓰지 않는다.
-- **Supplemental diagnostic D2.1.4C [IN_PROGRESS]**: 동일 b10775 / 동일 target+smart-Q4_0 drafter / MTP n=4에서 CUDA0 단일 GPU만 노출하고, target 일부 layer만 GPU0에 offload하며 context를 8192로 축소하는 startup-only 진단을 수행한다. 목적은 CUDA1을 완전히 제거했을 때 Gemma4 assistant speculative context가 생성되는지 확인하는 것이며 capacity acceptance가 아니다.
+- **Supplemental diagnostic D2.1.4C [DONE — INCONCLUSIVE]**: CUDA0 단일 GPU, context 8192, target `-ngl 20`, draft GPU offload `all`로 실행했으나 exit 132(SIGILL)로 종료됐다. CUDA1은 제거됐지만 target의 대규모 CPU partial-offload 경로를 동시에 새로 열었으므로 이 결과만으로 TP2/MTP placement 가설을 판정하지 않는다.
+- **Supplemental diagnostic D2.1.4D [IN_PROGRESS]**: baseline TP2/full-offload/128K/layer split을 그대로 유지하고, 유일한 변경으로 draft device를 `CUDA0`에서 `CUDA0,CUDA1`로 확장한다. b10775의 speculative params가 target context를 `ctx_other`로 참조하고 draft context의 n_ctx를 target과 동일하게 사용하는 구조에서, target과 draft device placement를 정렬했을 때 startup crash가 사라지는지 확인한다.
 
 ### 2.2 1Cat-vLLM STOCK
 
