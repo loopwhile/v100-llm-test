@@ -223,6 +223,7 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - exact artifact: `nvidia/Gemma-4-26B-A4B-NVFP4@a19cfe00be84568a6867111c9a68c9c44fdcffe6`.
 - target local path: `/srv/models/gemma-4-26b-a4b-nvfp4`.
 - local artifact download가 완료되어야 preflight가 PASS할 수 있다.
+- NVIDIA upstream model card의 일반 vLLM TP=1 제약은 그대로 1Cat TP2 verdict로 전이하지 않는다. pinned 1Cat-vLLM 1.5.0은 Gemma4 NVFP4를 SM70 TP2/TP4 release matrix에 포함하므로, 이 P520의 실제 TP2 startup gate로 compatibility를 판정한다.
 - weight: NVFP4.
 - KV: `FP16`.
 - speculative: target-only.
