@@ -43,6 +43,38 @@ def _read(path):
     return json.loads(Path(path).read_text())
 
 
+def _resolve_verdicts(raw_dir, metrics, completion):
+    """Resolve raw harness, capacity, integrity, and final semantic verdicts.
+
+    Raw metrics/completion remain immutable execution evidence. When an
+    acceptance-review exists, its semantic verdict is authoritative for
+    publication while the raw harness verdict is preserved separately.
+    """
+    raw_dir = Path(raw_dir)
+    audit_path = raw_dir / "acceptance-review.json"
+    audit = _read(audit_path) if audit_path.exists() else None
+
+    harness_verdict = completion.get("verdict") or metrics.get("verdict")
+    final_verdict = (audit.get("verdict") if audit else None) or harness_verdict
+    capacity_verdict = audit.get("capacity_verdict") if audit else None
+    integrity_verdict = audit.get("integrity_verdict") if audit else None
+
+    if capacity_verdict is None and harness_verdict == "PASS_C1_128K":
+        capacity_verdict = "PASS_C1_128K"
+    if integrity_verdict is None:
+        if final_verdict == "FAIL_OUTPUT":
+            integrity_verdict = "FAIL_OUTPUT"
+        elif final_verdict == "PASS_C1_128K":
+            integrity_verdict = "PASS"
+
+    return {
+        "harness_verdict": harness_verdict,
+        "capacity_verdict": capacity_verdict,
+        "integrity_verdict": integrity_verdict,
+        "final_verdict": final_verdict,
+    }
+
+
 def atomic_text(path, text):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -126,7 +158,7 @@ def _format_vram(peak0, peak1):
     return "None"
 
 
-def _extract_metrics(raw_dir, config, metrics, completion):
+def _extract_metrics(raw_dir, config, metrics, completion, final_verdict=None):
     metrics = dict(metrics)
     requests_path = raw_dir / "requests.json"
     requests = _read(requests_path) if requests_path.exists() else []
@@ -135,7 +167,7 @@ def _extract_metrics(raw_dir, config, metrics, completion):
     reqs_with_dec = [r for r in requests if r.get("decode_tps") is not None]
     reqs_with_pref = [r for r in requests if r.get("prefill_tps") is not None]
 
-    verdict = completion.get("verdict")
+    verdict = final_verdict or completion.get("verdict")
     if verdict == "FAIL_OUTPUT":
         if metrics.get("ttft_ms") is None and reqs_with_ttft:
             metrics["ttft_ms"] = sum(r["ttft_ms"] for r in reqs_with_ttft) / len(reqs_with_ttft)
@@ -168,11 +200,12 @@ def _extract_metrics(raw_dir, config, metrics, completion):
     return metrics
 
 
-def _report(config, metrics, completion, raw_dir):
+def _report(config, metrics, completion, raw_dir, verdicts=None):
     audit_path = raw_dir / "acceptance-review.json"
     audit = _read(audit_path) if audit_path.exists() else None
 
-    verdict = (audit.get("verdict") if audit else None) or completion["verdict"]
+    verdicts = verdicts or _resolve_verdicts(raw_dir, metrics, completion)
+    verdict = verdicts["final_verdict"]
     overlap = metrics.get("server_overlap") or {}
     gateway = config.get("gateway") or {}
     concurrency = config.get("concurrency", 1)
@@ -196,6 +229,14 @@ def _report(config, metrics, completion, raw_dir):
         f"- 런타임: {config['runtime']}",
         f"- Runtime revision: {config['runtime_revision']}",
     ]
+
+    if verdicts["harness_verdict"] != verdict:
+        lines.extend([
+            f"- Harness verdict (raw): {verdicts['harness_verdict']}",
+            f"- Capacity verdict: {verdicts['capacity_verdict'] or ''}",
+            f"- Output-integrity verdict: {verdicts['integrity_verdict'] or ''}",
+            f"- Final verdict (semantic audit): {verdict}",
+        ])
 
     if gateway.get("runtime") or gateway.get("endpoint"):
         lines.extend([
@@ -316,7 +357,14 @@ def publish(root, raw_dir, overwrite=False):
     if completion.get("experiment_id") != experiment_id:
         raise ValueError("completion experiment_id mismatch")
 
-    metrics = _extract_metrics(raw_dir, config, raw_metrics, completion)
+    verdicts = _resolve_verdicts(raw_dir, raw_metrics, completion)
+    metrics = _extract_metrics(
+        raw_dir,
+        config,
+        raw_metrics,
+        completion,
+        final_verdict=verdicts["final_verdict"],
+    )
 
     summary_path = root / "results/summary.csv"
     comparison_path = root / "reports/comparison.csv"
@@ -337,7 +385,7 @@ def publish(root, raw_dir, overwrite=False):
 
     audit_path = raw_dir / "acceptance-review.json"
     audit = _read(audit_path) if audit_path.exists() else None
-    verdict = (audit.get("verdict") if audit else None) or completion["verdict"]
+    verdict = verdicts["final_verdict"]
     note_text = (audit.get("key_note") or audit.get("note") if audit else None) or config.get("notes", "")
 
     summary_row = {
@@ -404,7 +452,7 @@ def publish(root, raw_dir, overwrite=False):
         comparison_rows = comparison_rows + [comparison_row]
 
     writes = {
-        report_rel.as_posix(): _report(config, metrics, completion, raw_dir),
+        report_rel.as_posix(): _report(config, metrics, completion, raw_dir, verdicts=verdicts),
         "results/summary.csv": _csv_text(SUMMARY_FIELDS, summary_rows),
         "reports/comparison.csv": _csv_text(COMPARISON_FIELDS, comparison_rows),
     }

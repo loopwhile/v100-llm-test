@@ -22,6 +22,6 @@
 - Results:
   - Hardware Capacity: PASS (128,832 tokens prefill in 739.29s, decode 9.76 tok/s, Peak VRAM 15,287 MiB GPU0/1 symmetric, OOM none, post-health 200 OK).
   - Output Integrity: **FAIL_OUTPUT** (Items 18~26 repeated 5 times in an infinite periodic collapse until 2,048 token length limit).
-- Conclusion: Synthetic duplication hypothesis is **rejected**. The repetition collapse occurs equally on diversified realistic codebases. Qwen3.8-27B + 1Cat-vLLM 1.5.0 + 128K context + FP8 E4M3 KV + Flash-V100/XQA general numerical/attention degeneration hypothesis is **strengthened**.
+- Conclusion: The hypothesis that exact duplicate-heavy synthetic padding is a **necessary cause** is rejected because repetition collapse also reproduced on a 116-file diversified snapshot. Broader prompt-composition / ultra-long code-dump effects remain possible. Qwen3.8-specific long-context runtime/checkpoint/KV/kernel interaction hypotheses are strengthened, but no single root cause is proven.
 - Note: WBS 2.2.1 verdict remains `CLOSED — 128K CAPACITY PASS / OUTPUT INTEGRITY FAIL` (unchanged). Single measured inference budget exhausted; stopped.
 
