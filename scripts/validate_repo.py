@@ -60,7 +60,7 @@ def validate():
  o9=read("config/models/ornith-1.5-9b.json")["onecat_vllm"]
  o35=read("config/models/ornith-1.5-35b-a3b.json")["onecat_vllm"]
  g4=read("config/models/gemma4-26b-a4b.json")["onecat_vllm"]
- check(q38.get("planning_ready") is True and q38.get("kv_candidates")==["fp8_e4m3"] and q38.get("speculative_candidates")==["target-only"],"WBS 2.2.1 Qwen STOCK contract drift")
+ check(q38.get("planning_ready") is True and q38.get("kv_candidates")==["fp8_e4m3"] and q38.get("speculative_candidates")==["target-only"] and q38.get("attention_backend")=="FLASH_ATTN_V100","WBS 2.2.1 Qwen STOCK contract drift")
  check(o9.get("planning_ready") is True and o9.get("kv_candidates")==["FP16"] and o9.get("speculative_candidates")==["MTP"],"WBS 2.2.2 Ornith9 STOCK identity drift")
  check(o9.get("attention_backend")=="FLASH_ATTN_V100","WBS 2.2.2 target attention backend drift")
  o9spec=o9.get("speculative_config") or {}
