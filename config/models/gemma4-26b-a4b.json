@@ -33,7 +33,8 @@
     },
     "mtp_draft_n_max": 4,
     "mtp_companion_required": true,
-    "mtp_draft_device": "CUDA0"
+    "mtp_draft_device": "CUDA0,CUDA1",
+    "mtp_draft_device_note": "On this pinned b10775 + 2x V100 layer-split topology, CUDA0-only drafter startup aborts while CUDA0,CUDA1 startup passes at 128K. This overrides Unsloth's generic multi-GPU CUDA0 example for this validated hardware/runtime."
   },
   "onecat_vllm": {
     "status": "pending_exact_local_artifact_and_v100_compatibility",
