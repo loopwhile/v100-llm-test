@@ -160,7 +160,7 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - 네 lane 모두 prompt 129,023 + output reserve 2,048 = 131,071 / 131,072 token budget을 사용했고, 정상 stop / post-health / cleanup / exit 0을 확인했다.
 - 모델 응답의 semantic caveat는 serving/output-integrity acceptance와 분리해 각 `acceptance-review.json`에 기록했다.
 
-#### 2.1.4 Gemma4 26B-A4B [IN_PROGRESS — corrected MTP device placement]
+#### 2.1.4 Gemma4 26B-A4B [IN_PROGRESS — MTP_NGRAM pending]
 - artifact: `UD-Q4_K_XL`.
 - KV: `FP16`.
 - 실행 lane: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
@@ -170,9 +170,9 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - NGRAM: `EXP-V100-GEMMA4-26B-LLAMA-F16-NGRAM-C1-128K-20260924-001` — `PASS_C1_128K`; prefill 526.51 tok/s, decode 64.39 tok/s; draft 96 / accepted 4. NGRAM 가속 효과는 Phase 5에서 판정한다.
 - MTP attempt 001: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C1-128K-20260924-001` — `FAIL_STARTUP` under the CUDA0-only drafter configuration. This result is preserved as configuration-specific evidence, not the final Gemma4 MTP verdict.
 - Root cause isolation: same b10775 / same artifacts / same TP2 layer split / same 128K / same MTP n=4 with only `--spec-draft-device CUDA0 -> CUDA0,CUDA1` changed produced `PASS_STARTUP`. The prior failure is therefore attributed operationally to draft/target device-placement incompatibility on this V100 topology.
-- Corrected MTP C1: new immutable experiment ID `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C1-128K-20260924-002` is pending measured acceptance using `CUDA0,CUDA1`.
-- MTP_NGRAM is reopened and pending after corrected MTP. The previous `UNSUPPORTED` disposition is superseded by the successful dual-draft-device startup diagnostic.
-- C2 promotion is pending the corrected MTP/MTP_NGRAM C1 results.
+- Corrected MTP: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C1-128K-20260924-002` — `PASS_C1_128K`; prefill 526.99 tok/s, decode 45.49 tok/s; draft 1088 / accepted 548, acceptance 50.368%; peak VRAM 8,983 / 9,101 MiB. C1 performance effectiveness is deferred to Phase 5.
+- MTP_NGRAM is reopened and is the only remaining C1 lane for 2.1.4. It must use the corrected `--spec-draft-device CUDA0,CUDA1` contract.
+- C2 promotion currently includes TARGET, NGRAM, corrected MTP; MTP_NGRAM is added only if its corrected C1 run passes.
 - 모델 응답의 semantic caveat와 startup failure 분석은 각 report / `acceptance-review.json`에 분리 기록했다.
 - **Supplemental diagnostic D2.1.4A [DONE — FAIL_STARTUP]**: 동일 pinned b10775 / 동일 target+smart-Q4_0 drafter / 동일 TP2 / MTP n=4에 `--fit off`만 추가했다. server startup은 다시 exit 139로 실패했고 measured request는 없었다. 따라서 device-memory fitting 자체가 baseline crash의 원인이라는 가설은 기각한다.
 - **Supplemental diagnostic D2.1.4B [DONE — DIAGNOSTIC TOPOLOGY UNSUPPORTED]**: TP2 128K를 유지하고 `split-mode layer -> row`, `main-gpu=0`만 바꿔 KV placement를 진단하려 했으나 target model load 단계에서 `device CUDA0 does not support split buffers`로 종료됐다. 따라서 V100 CUDA backend의 row split 자체가 이 pinned runtime에서 사용할 수 없어 MTP 원인 판정에는 쓰지 않는다.
