@@ -1,0 +1,113 @@
+{
+  "supported_for_planning": true,
+  "runtime": "1Cat-vLLM",
+  "runtime_revision": "1.5.0 wheel sha256:2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b",
+  "model": "Qwen3.8-27B",
+  "model_identity": {
+    "status": "verified_local_artifact_runtime_preflight_pass",
+    "repository": "QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4",
+    "revision": "15d2e47bffe5d8ad23928879f8f7d2f74909e259",
+    "path": "/srv/models/qwen3.8-vllm/Qwen3.8-27B-QUASAR-NVFP4",
+    "weight_quant": "NVFP4",
+    "kv_candidates": [
+      "fp8_e4m3"
+    ],
+    "required_backend_lanes": [
+      "stock",
+      "v100-skinny"
+    ],
+    "speculative_candidates": [
+      "target-only"
+    ],
+    "planning_ready": true,
+    "gpu_memory_utilization": "0.92",
+    "language_model_only": true,
+    "kv_contract_note": "Pinned 1Cat-vLLM 1.5.0 QUASAR Qwen3.8-27B NVFP4 target-only long-context path is validated with explicit fp8_e4m3. Do not use the generic fp8 alias for this acceptance lane.",
+    "attention_backend": "FLASH_ATTN_V100",
+    "environment": {
+      "VLLM_FLASH_V100_DECODE_PARTITION_SIZE": "256"
+    }
+  },
+  "weight_quant": "NVFP4",
+  "kv_cache": "fp8_e4m3",
+  "lane": "STOCK",
+  "speculative": "target-only",
+  "speculative_config": null,
+  "attention_backend": "FLASH_ATTN_V100",
+  "ngram": "N/A",
+  "topology": "tp2-shared",
+  "concurrency": 1,
+  "context_tokens_per_agent": 131072,
+  "commands": [
+    [
+      "/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python",
+      "-m",
+      "vllm.entrypoints.openai.api_server",
+      "--model",
+      "/srv/models/qwen3.8-vllm/Qwen3.8-27B-QUASAR-NVFP4",
+      "--served-model-name",
+      "Qwen3.8-27B",
+      "--trust-remote-code",
+      "--dtype",
+      "half",
+      "--attention-backend",
+      "FLASH_ATTN_V100",
+      "--tensor-parallel-size",
+      "2",
+      "--kv-cache-dtype",
+      "fp8_e4m3",
+      "--max-model-len",
+      "131072",
+      "--max-num-seqs",
+      "1",
+      "--max-num-batched-tokens",
+      "4096",
+      "--gpu-memory-utilization",
+      "0.92",
+      "--enforce-eager",
+      "--language-model-only",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18080"
+    ]
+  ],
+  "environment": {},
+  "command_environments": [
+    {
+      "CUDA_VISIBLE_DEVICES": "0,1",
+      "VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL": "0",
+      "PYTHONPATH": "/home/loopwhile/v100-llm-test-wbs22-20260924/scripts/runtime_hooks",
+      "VLLM_FLASH_V100_DECODE_PARTITION_SIZE": "256"
+    }
+  ],
+  "endpoints": [
+    "http://127.0.0.1:18080"
+  ],
+  "experiment_id": "EXP-V100-Q38-1CAT-FP8E4M3-TARGET-DIAG-REALISTIC-128K-20260925-003",
+  "launch_command": "/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python -m vllm.entrypoints.openai.api_server --model /srv/models/qwen3.8-vllm/Qwen3.8-27B-QUASAR-NVFP4 --served-model-name Qwen3.8-27B --trust-remote-code --dtype half --attention-backend FLASH_ATTN_V100 --tensor-parallel-size 2 --kv-cache-dtype fp8_e4m3 --max-model-len 131072 --max-num-seqs 1 --max-num-batched-tokens 4096 --gpu-memory-utilization 0.92 --enforce-eager --language-model-only --host 127.0.0.1 --port 18080",
+  "backend_variant": "stock",
+  "context_tokens": 131072,
+  "context_test": true,
+  "min_context_utilization": 0.98,
+  "prefix_cache_lane": "cold-independent",
+  "chat_template": "HF tokenizer chat template; enable_thinking=true; reasoning_effort=medium; temperature=0.7",
+  "tool_parser": "none",
+  "thinking": true,
+  "reasoning_effort": "medium",
+  "sampling": {
+    "temperature": 0.7,
+    "top_p": 0.8,
+    "seed": 520
+  },
+  "chat_template_kwargs": {
+    "enable_thinking": true,
+    "reasoning_effort": "medium"
+  },
+  "endpoint": "http://127.0.0.1:18080",
+  "notes": "Root-cause diagnostic run: realistic diversified 128K context workload; one measured request only after healthy startup; no synthetic repetition; 2048 output reserve, minimum 256.",
+  "measurement_policy": "v100-c1-c2-single-execution-v1",
+  "measured_repetitions": 1,
+  "repetition_count": 1,
+  "warmup_count": 0
+}

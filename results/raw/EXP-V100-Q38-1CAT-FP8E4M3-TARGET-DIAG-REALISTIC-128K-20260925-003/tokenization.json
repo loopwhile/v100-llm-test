@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "request_id": "diag-realistic-project",
+      "receipt": {
+        "source": "vllm tokenizer",
+        "prompt_tokens": 128832
+      },
+      "error": null
+    }
+  ]
+}

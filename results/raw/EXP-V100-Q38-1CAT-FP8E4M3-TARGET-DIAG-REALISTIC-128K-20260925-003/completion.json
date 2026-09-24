@@ -1,0 +1,30 @@
+{
+  "experiment_id": "EXP-V100-Q38-1CAT-FP8E4M3-TARGET-DIAG-REALISTIC-128K-20260925-003",
+  "completed_at_utc": "2026-09-24T17:03:35.020348+00:00",
+  "verdict": "PASS_C1_128K",
+  "error": null,
+  "exit_code": 2,
+  "server_post_health": {
+    "healthy": true,
+    "at_utc": "2026-09-24T17:03:29.100715+00:00"
+  },
+  "cleanup": {
+    "state": "cleaned",
+    "error": null,
+    "residual_compute_pids": [],
+    "port_state": "State  Recv-Q Send-Q               Local Address:Port  Peer Address:PortProcess\nLISTEN 0      4096                     127.0.0.1:45481      0.0.0.0:*          \nLISTEN 0      4096                    127.0.0.54:53         0.0.0.0:*          \nLISTEN 0      4096                       0.0.0.0:22         0.0.0.0:*          \nLISTEN 0      4096                 100.122.70.67:52285      0.0.0.0:*          \nLISTEN 0      4096                 127.0.0.53%lo:53         0.0.0.0:*          \nLISTEN 0      4096                             *:9835             *:*          \nLISTEN 0      4096                             *:9100             *:*          \nLISTEN 0      4096   [fd7a:115c:a1e0::f430:4644]:53640         [::]:*          \nLISTEN 0      4096                          [::]:22            [::]:*          \n"
+  },
+  "metadata_receipt": {
+    "path": "/srv/models/qwen3.8-vllm/Qwen3.8-27B-QUASAR-NVFP4",
+    "repository": "QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4",
+    "revision": "15d2e47bffe5d8ad23928879f8f7d2f74909e259",
+    "weight_quant": "NVFP4",
+    "metadata_sha256": {
+      "config.json": "4a602978ea802d91171d3c5a8b99c5a23900ed474289133d9d0193a35ce3206b",
+      "model.safetensors.index.json": "eee26dbb894969febd90ea21f29c10adc660267c47eeff63e08ef45611761046",
+      "tokenizer_config.json": "b11349aafa7cdc6a320767cf7ceb29ed82f7eda5d65e8e0819e76f0ce947bf27",
+      "chat_template.jinja": "c3cf9e34abf4f9e36c2d72165aa9c132d3e2a725b6c2586aaa3a8af9d7a81041"
+    },
+    "note": "Large model tensors are identified by pinned repository/revision; selected local metadata files are hashed as a host receipt."
+  }
+}

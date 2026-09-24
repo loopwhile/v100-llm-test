@@ -1,0 +1,719 @@
+{
+  "workload_id": "V100-EXP-DIAG-REALISTIC-128K-v1",
+  "post_template_prompt_tokens": 128832,
+  "reserved_output_tokens": 2048,
+  "total_budget": 130880,
+  "max_model_len": 131072,
+  "total_files": 116,
+  "by_project": {
+    "v100-llm-test": 29,
+    "qwen3.8-bench": 28,
+    "p520-inference-lab": 28,
+    "ariadne-cli": 31
+  },
+  "by_language": {
+    "py": 101,
+    "sh": 1,
+    "json": 8,
+    "md": 6
+  },
+  "prompt_sha256": "536cbd81060d890d5d29d559a9efc713ff711a0c1c0576c118f00f47b11ce770",
+  "files_manifest": [
+    {
+      "path": "v100-llm-test/tests/test_measurement_policy.py",
+      "project": "v100-llm-test",
+      "language": "py",
+      "lines": 62
+    },
+    {
+      "path": "qwen3.8-bench/tests/test_phase1_grid.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 60
+    },
+    {
+      "path": "p520-inference-lab/scripts/prepare_p520_model_candidates.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 58
+    },
+    {
+      "path": "ariadne-cli/tests/test_android.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 69
+    },
+    {
+      "path": "v100-llm-test/tests/test_c1_runner.py",
+      "project": "v100-llm-test",
+      "language": "py",
+      "lines": 48
+    },
+    {
+      "path": "qwen3.8-bench/tests/test_phase1_gate.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 63
+    },
+    {
+      "path": "p520-inference-lab/scripts/inspect_p520_candidate_metadata.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 65
+    },
+    {
+      "path": "ariadne-cli/tests/test_search_tool.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 84
+    },
+    {
+      "path": "v100-llm-test/scripts/skinny_gate.py",
+      "project": "v100-llm-test",
+      "language": "py",
+      "lines": 36
+    },
+    {
+      "path": "qwen3.8-bench/tests/test_phase4_baseline.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 74
+    },
+    {
+      "path": "p520-inference-lab/scripts/tokenize_phase6_remote.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 65
+    },
+    {
+      "path": "ariadne-cli/tests/test_cli_verify.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 85
+    },
+    {
+      "path": "v100-llm-test/scripts/measurement_policy.py",
+      "project": "v100-llm-test",
+      "language": "py",
+      "lines": 100
+    },
+    {
+      "path": "qwen3.8-bench/tests/test_phase4_gate.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 76
+    },
+    {
+      "path": "p520-inference-lab/scripts/tokenize_track_u_matrix_remote.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 61
+    },
+    {
+      "path": "ariadne-cli/myai/core/retrieval.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 74
+    },
+    {
+      "path": "v100-llm-test/tests/test_run_c1_onecat.py",
+      "project": "v100-llm-test",
+      "language": "py",
+      "lines": 40
+    },
+    {
+      "path": "qwen3.8-bench/tests/test_phase1_mtp.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 68
+    },
+    {
+      "path": "p520-inference-lab/tests/test_ornith_measurement.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 64
+    },
+    {
+      "path": "ariadne-cli/tests/unit/test_tool_call_validator.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 78
+    },
+    {
+      "path": "v100-llm-test/tests/test_bench_harness_output_integrity.py",
+      "project": "v100-llm-test",
+      "language": "py",
+      "lines": 97
+    },
+    {
+      "path": "qwen3.8-bench/tests/test_phase1_mtpngram.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 68
+    },
+    {
+      "path": "p520-inference-lab/scripts/phase8_residency_verdict.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 47
+    },
+    {
+      "path": "ariadne-cli/myai/agent/state.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 73
+    },
+    {
+      "path": "v100-llm-test/tests/test_workload_builder.py",
+      "project": "v100-llm-test",
+      "language": "py",
+      "lines": 80
+    },
+    {
+      "path": "qwen3.8-bench/tests/test_phase4_context.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 84
+    },
+    {
+      "path": "p520-inference-lab/tests/test_ornith_smoke.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 54
+    },
+    {
+      "path": "ariadne-cli/tests/unit/test_api_request_queue.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 68
+    },
+    {
+      "path": "v100-llm-test/tests/test_skinny_gate.py",
+      "project": "v100-llm-test",
+      "language": "py",
+      "lines": 29
+    },
+    {
+      "path": "qwen3.8-bench/scripts/measurement_policy.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 80
+    },
+    {
+      "path": "p520-inference-lab/tests/test_measurement_bundle.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 48
+    },
+    {
+      "path": "ariadne-cli/tests/test_result_saver_canonical.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 66
+    },
+    {
+      "path": "v100-llm-test/tests/test_runtime_hooks.py",
+      "project": "v100-llm-test",
+      "language": "py",
+      "lines": 35
+    },
+    {
+      "path": "qwen3.8-bench/e2e/EXP-Q38-HERMES-LLAMA-Q6K-FP16-MTP-C4-128K-TASK001-624/backend/parse_xml.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 20
+    },
+    {
+      "path": "p520-inference-lab/scripts/check_1cat_quality_contract_remote.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 40
+    },
+    {
+      "path": "ariadne-cli/myai/tools/shell_policy.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 64
+    },
+    {
+      "path": "v100-llm-test/scripts/runtime_hooks/sitecustomize.py",
+      "project": "v100-llm-test",
+      "language": "py",
+      "lines": 21
+    },
+    {
+      "path": "qwen3.8-bench/scripts/run_phase5_pi.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 121
+    },
+    {
+      "path": "p520-inference-lab/scripts/bundle_phase9.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 37
+    },
+    {
+      "path": "ariadne-cli/tests/test_parser.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 69
+    },
+    {
+      "path": "v100-llm-test/tests/test_c1_llama_runner.py",
+      "project": "v100-llm-test",
+      "language": "py",
+      "lines": 102
+    },
+    {
+      "path": "qwen3.8-bench/tests/test_phase4_concurrency.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 101
+    },
+    {
+      "path": "p520-inference-lab/scripts/prepare_diverse_workload.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 80
+    },
+    {
+      "path": "ariadne-cli/tests/test_tui_entry.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 64
+    },
+    {
+      "path": "v100-llm-test/scripts/validate_repo.py",
+      "project": "v100-llm-test",
+      "language": "py",
+      "lines": 105
+    },
+    {
+      "path": "qwen3.8-bench/scripts/prometheus_cache_collector.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 140
+    },
+    {
+      "path": "p520-inference-lab/tests/test_track_v.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 39
+    },
+    {
+      "path": "ariadne-cli/myai/android/capture_classifier.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 66
+    },
+    {
+      "path": "v100-llm-test/tests/test_runtime_launcher.py",
+      "project": "v100-llm-test",
+      "language": "py",
+      "lines": 136
+    },
+    {
+      "path": "qwen3.8-bench/tests/test_phase3_agent_loop.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 113
+    },
+    {
+      "path": "p520-inference-lab/scripts/prepare_ornith_nvfp4.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 93
+    },
+    {
+      "path": "ariadne-cli/tests/test_agent_state.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 90
+    },
+    {
+      "path": "v100-llm-test/scripts/gpu_telemetry.py",
+      "project": "v100-llm-test",
+      "language": "py",
+      "lines": 318
+    },
+    {
+      "path": "qwen3.8-bench/scripts/phase3_finalize.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 80
+    },
+    {
+      "path": "p520-inference-lab/scripts/tokenize_frontier_workloads_remote.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 49
+    },
+    {
+      "path": "ariadne-cli/tests/test_tool_registry.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 74
+    },
+    {
+      "path": "v100-llm-test/scripts/run_c1_qwen.py",
+      "project": "v100-llm-test",
+      "language": "py",
+      "lines": 207
+    },
+    {
+      "path": "qwen3.8-bench/tests/test_phase2_warm_prefix.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 95
+    },
+    {
+      "path": "p520-inference-lab/scripts/client_ornith_smoke.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 104
+    },
+    {
+      "path": "ariadne-cli/tests/test_recovery_event.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 79
+    },
+    {
+      "path": "v100-llm-test/tests/test_harness.py",
+      "project": "v100-llm-test",
+      "language": "py",
+      "lines": 113
+    },
+    {
+      "path": "qwen3.8-bench/tests/test_phase4_prefix_cache_execute.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 103
+    },
+    {
+      "path": "p520-inference-lab/tests/test_llama_fixed_slot.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 65
+    },
+    {
+      "path": "ariadne-cli/tests/test_index_manager.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 87
+    },
+    {
+      "path": "v100-llm-test/scripts/runtime_launcher.py",
+      "project": "v100-llm-test",
+      "language": "py",
+      "lines": 238
+    },
+    {
+      "path": "qwen3.8-bench/tests/test_phase2_context.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 110
+    },
+    {
+      "path": "p520-inference-lab/scripts/bundle_track_u_xhigh_quality.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 38
+    },
+    {
+      "path": "ariadne-cli/myai/cli/usage_command.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 74
+    },
+    {
+      "path": "v100-llm-test/scripts/collect_inventory.sh",
+      "project": "v100-llm-test",
+      "language": "sh",
+      "lines": 116
+    },
+    {
+      "path": "qwen3.8-bench/tests/test_phase3_concurrency.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 106
+    },
+    {
+      "path": "p520-inference-lab/scripts/prepare_workload.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 87
+    },
+    {
+      "path": "ariadne-cli/myai/tools/schema.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 75
+    },
+    {
+      "path": "v100-llm-test/config/models/gemma4-26b-a4b.json",
+      "project": "v100-llm-test",
+      "language": "json",
+      "lines": 60
+    },
+    {
+      "path": "qwen3.8-bench/tests/test_phase4_plan.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 164
+    },
+    {
+      "path": "p520-inference-lab/scripts/track_u_quality.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 59
+    },
+    {
+      "path": "ariadne-cli/tests/test_write_file_tool.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 82
+    },
+    {
+      "path": "v100-llm-test/config/models/qwen3.8-27b.json",
+      "project": "v100-llm-test",
+      "language": "json",
+      "lines": 64
+    },
+    {
+      "path": "qwen3.8-bench/scripts/phase5_probe_c1.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 245
+    },
+    {
+      "path": "p520-inference-lab/scripts/bundle_track_u_quality.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 19
+    },
+    {
+      "path": "ariadne-cli/tests/test_tool_schema.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 76
+    },
+    {
+      "path": "v100-llm-test/config/runtime-lock.json",
+      "project": "v100-llm-test",
+      "language": "json",
+      "lines": 52
+    },
+    {
+      "path": "qwen3.8-bench/tests/test_measurement_policy.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 152
+    },
+    {
+      "path": "p520-inference-lab/scripts/prepare_frontier_workloads.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 41
+    },
+    {
+      "path": "ariadne-cli/tests/test_delete_file_tool.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 83
+    },
+    {
+      "path": "v100-llm-test/config/models/ornith-1.5-35b-a3b.json",
+      "project": "v100-llm-test",
+      "language": "json",
+      "lines": 55
+    },
+    {
+      "path": "qwen3.8-bench/scripts/phase4_plan.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 273
+    },
+    {
+      "path": "p520-inference-lab/scripts/analyze_llama_fixed_slot.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 70
+    },
+    {
+      "path": "ariadne-cli/myai/android/readiness.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 68
+    },
+    {
+      "path": "v100-llm-test/config/profiles/runtime-lanes.json",
+      "project": "v100-llm-test",
+      "language": "json",
+      "lines": 64
+    },
+    {
+      "path": "qwen3.8-bench/scripts/phase5_policy.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 179
+    },
+    {
+      "path": "p520-inference-lab/scripts/analyze_phase6_comparison.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 91
+    },
+    {
+      "path": "ariadne-cli/tests/test_base_worker_lock.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 85
+    },
+    {
+      "path": "v100-llm-test/config/profiles/topologies.json",
+      "project": "v100-llm-test",
+      "language": "json",
+      "lines": 71
+    },
+    {
+      "path": "qwen3.8-bench/scripts/report_experiment.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 153
+    },
+    {
+      "path": "p520-inference-lab/scripts/make_mock_bundle.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 71
+    },
+    {
+      "path": "ariadne-cli/myai/core/executor.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 75
+    },
+    {
+      "path": "v100-llm-test/config/models/ornith-1.5-9b.json",
+      "project": "v100-llm-test",
+      "language": "json",
+      "lines": 52
+    },
+    {
+      "path": "qwen3.8-bench/scripts/phase5_server.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 192
+    },
+    {
+      "path": "p520-inference-lab/tests/test_phase8_frontier.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 87
+    },
+    {
+      "path": "ariadne-cli/tests/test_stage_security.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 50
+    },
+    {
+      "path": "v100-llm-test/config/profiles/acceptance-128k.json",
+      "project": "v100-llm-test",
+      "language": "json",
+      "lines": 54
+    },
+    {
+      "path": "qwen3.8-bench/scripts/gpu_telemetry.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 318
+    },
+    {
+      "path": "p520-inference-lab/scripts/prepare_all_ornith_workloads.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 123
+    },
+    {
+      "path": "ariadne-cli/tests/test_normalizer.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 74
+    },
+    {
+      "path": "v100-llm-test/docs/runtime-policy.md",
+      "project": "v100-llm-test",
+      "language": "md",
+      "lines": 57
+    },
+    {
+      "path": "qwen3.8-bench/scripts/hermes_runner.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 323
+    },
+    {
+      "path": "p520-inference-lab/scripts/run_wbs510_mbt_sweep.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 129
+    },
+    {
+      "path": "ariadne-cli/myai/tools/base.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 99
+    },
+    {
+      "path": "v100-llm-test/docs/methodology.md",
+      "project": "v100-llm-test",
+      "language": "md",
+      "lines": 71
+    },
+    {
+      "path": "qwen3.8-bench/scripts/phase0_gate.py",
+      "project": "qwen3.8-bench",
+      "language": "py",
+      "lines": 179
+    },
+    {
+      "path": "p520-inference-lab/scripts/owned_process.py",
+      "project": "p520-inference-lab",
+      "language": "py",
+      "lines": 135
+    },
+    {
+      "path": "ariadne-cli/tests/unit/test_health_endpoint_expanded.py",
+      "project": "ariadne-cli",
+      "language": "py",
+      "lines": 54
+    },
+    {
+      "path": "v100-llm-test/state/current.md",
+      "project": "v100-llm-test",
+      "language": "md",
+      "lines": 15
+    },
+    {
+      "path": "ariadne-cli/AGENTS.md",
+      "project": "ariadne-cli",
+      "language": "md",
+      "lines": 53
+    },
+    {
+      "path": "ariadne-cli/docs/05_contracts/data/erd.md",
+      "project": "ariadne-cli",
+      "language": "md",
+      "lines": 16
+    },
+    {
+      "path": "ariadne-cli/CHANGELOG.md (lines 1-1)",
+      "project": "ariadne-cli",
+      "language": "md",
+      "lines": 1
+    }
+  ]
+}

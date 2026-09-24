@@ -1,0 +1,42 @@
+{
+  "context_tokens": 131072,
+  "concurrency": 1,
+  "intended_requests": 1,
+  "completed_requests": 1,
+  "batch_wall_s": 949.2504726390034,
+  "submission_skew_s": 0.0,
+  "ttft_ms": 739288.4112739994,
+  "prefill_tps": null,
+  "mean_request_decode_tps": 9.756838144358474,
+  "aggregate_decode_tps": 9.756838144358474,
+  "end_to_end_output_tps": 2.1574916832080917,
+  "server_overlap": {
+    "source": "1Cat-vLLM server metrics/slots sampler",
+    "resident": null,
+    "active_overlap": null,
+    "queue_only": false,
+    "peak_processing": null,
+    "peak_waiting": null,
+    "peak_resident_slots": null,
+    "sample_count": 0,
+    "samples": []
+  },
+  "c1_128k": true,
+  "c2_resident": null,
+  "c2_active": null,
+  "queue_only": false,
+  "peak_vram_gpu0_mib": 15287.0,
+  "peak_vram_gpu1_mib": 15287.0,
+  "gpu_peak_probe": {
+    "source": "nvidia-smi sampled during measured request window",
+    "interval_s": 0.5,
+    "samples": 1738,
+    "peak_memory_mib": {
+      "0": 15287.0,
+      "1": 15287.0
+    },
+    "error": null,
+    "limitation": "sampled peaks may miss between-sample transients"
+  },
+  "verdict": "PASS_C1_128K"
+}

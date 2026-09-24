@@ -1,0 +1,21 @@
+{
+  "reviewed_at_utc": "2026-09-25T02:05:00.000000+00:00",
+  "verdict": "FAIL_OUTPUT",
+  "harness_verdict": "PASS_C1_128K",
+  "capacity_verdict": "PASS_C1_128K",
+  "integrity_verdict": "FAIL_OUTPUT",
+  "prompt_receipt_matches_usage": true,
+  "reserved_budget_tokens": 130880,
+  "prompt_tokens": 128832,
+  "completion_tokens": 2048,
+  "finish_reason": "length",
+  "runtime_truncated": 0,
+  "post_health_healthy": true,
+  "capacity_summary": "PASS (128,832 tokens realistic prefill + 2,048 tokens decode 성공, Peak VRAM GPU0 15,287 MiB / GPU1 15,287 MiB로 OOM 없음, post-health 정상).",
+  "integrity_summary": "FAIL (116개 고유 파일로 구성된 realistic diversified snapshot임에도, 초반 26개 파일 목록 열거 후 18~26번 9개 파일 블록이 5회 연속 동일하게 반복되는 Repetition Collapse에 진입하여 2,048 tokens에서 finish_reason=length로 강제 종료).",
+  "diagnostic_summary": "합성 반복 패턴(1,333회 반복)을 배제하고 116개 고유 실제 코드/문서 파일로 구성된 현실적인 128K 워크로드에서도 동일한 주기적 반복 붕괴(periodic repetition collapse)가 재현됨. 따라서 기존 실패는 단순 합성 반복 프롬프트 특화 문제가 아니며, Qwen3.8-27B + 1Cat-vLLM 1.5.0 + 128K context + FP8 E4M3 KV + Flash-V100/XQA 경로의 일반적인 런타임/수치 무결성 한계 가설이 강력하게 강화됨.",
+  "key_note": "Root-cause diagnostic run; 128K capacity passed without OOM, but realistic diversified context still caused 9-item block repetition collapse; finish_reason=length at 2048 tokens.",
+  "content_review": "FAIL_OUTPUT: Periodic repetition collapse detected on diversified realistic code prompt. Items 18-26 repeated 5 times until length limit (2048 tokens). Meaningful cross-file correctness reasoning not produced.",
+  "runtime_errors": [],
+  "cleanup": "owned process exited; exit 0"
+}
