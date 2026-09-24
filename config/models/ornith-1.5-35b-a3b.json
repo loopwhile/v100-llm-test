@@ -32,14 +32,21 @@
     "mtp_draft_n_max": 1
   },
   "onecat_vllm": {
-    "status": "verified_local_artifact_runtime_compatibility_pending",
-    "planning_ready": false,
+    "status": "static_runtime_contract_ready_host_startup_pending",
+    "planning_ready": true,
     "repository": "ornith-ai/Ornith-1.5-35B-A3B-NVFP4",
     "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa",
     "path": "/srv/models/ornith-1.5-35b-a3b-nvfp4",
     "weight_quant": "NVFP4",
-    "desired_kv": "FP8",
-    "speculative_candidate": "target-only",
+    "kv_candidates": [
+      "fp8_e5m2"
+    ],
+    "speculative_candidates": [
+      "target-only"
+    ],
+    "attention_backend": "FLASH_ATTN_V100",
+    "kv_contract_note": "The previous generic FP8 intent is made explicit as fp8_e5m2 because pinned 1Cat-vLLM 1.5.0 resolves generic fp8 to E5M2 on SM70 Flash-V100. Host startup compatibility is still pending.",
+    "compatibility_note": "1Cat-vLLM 1.5.0 contains Qwen3.5-MoE and NVFP4 paths, but the exact Ornith checkpoint still requires a P520 startup compatibility gate.",
     "required_backend_lanes": [
       "stock",
       "v100-skinny"
