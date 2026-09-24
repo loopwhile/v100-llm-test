@@ -83,6 +83,8 @@ def measure(raw):
         w.load_manifest(ROOT / "workloads/capacity/v1.json"),
         adapter,
         config["model"],
+        thinking=config.get("thinking", False),
+        chat_template_kwargs=config.get("chat_template_kwargs"),
     )
     checkpoint(
         raw,
@@ -123,6 +125,19 @@ def run_locked(args):
         {k: str(v) for k, v in (plan.get("command_environments") or [{}])[0].items()}
     )
 
+    thinking = True if args.model == "qwen3.8-27b" else False
+    reasoning_effort = "medium" if args.model == "qwen3.8-27b" else None
+    chat_template = (
+        "HF tokenizer chat template; enable_thinking=true; reasoning_effort=medium"
+        if args.model == "qwen3.8-27b"
+        else "HF tokenizer chat template; enable_thinking=false"
+    )
+    template_kwargs = (
+        {"enable_thinking": True, "reasoning_effort": "medium"}
+        if args.model == "qwen3.8-27b"
+        else {"enable_thinking": False}
+    )
+
     config = future_config(
         plan
         | dict(
@@ -133,9 +148,11 @@ def run_locked(args):
             context_test=True,
             min_context_utilization=0.99,
             prefix_cache_lane="cold-independent",
-            chat_template="HF tokenizer chat template; enable_thinking=false",
+            chat_template=chat_template,
             tool_parser="none",
-            thinking=False,
+            thinking=thinking,
+            reasoning_effort=reasoning_effort,
+            chat_template_kwargs=template_kwargs,
             endpoint=plan["endpoints"][0],
             notes=(
                 f"WBS {wbs}; server startup is the compatibility gate; "

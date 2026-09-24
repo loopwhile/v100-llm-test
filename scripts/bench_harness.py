@@ -16,13 +16,44 @@ def save(path,v):
  with t.open("wb") as f: f.write(json.dumps(v,ensure_ascii=False,indent=2,allow_nan=False).encode()+b"\n"); f.flush(); os.fsync(f.fileno())
  os.replace(t,p)
 
+def detect_repetition(text,finish_reason=None):
+ if not text or not text.strip():return False
+ words=text.split()
+ if len(words)<20:
+  return len(set(words))<=2 and len(words)>=6
+ lines=[l.strip() for l in text.splitlines() if len(l.strip())>=25]
+ if lines:
+  from collections import Counter
+  most_common_line,count=Counter(lines).most_common(1)[0]
+  if count>=3 and (len(most_common_line)*count)/max(1,len(text))>0.35:return True
+ if len(words)>=60:
+  n=8; ngrams=[tuple(words[i:i+n]) for i in range(len(words)-n+1)]
+  if len(set(ngrams))/len(ngrams)<0.40:return True
+ if finish_reason=="length" and len(words)>=100:
+  tail=words[-60:]; n=6; tail_ngrams=[tuple(tail[i:i+n]) for i in range(len(tail)-n+1)]
+  if len(set(tail_ngrams))/len(tail_ngrams)<0.35:return True
+ max_k=min(64,len(words)//3)
+ for k in range(4,max_k+1):
+  for i in range(len(words)-3*k+1):
+   if words[i:i+k]==words[i+k:i+2*k]==words[i+2*k:i+3*k]:
+    repeat_count=3; pos=i+3*k
+    while pos+k<=len(words) and words[pos:pos+k]==words[i:i+k]:
+     repeat_count+=1; pos+=k
+    if repeat_count*k>=30 or repeat_count>=5:return True
+ return False
+
 def output_ok(case,res):
  try:
   if len(res["choices"])!=1:return False
   c=res["choices"][0]; m=c["message"]; text=m.get("content") or ""; check=case.get("check","nonempty")
   if "\ufffd" in text or any(ord(x)<32 and x not in "\n\r\t" for x in text):return False
-  if c.get("finish_reason") not in (("stop","length") if check=="nonempty" else ("stop",)):return False
-  return bool(text.strip()) if check=="nonempty" else text.strip()==case["expected"]
+  finish_reason=c.get("finish_reason")
+  if finish_reason not in (("stop","length") if check=="nonempty" else ("stop",)):return False
+  if check=="nonempty":
+   if not text.strip():return False
+   if detect_repetition(text,finish_reason):return False
+   return True
+  return text.strip()==case["expected"]
  except (KeyError,IndexError,TypeError): return False
 
 def metric_value(text,name):
@@ -264,7 +295,12 @@ def cases(workload,n):
 
 def body(config,workload,case):
  out={"model":config.get("served_model",config["model"]),"messages":case["messages"],"max_tokens":case["max_tokens"],"stream":True,**workload.get("sampling",{})}
- out["chat_template_kwargs"]={"enable_thinking":config["thinking"]}
+ kwargs={"enable_thinking":config["thinking"]}
+ if "reasoning_effort" in config and config["reasoning_effort"] is not None:
+  kwargs["reasoning_effort"]=config["reasoning_effort"]
+ if config.get("chat_template_kwargs"):
+  kwargs.update(config["chat_template_kwargs"])
+ out["chat_template_kwargs"]=kwargs
  for k in ("tools","tool_choice"):
   if k in case:out[k]=case[k]
  return out

@@ -64,26 +64,43 @@ def render(spec: dict, units: int, pad_units: int = 0, *, diversify_identifiers:
 
 
 
-def payload_for(model: str, thinking: bool, content: str, output_tokens: int, sampling: dict) -> dict:
+def payload_for(
+    model: str,
+    thinking: bool,
+    content: str,
+    output_tokens: int,
+    sampling: dict,
+    chat_template_kwargs: dict | None = None,
+) -> dict:
+    kwargs = {"enable_thinking": thinking}
+    if chat_template_kwargs:
+        kwargs.update(chat_template_kwargs)
     return {
         "model": model,
         "messages": [{"role": "user", "content": content}],
         "max_tokens": output_tokens,
         "stream": True,
         **sampling,
-        "chat_template_kwargs": {"enable_thinking": thinking},
+        "chat_template_kwargs": kwargs,
     }
 
 
-def count(adapter, model, thinking, content, output_tokens, sampling):
-    receipt = adapter.receipt(payload_for(model, thinking, content, output_tokens, sampling))
+def count(adapter, model, thinking, content, output_tokens, sampling, chat_template_kwargs: dict | None = None):
+    receipt = adapter.receipt(payload_for(model, thinking, content, output_tokens, sampling, chat_template_kwargs))
     tokens = receipt.get("prompt_tokens")
     if type(tokens) is not int or tokens < 1:
         raise ValueError("runtime returned invalid prompt token count")
     return tokens, receipt
 
 
-def calibrate(adapter, manifest: dict, spec: dict, model: str, thinking: bool) -> tuple[dict, dict]:
+def calibrate(
+    adapter,
+    manifest: dict,
+    spec: dict,
+    model: str,
+    thinking: bool,
+    chat_template_kwargs: dict | None = None,
+) -> tuple[dict, dict]:
     context = manifest["context_tokens"]
     output_tokens = manifest["output_tokens"]
     minimum_output_tokens = spec.get("min_output_tokens", manifest.get("min_output_tokens", 1))
@@ -95,7 +112,7 @@ def calibrate(adapter, manifest: dict, spec: dict, model: str, thinking: bool) -
     low, high = 1, 1
     while True:
         text = render(spec, high, diversify_identifiers=diversify)
-        tokens, _ = count(adapter, model, thinking, text, output_tokens, sampling)
+        tokens, _ = count(adapter, model, thinking, text, output_tokens, sampling, chat_template_kwargs)
         if tokens > target: break
         low = high; high *= 2
         if high > 131072: raise ValueError("unable to bracket target prompt length")
@@ -104,22 +121,22 @@ def calibrate(adapter, manifest: dict, spec: dict, model: str, thinking: bool) -
     while lo <= hi:
         mid = (lo + hi) // 2
         text = render(spec, mid, diversify_identifiers=diversify)
-        tokens, _ = count(adapter, model, thinking, text, output_tokens, sampling)
+        tokens, _ = count(adapter, model, thinking, text, output_tokens, sampling, chat_template_kwargs)
         if tokens <= target: best_units = mid; lo = mid + 1
         else: hi = mid - 1
 
     base = render(spec, best_units, diversify_identifiers=diversify)
-    base_tokens, _ = count(adapter, model, thinking, base, output_tokens, sampling)
+    base_tokens, _ = count(adapter, model, thinking, base, output_tokens, sampling, chat_template_kwargs)
     best_pad = 0; lo, hi = 0, max(256, (target - base_tokens) * 4 + 256)
     while lo <= hi:
         mid = (lo + hi) // 2
         text = render(spec, best_units, mid, diversify_identifiers=diversify)
-        tokens, _ = count(adapter, model, thinking, text, output_tokens, sampling)
+        tokens, _ = count(adapter, model, thinking, text, output_tokens, sampling, chat_template_kwargs)
         if tokens <= target: best_pad = mid; lo = mid + 1
         else: hi = mid - 1
 
     content = render(spec, best_units, best_pad, diversify_identifiers=diversify)
-    prompt_tokens, receipt = count(adapter, model, thinking, content, output_tokens, sampling)
+    prompt_tokens, receipt = count(adapter, model, thinking, content, output_tokens, sampling, chat_template_kwargs)
     total = prompt_tokens + output_tokens
     if total > context: raise ValueError("calibration exceeded context budget")
     if total < minimum_total: raise ValueError(f"calibration underfilled context: total={total}, minimum={minimum_total}")
@@ -130,10 +147,16 @@ def calibrate(adapter, manifest: dict, spec: dict, model: str, thinking: bool) -
 
 
 
-def build(manifest: dict, adapter, model: str, thinking: bool = False) -> dict:
+def build(
+    manifest: dict,
+    adapter,
+    model: str,
+    thinking: bool = False,
+    chat_template_kwargs: dict | None = None,
+) -> dict:
     requests, evidence = [], []
     for spec in manifest["requests"]:
-        request, item = calibrate(adapter, manifest, spec, model, thinking)
+        request, item = calibrate(adapter, manifest, spec, model, thinking, chat_template_kwargs)
         requests.append(request)
         evidence.append(item)
 

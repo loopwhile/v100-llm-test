@@ -27,6 +27,12 @@ class OneCatC1RunnerTests(unittest.TestCase):
         self.assertIn("server_startup_compatibility_gate",source)
         self.assertNotIn("for retry",source.lower())
 
+    def test_qwen_thinking_and_reasoning_effort_configuration(self):
+        source=(ROOT/"scripts/run_c1_onecat.py").read_text()
+        self.assertIn('thinking = True if args.model == "qwen3.8-27b" else False', source)
+        self.assertIn('reasoning_effort = "medium" if args.model == "qwen3.8-27b" else None', source)
+        self.assertIn('reasoning_effort=medium', source)
+
 
 if __name__=="__main__":
     unittest.main()

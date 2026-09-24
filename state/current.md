@@ -7,9 +7,9 @@
 - All WBS 2.1 llama.cpp C1 model items are complete.
 - WBS 2.2 execution contract is prepared in `docs/WBS-2.2-execution-manifest.md`.
 - WBS 2.2 measured runner: `scripts/run_c1_onecat.py`.
-- 2.2.1 Qwen3.8 STOCK: DONE — PASS_C1_128K (EXP-V100-Q38-1CAT-FP8E4M3-TARGET-C1-128K-20260924-003; TTFT 742.61s, Decode 9.84 tok/s, Wall 950.77s; via --language-model-only, gpu_memory_utilization=0.92, VLLM_FLASH_V100_DECODE_PARTITION_SIZE=256).
+- 2.2.1 Qwen3.8 STOCK: IN PROGRESS (Attempt 003 audited to FAIL_OUTPUT; Attempt 004 with thinking=True & reasoning_effort=medium verified 128K capacity PASS but failed output integrity due to repetition loop under greedy decoding; recorded as FAIL_OUTPUT).
 - 2.2.2 Ornith 9B STOCK: DONE — PASS_C1_128K (EXP-V100-ORN15-9B-1CAT-F16-MTP1-C1-128K-20260924-003; TTFT 165.43s, Decode 8.98 tok/s, Wall 201.64s).
 - 2.2.3 Ornith 35B STOCK: DONE — PASS_C1_128K (EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C1-128K-20260924-002; TTFT 62.05s, Decode 10.45 tok/s, Wall 118.88s).
 - 2.2.4 Gemma4 26B STOCK: CLOSED — FAIL_STARTUP (EXP-V100-GEMMA4-26B-1CAT-F16-TARGET-C1-128K-20260924-002; 1Cat-vLLM 1.5.0 SM70 TurboMind NVFP4 MoE does not support Gemma4 MoE architecture shape (2816, 704, 128, 8) and gelu_pytorch_tanh activation).
-- All WBS 2.2 items (2.2.1 ~ 2.2.4) and Qwen 3.8 27B 128K optimization are fully executed and closed out.
+- Current task: Qwen3.8 27B 1Cat-vLLM Attempt 004 execution complete, recorded as FAIL_OUTPUT.
 - Do not launch work beyond WBS 2.2 automatically.

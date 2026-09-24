@@ -191,7 +191,7 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - model profile에 선언된 explicit KV format과 speculative configuration을 사용한다.
 - artifact identity와 실제 P520 runtime compatibility를 별도로 판정한다.
 
-#### 2.2.1 Qwen3.8-27B STOCK [DONE — PASS_C1_128K]
+#### 2.2.1 Qwen3.8-27B STOCK [IN PROGRESS — 128K CAPACITY PASS / OUTPUT INTEGRITY FAIL]
 - artifact: `QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4@15d2e47bffe5d8ad23928879f8f7d2f74909e259`.
 - WBS 1.3 TP2 runtime preflight: PASS.
 - KV: `fp8_e4m3` (explicit).
@@ -203,13 +203,15 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - experiment ID 002: `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-C1-128K-20260924-002` — `FAIL_CRASH`.
   - 조치: `--language-model-only` 추가(불필요한 multimodal encoder 16K 토큰 제거 -> 0.45 GiB 절감) 및 `gpu_memory_utilization=0.92`로 상향하여 가용 KV 캐시를 2.65 GiB 이상으로 확보.
   - 결과: 128K(129,023 tokens) Prefill 완전 성공(TTFT 742.46s, Peak VRAM 15,287 MiB / 16,384 MiB로 OOM 없이 정상 수용). 그러나 첫 토큰 Decode 진입 시 Flash-V100 XQA 커널에서 크래시 발생 (`RuntimeError: E4M3 XQA supports B=1, or B=2..16 when VLLM_FLASH_V100_E4M3_BATCH_XQA=1; q_per_kv=6 and D=256 are required. Page-1568/Hkv=1 B1 additionally supports partition sizes 512, 896, 1024, and 1664`).
-- experiment ID 003: `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-C1-128K-20260924-003` — `PASS_C1_128K`.
-  - 원인 분석 및 조치: Qwen 3.8 27B는 TP2 환경에서 GPU당 `Hkv=2`개의 KV head를 가짐. `flash_attn_v100` 백엔드는 32K 이상 시퀀스에서 partition size를 1024로 자동 승격시키나, 1Cat SM70 네이티브 CUDA 커널(`decode_paged_xqa_fwd`)은 Mamba align `page_size=1568` 조건에서 `Hkv=2`일 때 오직 `partition_size=256`만 지원함. `VLLM_FLASH_V100_DECODE_PARTITION_SIZE=256` 환경변수를 설정하여 decode partition size를 256으로 고정.
-  - 결과: Prefill 및 Decode 전 과정 완주 성공!
-  - TTFT 742.61 s, Decode 9.84 tok/s, End-to-end 2.15 tok/s, Batch Wall 950.77 s.
-  - Prompt 129,023 tokens, Output 2048 tokens 정상 생성.
-  - Peak VRAM: GPU0 15,287 MiB / GPU1 15,287 MiB.
-  - Post-health PASS, cleanup exit 0.
+- experiment ID 003: `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-C1-128K-20260924-003` — `FAIL_OUTPUT` (Semantic Audit).
+  - 조치: Qwen 3.8 27B TP2 환경에서 `VLLM_FLASH_V100_DECODE_PARTITION_SIZE=256` 환경변수를 설정하여 decode partition size를 256으로 고정.
+  - 결과: 128K Capacity는 완전 성공(TTFT 742.61 s, Decode 9.84 tok/s, Batch Wall 950.77 s, Peak VRAM 15,287 MiB, OOM 없음).
+  - 실패 원인: 출력된 2,048 토큰이 프롬프트 지시문("The user wants me to review...")을 50회 이상 단순 반복하는 명백한 repetition loop이며 `finish_reason=length`로 강제 종료됨. WBS 2 및 WBS 5.4.5 acceptance 계약(유효한 출력, repetition loop 불가)에 따라 최종 판정을 `FAIL_OUTPUT`으로 감사/정정.
+  - 후속 조치: harness에 repetition loop 자동 검출기 추가, Qwen output corruption 근본 원인 분석 후 수정 및 재검증.
+- experiment ID 004: `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-C1-128K-20260924-004` — `FAIL_OUTPUT`.
+  - 조치: Qwen 3.8 27B 추론 모델 특성에 맞춰 `thinking=True` 및 `reasoning_effort="medium"` 설정 반영, harness `detect_repetition` 검사 통과 여부 검증.
+  - 결과: 128K Capacity 및 서버 안정성은 완전 유지 (TTFT 742.54 s, Decode 9.69 tok/s, Batch Wall 953.90 s, Peak VRAM 15,287 MiB, OOM 없음, Post-health PASS).
+  - 출력 무결성 분석: 첫 부분(약 256토큰)에서는 `PageIndex`, `Transaction` 및 `test_snapshot.py`의 구조와 메서드를 정확히 파악하여 정상 분석을 시작했으나, 1,333개 반복 섹션을 갖는 합성 프롬프트 특성과 greedy (`temperature=0`, penalty=0) 디코딩이 결합되어 3개 파일 기술 블록을 20회 이상 반복 열거하는 축퇴 루프에 진입. 새로 구현된 `detect_repetition()`에 의해 `FAIL_OUTPUT`으로 정확히 감지 및 차단됨.
 
 #### 2.2.2 Ornith 1.5 9B STOCK [DONE — PASS_C1_128K]
 - artifact: `ornith-ai/Ornith-1.5-9B-NVFP4@155f200d85ad58464571c77d5e1122ea5d419d7b`.

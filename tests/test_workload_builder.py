@@ -69,6 +69,12 @@ class WorkloadBuilderTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 builder.load_manifest(p)
 
+    def test_payload_for_preserves_chat_template_kwargs(self):
+        p1 = builder.payload_for("qwen", True, "hello", 256, {}, {"reasoning_effort": "medium"})
+        self.assertEqual(p1["chat_template_kwargs"], {"enable_thinking": True, "reasoning_effort": "medium"})
+        p2 = builder.payload_for("qwen", False, "hello", 256, {})
+        self.assertEqual(p2["chat_template_kwargs"], {"enable_thinking": False})
+
 
 if __name__ == "__main__":
     unittest.main()
