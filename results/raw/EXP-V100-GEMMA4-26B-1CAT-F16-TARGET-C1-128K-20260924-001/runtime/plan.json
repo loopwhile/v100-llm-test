@@ -1,0 +1,80 @@
+{
+  "supported_for_planning": true,
+  "runtime": "1Cat-vLLM",
+  "runtime_revision": "1.5.0 wheel sha256:2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b",
+  "model": "Gemma4-26B-A4B-IT-QAT",
+  "model_identity": {
+    "status": "exact_remote_artifact_pinned_local_download_pending",
+    "planning_ready": true,
+    "repository": "nvidia/Gemma-4-26B-A4B-NVFP4",
+    "revision": "a19cfe00be84568a6867111c9a68c9c44fdcffe6",
+    "path": "/srv/models/gemma-4-26b-a4b-nvfp4",
+    "weight_quant": "NVFP4",
+    "kv_candidates": [
+      "FP16"
+    ],
+    "speculative_candidates": [
+      "target-only"
+    ],
+    "attention_backend": "TRITON_ATTN",
+    "artifact_note": "Exact remote NVFP4 artifact is pinned; local download to the configured path is required before preflight can pass.",
+    "kv_contract_note": "Use FP16 KV for the initial SM70 compatibility lane. 1Cat's SM70 release matrix records Gemma4 NVFP4 + fp8_e5m2 KV as a rejected diagnostic combination, so FP8 KV must not be substituted automatically.",
+    "required_backend_lanes": [
+      "stock",
+      "v100-skinny"
+    ]
+  },
+  "weight_quant": "NVFP4",
+  "kv_cache": "FP16",
+  "lane": "STOCK",
+  "speculative": "target-only",
+  "speculative_config": null,
+  "attention_backend": "TRITON_ATTN",
+  "ngram": "N/A",
+  "topology": "tp2-shared",
+  "concurrency": 1,
+  "context_tokens_per_agent": 131072,
+  "commands": [
+    [
+      "/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python",
+      "-m",
+      "vllm.entrypoints.openai.api_server",
+      "--model",
+      "/srv/models/gemma-4-26b-a4b-nvfp4",
+      "--served-model-name",
+      "Gemma4-26B-A4B-IT-QAT",
+      "--trust-remote-code",
+      "--dtype",
+      "half",
+      "--attention-backend",
+      "TRITON_ATTN",
+      "--tensor-parallel-size",
+      "2",
+      "--kv-cache-dtype",
+      "float16",
+      "--max-model-len",
+      "131072",
+      "--max-num-seqs",
+      "1",
+      "--max-num-batched-tokens",
+      "4096",
+      "--gpu-memory-utilization",
+      "0.90",
+      "--enforce-eager",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18080"
+    ]
+  ],
+  "environment": {},
+  "command_environments": [
+    {
+      "CUDA_VISIBLE_DEVICES": "0,1",
+      "VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL": "0"
+    }
+  ],
+  "endpoints": [
+    "http://127.0.0.1:18080"
+  ]
+}

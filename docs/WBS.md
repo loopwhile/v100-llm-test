@@ -233,17 +233,18 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
   - Peak VRAM: GPU0 14,565 MiB / GPU1 14,565 MiB.
   - Post-health PASS, cleanup exit 0.
 
-#### 2.2.4 Gemma4 26B-A4B STOCK [READY AFTER DOWNLOAD — host compatibility gate pending]
+#### 2.2.4 Gemma4 26B-A4B STOCK [IN PROGRESS — ATTEMPT 001 FAIL_STARTUP]
 - exact artifact: `nvidia/Gemma-4-26B-A4B-NVFP4@a19cfe00be84568a6867111c9a68c9c44fdcffe6`.
-- target local path: `/srv/models/gemma-4-26b-a4b-nvfp4`.
-- local artifact download가 완료되어야 preflight가 PASS할 수 있다.
-- NVIDIA upstream model card의 일반 vLLM TP=1 제약은 그대로 1Cat TP2 verdict로 전이하지 않는다. pinned 1Cat-vLLM 1.5.0은 Gemma4 NVFP4를 SM70 TP2/TP4 release matrix에 포함하므로, 이 P520의 실제 TP2 startup gate로 compatibility를 판정한다.
+- target local path: `/srv/models/gemma-4-26b-a4b-nvfp4` (다운로드 완료).
 - weight: NVFP4.
-- KV: `FP16`.
+- KV: `FP16` (`float16`).
 - speculative: target-only.
 - attention backend: `TRITON_ATTN`.
+- NVIDIA upstream model card의 일반 vLLM TP=1 제약은 그대로 1Cat TP2 verdict로 전이하지 않는다. pinned 1Cat-vLLM 1.5.0은 Gemma4 NVFP4를 SM70 TP2/TP4 release matrix에 포함하므로, 이 P520의 실제 TP2 startup gate로 compatibility를 판정한다.
 - 1Cat SM70 release matrix의 Gemma4 NVFP4 + E5M2 KV diagnostic는 KV-cache quantization validation에 의해 거부되는 조합으로 기록돼 있으므로 FP8 KV를 자동 대체하지 않는다.
-- experiment ID: `EXP-V100-GEMMA4-26B-1CAT-F16-TARGET-C1-128K-20260924-001`.
+- experiment ID 001: `EXP-V100-GEMMA4-26B-1CAT-F16-TARGET-C1-128K-20260924-001` — `FAIL_STARTUP`.
+  - 원인: `transformers` 5.16.1의 `HeterogeneousConfigMixin`에서 per-layer attribute인 `head_dim`을 global config에서 접근 시 `AmbiguousGlobalPerLayerAttributeError` 발생 (`vllm/transformers_utils/model_arch_config_convertor.py:545` `getattr(self.hf_text_config, "head_dim", 0)`).
+  - 해결 계획: 런타임 호환 훅(`scripts/runtime_hooks/sitecustomize.py`)을 통해 `HeterogeneousConfigMixin.allow_global_per_layer_attribute_access = True` 기본값 적용 후 Attempt 002 재실행 예정.
 
 ### 2.3 v100-skinny SKINNY
 

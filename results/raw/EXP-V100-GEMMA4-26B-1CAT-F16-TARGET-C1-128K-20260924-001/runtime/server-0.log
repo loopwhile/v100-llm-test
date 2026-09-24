@@ -1,0 +1,69 @@
+(APIServer pid=56358) INFO 09-24 18:51:45 [utils.py:344] 
+(APIServer pid=56358) INFO 09-24 18:51:45 [utils.py:344]        █     █     █▄   ▄█
+(APIServer pid=56358) INFO 09-24 18:51:45 [utils.py:344]  ▄▄ ▄█ █     █     █ ▀▄▀ █  version 1.5.0
+(APIServer pid=56358) INFO 09-24 18:51:45 [utils.py:344]   █▄█▀ █     █     █     █  model   /srv/models/gemma-4-26b-a4b-nvfp4
+(APIServer pid=56358) INFO 09-24 18:51:45 [utils.py:344]    ▀▀  ▀▀▀▀▀ ▀▀▀▀▀ ▀     ▀
+(APIServer pid=56358) INFO 09-24 18:51:45 [utils.py:344] 
+(APIServer pid=56358) INFO 09-24 18:51:45 [utils.py:278] non-default args: {'host': '127.0.0.1', 'port': 18080, 'model': '/srv/models/gemma-4-26b-a4b-nvfp4', 'trust_remote_code': True, 'dtype': 'half', 'max_model_len': 131072, 'enforce_eager': True, 'served_model_name': ['Gemma4-26B-A4B-IT-QAT'], 'attention_backend': 'TRITON_ATTN', 'tensor_parallel_size': 2, 'gpu_memory_utilization': 0.9, 'kv_cache_dtype': 'float16', 'max_num_batched_tokens': 4096, 'max_num_seqs': 1}
+(APIServer pid=56358) WARNING 09-24 18:51:45 [envs.py:4449] Unknown vLLM environment variable detected: VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL
+(APIServer pid=56358) Traceback (most recent call last):
+(APIServer pid=56358)   File "<frozen runpy>", line 198, in _run_module_as_main
+(APIServer pid=56358)   File "<frozen runpy>", line 88, in _run_code
+(APIServer pid=56358)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 718, in <module>
+(APIServer pid=56358)     uvloop.run(run_server(args))
+(APIServer pid=56358)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/uvloop/__init__.py", line 96, in run
+(APIServer pid=56358)     return __asyncio.run(
+(APIServer pid=56358)            ^^^^^^^^^^^^^^
+(APIServer pid=56358)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 195, in run
+(APIServer pid=56358)     return runner.run(main)
+(APIServer pid=56358)            ^^^^^^^^^^^^^^^^
+(APIServer pid=56358)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 118, in run
+(APIServer pid=56358)     return self._loop.run_until_complete(task)
+(APIServer pid=56358)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=56358)   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+(APIServer pid=56358)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/uvloop/__init__.py", line 48, in wrapper
+(APIServer pid=56358)     return await main
+(APIServer pid=56358)            ^^^^^^^^^^
+(APIServer pid=56358)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 678, in run_server
+(APIServer pid=56358)     await run_server_worker(listen_address, sock, args, **uvicorn_kwargs)
+(APIServer pid=56358)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 692, in run_server_worker
+(APIServer pid=56358)     async with build_async_engine_client(
+(APIServer pid=56358)                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=56358)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 210, in __aenter__
+(APIServer pid=56358)     return await anext(self.gen)
+(APIServer pid=56358)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=56358)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 100, in build_async_engine_client
+(APIServer pid=56358)     async with build_async_engine_client_from_engine_args(
+(APIServer pid=56358)                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=56358)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 210, in __aenter__
+(APIServer pid=56358)     return await anext(self.gen)
+(APIServer pid=56358)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=56358)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 124, in build_async_engine_client_from_engine_args
+(APIServer pid=56358)     vllm_config = engine_args.create_engine_config(usage_context=usage_context)
+(APIServer pid=56358)                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=56358)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/engine/arg_utils.py", line 1965, in create_engine_config
+(APIServer pid=56358)     model_config = self.create_model_config()
+(APIServer pid=56358)                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=56358)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/engine/arg_utils.py", line 1599, in create_model_config
+(APIServer pid=56358)     return ModelConfig(
+(APIServer pid=56358)            ^^^^^^^^^^^^
+(APIServer pid=56358)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/pydantic/_internal/_dataclasses.py", line 121, in __init__
+(APIServer pid=56358)     s.__pydantic_validator__.validate_python(ArgsKwargs(args, kwargs), self_instance=s)
+(APIServer pid=56358)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/config/model.py", line 567, in __post_init__
+(APIServer pid=56358)     self.model_arch_config = self.get_model_arch_config()
+(APIServer pid=56358)                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=56358)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/config/model.py", line 764, in get_model_arch_config
+(APIServer pid=56358)     return convertor.convert()
+(APIServer pid=56358)            ^^^^^^^^^^^^^^^^^^^
+(APIServer pid=56358)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/transformers_utils/model_arch_config_convertor.py", line 323, in convert
+(APIServer pid=56358)     head_size=self.get_head_size(),
+(APIServer pid=56358)               ^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=56358)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/transformers_utils/model_arch_config_convertor.py", line 545, in get_head_size
+(APIServer pid=56358)     head_dim = getattr(self.hf_text_config, "head_dim", 0)
+(APIServer pid=56358)                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=56358)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/transformers/configuration_utils.py", line 484, in __getattribute__
+(APIServer pid=56358)     return super().__getattribute__(key)
+(APIServer pid=56358)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=56358)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/transformers/integrations/heterogeneity/configuration_utils.py", line 298, in __getattribute__
+(APIServer pid=56358)     raise AmbiguousGlobalPerLayerAttributeError(
+(APIServer pid=56358) transformers.integrations.heterogeneity.configuration_utils.AmbiguousGlobalPerLayerAttributeError: 'head_dim' is a per-layer attribute and may vary across layers. Access it via the individual layer configs instead (e.g. config.per_layer_config[i].head_dim). To read the global config value from config.head_dim anyway, set `allow_global_per_layer_attribute_access` to `True` on the config. Warning: only do this if the caller can safely handle heterogeneous configs; code that assumes a homogeneous model may use the global value incorrectly.
