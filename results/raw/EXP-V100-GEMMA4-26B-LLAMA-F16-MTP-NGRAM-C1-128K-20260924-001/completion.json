@@ -1,0 +1,9 @@
+{
+  "experiment_id": "EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-NGRAM-C1-128K-20260924-001",
+  "verdict": "PASS_C1_128K",
+  "completed_at_utc": "2026-09-24T07:33:00.302560+00:00",
+  "post_health": {
+    "healthy": true,
+    "at_utc": "2026-09-24T07:33:00.274972+00:00"
+  }
+}
