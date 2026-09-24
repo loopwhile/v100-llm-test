@@ -191,14 +191,16 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - model profile에 선언된 explicit KV format과 speculative configuration을 사용한다.
 - artifact identity와 실제 P520 runtime compatibility를 별도로 판정한다.
 
-#### 2.2.1 Qwen3.8-27B STOCK [READY]
+#### 2.2.1 Qwen3.8-27B STOCK [CLOSED — FAIL_STARTUP]
 - artifact: `QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4@15d2e47bffe5d8ad23928879f8f7d2f74909e259`.
 - WBS 1.3 TP2 runtime preflight: PASS.
 - KV: `fp8_e4m3` (explicit).
 - 1Cat-vLLM 1.5.0의 QUASAR NVFP4 target-only long-context 검증 경로와 맞추기 위해 E4M3를 명시한다. SM70의 generic `fp8` alias는 사용하지 않는다.
 - speculative: target-only.
-- experiment ID: `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-C1-128K-20260924-001`.
-- 신규 C1 128K acceptance를 수행한다.
+- experiment ID: `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-C1-128K-20260924-001` — `FAIL_STARTUP`.
+- 1Cat-vLLM 엔진 초기화 중 128K(131,072) 컨텍스트 1개를 수용하기 위한 최소 KV 캐시 메모리(GPU당 2.15 GiB)가 가용 KV 캐시 메모리(1.19 GiB)를 초과하여 기동 실패 (`ValueError: To serve at least one request with the model's max seq len (131072), (2.15 GiB KV cache is needed, which is larger than the available KV cache memory (1.19 GiB). Based on the available memory, the estimated maximum model length is 67424.`).
+- Peak VRAM: GPU0 14,603 MiB / GPU1 14,603 MiB.
+- Contract에 따라 설정을 임의로 변경하지 않고 terminal evidence로 closeout했다.
 
 #### 2.2.2 Ornith 1.5 9B STOCK [READY — host compatibility gate pending]
 - artifact: `ornith-ai/Ornith-1.5-9B-NVFP4@155f200d85ad58464571c77d5e1122ea5d419d7b`.
