@@ -165,7 +165,7 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - KV: `FP16`.
 - 실행 lane: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
 - base GGUF SHA256: `a7c5bc715f5ff8e99a3e8901ce7d2b42b402c669bf24f7c5250747633d0f5891`.
-- MTP 계열은 별도 Q8_0 Gemma4 assistant GGUF `mtp-gemma-4-26B-A4B-it.gguf`, `--spec-draft-n-max 4`, `--spec-draft-device CUDA0` contract로 검증했다. companion SHA256은 `7272d97595f0d4c74bd7b623492b7dbdaafd8b7c72f329a8270ba4eca68f768a`.
+- MTP 계열은 별도 **smart Q4_0** Gemma4 assistant GGUF `mtp-gemma-4-26B-A4B-it.gguf`, `--spec-draft-n-max 4`, `--spec-draft-device CUDA0` contract로 검증했다. companion SHA256은 `7272d97595f0d4c74bd7b623492b7dbdaafd8b7c72f329a8270ba4eca68f768a`.
 - TARGET: `EXP-V100-GEMMA4-26B-LLAMA-F16-TARGET-C1-128K-20260924-001` — `PASS_C1_128K`; prompt 129,024 + reserve 2,048 = 131,072 / 131,072; prefill 524.64 tok/s, decode 68.10 tok/s; peak VRAM 8,775 / 8,785 MiB.
 - NGRAM: `EXP-V100-GEMMA4-26B-LLAMA-F16-NGRAM-C1-128K-20260924-001` — `PASS_C1_128K`; prefill 526.51 tok/s, decode 64.39 tok/s; draft 96 / accepted 4. NGRAM 가속 효과는 Phase 5에서 판정한다.
 - MTP: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C1-128K-20260924-001` — `FAIL_STARTUP`. preflight와 target/companion SHA256 검증은 PASS했으나 Gemma4 assistant speculative draft 초기화 중 native backtrace가 발생했고 server exit code 139로 종료됐다. measured request는 시작되지 않았다. OOM 또는 artifact identity 실패로 분류하지 않는다.
@@ -173,6 +173,8 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - MTP startup failure signature는 ggml-org/llama.cpp issue #25828의 보고와 유사하지만, 동일 root cause라고 단정하지 않는다.
 - C2 승격 대상은 C1을 PASS한 `TARGET`, `NGRAM` 두 lane뿐이다.
 - 모델 응답의 semantic caveat와 startup failure 분석은 각 report / `acceptance-review.json`에 분리 기록했다.
+- **Supplemental diagnostic D2.1.4A [IN_PROGRESS]**: baseline `FAIL_STARTUP`을 변경하지 않은 채, 동일 pinned b10775 / 동일 target+smart-Q4_0 drafter / 동일 TP2 / MTP n=4에 `--fit off`만 추가하여 startup-only 진단을 수행한다. 이 진단은 measured C1이 아니며 기존 experiment ID를 재사용하지 않는다.
+- D2.1.4A가 startup PASS하면 `--fit off`를 별도 serving configuration으로 간주하여 새로운 experiment ID로 C1 128K MTP acceptance 재실행 여부를 결정한다. D2.1.4A도 실패하면 baseline runtime/startup incompatibility 근거를 강화한다.
 
 ### 2.2 1Cat-vLLM STOCK
 
