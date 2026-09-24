@@ -4,6 +4,61 @@ This file is the pre-decided execution contract for WBS 2.2. It exists so the
 benchmark orchestrator does not spend model quota re-researching model/runtime
 choices that are already pinned here.
 
+## Execution host and repository flow
+
+The Git checkout lives on the ThinkPad, but measured 1Cat execution must run on
+`p520-llm`. Do not run `scripts/run_c1_onecat.py` on the ThinkPad.
+
+Use this WBS 2.2 snapshot:
+
+- ThinkPad checkout: `~/Data/Workspace_VSCode/v100-llm-test`
+- P520 snapshot: `/home/loopwhile/v100-llm-test-wbs22-20260924`
+- 1Cat Python: `/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python`
+
+Before the first item, from the ThinkPad checkout:
+
+```bash
+git pull
+python3 scripts/validate_repo.py
+python3 -m unittest discover -s tests -q
+
+rsync -av \
+  --exclude='.git/' \
+  --exclude='results/raw/' \
+  --exclude='results/*.nohup.log' \
+  ./ p520-llm:/home/loopwhile/v100-llm-test-wbs22-20260924/
+```
+
+Each measured command is executed through SSH with the pinned interpreter
+environment, for example:
+
+```bash
+ssh p520-llm 'cd /home/loopwhile/v100-llm-test-wbs22-20260924 && \
+  V100_1CAT_PYTHON=/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python \
+  python3 scripts/run_c1_onecat.py ...'
+```
+
+After each item finishes, copy only that immutable raw directory back to the
+ThinkPad checkout before generating reports or editing Git-tracked closeout
+files:
+
+```bash
+rsync -av \
+  p520-llm:/home/loopwhile/v100-llm-test-wbs22-20260924/results/raw/<EXP_ID> \
+  results/raw/
+```
+
+Then generate the report from the ThinkPad checkout using the raw directory:
+
+```bash
+python3 scripts/report_experiment.py results/raw/<EXP_ID>
+```
+
+Commit/push the completed item's evidence and closeout before the next item.
+When tracked files change between items, rsync the refreshed checkout to the
+same P520 snapshot again. The P520 snapshot intentionally has no `.git`;
+never run `git pull` there.
+
 ## Global contract
 
 - Runtime: pinned 1Cat-vLLM 1.5.0 wheel from `config/runtime-lock.json`.
