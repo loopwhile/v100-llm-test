@@ -110,6 +110,13 @@ define_subagent:
 ### Phase A: 레포 검증
 python3 scripts/validate_repo.py 를 실행하여 레포 계약을 검증한다.
 
+WBS 2.2에서는 `docs/WBS-2.2-execution-manifest.md`의 **Execution host and repository flow**를 그대로 따른다:
+- Git checkout/closeout은 ThinkPad에서 수행한다.
+- measured 1Cat runner는 반드시 `p520-llm`의 `/home/loopwhile/v100-llm-test-wbs22-20260924` snapshot에서 SSH로 실행한다.
+- `V100_1CAT_PYTHON=/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python`을 사용한다.
+- P520 snapshot에는 `.git`이 없으므로 P520에서 `git pull`을 실행하지 않는다.
+- 각 item 뒤 raw directory를 ThinkPad checkout으로 rsync한 뒤 report/WBS/state/Git closeout을 수행한다.
+
 ### Phase B: 서버 기동
 오케스트레이터가 전달한 파라미터를 기반으로 적절한 러너 스크립트를 실행한다:
 - llama.cpp Qwen: python3 scripts/run_c1_qwen.py
@@ -136,8 +143,11 @@ WBS 2.2의 exact experiment ID와 model key는 execution manifest를 그대로 �
 - results/raw/{EXP_ID}/gpu-peak.json — GPU 피크 사용량
 
 ### Phase E: 리포트 생성
-python3 scripts/report_experiment.py {EXP_ID} 를 실행하여
-Markdown 리포트와 CSV 요약을 생성한다.
+P520 raw evidence를 ThinkPad checkout의 `results/raw/{EXP_ID}`로 회수한 뒤:
+
+`python3 scripts/report_experiment.py results/raw/{EXP_ID}`
+
+를 실행하여 Markdown 리포트와 CSV 요약을 생성한다.
 
 ### Phase F: 오케스트레이터에 보고
 다음 형식으로 결과를 보고한다:
