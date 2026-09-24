@@ -1,0 +1,35 @@
+[
+  {
+    "request_id": "project-a",
+    "project_id": "A",
+    "status": "results_saved",
+    "verdict": "FAIL_OUTPUT",
+    "raw_prompt_sha256": "7eb8fba6a85337dadebcd49bce83334812e159fae96d669e3e24abeb74612535",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.0013685919984709471,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": ""
+          }
+        }
+      ]
+    },
+    "actual_output_tokens": null,
+    "post_template_prompt_tokens": null,
+    "ttft_ms": null,
+    "first_abs": null,
+    "end_abs": 12427.001957367,
+    "wall_s": 2.4464909399994212,
+    "prefill_tps": null,
+    "decode_tps": null,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 2.4569870799987257
+  }
+]

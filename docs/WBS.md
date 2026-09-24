@@ -202,7 +202,7 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - Peak VRAM: GPU0 14,603 MiB / GPU1 14,603 MiB.
 - Contract에 따라 설정을 임의로 변경하지 않고 terminal evidence로 closeout했다.
 
-#### 2.2.2 Ornith 1.5 9B STOCK [CLOSED — FAIL_STARTUP]
+#### 2.2.2 Ornith 1.5 9B STOCK [IN_PROGRESS — configuration fix and retry]
 - artifact: `ornith-ai/Ornith-1.5-9B-NVFP4@155f200d85ad58464571c77d5e1122ea5d419d7b`.
 - 1Cat-vLLM 1.5.0의 Qwen3.5 + MTP model path 정적 지원을 확인했지만 exact Ornith checkpoint의 V100 compatibility PASS로 간주하지 않는다.
 - KV: `FP16`.
@@ -210,9 +210,12 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - target attention backend: `FLASH_ATTN_V100`.
 - startup이 healthy해진 경우에만 동일 실행에서 C1 128K measured request를 진행한다.
 - startup 실패 시 exact failure를 terminal evidence로 보존하고 target-only/MTP depth/KV를 자동 변경하지 않는다.
-- experiment ID: `EXP-V100-ORN15-9B-1CAT-F16-MTP1-C1-128K-20260924-001` — `FAIL_STARTUP`.
-- 1Cat-vLLM API 서버 실행 시 `--kv-cache-dtype` 인자에 `float16` 대신 `f16`이 전달되어 CLI argparse 단계에서 거부됨 (`api_server.py: error: argument --kv-cache-dtype: invalid choice: 'f16'`).
-- Contract에 따라 설정을 임의로 변경하거나 재시도하지 않고 terminal evidence로 closeout했다.
+- experiment ID 001: `EXP-V100-ORN15-9B-1CAT-F16-MTP1-C1-128K-20260924-001` — `FAIL_STARTUP`.
+  - 1Cat-vLLM API 서버 실행 시 `--kv-cache-dtype` 인자에 `float16` 대신 `f16`이 전달되어 CLI argparse 단계에서 거부됨 (`api_server.py: error: argument --kv-cache-dtype: invalid choice: 'f16'`).
+- experiment ID 002: `EXP-V100-ORN15-9B-1CAT-F16-MTP1-C1-128K-20260924-002` — `FAIL_CRASH`.
+  - KV `float16` 및 `max-num-batched-tokens 4096` 설정으로 서버 정상 기동 성공 (Peak VRAM 13,821 MiB / 13,821 MiB).
+  - 그러나 첫 번째 요청 처리 중 GDN prefill kernel JIT 컴파일 단계에서 `tilelang`이 nvcc 컴파일러 부재로 인해 `ValueError: No CUDA or HIP or MPS available on this system` 크래시 발생.
+  - 원인 분석 결과 `VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL=0` 설정 시 TileLang JIT 대신 사전 컴파일된 네이티브 SM70 커널(`chunk_gated_delta_rule_fwd_sm70_vlk_varlen`)로 정상 실행 가능함을 검증함.
 - TP2 결과와 별도로 Phase 4의 1GPU×2 + LiteLLM topology는 후속 검증한다.
 
 #### 2.2.3 Ornith 1.5 35B-A3B STOCK [CLOSED — FAIL_STARTUP]

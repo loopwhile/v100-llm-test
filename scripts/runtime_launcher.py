@@ -17,7 +17,11 @@ def read(path): return json.loads(Path(path).read_text())
 def state(root,model):
  return (read(root/"config/runtime-lock.json"),read(root/"config/profiles/runtime-lanes.json"),
          read(root/"config/profiles/topologies.json"),read(root/"config/models"/MODELS[model]))
-def kv(value):
+def kv(value,runtime="llama.cpp"):
+ if runtime=="1Cat-vLLM":
+  table={"FP16":"float16","float16":"float16","fp8_e4m3":"fp8_e4m3","fp8_e5m2":"fp8_e5m2"}
+  if value not in table: raise ValueError("unsupported 1Cat KV: "+value)
+  return table[value]
  table={"Q8_0":"q8_0","FP16":"f16","fp8_e4m3":"fp8_e4m3","fp8_e5m2":"fp8_e5m2"}
  if value not in table: raise ValueError("unsupported KV: "+value)
  return table[value]
@@ -102,10 +106,10 @@ def onecat_plan(lock,m,lane,c,topology,port,gateway_port=18079):
    if not isinstance(spec_cfg,dict):return unsupported(m,"1Cat-vLLM",lane,topology,"exact speculative launch config is unresolved")
    spec_args=["--speculative-config",json.dumps(spec_cfg,separators=(",",":"))]
   def command(p,tp,max_seqs):
-   return [py,"-m","vllm.entrypoints.openai.api_server","--model",mc["path"],"--served-model-name",m["model_id"],"--trust-remote-code","--dtype","half","--attention-backend",attention_backend,"--tensor-parallel-size",str(tp),"--kv-cache-dtype",kv(kv_value),"--max-model-len","131072","--max-num-seqs",str(max_seqs),"--max-num-batched-tokens","2048","--gpu-memory-utilization","0.90","--enforce-eager",*spec_args,"--host","127.0.0.1","--port",str(p)]
-  if topology=="tp2-shared":commands=[command(port,2,c)];envs=[{"CUDA_VISIBLE_DEVICES":"0,1"}];endpoints=[f"http://127.0.0.1:{port}"]
+   return [py,"-m","vllm.entrypoints.openai.api_server","--model",mc["path"],"--served-model-name",m["model_id"],"--trust-remote-code","--dtype","half","--attention-backend",attention_backend,"--tensor-parallel-size",str(tp),"--kv-cache-dtype",kv(kv_value,"1Cat-vLLM"),"--max-model-len","131072","--max-num-seqs",str(max_seqs),"--max-num-batched-tokens","4096","--gpu-memory-utilization","0.90","--enforce-eager",*spec_args,"--host","127.0.0.1","--port",str(p)]
+  if topology=="tp2-shared":commands=[command(port,2,c)];envs=[{"CUDA_VISIBLE_DEVICES":"0,1","VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL":"0"}];endpoints=[f"http://127.0.0.1:{port}"]
   else:
-   commands=[command(port,1,1),command(port+1,1,1)];envs=[{"CUDA_VISIBLE_DEVICES":"0"},{"CUDA_VISIBLE_DEVICES":"1"}];endpoints=[f"http://127.0.0.1:{port}",f"http://127.0.0.1:{port+1}"]
+   commands=[command(port,1,1),command(port+1,1,1)];envs=[{"CUDA_VISIBLE_DEVICES":"0","VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL":"0"},{"CUDA_VISIBLE_DEVICES":"1","VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL":"0"}];endpoints=[f"http://127.0.0.1:{port}",f"http://127.0.0.1:{port+1}"]
   plan={"supported_for_planning":True,"runtime":"1Cat-vLLM","runtime_revision":f"{rt['version']} wheel sha256:{rt['sha256']}","model":m["model_id"],"model_identity":mc,"weight_quant":weight,"kv_cache":kv_value,"lane":lane,"speculative":spec_mode,"speculative_config":spec_cfg,"attention_backend":attention_backend,"ngram":"N/A","topology":topology,"concurrency":c,"context_tokens_per_agent":131072,"commands":commands,"environment":{},"command_environments":envs,"endpoints":endpoints}
   return attach_gateway(plan,lock,m,endpoints,gateway_port) if topology=="1gpu-x2-independent" else plan
  if lane!="SKINNY":raise ValueError("unknown onecat lane")

@@ -43,7 +43,7 @@ class RuntimePlanTests(unittest.TestCase):
   self.assertEqual(len(p["commands"]),2);self.assertEqual(p["endpoints"],["http://127.0.0.1:18079"]);self.assertEqual(p["concurrency"],1)
  def test_ornith9_stock_independent_when_artifact_resolves(self):
   lock,_,_,m=r.state(ROOT,"ornith-1.5-9b");m=copy.deepcopy(m);m["onecat_vllm"].update(planning_ready=True,path="/srv/models/mock-ornith9",weight_quant="NVFP4",kv_candidates=["FP16"],speculative_candidates=["MTP"],speculative_config={"method":"mtp","num_speculative_tokens":3})
-  p=r.onecat_plan(lock,m,"STOCK",2,"1gpu-x2-independent",18080);self.assertTrue(p["supported_for_planning"]);self.assertEqual(len(p["commands"]),2);self.assertEqual(p["command_environments"],[{"CUDA_VISIBLE_DEVICES":"0"},{"CUDA_VISIBLE_DEVICES":"1"}]);self.assertEqual(p["endpoints"],["http://127.0.0.1:18079"])
+  p=r.onecat_plan(lock,m,"STOCK",2,"1gpu-x2-independent",18080);self.assertTrue(p["supported_for_planning"]);self.assertEqual(len(p["commands"]),2);self.assertEqual(p["command_environments"],[{"CUDA_VISIBLE_DEVICES":"0","VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL":"0"},{"CUDA_VISIBLE_DEVICES":"1","VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL":"0"}]);self.assertEqual(p["endpoints"],["http://127.0.0.1:18079"])
   for c in p["commands"]:self.assertEqual(c[c.index("--tensor-parallel-size")+1],"1");self.assertEqual(c[c.index("--max-num-seqs")+1],"1");self.assertIn("--speculative-config",c)
  def test_ornith9_stock_fails_closed_without_spec_config(self):
   lock,_,_,m=r.state(ROOT,"ornith-1.5-9b");m=copy.deepcopy(m);m["onecat_vllm"].update(planning_ready=True,path="/srv/models/mock-ornith9",weight_quant="NVFP4",kv_candidates=["FP16"],speculative_candidates=["MTP"])
@@ -53,11 +53,13 @@ class RuntimePlanTests(unittest.TestCase):
   p=r.build_plan(ROOT,"qwen3.8-27b","STOCK",2,"tp2-shared");c=p["commands"][0]
   self.assertEqual(c[c.index("--tensor-parallel-size")+1],"2");self.assertEqual(c[c.index("--max-num-seqs")+1],"2")
   self.assertEqual(c[c.index("--kv-cache-dtype")+1],"fp8_e4m3")
+  self.assertEqual(c[c.index("--max-num-batched-tokens")+1],"4096")
  def test_ornith9_stock_contract_is_pinned_for_host_gate(self):
   p=r.build_plan(ROOT,"ornith-1.5-9b","STOCK",1,"tp2-shared");c=p["commands"][0]
   self.assertTrue(p["supported_for_planning"])
   self.assertEqual(c[c.index("--attention-backend")+1],"FLASH_ATTN_V100")
-  self.assertEqual(c[c.index("--kv-cache-dtype")+1],"f16")
+  self.assertEqual(c[c.index("--kv-cache-dtype")+1],"float16")
+  self.assertEqual(c[c.index("--max-num-batched-tokens")+1],"4096")
   self.assertIn("--speculative-config",c)
   spec=__import__("json").loads(c[c.index("--speculative-config")+1])
   self.assertEqual(spec["method"],"mtp");self.assertEqual(spec["num_speculative_tokens"],1)
@@ -67,6 +69,7 @@ class RuntimePlanTests(unittest.TestCase):
   self.assertTrue(p["supported_for_planning"])
   self.assertEqual(c[c.index("--attention-backend")+1],"FLASH_ATTN_V100")
   self.assertEqual(c[c.index("--kv-cache-dtype")+1],"fp8_e5m2")
+  self.assertEqual(c[c.index("--max-num-batched-tokens")+1],"4096")
   self.assertNotIn("--speculative-config",c)
  def test_gemma_stock_contract_is_pinned_for_download_and_host_gate(self):
   p=r.build_plan(ROOT,"gemma4-26b-a4b","STOCK",1,"tp2-shared");c=p["commands"][0]
@@ -74,13 +77,17 @@ class RuntimePlanTests(unittest.TestCase):
   self.assertEqual(p["model_identity"]["repository"],"nvidia/Gemma-4-26B-A4B-NVFP4")
   self.assertEqual(p["model_identity"]["revision"],"a19cfe00be84568a6867111c9a68c9c44fdcffe6")
   self.assertEqual(c[c.index("--attention-backend")+1],"TRITON_ATTN")
-  self.assertEqual(c[c.index("--kv-cache-dtype")+1],"f16")
+  self.assertEqual(c[c.index("--kv-cache-dtype")+1],"float16")
+  self.assertEqual(c[c.index("--max-num-batched-tokens")+1],"4096")
   self.assertNotIn("--speculative-config",c)
  def test_fp8_kv_subtypes_must_be_explicit(self):
   self.assertEqual(r.kv("fp8_e4m3"),"fp8_e4m3")
   self.assertEqual(r.kv("fp8_e5m2"),"fp8_e5m2")
+  self.assertEqual(r.kv("FP16","1Cat-vLLM"),"float16")
+  self.assertEqual(r.kv("FP16","llama.cpp"),"f16")
   with self.assertRaises(ValueError):r.kv("FP8")
   with self.assertRaises(ValueError):r.kv("fp8")
+  with self.assertRaises(ValueError):r.kv("FP8","1Cat-vLLM")
  def test_skinny_closed_after_model_load_oom(self):
   p=r.build_plan(ROOT,"qwen3.8-27b","SKINNY",2,"tp2-shared")
   self.assertFalse(p["supported_for_planning"]);self.assertNotIn("commands",p)

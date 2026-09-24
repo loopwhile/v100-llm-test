@@ -1,0 +1,10 @@
+{
+  "experiment_id": "EXP-V100-ORN15-9B-1CAT-F16-MTP1-C1-128K-20260924-002",
+  "verdict": "FAIL_CRASH",
+  "completed_at_utc": "2026-09-24T09:21:32.934739+00:00",
+  "post_health": {
+    "healthy": false,
+    "error": "HTTP Error 503: Service Unavailable",
+    "at_utc": "2026-09-24T09:21:32.894042+00:00"
+  }
+}
