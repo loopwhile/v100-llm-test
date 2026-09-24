@@ -126,22 +126,29 @@ def run_locked(args):
         {k: str(v) for k, v in (plan.get("command_environments") or [{}])[0].items()}
     )
 
-    thinking = True if args.model == "qwen3.8-27b" else False
-    reasoning_effort = "medium" if args.model == "qwen3.8-27b" else None
+    if getattr(args, "thinking", None) is not None:
+        thinking = bool(args.thinking)
+    else:
+        thinking = True if args.model == "qwen3.8-27b" else False
+
+    if getattr(args, "reasoning_effort", None) is not None:
+        reasoning_effort = args.reasoning_effort if thinking else None
+    else:
+        reasoning_effort = "medium" if (args.model == "qwen3.8-27b" and thinking) else None
     sampling = (
         {"temperature": 0.7, "top_p": 0.8, "seed": 520}
         if args.model == "qwen3.8-27b"
         else None
     )
     chat_template = (
-        "HF tokenizer chat template; enable_thinking=true; reasoning_effort=medium; temperature=0.7"
-        if args.model == "qwen3.8-27b"
-        else "HF tokenizer chat template; enable_thinking=false"
+        f"HF tokenizer chat template; enable_thinking={'true' if thinking else 'false'}"
+        + (f"; reasoning_effort={reasoning_effort}" if reasoning_effort else "")
+        + ("; temperature=0.7" if sampling else "")
     )
     template_kwargs = (
-        {"enable_thinking": True, "reasoning_effort": "medium"}
-        if args.model == "qwen3.8-27b"
-        else {"enable_thinking": False}
+        {"enable_thinking": thinking, "reasoning_effort": reasoning_effort}
+        if reasoning_effort
+        else {"enable_thinking": thinking}
     )
 
     config = future_config(
@@ -392,6 +399,8 @@ if __name__ == "__main__":
     parser.add_argument("--retry-of")
     parser.add_argument("--retry-evidence")
     parser.add_argument("--model", choices=sorted(MODEL_WBS))
+    parser.add_argument("--thinking", action=argparse.BooleanOptionalAction, default=None)
+    parser.add_argument("--reasoning-effort", choices=["low", "medium", "xhigh"], default=None)
     parser.add_argument("--port", type=int, default=18080)
     parser.add_argument("--worker", type=Path)
     args = parser.parse_args()

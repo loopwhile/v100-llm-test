@@ -191,7 +191,7 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - model profile에 선언된 explicit KV format과 speculative configuration을 사용한다.
 - artifact identity와 실제 P520 runtime compatibility를 별도로 판정한다.
 
-#### 2.2.1 Qwen3.8-27B STOCK [IN PROGRESS — 128K CAPACITY PASS / OUTPUT INTEGRITY FAIL]
+#### 2.2.1 Qwen3.8-27B STOCK [CLOSED — 128K CAPACITY PASS / OUTPUT INTEGRITY FAIL]
 - artifact: `QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4@15d2e47bffe5d8ad23928879f8f7d2f74909e259`.
 - WBS 1.3 TP2 runtime preflight: PASS.
 - KV: `fp8_e4m3` (explicit).
@@ -216,6 +216,17 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
   - 조치: greedy 디코딩 루프 방지를 위해 `temperature=0.7`, `top_p=0.8`, `seed=520` 및 `reasoning_effort="medium"` 적용.
   - 결과: 128K Capacity 및 서버 안정성은 완전 유지 (TTFT 742.53 s, Decode 9.83 tok/s, Batch Wall 950.92 s, Peak VRAM 15,287 MiB, OOM 없음, Post-health PASS).
   - 출력 무결성 분석: 초반 약 800토큰(2,500자) 이상에서 `PageIndex` 및 `Transaction` 클래스의 세부 구현과 정합성 리스크를 매우 우수하고 논리적으로 분석함. 그러나 `presence_penalty` 부재로 인해 특정 구문(`( the code might crash. For example, \`page_id = "10"\` ( ...`)이 n-gram 반복 트랩에 빠져 2,048 토큰까지 반복되며 `detect_repetition()`에 의해 `FAIL_OUTPUT`으로 판정됨.
+- experiment ID 006: `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-C1-128K-20260924-006` — `FAIL_OUTPUT` (Measured Inference 1/2, Thinking OFF Diagnostic).
+  - 조치: Thinking OFF 한 변수만 변경 (`--no-thinking`, `chat_template_kwargs={"enable_thinking": False}`, `temperature=0.7`, `top_p=0.8`).
+  - 결과: 128K Capacity 완전 성공 (TTFT 742.66 s, Decode 9.77 tok/s, Batch Wall 929.58 s, Peak VRAM 15,287 MiB, OOM 없음, Post-health PASS).
+  - 출력 분석: Qwen3.8 기본 Jinja 템플릿이 `enable_thinking=false` 시 빈 `<think>\n\n</think>\n\n` 블록을 주입함. 모델이 일반 텍스트 모드로 독백을 시작하다가 프롬프트 끝의 메타 지시문("Produce at least 256 tokens...")에 집착하여 `"Wait, the user is asking me to produce at least  256 tokens so decode behavior is measurable."` 문장을 73회 반복 출력한 후 `stop` 종료됨.
+- experiment ID 007: `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-C1-128K-20260924-007` — `FAIL_OUTPUT` (Measured Inference 2/2, Final Acceptance, Reasoning Effort LOW).
+  - 조치: Jinja 템플릿의 `reasoning_effort=medium` 분기 누락(시스템 프롬프트 미생성) 원인을 교정하기 위해 유일하게 정식 제어 프롬프트("Keep your thinking brief and focused, moving directly to the conclusion without unnecessary elaboration.")가 주입되는 `--thinking --reasoning-effort low` 적용.
+  - 결과: 128K Capacity 완전 성공 (TTFT 742.67 s, Decode 9.68 tok/s, Batch Wall 954.25 s, Peak VRAM 15,287 MiB, OOM 없음, Post-health PASS).
+  - 출력 분석: 시스템 프롬프트가 정상 주입되었으나, 모델이 프롬프트 지시문을 요약하는 첫 문장("The user wants me to review...")을 반복 출력하는 루프에 빠져 2,048 토큰 한도에 도달 (`finish_reason=length`).
+- 2.2.1 종합 판정:
+  - **128K Hardware / Runtime Capacity**: **PASS** (Attempt 002~007까지 6회 연속 OOM 없음, 129K 프롬프트 수용, Peak VRAM 15,287 MiB 안정 동작, Flash-V100 E4M3 XQA 디코딩 완료).
+  - **Output Integrity (출력 무결성)**: **FAIL_OUTPUT** (Thinking OFF/ON, Greedy/Stochastic, Medium/Low 전 조건에서 128K 합성 프롬프트 특유의 디코딩 반복 루프가 지속됨). WBS 2.2.1은 최대 허용 추론 횟수 2회 소진 후 정해진 규칙에 따라 CLOSED 처리.
 
 #### 2.2.2 Ornith 1.5 9B STOCK [DONE — PASS_C1_128K]
 - artifact: `ornith-ai/Ornith-1.5-9B-NVFP4@155f200d85ad58464571c77d5e1122ea5d419d7b`.
