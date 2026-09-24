@@ -1,0 +1,13 @@
+{
+  "reviewed_at_utc": "2026-09-24T06:30:00+00:00",
+  "verdict": "PASS_C1_128K",
+  "prompt_receipt_matches_usage": true,
+  "token_budget": "129024 prompt + 2048 reserve = 131072 / 131072",
+  "completion_tokens": 736,
+  "finish_reason": "stop",
+  "runtime_truncated": 0,
+  "post_health_healthy": true,
+  "content_review": "Coherent and non-truncated. The response treats Transaction.commit atomicity/isolation as a required ACID contract; that requirement is not established by the capacity workload itself, so the severity/bug conclusion is contract-dependent. This is a model-quality caveat, not a serving/output-integrity failure.",
+  "speculative_evidence": "target-only",
+  "cleanup": "owned container stopped; server exit 0"
+}
