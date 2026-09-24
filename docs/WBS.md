@@ -365,20 +365,22 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - `max_num_seqs=2`.
 - C1에서 검증된 exact artifact/runtime configuration을 그대로 사용한다.
 
-#### 3.2.1 Qwen3.8-27B STOCK [TODO after 2.2.1]
-- C1 128K PASS 후 동일 STOCK lane을 C2로 승격한다.
+#### 3.2.1 Qwen3.8-27B STOCK [NOT ELIGIBLE — C1 OUTPUT INTEGRITY FAIL]
+- WBS 2.2.1은 128K capacity는 PASS했지만 output integrity가 FAIL이므로 정식 C2 lane으로 승격하지 않는다.
+- WBS 5.3.1의 E5M2 64K known-good recovery diagnostic은 원인 분리를 위한 별도 1회 진단이며 128K C2 promotion gate가 아니다.
+- 별도 사용자 승인에 따른 failure-boundary diagnostic이 아닌 한 Qwen STOCK C2를 실행하지 않는다.
 
-#### 3.2.2 Ornith 1.5 9B STOCK [BLOCKED by 2.2.2]
-- V100 runtime compatibility와 C1 128K를 먼저 PASS해야 한다.
-- PASS 전에는 C2를 예약하지 않는다.
+#### 3.2.2 Ornith 1.5 9B STOCK [TODO — ELIGIBLE]
+- WBS 2.2.2에서 V100 runtime compatibility 및 C1 128K를 PASS했다.
+- 검증된 exact TP2/MTP1/FP16 configuration을 유지하여 C2 resident 및 active-overlap을 측정한다.
 
-#### 3.2.3 Ornith 1.5 35B-A3B STOCK [BLOCKED by 2.2.3]
-- V100 runtime compatibility와 C1 128K를 먼저 PASS해야 한다.
-- PASS 전에는 C2를 예약하지 않는다.
+#### 3.2.3 Ornith 1.5 35B-A3B STOCK [TODO — ELIGIBLE]
+- WBS 2.2.3에서 V100 runtime compatibility 및 C1 128K를 PASS했다.
+- 검증된 exact TP2/target-only/E5M2 configuration을 유지하여 C2 resident 및 active-overlap을 측정한다.
 
-#### 3.2.4 Gemma4 26B-A4B STOCK [BLOCKED by 2.2.4]
-- exact artifact, V100 runtime compatibility, C1 128K를 순서대로 확정해야 한다.
-- PASS 전에는 C2를 예약하지 않는다.
+#### 3.2.4 Gemma4 26B-A4B STOCK [NOT ELIGIBLE — WBS 2.2.4 FAIL_STARTUP]
+- pinned 1Cat-vLLM 1.5.0 SM70 NVFP4 MoE path에서 WBS 2.2.4가 terminal FAIL_STARTUP으로 종료됐다.
+- 현재 STOCK lane으로 C2를 실행하지 않는다.
 
 ### 3.3 v100-skinny SKINNY
 
@@ -405,9 +407,10 @@ runnable한 3.1/3.2 lane에서 다음 항목을 각각 분리해서 기록한다
 
 `QUEUE_ONLY`를 `PASS_C2_ACTIVE`로 판정해서는 안 된다.
 
-## 4. Ornith 1.5 9B — 1GPU×2 + LiteLLM 실배포 topology [TODO]
+## 4. Ornith 1.5 9B — 1GPU×2 + LiteLLM topology [TODO]
 
-이 topology는 단순 fallback이 아니라 정식 배포 후보로 취급하며, **LiteLLM까지 포함한 전체 서빙 경로**를 테스트한다.
+이 topology는 TP2 shared와 동등한 **정식 테스트 후보**로 취급하며, **LiteLLM까지 포함한 전체 서빙 경로**를 테스트한다.
+프로젝트는 이 topology를 실제 배포 대상으로 선택하지 않으며, 검증 결과와 최종 recipe만 보존한다.
 
 1GPU에서 128K compatibility를 증명한 모든 런타임 lane(필수 llama.cpp lane 전체, exact Ornith 9B artifact가 확정된 STOCK 1Cat 포함)에 대해:
 - GPU0 → Server A.
