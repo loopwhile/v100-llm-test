@@ -73,7 +73,7 @@ class RuntimePlanTests(unittest.TestCase):
    c=p["commands"][0]
    self.assertEqual(c[c.index("--spec-draft-n-max")+1],"4")
    self.assertEqual(c[c.index("--model-draft")+1],"/model/draft.gguf")
-   self.assertEqual(c[c.index("--spec-draft-device")+1],"CUDA0")
+   self.assertEqual(c[c.index("--spec-draft-device")+1],"CUDA0,CUDA1")
    self.assertTrue(any("mtp-gemma-4-26B-A4B-it.gguf:/model/draft.gguf:ro" in x for x in c))
  def test_gemma_target_does_not_mount_companion(self):
   c=r.build_plan(ROOT,"gemma4-26b-a4b","TARGET",1,"tp2-shared")["commands"][0]
