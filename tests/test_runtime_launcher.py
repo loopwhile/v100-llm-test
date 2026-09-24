@@ -54,6 +54,13 @@ class RuntimePlanTests(unittest.TestCase):
   self.assertEqual(c[c.index("--tensor-parallel-size")+1],"2");self.assertEqual(c[c.index("--max-num-seqs")+1],"2")
   self.assertEqual(c[c.index("--kv-cache-dtype")+1],"fp8_e4m3")
   self.assertEqual(c[c.index("--max-num-batched-tokens")+1],"4096")
+ def test_qwen_stock_contract_enables_128k_capacity(self):
+  p=r.build_plan(ROOT,"qwen3.8-27b","STOCK",1,"tp2-shared");c=p["commands"][0]
+  self.assertTrue(p["supported_for_planning"])
+  self.assertEqual(c[c.index("--gpu-memory-utilization")+1],"0.92")
+  self.assertIn("--language-model-only",c)
+  self.assertEqual(c[c.index("--kv-cache-dtype")+1],"fp8_e4m3")
+  self.assertEqual(c[c.index("--max-num-batched-tokens")+1],"4096")
  def test_ornith9_stock_contract_is_pinned_for_host_gate(self):
   p=r.build_plan(ROOT,"ornith-1.5-9b","STOCK",1,"tp2-shared");c=p["commands"][0]
   self.assertTrue(p["supported_for_planning"])

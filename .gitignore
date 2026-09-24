@@ -33,7 +33,7 @@ scratch/
 *.gguf
 *.safetensors
 *.bin
-models/
+/models/
 
 # Generated workload/cache material
 .cache/
