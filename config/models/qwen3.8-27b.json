@@ -29,7 +29,7 @@
     "path": "/srv/models/qwen3.8-vllm/Qwen3.8-27B-QUASAR-NVFP4",
     "weight_quant": "NVFP4",
     "kv_candidates": [
-      "fp8_e5m2"
+      "fp8_e4m3"
     ],
     "required_backend_lanes": [
       "stock",
@@ -38,7 +38,8 @@
     "speculative_candidates": [
       "target-only"
     ],
-    "planning_ready": true
+    "planning_ready": true,
+    "kv_contract_note": "Pinned 1Cat-vLLM 1.5.0 QUASAR Qwen3.8-27B NVFP4 target-only long-context path is validated with explicit fp8_e4m3. Do not use the generic fp8 alias for this acceptance lane."
   },
   "skinny_v11": {
     "status": "verified_artifact_current_hardware_fail_oom_model_load",
