@@ -160,23 +160,24 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - 네 lane 모두 prompt 129,023 + output reserve 2,048 = 131,071 / 131,072 token budget을 사용했고, 정상 stop / post-health / cleanup / exit 0을 확인했다.
 - 모델 응답의 semantic caveat는 serving/output-integrity acceptance와 분리해 각 `acceptance-review.json`에 기록했다.
 
-#### 2.1.4 Gemma4 26B-A4B [DONE]
+#### 2.1.4 Gemma4 26B-A4B [IN_PROGRESS — corrected MTP device placement]
 - artifact: `UD-Q4_K_XL`.
 - KV: `FP16`.
 - 실행 lane: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
 - base GGUF SHA256: `a7c5bc715f5ff8e99a3e8901ce7d2b42b402c669bf24f7c5250747633d0f5891`.
-- MTP 계열은 별도 **smart Q4_0** Gemma4 assistant GGUF `mtp-gemma-4-26B-A4B-it.gguf`, `--spec-draft-n-max 4`, `--spec-draft-device CUDA0` contract로 검증했다. companion SHA256은 `7272d97595f0d4c74bd7b623492b7dbdaafd8b7c72f329a8270ba4eca68f768a`.
+- MTP 계열은 별도 **smart Q4_0** Gemma4 assistant GGUF `mtp-gemma-4-26B-A4B-it.gguf`, `--spec-draft-n-max 4`를 사용한다. Unsloth 일반 문서는 multi-GPU 예시로 `--spec-draft-device CUDA0 -sm layer`를 제시하지만, pinned b10775 + 2×V100 layer-split 실측에서는 CUDA0-only drafter가 speculative context에서 CUDA1 KV/backend 충돌로 abort했고, `--spec-draft-device CUDA0,CUDA1`로 target placement와 정렬하면 동일 128K startup이 PASS했다. 따라서 이 프로젝트의 검증된 V100 contract는 `CUDA0,CUDA1`이다. companion SHA256은 `7272d97595f0d4c74bd7b623492b7dbdaafd8b7c72f329a8270ba4eca68f768a`.
 - TARGET: `EXP-V100-GEMMA4-26B-LLAMA-F16-TARGET-C1-128K-20260924-001` — `PASS_C1_128K`; prompt 129,024 + reserve 2,048 = 131,072 / 131,072; prefill 524.64 tok/s, decode 68.10 tok/s; peak VRAM 8,775 / 8,785 MiB.
 - NGRAM: `EXP-V100-GEMMA4-26B-LLAMA-F16-NGRAM-C1-128K-20260924-001` — `PASS_C1_128K`; prefill 526.51 tok/s, decode 64.39 tok/s; draft 96 / accepted 4. NGRAM 가속 효과는 Phase 5에서 판정한다.
-- MTP: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C1-128K-20260924-001` — `FAIL_STARTUP`. preflight와 target/companion SHA256 검증은 PASS했으나 Gemma4 assistant speculative draft 초기화 중 native backtrace가 발생했고 server exit code 139로 종료됐다. measured request는 시작되지 않았다. OOM 또는 artifact identity 실패로 분류하지 않는다.
-- MTP_NGRAM: `UNSUPPORTED` on the pinned runtime. composite lane도 동일한 Gemma4 assistant draft initialization을 선행 조건으로 가지므로 MTP의 terminal startup blocker를 NGRAM이 우회할 수 없다. 중복 crash replay는 실행하지 않았고 가짜 experiment ID도 만들지 않았다.
-- MTP startup failure signature는 ggml-org/llama.cpp issue #25828의 보고와 유사하지만, 동일 root cause라고 단정하지 않는다.
-- C2 승격 대상은 C1을 PASS한 `TARGET`, `NGRAM` 두 lane뿐이다.
+- MTP attempt 001: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C1-128K-20260924-001` — `FAIL_STARTUP` under the CUDA0-only drafter configuration. This result is preserved as configuration-specific evidence, not the final Gemma4 MTP verdict.
+- Root cause isolation: same b10775 / same artifacts / same TP2 layer split / same 128K / same MTP n=4 with only `--spec-draft-device CUDA0 -> CUDA0,CUDA1` changed produced `PASS_STARTUP`. The prior failure is therefore attributed operationally to draft/target device-placement incompatibility on this V100 topology.
+- Corrected MTP C1: new immutable experiment ID `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C1-128K-20260924-002` is pending measured acceptance using `CUDA0,CUDA1`.
+- MTP_NGRAM is reopened and pending after corrected MTP. The previous `UNSUPPORTED` disposition is superseded by the successful dual-draft-device startup diagnostic.
+- C2 promotion is pending the corrected MTP/MTP_NGRAM C1 results.
 - 모델 응답의 semantic caveat와 startup failure 분석은 각 report / `acceptance-review.json`에 분리 기록했다.
 - **Supplemental diagnostic D2.1.4A [DONE — FAIL_STARTUP]**: 동일 pinned b10775 / 동일 target+smart-Q4_0 drafter / 동일 TP2 / MTP n=4에 `--fit off`만 추가했다. server startup은 다시 exit 139로 실패했고 measured request는 없었다. 따라서 device-memory fitting 자체가 baseline crash의 원인이라는 가설은 기각한다.
 - **Supplemental diagnostic D2.1.4B [DONE — DIAGNOSTIC TOPOLOGY UNSUPPORTED]**: TP2 128K를 유지하고 `split-mode layer -> row`, `main-gpu=0`만 바꿔 KV placement를 진단하려 했으나 target model load 단계에서 `device CUDA0 does not support split buffers`로 종료됐다. 따라서 V100 CUDA backend의 row split 자체가 이 pinned runtime에서 사용할 수 없어 MTP 원인 판정에는 쓰지 않는다.
 - **Supplemental diagnostic D2.1.4C [DONE — INCONCLUSIVE]**: CUDA0 단일 GPU, context 8192, target `-ngl 20`, draft GPU offload `all`로 실행했으나 exit 132(SIGILL)로 종료됐다. CUDA1은 제거됐지만 target의 대규모 CPU partial-offload 경로를 동시에 새로 열었으므로 이 결과만으로 TP2/MTP placement 가설을 판정하지 않는다.
-- **Supplemental diagnostic D2.1.4D [IN_PROGRESS]**: baseline TP2/full-offload/128K/layer split을 그대로 유지하고, 유일한 변경으로 draft device를 `CUDA0`에서 `CUDA0,CUDA1`로 확장한다. b10775의 speculative params가 target context를 `ctx_other`로 참조하고 draft context의 n_ctx를 target과 동일하게 사용하는 구조에서, target과 draft device placement를 정렬했을 때 startup crash가 사라지는지 확인한다.
+- **Supplemental diagnostic D2.1.4D [DONE — PASS_STARTUP]**: baseline TP2/full-offload/128K/layer split을 유지하고 draft device만 `CUDA0`에서 `CUDA0,CUDA1`로 바꿨다. server가 정상 health 상태까지 올라왔고 cleanup exit 0이었다. 이 single-variable result를 근거로 corrected production candidate는 dual draft devices를 사용한다.
 
 ### 2.2 1Cat-vLLM STOCK
 
@@ -259,8 +260,8 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - C1을 PASS한 `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM` lane만 C2로 승격한다.
 
 #### 3.1.4 Gemma4 26B-A4B [TODO after 2.1.4]
-- C1을 PASS한 `TARGET`, `NGRAM` lane만 C2로 승격한다.
-- `MTP`는 C1 `FAIL_STARTUP`, `MTP_NGRAM`은 pinned runtime에서 동일 draft-startup dependency 때문에 `UNSUPPORTED`이므로 C2 대상에서 제외한다.
+- `TARGET`, `NGRAM`은 C1 PASS 상태다.
+- corrected `MTP` / `MTP_NGRAM`은 `--spec-draft-device CUDA0,CUDA1` 구성으로 C1을 다시 판정한 뒤 PASS한 lane만 C2로 승격한다.
 
 ### 3.2 Shared TP2 1Cat-vLLM STOCK
 
