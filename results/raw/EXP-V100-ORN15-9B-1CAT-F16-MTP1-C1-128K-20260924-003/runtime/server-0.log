@@ -1,0 +1,228 @@
+(APIServer pid=49609) INFO 09-24 18:28:51 [utils.py:344] 
+(APIServer pid=49609) INFO 09-24 18:28:51 [utils.py:344]        █     █     █▄   ▄█
+(APIServer pid=49609) INFO 09-24 18:28:51 [utils.py:344]  ▄▄ ▄█ █     █     █ ▀▄▀ █  version 1.5.0
+(APIServer pid=49609) INFO 09-24 18:28:51 [utils.py:344]   █▄█▀ █     █     █     █  model   /srv/models/ornith-1.5-9b-nvfp4
+(APIServer pid=49609) INFO 09-24 18:28:51 [utils.py:344]    ▀▀  ▀▀▀▀▀ ▀▀▀▀▀ ▀     ▀
+(APIServer pid=49609) INFO 09-24 18:28:51 [utils.py:344] 
+(APIServer pid=49609) INFO 09-24 18:28:51 [utils.py:278] non-default args: {'host': '127.0.0.1', 'port': 18080, 'model': '/srv/models/ornith-1.5-9b-nvfp4', 'trust_remote_code': True, 'dtype': 'half', 'max_model_len': 131072, 'enforce_eager': True, 'served_model_name': ['Ornith-1.5-9B'], 'attention_backend': 'FLASH_ATTN_V100', 'tensor_parallel_size': 2, 'gpu_memory_utilization': 0.9, 'kv_cache_dtype': 'float16', 'max_num_batched_tokens': 4096, 'max_num_seqs': 1, 'speculative_config': {'method': 'mtp', 'num_speculative_tokens': 1, 'attention_backend': 'TRITON_ATTN'}}
+(APIServer pid=49609) WARNING 09-24 18:28:51 [envs.py:4449] Unknown vLLM environment variable detected: VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL
+(APIServer pid=49609) INFO 09-24 18:28:51 [model.py:617] Resolved architecture: Qwen3_5ForConditionalGeneration
+(APIServer pid=49609) WARNING 09-24 18:28:51 [model.py:2089] Casting torch.bfloat16 to torch.float16.
+(APIServer pid=49609) INFO 09-24 18:28:51 [model.py:1751] Using max model len 131072
+(APIServer pid=49609) INFO 09-24 18:28:53 [arg_utils.py:1924] Applied 1Cat SM70 MTP defaults: enable_prefix_caching=True, mamba_cache_mode=align, speculative_config.draft_sample_method=greedy, speculative_config.use_local_argmax_reduction=True, fast_moe_cold_start=True, mtp_verifier_cudagraph_shapes=2x1..1, cudagraph_capture_sizes=[1, 2, 4, 8, 9]. Unset VLLM_1CAT_ENABLE_SM70_MTP_DEFAULTS, set it to 0, or pass an explicit non-MTP speculative config to disable automatic MTP.
+(APIServer pid=49609) INFO 09-24 18:28:53 [arg_utils.py:1727] Defaulting speculative_config.enforce_eager=False. Set speculative_config.enforce_eager=true to disable drafter CUDA graphs.
+(APIServer pid=49609) INFO 09-24 18:28:53 [model.py:617] Resolved architecture: Qwen3_5MTP
+(APIServer pid=49609) WARNING 09-24 18:28:53 [model.py:2089] Casting torch.bfloat16 to torch.float16.
+(APIServer pid=49609) INFO 09-24 18:28:53 [model.py:1751] Using max model len 262144
+(APIServer pid=49609) INFO 09-24 18:28:53 [speculative.py:1169] Overriding draft model max model len from 262144 to 131072
+(APIServer pid=49609) INFO 09-24 18:28:53 [scheduler.py:243] Chunked prefill is enabled with max_num_batched_tokens=4096.
+(APIServer pid=49609) INFO 09-24 18:28:53 [config.py:386] Prefix caching is enabled with Mamba cache 'align' mode.
+(APIServer pid=49609) WARNING 09-24 18:28:53 [modelopt.py:381] Detected ModelOpt fp8 checkpoint (quant_algo=FP8). Please note that the format is experimental and could change.
+(APIServer pid=49609) WARNING 09-24 18:28:53 [modelopt.py:1135] Detected ModelOpt NVFP4 checkpoint (quant_algo=NVFP4). Please note that the format is experimental and could change in future.
+(APIServer pid=49609) WARNING 09-24 18:28:53 [modelopt.py:1135] Detected ModelOpt NVFP4 checkpoint (quant_algo=W4A16_NVFP4). Please note that the format is experimental and could change in future.
+(APIServer pid=49609) INFO 09-24 18:28:53 [vllm.py:1324] Asynchronous scheduling is enabled.
+(APIServer pid=49609) WARNING 09-24 18:28:53 [vllm.py:1412] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+(APIServer pid=49609) INFO 09-24 18:28:53 [vllm.py:1535] Using SM70 Flash-V100 multimodal default: image=1, video=0. Set --limit-mm-per-prompt to override.
+(APIServer pid=49609) INFO 09-24 18:28:53 [vllm.py:1592] Not auto-setting VLLM_SM70_FLASH_V100_0DOT3_COMPILE_GRAPH=1 for the SM70 Flash-V100 baseline because no-compile decode graph is requested or compile was explicitly disabled.
+(APIServer pid=49609) INFO 09-24 18:28:53 [vllm.py:1601] Auto-setting VLLM_ENABLE_FLA_PACKED_RECURRENT_DECODE=1 for the SM70 Flash-V100 baseline. Set it explicitly to override.
+(APIServer pid=49609) INFO 09-24 18:28:53 [vllm.py:1601] Auto-setting VLLM_SM70_GDN_KKT_SCHEDULE=1 for the SM70 Flash-V100 baseline. Set it explicitly to override.
+(APIServer pid=49609) INFO 09-24 18:28:53 [vllm.py:1601] Auto-setting VLLM_SM70_GDN_DELTA_H_SCHEDULE=1 for the SM70 Flash-V100 baseline. Set it explicitly to override.
+(APIServer pid=49609) INFO 09-24 18:28:53 [vllm.py:1601] Auto-setting VLLM_SM70_GDN_CHUNK_O_SCHEDULE=1 for the SM70 Flash-V100 baseline. Set it explicitly to override.
+(APIServer pid=49609) INFO 09-24 18:28:53 [vllm.py:1601] Auto-setting VLLM_SM70_FLA_RECURRENT_SCHEDULE=1 for the SM70 Flash-V100 baseline. Set it explicitly to override.
+(APIServer pid=49609) INFO 09-24 18:28:53 [vllm.py:1601] Auto-setting VLLM_SM70_FUSED_SIGMOID_GATING_SCHED=1 for the SM70 Flash-V100 baseline. Set it explicitly to override.
+(APIServer pid=49609) INFO 09-24 18:28:53 [vllm.py:1601] Auto-setting VLLM_SM70_GEMMA_RMS_NORM_COMPILE_NATIVE=1 for the SM70 Flash-V100 baseline. Set it explicitly to override.
+(APIServer pid=49609) INFO 09-24 18:28:53 [vllm.py:1601] Auto-setting VLLM_SM70_GDN_DECODE_FLASHQLA=1 for the SM70 Flash-V100 baseline. Set it explicitly to override.
+(APIServer pid=49609) INFO 09-24 18:28:53 [kernel.py:270] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(APIServer pid=49609) INFO 09-24 18:28:53 [vllm.py:2062] Cudagraph is disabled under eager mode
+(APIServer pid=49609) INFO 09-24 18:28:53 [compilation.py:321] Enabled custom fusions: norm_quant, act_quant
+(APIServer pid=49609) [transformers] The `use_fast` parameter is deprecated and will be removed in a future version. Use `backend="torchvision"` instead of `use_fast=True`, or `backend="pil"` instead of `use_fast=False`.
+(EngineCore pid=49679) INFO 09-24 18:29:16 [core.py:112] Initializing a V1 LLM engine (v1.5.0) with config: model='/srv/models/ornith-1.5-9b-nvfp4', speculative_config=SpeculativeConfig(method='mtp', model='/srv/models/ornith-1.5-9b-nvfp4', num_spec_tokens=1), tokenizer='/srv/models/ornith-1.5-9b-nvfp4', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.float16, max_seq_len=131072, download_dir=None, load_format=auto, tensor_parallel_size=2, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=modelopt_mixed, quantization_config=None, enforce_eager=True, enable_return_routed_experts=False, kv_cache_dtype=float16, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False), seed=0, served_model_name=Ornith-1.5-9B, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['all'], 'ir_enable_torch_wrap': False, 'splitting_ops': [], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': [], 'compile_ranges_endpoints': [4096], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'size_asserts': False, 'alignment_asserts': False, 'scalar_asserts': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': True, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native']), enable_flashinfer_autotune=True, moe_backend='auto', linear_backend='auto')
+(EngineCore pid=49679) INFO 09-24 18:29:16 [multiproc_executor.py:140] DP group leader: node_rank=0, node_rank_within_dp=0, master_addr=127.0.0.1, mq_connect_ip=172.30.1.153 (local), world_size=2, local_world_size=2
+(Worker pid=49722) INFO 09-24 18:29:27 [parallel_state.py:1782] world_size=2 rank=0 local_rank=0 distributed_init_method=tcp://127.0.0.1:33321 backend=nccl
+(Worker pid=49736) INFO 09-24 18:29:34 [parallel_state.py:1782] world_size=2 rank=1 local_rank=1 distributed_init_method=tcp://127.0.0.1:33321 backend=nccl
+(Worker pid=49722) INFO 09-24 18:29:35 [pynccl.py:113] vLLM is using nccl==2.27.5
+(Worker pid=49722) INFO 09-24 18:29:36 [cuda_communicator.py:324] Using ['CUSTOM', 'PYNCCL'] all-reduce backends (in dispatch order) for group 'tp:0' out of potential backends: ['NCCL_SYMM_MEM', 'QUICK_REDUCE', 'FLASHINFER', 'CUSTOM', 'SYMM_MEM', 'PYNCCL'].
+(Worker pid=49722) INFO 09-24 18:29:36 [parallel_state.py:2095] rank 0 in world size 2 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+(Worker pid=49722) WARNING 09-24 18:29:36 [__init__.py:204] min_p and logit_bias parameters won't work with speculative decoding.
+(Worker pid=49736) WARNING 09-24 18:29:36 [__init__.py:204] min_p and logit_bias parameters won't work with speculative decoding.
+(Worker pid=49722) [transformers] The `use_fast` parameter is deprecated and will be removed in a future version. Use `backend="torchvision"` instead of `use_fast=True`, or `backend="pil"` instead of `use_fast=False`.
+(Worker pid=49736) [transformers] The `use_fast` parameter is deprecated and will be removed in a future version. Use `backend="torchvision"` instead of `use_fast=True`, or `backend="pil"` instead of `use_fast=False`.
+(Worker_TP0 pid=49722) INFO 09-24 18:29:44 [gpu_model_runner.py:10153] Starting to load model /srv/models/ornith-1.5-9b-nvfp4...
+(Worker_TP0 pid=49722) INFO 09-24 18:29:45 [mm_encoder_attention.py:372] Using AttentionBackendEnum.TORCH_SDPA for MMEncoderAttention.
+(Worker_TP0 pid=49722) INFO 09-24 18:29:46 [qwen_gdn_linear_attn.py:1783] Using FlashQLA-SM70 GDN prefill kernel (requested=auto, head_k_dim=128, model_dtype=torch.float16).
+(Worker_TP0 pid=49722) INFO 09-24 18:29:46 [qwen_gdn_linear_attn.py:2511] SM70 GDN/FLA schedule gates enabled: kkt=True delta_h=True chunk_o=True recurrent=True sigmoid_gating=True.
+(Worker_TP0 pid=49722) INFO 09-24 18:29:46 [qwen_gdn_linear_attn.py:2528] SM70 FlashQLA GDN decode route enabled.
+(Worker_TP0 pid=49722) INFO 09-24 18:29:46 [cuda.py:349] Using AttentionBackendEnum.FLASH_ATTN_V100 backend.
+(Worker_TP1 pid=49736) INFO 09-24 18:29:46 [cuda.py:349] Using AttentionBackendEnum.FLASH_ATTN_V100 backend.
+(Worker_TP0 pid=49722) INFO 09-24 18:29:46 [weight_utils.py:960] Filesystem type for checkpoints: EXT4. Checkpoint size: 8.21 GiB. Available RAM: 54.20 GiB.
+(Worker_TP0 pid=49722) INFO 09-24 18:29:46 [weight_utils.py:983] Auto-prefetch is disabled because the filesystem (EXT4) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+(Worker_TP0 pid=49722) Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+(Worker_TP0 pid=49722) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:02<00:00,  2.33s/it]
+(Worker_TP0 pid=49722) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:02<00:00,  2.33s/it]
+(Worker_TP0 pid=49722) 
+(Worker_TP0 pid=49722) INFO 09-24 18:29:48 [default_loader.py:430] Loading weights took 2.37 seconds
+(Worker_TP0 pid=49722) INFO 09-24 18:29:48 [modelopt.py:559] SM70 ModelOpt FP8 TurboMind W8A16 dense path enabled.
+(Worker_TP0 pid=49722) INFO 09-24 18:29:48 [modelopt.py:1102] SM70 ModelOpt NVFP4 TurboMind dense path enabled (weight-only; activations remain half).
+(Worker_TP0 pid=49722) INFO 09-24 18:29:49 [gpu_model_runner.py:10177] Loading drafter model...
+(Worker_TP0 pid=49722) INFO 09-24 18:29:49 [vllm.py:1324] Asynchronous scheduling is enabled.
+(Worker_TP0 pid=49722) WARNING 09-24 18:29:49 [vllm.py:1412] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+(Worker_TP0 pid=49722) INFO 09-24 18:29:49 [kernel.py:270] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP0 pid=49722) INFO 09-24 18:29:49 [vllm.py:2062] Cudagraph is disabled under eager mode
+(Worker_TP0 pid=49722) INFO 09-24 18:29:49 [compilation.py:321] Enabled custom fusions: norm_quant, act_quant
+(Worker_TP1 pid=49736) WARNING 09-24 18:29:49 [vllm.py:1412] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+(Worker_TP0 pid=49722) INFO 09-24 18:29:49 [cuda.py:349] Using AttentionBackendEnum.TRITON_ATTN backend.
+(Worker_TP1 pid=49736) INFO 09-24 18:29:49 [kernel.py:270] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP1 pid=49736) INFO 09-24 18:29:49 [vllm.py:2062] Cudagraph is disabled under eager mode
+(Worker_TP1 pid=49736) INFO 09-24 18:29:49 [cuda.py:349] Using AttentionBackendEnum.TRITON_ATTN backend.
+(Worker_TP0 pid=49722) INFO 09-24 18:29:49 [qwen3_5_mtp.py:91] SM70 MTP draft dense fp16 TurboMind fast path requested for down_proj,fc,gate_up_proj,o_proj,qkv_proj.
+(Worker_TP0 pid=49722) INFO 09-24 18:29:49 [weight_utils.py:960] Filesystem type for checkpoints: EXT4. Checkpoint size: 8.21 GiB. Available RAM: 53.05 GiB.
+(Worker_TP0 pid=49722) Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+(Worker_TP0 pid=49722) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:00<00:00,  3.03it/s]
+(Worker_TP0 pid=49722) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:00<00:00,  3.03it/s]
+(Worker_TP0 pid=49722) 
+(Worker_TP0 pid=49722) INFO 09-24 18:29:49 [default_loader.py:430] Loading weights took 0.33 seconds
+(Worker_TP0 pid=49722) INFO 09-24 18:29:49 [linear.py:429] SM70 dense fp16 fast path enabled for small decode projections.
+(Worker_TP0 pid=49722) INFO 09-24 18:29:49 [llm_base_proposer.py:2298] Detected MTP model. Sharing target model embedding weights with the draft model.
+(Worker_TP0 pid=49722) INFO 09-24 18:29:49 [llm_base_proposer.py:2354] Detected MTP model. Sharing target model lm_head weights with the draft model.
+(Worker_TP0 pid=49722) INFO 09-24 18:29:49 [llm_base_proposer.py:2413] Using local argmax reduction for draft token generation (communication: O(2*tp_size) vs O(vocab_size)).
+(Worker_TP1 pid=49736) INFO 09-24 18:29:49 [llm_base_proposer.py:2298] Detected MTP model. Sharing target model embedding weights with the draft model.
+(Worker_TP1 pid=49736) INFO 09-24 18:29:49 [llm_base_proposer.py:2354] Detected MTP model. Sharing target model lm_head weights with the draft model.
+(Worker_TP1 pid=49736) INFO 09-24 18:29:49 [llm_base_proposer.py:2413] Using local argmax reduction for draft token generation (communication: O(2*tp_size) vs O(vocab_size)).
+(Worker_TP0 pid=49722) INFO 09-24 18:29:50 [gpu_model_runner.py:10248] Model loading took 4.89 GiB memory and 4.337783 seconds
+(Worker_TP0 pid=49722) INFO 09-24 18:29:50 [interface.py:683] Setting attention block size to 528 tokens to ensure that attention page size is >= mamba page size.
+(Worker_TP1 pid=49736) INFO 09-24 18:29:50 [interface.py:683] Setting attention block size to 528 tokens to ensure that attention page size is >= mamba page size.
+(Worker_TP0 pid=49722) INFO 09-24 18:29:50 [gpu_model_runner.py:11453] Encoder cache will be initialized with a budget of 16384 tokens, and profiled with 1 image items of the maximum feature size.
+(Worker_TP0 pid=49722) WARNING 09-24 18:30:15 [utils.py:109] BatchDescriptor.num_tokens has no default or default factory.
+(Worker_TP0 pid=49722) INFO 09-24 18:30:17 [gpu_worker.py:578] Available KV cache memory: 7.78 GiB
+(EngineCore pid=49679) WARNING 09-24 18:30:17 [kv_cache_utils.py:1251] Add 3 padding layers, may waste at most 12.50% KV cache memory
+(EngineCore pid=49679) INFO 09-24 18:30:17 [kv_cache_utils.py:2399] GPU KV cache size: 435,890 tokens
+(EngineCore pid=49679) INFO 09-24 18:30:17 [kv_cache_utils.py:2400] Maximum concurrency for 131,072 tokens per request: 3.33x
+(Worker_TP1 pid=49736) INFO 09-24 18:30:17 [awq_sm70_warmup.py:1049] Warming up SM70 TurboMind accepted routes (0 AWQ dense layer shapes, 3 FP8 dense layer shapes, 3 FP4 dense layer shapes, 0 MoE layer shapes, 0 MXFP4 MoE B1 layer shapes, 0 NVFP4 MoE layer shapes, dense_m=[1, 2, 4, 8, 16], moe_tokens=[1, 2, 4, 8], nvfp4_moe_tokens=[1, 2, 4, 8], lut_path=None).
+(Worker_TP0 pid=49722) INFO 09-24 18:30:17 [awq_sm70_warmup.py:1049] Warming up SM70 TurboMind accepted routes (0 AWQ dense layer shapes, 3 FP8 dense layer shapes, 3 FP4 dense layer shapes, 0 MoE layer shapes, 0 MXFP4 MoE B1 layer shapes, 0 NVFP4 MoE layer shapes, dense_m=[1, 2, 4, 8, 16], moe_tokens=[1, 2, 4, 8], nvfp4_moe_tokens=[1, 2, 4, 8], lut_path=None).
+(Worker_TP0 pid=49722) INFO 09-24 18:30:24 [awq_sm70_warmup.py:181] SM70 FP8 coordinated tuning loaded 26 rank0 LUT records on rank 0.
+(Worker_TP1 pid=49736) INFO 09-24 18:30:24 [awq_sm70_warmup.py:181] SM70 FP8 coordinated tuning loaded 26 rank0 LUT records on rank 1.
+(Worker_TP1 pid=49736) INFO 09-24 18:30:27 [awq_sm70_warmup.py:1081] SM70 TurboMind warmup finished (0 AWQ dense calls, 15 FP8 dense calls, 15 FP4 dense calls, 0 MoE stage calls, 0 single-token active-expert calls, 0 MXFP4 MoE B1 stage calls, 0 NVFP4 MoE stage calls).
+(Worker_TP0 pid=49722) INFO 09-24 18:30:27 [awq_sm70_warmup.py:1081] SM70 TurboMind warmup finished (0 AWQ dense calls, 15 FP8 dense calls, 15 FP4 dense calls, 0 MoE stage calls, 0 single-token active-expert calls, 0 MXFP4 MoE B1 stage calls, 0 NVFP4 MoE stage calls).
+(Worker_TP0 pid=49722) INFO 09-24 18:30:27 [gpu_model_runner.py:2280] SM70 auxiliary kernel warmup finished: ('zero_kv_blocks', 'compute_slot_mapping', 'mamba_batch_memcpy', 'mamba_spec_postprocess', 'mtp_prepare_next_token', 'mtp_prepare_inputs', 'mtp_rejection_expand', 'mtp_step_slot_mapping', 'gdn_causal_conv1d')
+(Worker_TP1 pid=49736) INFO 09-24 18:30:28 [jit_monitor.py:54] Kernel JIT monitor activated — Triton JIT compilations during inference will be logged as warnings.
+(Worker_TP0 pid=49722) INFO 09-24 18:30:28 [jit_monitor.py:54] Kernel JIT monitor activated — Triton JIT compilations during inference will be logged as warnings.
+(EngineCore pid=49679) INFO 09-24 18:30:28 [core.py:321] init engine (profile, create kv cache, warmup model) took 38.11 s
+(EngineCore pid=49679) [transformers] The `use_fast` parameter is deprecated and will be removed in a future version. Use `backend="torchvision"` instead of `use_fast=True`, or `backend="pil"` instead of `use_fast=False`.
+(EngineCore pid=49679) INFO 09-24 18:30:37 [vllm.py:1324] Asynchronous scheduling is enabled.
+(EngineCore pid=49679) WARNING 09-24 18:30:37 [vllm.py:1412] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+(EngineCore pid=49679) INFO 09-24 18:30:37 [vllm.py:1592] Not auto-setting VLLM_SM70_FLASH_V100_0DOT3_COMPILE_GRAPH=1 for the SM70 Flash-V100 baseline because no-compile decode graph is requested or compile was explicitly disabled.
+(EngineCore pid=49679) INFO 09-24 18:30:37 [kernel.py:270] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(EngineCore pid=49679) INFO 09-24 18:30:37 [vllm.py:2062] Cudagraph is disabled under eager mode
+(EngineCore pid=49679) INFO 09-24 18:30:37 [compilation.py:321] Enabled custom fusions: norm_quant, act_quant
+(APIServer pid=49609) INFO 09-24 18:30:37 [api_server.py:592] Supported tasks: ['generate']
+(APIServer pid=49609) INFO 09-24 18:30:38 [hf.py:488] Detected the chat template content format to be 'openai'. You can set `--chat-template-content-format` to override this.
+(APIServer pid=49609) INFO 09-24 18:31:00 [base.py:224] Multi-modal warmup completed in 21.492s
+(APIServer pid=49609) INFO 09-24 18:31:00 [base.py:224] Readonly multi-modal warmup completed in 0.378s
+(APIServer pid=49609) INFO 09-24 18:31:00 [api_server.py:596] Starting vLLM server on http://127.0.0.1:18080
+(APIServer pid=49609) INFO 09-24 18:31:00 [launcher.py:37] Available routes are:
+(APIServer pid=49609) INFO 09-24 18:31:00 [launcher.py:46] Route: /openapi.json, Methods: GET, HEAD
+(APIServer pid=49609) INFO 09-24 18:31:00 [launcher.py:46] Route: /docs, Methods: GET, HEAD
+(APIServer pid=49609) INFO 09-24 18:31:00 [launcher.py:46] Route: /docs/oauth2-redirect, Methods: GET, HEAD
+(APIServer pid=49609) INFO 09-24 18:31:00 [launcher.py:46] Route: /redoc, Methods: GET, HEAD
+(APIServer pid=49609) INFO 09-24 18:31:00 [launcher.py:46] Route: /metrics, Methods: GET
+(APIServer pid=49609) INFO:     Started server process [49609]
+(APIServer pid=49609) INFO:     Waiting for application startup.
+(APIServer pid=49609) INFO:     Application startup complete.
+(APIServer pid=49609) INFO:     127.0.0.1:51510 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51524 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51540 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51548 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51558 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51574 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51578 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51592 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51606 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51610 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51612 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51618 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51634 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51648 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51660 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51664 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51674 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51684 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51688 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51690 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51696 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:51706 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:44280 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:44288 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:44302 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:44306 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:44320 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:44332 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:44348 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:44356 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:44364 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:44368 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:44372 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:44382 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:44384 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:44398 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:44412 - "GET /props HTTP/1.1" 404 Not Found
+(APIServer pid=49609) INFO:     127.0.0.1:44428 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:44434 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(Worker_TP0 pid=49722) WARNING 09-24 18:31:16 [jit_monitor.py:103] Triton kernel JIT compilation during inference: _fused_post_conv_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(Worker_TP1 pid=49736) INFO 09-24 18:31:16 [flash_attn_v100.py:5845] FLASH_ATTN_V100 prefill path active (no prefix/chunked context).
+(Worker_TP0 pid=49722) INFO 09-24 18:31:16 [flash_attn_v100.py:5845] FLASH_ATTN_V100 prefill path active (no prefix/chunked context).
+(Worker_TP0 pid=49722) INFO 09-24 18:31:16 [triton_unified_attention.py:963] SM70 Triton attention schedule override active: prefill_tile=32 decode_tile=16 prefill_num_warps=4 decode_num_warps=8 qk_input_precision=default pv_input_precision=default safe_defaults=True
+(Worker_TP0 pid=49722) WARNING 09-24 18:31:18 [jit_monitor.py:103] Triton kernel JIT compilation during inference: kernel_unified_attention. This causes a latency spike; consider extending warmup to cover this shape/config.
+In file included from /home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/include/python3.12/Python.h:12,
+                 from /tmp/tmppjxhk254/__triton_launcher.c:7:
+/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/include/python3.12/pyconfig.h:1877:9: warning: ‘_POSIX_C_SOURCE’ redefined
+ 1877 | #define _POSIX_C_SOURCE 200809L
+      |         ^~~~~~~~~~~~~~~
+In file included from /usr/include/x86_64-linux-gnu/bits/libc-header-start.h:33,
+                 from /usr/include/stdlib.h:26,
+                 from /home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/triton/backends/nvidia/include/cuda.h:56,
+                 from /tmp/tmppjxhk254/__triton_launcher.c:2:
+/usr/include/features.h:319:10: note: this is the location of the previous definition
+  319 | # define _POSIX_C_SOURCE        202405L
+      |          ^~~~~~~~~~~~~~~
+In file included from /home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/include/python3.12/Python.h:12,
+                 from /tmp/tmp2j7ggbm6/__triton_launcher.c:7:
+/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/include/python3.12/pyconfig.h:1877:9: warning: ‘_POSIX_C_SOURCE’ redefined
+ 1877 | #define _POSIX_C_SOURCE 200809L
+      |         ^~~~~~~~~~~~~~~
+In file included from /usr/include/x86_64-linux-gnu/bits/libc-header-start.h:33,
+                 from /usr/include/stdlib.h:26,
+                 from /home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/triton/backends/nvidia/include/cuda.h:56,
+                 from /tmp/tmp2j7ggbm6/__triton_launcher.c:2:
+/usr/include/features.h:319:10: note: this is the location of the previous definition
+  319 | # define _POSIX_C_SOURCE        202405L
+      |          ^~~~~~~~~~~~~~~
+(Worker_TP1 pid=49736) INFO 09-24 18:31:19 [flash_attn_v100.py:5802] FLASH_ATTN_V100 prefill path active (prefix/chunked via direct paged prefill kernel).
+(Worker_TP0 pid=49722) INFO 09-24 18:31:19 [flash_attn_v100.py:5802] FLASH_ATTN_V100 prefill path active (prefix/chunked via direct paged prefill kernel).
+(Worker_TP0 pid=49722) WARNING 09-24 18:33:59 [jit_monitor.py:103] Triton kernel JIT compilation during inference: _triton_mrope_forward. This causes a latency spike; consider extending warmup to cover this shape/config.
+(Worker_TP0 pid=49722) WARNING 09-24 18:34:00 [jit_monitor.py:103] Triton kernel JIT compilation during inference: _causal_conv1d_update_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(Worker_TP0 pid=49722) WARNING 09-24 18:34:00 [jit_monitor.py:103] Triton kernel JIT compilation during inference: fused_gdn_gating_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(Worker_TP0 pid=49722) WARNING 09-24 18:34:00 [jit_monitor.py:103] Triton kernel JIT compilation during inference: fused_recurrent_gated_delta_rule_fwd_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(Worker_TP1 pid=49736) INFO 09-24 18:34:00 [flash_attn_v100.py:7670] FLASH_ATTN_V100 prefix prefill small-query path active (paged decode verifier, max_query_len<=16).
+(Worker_TP1 pid=49736) INFO 09-24 18:34:00 [flash_attn_v100.py:5245] FLASH_ATTN_V100 DFlash2 grouped verifier gate rejected: op=True marker=False max_model_len=131072 min_model_len=32768 causal=True window=(-1, -1) actual=2 native_max_q=16 q=(2, 8, 256)/torch.float16 k=(858, 528, 2, 256)/torch.float16 v=(858, 528, 2, 256)/torch.float16 kv_dtype=auto block_table=(1, 249)/torch.int32 seq_lens=(1,)/torch.int32.
+(Worker_TP0 pid=49722) INFO 09-24 18:34:00 [flash_attn_v100.py:7670] FLASH_ATTN_V100 prefix prefill small-query path active (paged decode verifier, max_query_len<=16).
+(Worker_TP0 pid=49722) INFO 09-24 18:34:00 [flash_attn_v100.py:5245] FLASH_ATTN_V100 DFlash2 grouped verifier gate rejected: op=True marker=False max_model_len=131072 min_model_len=32768 causal=True window=(-1, -1) actual=2 native_max_q=16 q=(2, 8, 256)/torch.float16 k=(858, 528, 2, 256)/torch.float16 v=(858, 528, 2, 256)/torch.float16 kv_dtype=auto block_table=(1, 249)/torch.int32 seq_lens=(1,)/torch.int32.
+(APIServer pid=49609) INFO 09-24 18:34:01 [loggers.py:271] Engine 000: Avg prompt throughput: 12902.4 tokens/s, Avg generation throughput: 0.1 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 29.6%, Prefix cache hit rate: 0.0%
+(APIServer pid=49609) INFO 09-24 18:34:11 [loggers.py:271] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 8.1 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 29.3%, Prefix cache hit rate: 0.0%
+(APIServer pid=49609) INFO 09-24 18:34:11 [metrics.py:101] SpecDecoding metrics: Mean acceptance length: 1.72, Accepted throughput: 0.16 tokens/s, Drafted throughput: 0.22 tokens/s, Accepted: 34 tokens, Drafted: 47 tokens, Per-position acceptance rate: 0.723, Avg Draft acceptance rate: 72.3%
+(APIServer pid=49609) INFO 09-24 18:34:21 [loggers.py:271] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 9.8 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 29.3%, Prefix cache hit rate: 0.0%
+(APIServer pid=49609) INFO 09-24 18:34:21 [metrics.py:101] SpecDecoding metrics: Mean acceptance length: 1.72, Accepted throughput: 4.10 tokens/s, Drafted throughput: 5.70 tokens/s, Accepted: 41 tokens, Drafted: 57 tokens, Per-position acceptance rate: 0.719, Avg Draft acceptance rate: 71.9%
+(APIServer pid=49609) INFO 09-24 18:34:31 [loggers.py:271] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 10.3 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 29.3%, Prefix cache hit rate: 0.0%
+(APIServer pid=49609) INFO 09-24 18:34:31 [metrics.py:101] SpecDecoding metrics: Mean acceptance length: 1.78, Accepted throughput: 4.50 tokens/s, Drafted throughput: 5.80 tokens/s, Accepted: 45 tokens, Drafted: 58 tokens, Per-position acceptance rate: 0.776, Avg Draft acceptance rate: 77.6%
+(APIServer pid=49609) INFO:     127.0.0.1:50436 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:50440 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=49609) INFO:     127.0.0.1:50446 - "GET /props HTTP/1.1" 404 Not Found
+(Worker_TP0 pid=49722) WARNING 09-24 18:34:36 [multiproc_executor.py:894] WorkerProc was terminated
+(Worker_TP1 pid=49736) WARNING 09-24 18:34:36 [multiproc_executor.py:894] WorkerProc was terminated
+(APIServer pid=49609) INFO 09-24 18:34:36 [launcher.py:137] Shutting down FastAPI HTTP server.
+(APIServer pid=49609) INFO:     Shutting down
+(APIServer pid=49609) INFO:     Waiting for application shutdown.
+(APIServer pid=49609) INFO:     Application shutdown complete.
+/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 2 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
+/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 4 leaked shared_memory objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
