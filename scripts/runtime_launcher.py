@@ -111,9 +111,10 @@ def onecat_plan(lock,m,lane,c,topology,port,gateway_port=18079):
    return [py,"-m","vllm.entrypoints.openai.api_server","--model",mc["path"],"--served-model-name",m["model_id"],"--trust-remote-code","--dtype","half","--attention-backend",attention_backend,"--tensor-parallel-size",str(tp),"--kv-cache-dtype",kv(kv_value,"1Cat-vLLM"),"--max-model-len","131072","--max-num-seqs",str(max_seqs),"--max-num-batched-tokens","4096","--gpu-memory-utilization",gpu_util,"--enforce-eager",*mm_args,*spec_args,"--host","127.0.0.1","--port",str(p)]
   hook_dir=str(ROOT/"scripts/runtime_hooks")
   py_path=hook_dir if not os.environ.get("PYTHONPATH") else f"{hook_dir}:{os.environ['PYTHONPATH']}"
-  if topology=="tp2-shared":commands=[command(port,2,c)];envs=[{"CUDA_VISIBLE_DEVICES":"0,1","VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL":"0","PYTHONPATH":py_path}];endpoints=[f"http://127.0.0.1:{port}"]
+  extra_env={str(k):str(v) for k,v in mc.get("environment",{}).items()}
+  if topology=="tp2-shared":commands=[command(port,2,c)];envs=[{"CUDA_VISIBLE_DEVICES":"0,1","VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL":"0","PYTHONPATH":py_path,**extra_env}];endpoints=[f"http://127.0.0.1:{port}"]
   else:
-   commands=[command(port,1,1),command(port+1,1,1)];envs=[{"CUDA_VISIBLE_DEVICES":"0","VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL":"0","PYTHONPATH":py_path},{"CUDA_VISIBLE_DEVICES":"1","VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL":"0","PYTHONPATH":py_path}];endpoints=[f"http://127.0.0.1:{port}",f"http://127.0.0.1:{port+1}"]
+   commands=[command(port,1,1),command(port+1,1,1)];envs=[{"CUDA_VISIBLE_DEVICES":"0","VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL":"0","PYTHONPATH":py_path,**extra_env},{"CUDA_VISIBLE_DEVICES":"1","VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL":"0","PYTHONPATH":py_path,**extra_env}];endpoints=[f"http://127.0.0.1:{port}",f"http://127.0.0.1:{port+1}"]
   plan={"supported_for_planning":True,"runtime":"1Cat-vLLM","runtime_revision":f"{rt['version']} wheel sha256:{rt['sha256']}","model":m["model_id"],"model_identity":mc,"weight_quant":weight,"kv_cache":kv_value,"lane":lane,"speculative":spec_mode,"speculative_config":spec_cfg,"attention_backend":attention_backend,"ngram":"N/A","topology":topology,"concurrency":c,"context_tokens_per_agent":131072,"commands":commands,"environment":{},"command_environments":envs,"endpoints":endpoints}
   return attach_gateway(plan,lock,m,endpoints,gateway_port) if topology=="1gpu-x2-independent" else plan
  if lane!="SKINNY":raise ValueError("unknown onecat lane")

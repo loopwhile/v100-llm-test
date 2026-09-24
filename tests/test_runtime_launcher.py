@@ -61,6 +61,7 @@ class RuntimePlanTests(unittest.TestCase):
   self.assertIn("--language-model-only",c)
   self.assertEqual(c[c.index("--kv-cache-dtype")+1],"fp8_e4m3")
   self.assertEqual(c[c.index("--max-num-batched-tokens")+1],"4096")
+  self.assertEqual(p["command_environments"][0].get("VLLM_FLASH_V100_DECODE_PARTITION_SIZE"),"256")
  def test_ornith9_stock_contract_is_pinned_for_host_gate(self):
   p=r.build_plan(ROOT,"ornith-1.5-9b","STOCK",1,"tp2-shared");c=p["commands"][0]
   self.assertTrue(p["supported_for_planning"])

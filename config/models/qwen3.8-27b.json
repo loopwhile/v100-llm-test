@@ -42,7 +42,10 @@
     "gpu_memory_utilization": "0.92",
     "language_model_only": true,
     "kv_contract_note": "Pinned 1Cat-vLLM 1.5.0 QUASAR Qwen3.8-27B NVFP4 target-only long-context path is validated with explicit fp8_e4m3. Do not use the generic fp8 alias for this acceptance lane.",
-    "attention_backend": "FLASH_ATTN_V100"
+    "attention_backend": "FLASH_ATTN_V100",
+    "environment": {
+      "VLLM_FLASH_V100_DECODE_PARTITION_SIZE": "256"
+    }
   },
   "skinny_v11": {
     "status": "verified_artifact_current_hardware_fail_oom_model_load",

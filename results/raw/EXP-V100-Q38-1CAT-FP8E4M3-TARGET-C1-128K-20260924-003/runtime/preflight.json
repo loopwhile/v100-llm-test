@@ -1,0 +1,30 @@
+{
+  "pass": true,
+  "checks": [
+    {
+      "name": "supported",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "host",
+      "ok": true,
+      "detail": "p520-llm"
+    },
+    {
+      "name": "V100_1CAT_PYTHON",
+      "ok": true,
+      "detail": "/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python"
+    },
+    {
+      "name": "1cat_version",
+      "ok": true,
+      "detail": "1.5.0"
+    },
+    {
+      "name": "model_path",
+      "ok": true,
+      "detail": "/srv/models/qwen3.8-vllm/Qwen3.8-27B-QUASAR-NVFP4"
+    }
+  ]
+}
