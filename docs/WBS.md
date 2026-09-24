@@ -173,8 +173,8 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - MTP startup failure signature는 ggml-org/llama.cpp issue #25828의 보고와 유사하지만, 동일 root cause라고 단정하지 않는다.
 - C2 승격 대상은 C1을 PASS한 `TARGET`, `NGRAM` 두 lane뿐이다.
 - 모델 응답의 semantic caveat와 startup failure 분석은 각 report / `acceptance-review.json`에 분리 기록했다.
-- **Supplemental diagnostic D2.1.4A [IN_PROGRESS]**: baseline `FAIL_STARTUP`을 변경하지 않은 채, 동일 pinned b10775 / 동일 target+smart-Q4_0 drafter / 동일 TP2 / MTP n=4에 `--fit off`만 추가하여 startup-only 진단을 수행한다. 이 진단은 measured C1이 아니며 기존 experiment ID를 재사용하지 않는다.
-- D2.1.4A가 startup PASS하면 `--fit off`를 별도 serving configuration으로 간주하여 새로운 experiment ID로 C1 128K MTP acceptance 재실행 여부를 결정한다. D2.1.4A도 실패하면 baseline runtime/startup incompatibility 근거를 강화한다.
+- **Supplemental diagnostic D2.1.4A [DONE — FAIL_STARTUP]**: 동일 pinned b10775 / 동일 target+smart-Q4_0 drafter / 동일 TP2 / MTP n=4에 `--fit off`만 추가했다. server startup은 다시 exit 139로 실패했고 measured request는 없었다. 따라서 device-memory fitting 자체가 baseline crash의 원인이라는 가설은 기각한다.
+- **Supplemental diagnostic D2.1.4B [IN_PROGRESS]**: 동일 b10775/artifacts/MTP n=4에서 1GPU(CUDA0) + 축소 context startup-only 진단을 수행해 TP2 layer-split/KV placement 의존성을 분리한다. 이 진단은 capacity acceptance가 아니며, 1GPU 128K 가능 여부를 판단하지 않는다.
 
 ### 2.2 1Cat-vLLM STOCK
 
