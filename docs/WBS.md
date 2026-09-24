@@ -233,7 +233,7 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
   - Peak VRAM: GPU0 14,565 MiB / GPU1 14,565 MiB.
   - Post-health PASS, cleanup exit 0.
 
-#### 2.2.4 Gemma4 26B-A4B STOCK [IN PROGRESS — ATTEMPT 001 FAIL_STARTUP]
+#### 2.2.4 Gemma4 26B-A4B STOCK [CLOSED — FAIL_STARTUP]
 - exact artifact: `nvidia/Gemma-4-26B-A4B-NVFP4@a19cfe00be84568a6867111c9a68c9c44fdcffe6`.
 - target local path: `/srv/models/gemma-4-26b-a4b-nvfp4` (다운로드 완료).
 - weight: NVFP4.
@@ -244,7 +244,10 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - 1Cat SM70 release matrix의 Gemma4 NVFP4 + E5M2 KV diagnostic는 KV-cache quantization validation에 의해 거부되는 조합으로 기록돼 있으므로 FP8 KV를 자동 대체하지 않는다.
 - experiment ID 001: `EXP-V100-GEMMA4-26B-1CAT-F16-TARGET-C1-128K-20260924-001` — `FAIL_STARTUP`.
   - 원인: `transformers` 5.16.1의 `HeterogeneousConfigMixin`에서 per-layer attribute인 `head_dim`을 global config에서 접근 시 `AmbiguousGlobalPerLayerAttributeError` 발생 (`vllm/transformers_utils/model_arch_config_convertor.py:545` `getattr(self.hf_text_config, "head_dim", 0)`).
-  - 해결 계획: 런타임 호환 훅(`scripts/runtime_hooks/sitecustomize.py`)을 통해 `HeterogeneousConfigMixin.allow_global_per_layer_attribute_access = True` 기본값 적용 후 Attempt 002 재실행 예정.
+- experiment ID 002: `EXP-V100-GEMMA4-26B-1CAT-F16-TARGET-C1-128K-20260924-002` — `FAIL_STARTUP` (Terminal Failure).
+  - 조치: 런타임 호환 훅(`scripts/runtime_hooks/sitecustomize.py`)을 통해 `HeterogeneousConfigMixin.allow_global_per_layer_attribute_access = True` 적용하여 config/converter 단계 통과.
+  - 원인: 모델 로딩 중 1Cat-vLLM 1.5.0의 SM70 TurboMind NVFP4 MoE 커널(`validate_nvfp4_sm70_moe_contract`)에서 Gemma4 26B-A4B의 MoE 아키텍처(shape `hidden=2816, intermediate=704, experts=128, top_k=8` 및 `activation=gelu_pytorch_tanh`)를 지원하지 않아 `NotImplementedError` 발생 (`SM70 TurboMind NVFP4 MoE shape is not validated: hidden=2816, intermediate=704, experts=128, top_k=8. Validated contracts: [(2048, 512, 256, 8), (2560, 640, 512, 10), (4096, 2048, 288, 8)].`). SM70 NVFP4 MoE 커널은 SiLU 기반 Qwen/GLM 형태만 지원하도록 컴파일되어 있어 Gemma4 Gelu MoE는 런타임 레벨에서 지원 불가.
+- Contract에 따라 설정을 임의로 변경하지 않고 terminal evidence로 closeout했다.
 
 ### 2.3 v100-skinny SKINNY
 
