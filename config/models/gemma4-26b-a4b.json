@@ -37,17 +37,24 @@
     "mtp_draft_device_note": "On this pinned b10775 + 2x V100 layer-split topology, CUDA0-only drafter startup aborts while CUDA0,CUDA1 startup passes at 128K. This overrides Unsloth's generic multi-GPU CUDA0 example for this validated hardware/runtime."
   },
   "onecat_vllm": {
-    "status": "pending_exact_local_artifact_and_v100_compatibility",
-    "desired_weight_quant": "NVFP4",
-    "desired_kv": "FP8",
-    "speculative_candidate": "target-only",
+    "status": "exact_remote_artifact_pinned_local_download_pending",
+    "planning_ready": true,
+    "repository": "nvidia/Gemma-4-26B-A4B-NVFP4",
+    "revision": "a19cfe00be84568a6867111c9a68c9c44fdcffe6",
+    "path": "/srv/models/gemma-4-26b-a4b-nvfp4",
+    "weight_quant": "NVFP4",
+    "kv_candidates": [
+      "FP16"
+    ],
+    "speculative_candidates": [
+      "target-only"
+    ],
+    "attention_backend": "TRITON_ATTN",
+    "artifact_note": "Exact remote NVFP4 artifact is pinned; local download to the configured path is required before preflight can pass.",
+    "kv_contract_note": "Use FP16 KV for the initial SM70 compatibility lane. 1Cat's SM70 release matrix records Gemma4 NVFP4 + fp8_e5m2 KV as a rejected diagnostic combination, so FP8 KV must not be substituted automatically.",
     "required_backend_lanes": [
       "stock",
       "v100-skinny"
-    ],
-    "repository": null,
-    "revision": null,
-    "path": null,
-    "planning_ready": false
+    ]
   }
 }
