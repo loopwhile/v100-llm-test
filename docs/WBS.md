@@ -174,7 +174,8 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - C2 승격 대상은 C1을 PASS한 `TARGET`, `NGRAM` 두 lane뿐이다.
 - 모델 응답의 semantic caveat와 startup failure 분석은 각 report / `acceptance-review.json`에 분리 기록했다.
 - **Supplemental diagnostic D2.1.4A [DONE — FAIL_STARTUP]**: 동일 pinned b10775 / 동일 target+smart-Q4_0 drafter / 동일 TP2 / MTP n=4에 `--fit off`만 추가했다. server startup은 다시 exit 139로 실패했고 measured request는 없었다. 따라서 device-memory fitting 자체가 baseline crash의 원인이라는 가설은 기각한다.
-- **Supplemental diagnostic D2.1.4B [IN_PROGRESS]**: 동일 b10775/artifacts/MTP n=4에서 1GPU(CUDA0) + 축소 context startup-only 진단을 수행해 TP2 layer-split/KV placement 의존성을 분리한다. 이 진단은 capacity acceptance가 아니며, 1GPU 128K 가능 여부를 판단하지 않는다.
+- **Supplemental diagnostic D2.1.4B [DONE — DIAGNOSTIC TOPOLOGY UNSUPPORTED]**: TP2 128K를 유지하고 `split-mode layer -> row`, `main-gpu=0`만 바꿔 KV placement를 진단하려 했으나 target model load 단계에서 `device CUDA0 does not support split buffers`로 종료됐다. 따라서 V100 CUDA backend의 row split 자체가 이 pinned runtime에서 사용할 수 없어 MTP 원인 판정에는 쓰지 않는다.
+- **Supplemental diagnostic D2.1.4C [IN_PROGRESS]**: 동일 b10775 / 동일 target+smart-Q4_0 drafter / MTP n=4에서 CUDA0 단일 GPU만 노출하고, target 일부 layer만 GPU0에 offload하며 context를 8192로 축소하는 startup-only 진단을 수행한다. 목적은 CUDA1을 완전히 제거했을 때 Gemma4 assistant speculative context가 생성되는지 확인하는 것이며 capacity acceptance가 아니다.
 
 ### 2.2 1Cat-vLLM STOCK
 
