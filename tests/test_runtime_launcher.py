@@ -43,7 +43,7 @@ class RuntimePlanTests(unittest.TestCase):
   self.assertEqual(len(p["commands"]),2);self.assertEqual(p["endpoints"],["http://127.0.0.1:18079"]);self.assertEqual(p["concurrency"],1)
  def test_ornith9_stock_independent_when_artifact_resolves(self):
   lock,_,_,m=r.state(ROOT,"ornith-1.5-9b");m=copy.deepcopy(m);m["onecat_vllm"].update(planning_ready=True,path="/srv/models/mock-ornith9",weight_quant="NVFP4",kv_candidates=["FP16"],speculative_candidates=["MTP"],speculative_config={"method":"mtp","num_speculative_tokens":3})
-  p=r.onecat_plan(lock,m,"STOCK",2,"1gpu-x2-independent",18080);self.assertTrue(p["supported_for_planning"]);self.assertEqual(len(p["commands"]),2);self.assertEqual(p["command_environments"],[{"CUDA_VISIBLE_DEVICES":"0","VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL":"0"},{"CUDA_VISIBLE_DEVICES":"1","VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL":"0"}]);self.assertEqual(p["endpoints"],["http://127.0.0.1:18079"])
+  p=r.onecat_plan(lock,m,"STOCK",2,"1gpu-x2-independent",18080);self.assertTrue(p["supported_for_planning"]);self.assertEqual(len(p["commands"]),2);self.assertEqual([e["CUDA_VISIBLE_DEVICES"] for e in p["command_environments"]],["0","1"]);self.assertTrue(all(e.get("VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL")=="0" and "PYTHONPATH" in e for e in p["command_environments"]));self.assertEqual(p["endpoints"],["http://127.0.0.1:18079"])
   for c in p["commands"]:self.assertEqual(c[c.index("--tensor-parallel-size")+1],"1");self.assertEqual(c[c.index("--max-num-seqs")+1],"1");self.assertIn("--speculative-config",c)
  def test_ornith9_stock_fails_closed_without_spec_config(self):
   lock,_,_,m=r.state(ROOT,"ornith-1.5-9b");m=copy.deepcopy(m);m["onecat_vllm"].update(planning_ready=True,path="/srv/models/mock-ornith9",weight_quant="NVFP4",kv_candidates=["FP16"],speculative_candidates=["MTP"])
@@ -119,4 +119,10 @@ class RuntimePlanTests(unittest.TestCase):
  def test_gemma_verified_llama_and_pinned_stock_plan(self):
   self.assertTrue(r.build_plan(ROOT,"gemma4-26b-a4b","NGRAM",1,"tp2-shared")["supported_for_planning"])
   self.assertTrue(r.build_plan(ROOT,"gemma4-26b-a4b","STOCK",1,"tp2-shared")["supported_for_planning"])
+ def test_onecat_plan_injects_runtime_hooks_in_pythonpath(self):
+  for model in ("gemma4-26b-a4b","ornith-1.5-9b","ornith-1.5-35b-a3b"):
+   p=r.build_plan(ROOT,model,"STOCK",1,"tp2-shared")
+   env=p["command_environments"][0]
+   self.assertIn("PYTHONPATH",env)
+   self.assertIn("scripts/runtime_hooks",env["PYTHONPATH"])
 if __name__=="__main__":unittest.main()
