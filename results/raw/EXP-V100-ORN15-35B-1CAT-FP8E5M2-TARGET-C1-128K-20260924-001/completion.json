@@ -1,0 +1,6 @@
+{
+  "experiment_id": "EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C1-128K-20260924-001",
+  "verdict": "FAIL_STARTUP",
+  "completed_at_utc": "2026-09-24T09:01:05.633831+00:00",
+  "error": "server exited during compatibility startup"
+}
