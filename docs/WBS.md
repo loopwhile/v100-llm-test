@@ -215,18 +215,48 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - experiment ID 005: `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-C1-128K-20260924-005` — `FAIL_OUTPUT`.
   - 조치: greedy 디코딩 루프 방지를 위해 `temperature=0.7`, `top_p=0.8`, `seed=520` 및 `reasoning_effort="medium"` 적용.
   - 결과: 128K Capacity 및 서버 안정성은 완전 유지 (TTFT 742.53 s, Decode 9.83 tok/s, Batch Wall 950.92 s, Peak VRAM 15,287 MiB, OOM 없음, Post-health PASS).
-  - 출력 무결성 분석: 초반 약 800토큰(2,500자) 이상에서 `PageIndex` 및 `Transaction` 클래스의 세부 구현과 정합성 리스크를 매우 우수하고 논리적으로 분석함. 그러나 `presence_penalty` 부재로 인해 특정 구문(`( the code might crash. For example, \`page_id = "10"\` ( ...`)이 n-gram 반복 트랩에 빠져 2,048 토큰까지 반복되며 `detect_repetition()`에 의해 `FAIL_OUTPUT`으로 판정됨.
+  - 출력 무결성 분석: 초반 약 800토큰(2,500자) 이상에서 `PageIndex` 및 `Transaction` 클래스의 세부 구현과 정합성 리스크를 매우 우수하고 논리적으로 분석함. 그러나 `presence_penalty=0.0` 조건에서 특정 구문(`( the code might crash. For example, \`page_id = "10"\` ( ...`)이 n-gram 반복 트랩에 빠져 2,048 토큰까지 반복되며 `detect_repetition()`에 의해 `FAIL_OUTPUT`으로 판정됨 (`presence_penalty` 부재를 단독 원인으로 확정할 evidence는 없음).
 - experiment ID 006: `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-C1-128K-20260924-006` — `FAIL_OUTPUT` (Measured Inference 1/2, Thinking OFF Diagnostic).
   - 조치: Thinking OFF 한 변수만 변경 (`--no-thinking`, `chat_template_kwargs={"enable_thinking": False}`, `temperature=0.7`, `top_p=0.8`).
   - 결과: 128K Capacity 완전 성공 (TTFT 742.66 s, Decode 9.77 tok/s, Batch Wall 929.58 s, Peak VRAM 15,287 MiB, OOM 없음, Post-health PASS).
   - 출력 분석: Qwen3.8 기본 Jinja 템플릿이 `enable_thinking=false` 시 빈 `<think>\n\n</think>\n\n` 블록을 주입함. 모델이 일반 텍스트 모드로 독백을 시작하다가 프롬프트 끝의 메타 지시문("Produce at least 256 tokens...")에 집착하여 `"Wait, the user is asking me to produce at least  256 tokens so decode behavior is measurable."` 문장을 73회 반복 출력한 후 `stop` 종료됨.
 - experiment ID 007: `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-C1-128K-20260924-007` — `FAIL_OUTPUT` (Measured Inference 2/2, Final Acceptance, Reasoning Effort LOW).
-  - 조치: Jinja 템플릿의 `reasoning_effort=medium` 분기 누락(시스템 프롬프트 미생성) 원인을 교정하기 위해 유일하게 정식 제어 프롬프트("Keep your thinking brief and focused, moving directly to the conclusion without unnecessary elaboration.")가 주입되는 `--thinking --reasoning-effort low` 적용.
+  - 조치: reasoning_effort 변경 효과를 검증하기 위해 명시적인 간결성 제어 시스템 지시문("Keep your thinking brief and focused, moving directly to the conclusion without unnecessary elaboration.")이 주입되는 `--thinking --reasoning-effort low` 적용.
   - 결과: 128K Capacity 완전 성공 (TTFT 742.67 s, Decode 9.68 tok/s, Batch Wall 954.25 s, Peak VRAM 15,287 MiB, OOM 없음, Post-health PASS).
   - 출력 분석: 시스템 프롬프트가 정상 주입되었으나, 모델이 프롬프트 지시문을 요약하는 첫 문장("The user wants me to review...")을 반복 출력하는 루프에 빠져 2,048 토큰 한도에 도달 (`finish_reason=length`).
-- 2.2.1 종합 판정:
+- 2.2.1 종합 판정: `CLOSED — 128K CAPACITY PASS / OUTPUT INTEGRITY FAIL`
   - **128K Hardware / Runtime Capacity**: **PASS** (Attempt 002~007까지 6회 연속 OOM 없음, 129K 프롬프트 수용, Peak VRAM 15,287 MiB 안정 동작, Flash-V100 E4M3 XQA 디코딩 완료).
   - **Output Integrity (출력 무결성)**: **FAIL_OUTPUT** (Thinking OFF/ON, Greedy/Stochastic, Medium/Low 전 조건에서 128K 합성 프롬프트 특유의 디코딩 반복 루프가 지속됨). WBS 2.2.1은 최대 허용 추론 횟수 2회 소진 후 정해진 규칙에 따라 CLOSED 처리.
+
+  #### 2.2.1 Root-Cause 분석 및 해석 정비
+
+  ##### [검증된 사실]
+  1. **128K 하드웨어 수용성 확립**: 2× V100-SXM2-16GB 환경에서 Qwen3.8-27B NVFP4 + FP8 E4M3 KV 구성으로 128K context(129,023 tokens) prefill 및 decode 수용은 6회 연속 재현 가능하게 성공함 (TTFT ~742.6s, Peak VRAM 15,287 MiB / 16,384 MiB, OOM 없음, post-health PASS).
+  2. **XQA 디코드 크래시 해결**: `VLLM_FLASH_V100_DECODE_PARTITION_SIZE=256` 환경변수로 Hkv=2 TP2 환경의 Flash-V100 XQA partition 크래시를 완전히 해결함.
+  3. **Thinking 제어 무관 반복 발생**: Thinking ON(`reasoning_effort=medium`, `low`) 및 Thinking OFF(`enable_thinking=false`) 양쪽 모두에서 repetition loop가 발생함 (EXP-005 vs EXP-006).
+  4. **샘플링 전략 무관 반복 발생**: Greedy(`temperature=0.0`) 및 Stochastic(`temperature=0.7`, `top_p=0.8`) 모두 repetition loop가 발생함 (EXP-003/004 vs EXP-005/006/007).
+  5. **합성 프롬프트 구조**: 테스트에 사용된 프롬프트는 3개 파일(`storage/index.py`, `storage/transaction.py`, `tests/test_snapshot.py`)의 코드 스니펫을 1,300회 이상 대량 반복 복제하여 129K를 채운 합성 워크로드임.
+  6. **선택적 정보 인출 성공**: 모델은 프롬프트 내부의 세부 식별자(`PageIndex`, `Transaction`, `test_snapshot.py`) 및 메서드 시그니처를 왜곡(hallucination) 없이 정확히 추출하여 분석을 시작함 (gross memory/data corruption 아님).
+  7. **Ornith 모델 대조 결과**: 동일 128K synthetic workload에서 Ornith 1.5 9B(325 tokens) 및 Ornith 1.5 35B-A3B(594 tokens)는 repetition 없이 정상 출력 PASS함.
+
+  ##### [배제 및 수정된 해석]
+  1. **"128K VRAM 부족 또는 OOM" -> 완전 배제**: Peak VRAM 15,287 MiB로 16GB 한도 내에서 안정적으로 제어됨.
+  2. **"Flash-V100 XQA 디코드 크래시" -> 완전 배제**: partition size 256 고정으로 완전히 해결됨.
+  3. **"단순 Thinking ON/OFF 문제" -> 배제**: Thinking OFF에서도 메타 지시문 반복 루프(72회)가 발생함.
+  4. **"Jinja 템플릿의 reasoning_effort=medium 분기 누락이 단일 원인" -> 배제**: 실제 템플릿에서 `xhigh`와 `low`에만 별도 지시를 두고 `medium`은 추가 지시가 없는 기본 형태일 수 있으며, low 지시문을 명시 주입(EXP-007)해도 repetition 루프가 해결되지 않았음.
+  5. **"presence_penalty=0.0 부재가 유일 원인" -> 확정할 evidence 없음**: 본 실험군에서는 presence_penalty를 독립 변수로 대조 검증하지 않았으며, coding-agent 실사용 벤치마크에서도 `presence_penalty=0.0` 설정으로 정상 동작한 사례가 다수 확인됨.
+  6. **"Ornith=Transformer vs Qwen=GDN 차이로 인한 GDN 포화" -> 완전 배제**: Ornith 1.5 9B 및 35B-A3B 역시 Qwen3.5 계열의 hybrid linear/full-attention (GDN 3 : Full-Attention 1) 구조를 사용함 (`model_type: qwen3_5_text`). 동일한 GDN 하이브리드 아키텍처임에도 Ornith는 정상 PASS했으므로 "GDN 구조 자체가 128K에서 본질적으로 포화된다"는 가설은 성립하지 않음.
+  7. **"Flash-V100 XQA 및 FP8 E4M3 수치 무결성 완전 확인 / 결함 완전 배제" -> 과도한 단정이므로 수정**: NaN, garbage string, U+FFFD 같은 gross corruption은 관찰되지 않았으나, 128K 극단 영역에서 FP8 E4M3 KV 캐시의 미세 수치 품질 저하(numerical degradation)나 Flash-V100 XQA 커널의 누적 오차가 logits을 미세하게 왜곡하여 repetition attractor를 형성했을 가능성까지 완전히 배제할 수는 없음.
+
+  ##### [아직 배제되지 않은 주요 가설 4가지]
+  1. **가설 1: 128K 합성 프롬프트 자체의 repetition attractor / in-context learning trap**
+     - 동일 패턴 코드가 수천 번 반복되는 초장문 프롬프트 구조 자체가 자기회귀 디코딩 시 모델을 강력한 n-gram 반복 패턴으로 유인했을 가능성.
+  2. **가설 2: Qwen3.8 모델 자체의 long-context / NVFP4 양자화 checkpoint 특성**
+     - Qwen3.8-27B의 학습 데이터 분포, 128K 극단 컨텍스트에서의 attention sink 특성, 또는 NVFP4 가중치/활성화 양자화에 따른 attention score 왜곡 가능성.
+  3. **가설 3: 1Cat-vLLM Qwen3.8 런타임/커널 상호작용**
+     - Qwen3.8 특화 1Cat-vLLM 런타임의 RoPE scaling (`mrope_section`, `partial_rotary_factor=0.25`), GDN recurrent state update, 또는 decoding kernel 상호작용 이슈.
+  4. **가설 4: FP8 E4M3 KV / Flash-V100 XQA의 미세 수치 품질 저하**
+     - Gross corruption은 없었으나 128K 토큰 누적 상태에서 FP8 E4M3 정밀도 한계 또는 V100 XQA 축약 연산의 미세 오차가 특정 logits을 비정상 증폭시켜 repetition attractor로 작용했을 가능성.
 
 #### 2.2.2 Ornith 1.5 9B STOCK [DONE — PASS_C1_128K]
 - artifact: `ornith-ai/Ornith-1.5-9B-NVFP4@155f200d85ad58464571c77d5e1122ea5d419d7b`.
