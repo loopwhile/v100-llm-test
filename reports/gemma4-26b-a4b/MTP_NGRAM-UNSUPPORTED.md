@@ -1,11 +1,19 @@
-# Gemma4 26B-A4B MTP_NGRAM — previous disposition superseded
+# Gemma4 26B-A4B MTP_NGRAM — historical unsupported disposition superseded
 
-The earlier `UNSUPPORTED` disposition was based on the CUDA0-only MTP startup failure and is no longer the active conclusion.
+The earlier `UNSUPPORTED` disposition was based on the CUDA0-only MTP startup failure.
 
-A same-build, same-artifact, same-TP2, same-128K diagnostic changed only:
+Subsequent isolation showed that changing only:
 
 `--spec-draft-device CUDA0 -> CUDA0,CUDA1`
 
-and produced **PASS_STARTUP**. Therefore MTP_NGRAM is reopened and must be tested after the corrected MTP C1 lane completes successfully.
+produced startup PASS on the same b10775 / TP2 / 128K / artifact configuration.
 
-No measured MTP_NGRAM result exists yet. Do not treat this file as a PASS row.
+The corrected composite lane was then measured:
+
+- experiment: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-NGRAM-C1-128K-20260924-001`
+- verdict: **PASS_C1_128K**
+- draft accepted/generated: **548 / 1088 (50.368%)**
+- decode: **45.53 tok/s**
+- peak VRAM: **8983 / 9121 MiB**
+
+Therefore `MTP_NGRAM` is supported under the validated dual-draft-device contract. This file is retained only to document that the previous unsupported conclusion was superseded.
