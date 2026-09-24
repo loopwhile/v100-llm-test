@@ -44,3 +44,20 @@ Therefore this result cannot support or refute the MTP/KV-placement hypothesis. 
 ## D2.1.4C — next diagnostic
 
 Use one visible GPU (CUDA0), reduced 8192 context, and partial target GPU offload so the target + smart-Q4_0 drafter can plausibly fit. Keep the same b10775 and MTP n=4. The goal is startup only: determine whether removing CUDA1 eliminates the speculative-context crash.
+
+## D2.1.4C — single-GPU partial-offload diagnostic
+
+- Diagnostic ID: `DIAG-GEMMA4-MTP-1GPU-B10775-20260924-001`
+- Measured C1: no
+- Visible GPU: CUDA0 only
+- Context: 8192
+- Target GPU layers: 20
+- Draft GPU layers: all
+- Verdict: **INCONCLUSIVE**
+- Process exit code: **132 (SIGILL)**
+
+The log reached `common_speculative_init_result: loading draft model '/model/draft.gguf'` and then terminated with SIGILL. This diagnostic removed CUDA1 but simultaneously moved most target layers onto the CPU, opening a materially different host execution path. SIGILL is therefore not attributed to the original TP2 MTP failure without further evidence.
+
+## D2.1.4D — next diagnostic
+
+Restore the exact baseline TP2/full-offload/128K/layer-split configuration. Change only the draft device list from `CUDA0` to `CUDA0,CUDA1`. This directly tests whether aligning draft placement with the two-device target context avoids the CUDA1 KV/backend abort seen in the same-build CLI diagnostic.
