@@ -47,6 +47,7 @@ class RuntimePlanTests(unittest.TestCase):
   for c in p["commands"]:self.assertEqual(c[c.index("--tensor-parallel-size")+1],"1");self.assertEqual(c[c.index("--max-num-seqs")+1],"1");self.assertIn("--speculative-config",c)
  def test_ornith9_stock_fails_closed_without_spec_config(self):
   lock,_,_,m=r.state(ROOT,"ornith-1.5-9b");m=copy.deepcopy(m);m["onecat_vllm"].update(planning_ready=True,path="/srv/models/mock-ornith9",weight_quant="NVFP4",kv_candidates=["FP16"],speculative_candidates=["MTP"])
+  m["onecat_vllm"].pop("speculative_config",None)
   p=r.onecat_plan(lock,m,"STOCK",2,"1gpu-x2-independent",18080);self.assertFalse(p["supported_for_planning"]);self.assertIn("speculative",p["reason"])
  def test_stock_tp2_c2(self):
   p=r.build_plan(ROOT,"qwen3.8-27b","STOCK",2,"tp2-shared");c=p["commands"][0]
