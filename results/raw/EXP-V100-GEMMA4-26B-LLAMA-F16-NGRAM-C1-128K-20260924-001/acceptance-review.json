@@ -1,0 +1,14 @@
+{
+  "reviewed_at_utc": "2026-09-24T06:30:00+00:00",
+  "verdict": "PASS_C1_128K",
+  "prompt_receipt_matches_usage": true,
+  "token_budget": "129024 prompt + 2048 reserve = 131072 / 131072",
+  "completion_tokens": 721,
+  "finish_reason": "stop",
+  "runtime_truncated": 0,
+  "post_health_healthy": true,
+  "content_review": "Coherent and non-truncated. As in TARGET, the response assumes transactional atomicity/isolation is part of the intended contract; that is not established by this workload and is recorded as a model-quality caveat only.",
+  "speculative_evidence": "ngram-simple active; draft_n=96, draft_n_accepted=4, observed acceptance=0.04167",
+  "ngram_acceptance_scope": "C1 validates NGRAM-on 128K compatibility/capacity and output integrity. Acceleration effectiveness is deferred to Phase 5.",
+  "cleanup": "owned container stopped; server exit 0"
+}
