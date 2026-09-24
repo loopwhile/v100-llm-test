@@ -92,10 +92,15 @@ Do not repeat this research during execution.
    to `fp8_e5m2`. This project therefore writes E4M3/E5M2 explicitly.
 3. The Qwen3.8 QUASAR NVFP4 target-only long-context contract is pinned to
    explicit `fp8_e4m3`.
-4. The 1Cat SM70 release matrix treats Gemma4 as a TRITON_ATTN family. Its
-   Gemma4 NVFP4 + E5M2 KV diagnostic path is skipped by default because that
-   combination is rejected by SM70 KV-cache quantization validation.
-5. Exact remote Gemma4 26B-A4B NVFP4 artifact is pinned to
+4. Pinned 1Cat-vLLM 1.5.0's SM70 release matrix explicitly includes Gemma4
+   31B AWQ/NVFP4 with TP2 and TP4. Its Gemma4 NVFP4 + E5M2 KV diagnostic path
+   is skipped by default because that combination is rejected by SM70 KV-cache
+   quantization validation.
+5. NVIDIA's Gemma4 26B NVFP4 model card states ordinary upstream vLLM currently
+   uses TP=1 for that checkpoint. Do not convert this into either a TP2 PASS or
+   FAIL for 1Cat: the pinned 1Cat fork has its own SM70 Gemma TP2 path, so the
+   P520 TP2 startup remains the required compatibility gate.
+6. Exact remote Gemma4 26B-A4B NVFP4 artifact is pinned to
    `nvidia/Gemma-4-26B-A4B-NVFP4@a19cfe00be84568a6867111c9a68c9c44fdcffe6`.
    It must exist at the configured local path before 2.2.4 runs.
 
@@ -127,9 +132,11 @@ Pinned contract:
 Command:
 
 ```bash
-python3 scripts/run_c1_onecat.py \
-  --experiment-id EXP-V100-Q38-1CAT-FP8E4M3-TARGET-C1-128K-20260924-001 \
-  --model qwen3.8-27b
+ssh p520-llm 'cd /home/loopwhile/v100-llm-test-wbs22-20260924 && \
+  V100_1CAT_PYTHON=/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python \
+  python3 scripts/run_c1_onecat.py \
+    --experiment-id EXP-V100-Q38-1CAT-FP8E4M3-TARGET-C1-128K-20260924-001 \
+    --model qwen3.8-27b'
 ```
 
 ## 2.2.2 Ornith 1.5 9B STOCK
@@ -156,9 +163,11 @@ optimum. Phase 5 remains responsible for performance tuning.
 Command:
 
 ```bash
-python3 scripts/run_c1_onecat.py \
-  --experiment-id EXP-V100-ORN15-9B-1CAT-F16-MTP1-C1-128K-20260924-001 \
-  --model ornith-1.5-9b
+ssh p520-llm 'cd /home/loopwhile/v100-llm-test-wbs22-20260924 && \
+  V100_1CAT_PYTHON=/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python \
+  python3 scripts/run_c1_onecat.py \
+    --experiment-id EXP-V100-ORN15-9B-1CAT-F16-MTP1-C1-128K-20260924-001 \
+    --model ornith-1.5-9b'
 ```
 
 If startup fails, preserve that exact failure. Do not silently switch to
@@ -187,9 +196,11 @@ the numerical format.
 Command:
 
 ```bash
-python3 scripts/run_c1_onecat.py \
-  --experiment-id EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C1-128K-20260924-001 \
-  --model ornith-1.5-35b-a3b
+ssh p520-llm 'cd /home/loopwhile/v100-llm-test-wbs22-20260924 && \
+  V100_1CAT_PYTHON=/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python \
+  python3 scripts/run_c1_onecat.py \
+    --experiment-id EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C1-128K-20260924-001 \
+    --model ornith-1.5-35b-a3b'
 ```
 
 ## 2.2.4 Gemma4 26B-A4B STOCK
@@ -213,9 +224,9 @@ Before the run, the exact revision must be downloaded to the configured local
 path. Preferred command when the `hf` CLI is already installed:
 
 ```bash
-hf download nvidia/Gemma-4-26B-A4B-NVFP4 \
+ssh p520-llm 'hf download nvidia/Gemma-4-26B-A4B-NVFP4 \
   --revision a19cfe00be84568a6867111c9a68c9c44fdcffe6 \
-  --local-dir /srv/models/gemma-4-26b-a4b-nvfp4
+  --local-dir /srv/models/gemma-4-26b-a4b-nvfp4'
 ```
 
 Do not install a new download tool silently. If `hf` is unavailable, report
@@ -224,9 +235,11 @@ the missing prerequisite.
 After the exact artifact exists:
 
 ```bash
-python3 scripts/run_c1_onecat.py \
-  --experiment-id EXP-V100-GEMMA4-26B-1CAT-F16-TARGET-C1-128K-20260924-001 \
-  --model gemma4-26b-a4b
+ssh p520-llm 'cd /home/loopwhile/v100-llm-test-wbs22-20260924 && \
+  V100_1CAT_PYTHON=/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python \
+  python3 scripts/run_c1_onecat.py \
+    --experiment-id EXP-V100-GEMMA4-26B-1CAT-F16-TARGET-C1-128K-20260924-001 \
+    --model gemma4-26b-a4b'
 ```
 
 FP8 KV is not substituted automatically. The current 1Cat SM70 release matrix
