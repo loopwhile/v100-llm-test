@@ -1,0 +1,5 @@
+{
+  "verdict": "FAIL_STARTUP",
+  "c1_128k": false,
+  "error": "server exited during startup"
+}

@@ -1,0 +1,42 @@
+0.00.063.438 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.064.611 W srv  llama_server: -----------------
+0.00.064.617 W srv  llama_server: CORS is set to allow all origins ('*') and no API key is set
+0.00.064.618 W srv  llama_server: this can be a security risk (cross-origin attacks)
+0.00.064.619 W srv  llama_server: more info: https://github.com/ggml-org/llama.cpp/pull/25655
+0.00.064.619 W srv  llama_server: -----------------
+0.00.066.448 I srv    load_model: loading model '/model/target.gguf'
+AMX is not ready to be used!
+0.02.289.194 E llama_init_from_model: failed to initialize the context: Gemma4Assistant requires ctx_other to be set (this warning is normal during memory fitting)
+0.02.460.897 W operator(): failed to measure the memory of the extra model, fitting without it: failed to create llama_context from model
+0.03.147.246 W load: override 'tokenizer.ggml.add_bos_token' to 'true' for Gemma4
+0.03.283.692 W load: control-looking token:    212 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.03.284.680 W load: control-looking token:     50 '<|tool_response>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.03.342.280 W load: special_eog_ids contains '<|tool_response>', removing '</s>' token from EOG list
+0.05.792.252 I cmn          init: llama threadpool init, n_threads = 6
+0.05.792.662 I common_speculative_init_result: loading draft model '/model/draft.gguf'
+0.06.640.956 W load: control-looking token:    212 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.06.641.907 W load: control-looking token:     50 '<|tool_response>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.06.697.880 W load: special_eog_ids contains '<|tool_response>', removing '</s>' token from EOG list
+0.06.785.413 W llama_kv_cache: layer   3: sharing with layer 29. k = 0x7e906e000000, v = 0x7e907e000000
+0.06.785.438 W llama_kv_cache: layer   0: sharing with layer 28. k = 0x7e9022400000, v = 0x7e9022900000
+0.06.785.440 W llama_kv_cache: layer   1: sharing with layer 28. k = 0x7e9022400000, v = 0x7e9022900000
+0.06.785.441 W llama_kv_cache: layer   2: sharing with layer 28. k = 0x7e9022400000, v = 0x7e9022900000
+/opt/llama.cpp/ggml/src/ggml-backend.cpp:941: pre-allocated tensor (cache_k_l28) in a buffer (CUDA1) that cannot run the operation (NONE)
+/usr/local/lib/libggml-base.so.0(+0x1c97b)[0x7e917651e97b]
+/usr/local/lib/libggml-base.so.0(ggml_print_backtrace+0x21f)[0x7e917651edff]
+/usr/local/lib/libggml-base.so.0(ggml_abort+0x152)[0x7e917651efd2]
+/usr/local/lib/libggml-base.so.0(+0x37838)[0x7e9176539838]
+/usr/local/lib/libggml-base.so.0(ggml_backend_sched_split_graph+0x16bf)[0x7e917653c1cf]
+/usr/local/lib/libllama.so.0(_ZN13llama_context13graph_reserveEjjjPK22llama_memory_context_ibPm+0x92d)[0x7e91766e11ed]
+/usr/local/lib/libllama.so.0(_ZN13llama_context17resolve_fused_opsEPK22llama_memory_context_ij+0x318)[0x7e91766e18b8]
+/usr/local/lib/libllama.so.0(_ZN13llama_context13sched_reserveEv+0x594)[0x7e91766e2664]
+/usr/local/lib/libllama.so.0(_ZN13llama_contextC1ERK11llama_model20llama_context_params+0xdb2)[0x7e91766e3972]
+/usr/local/lib/libllama.so.0(llama_init_from_model+0x3a8)[0x7e91766e4cf8]
+/usr/local/lib/libllama-common.so.0(_ZN30common_speculative_init_resultC1ER13common_paramsP11llama_modelP13llama_context+0x3fd)[0x7e9176e0235d]
+/usr/local/lib/libllama-common.so.0(_Z35common_speculative_init_from_paramsR13common_paramsP11llama_modelP13llama_context+0x37)[0x7e9176e025f7]
+/usr/local/lib/libllama-server-impl.so(_ZN19server_context_impl10load_modelER13common_params+0x1f2a)[0x7e91775ac02a]
+/usr/local/lib/libllama-server-impl.so(_Z12llama_serverR13common_paramsiPPc+0x4246)[0x7e91774fbb56]
+/usr/local/lib/libllama-server-impl.so(_Z12llama_serveriPPc+0xdf)[0x7e91774fd42f]
+/usr/lib/x86_64-linux-gnu/libc.so.6(+0x29d90)[0x7e9176fead90]
+/usr/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x80)[0x7e9176feae40]
+llama-server(+0x1295)[0x63f0b25a8295]

@@ -1,0 +1,5 @@
+{
+  "container_stopped": false,
+  "error": "Command '['docker', 'inspect', '0648fcde6de010b32092d4f7c8c74ea29350733dbabd1870154efa4866a37c76']' returned non-zero exit status 1.",
+  "server_exit_code": 139
+}
