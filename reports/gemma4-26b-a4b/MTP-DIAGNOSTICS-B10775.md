@@ -61,3 +61,18 @@ The log reached `common_speculative_init_result: loading draft model '/model/dra
 ## D2.1.4D — next diagnostic
 
 Restore the exact baseline TP2/full-offload/128K/layer-split configuration. Change only the draft device list from `CUDA0` to `CUDA0,CUDA1`. This directly tests whether aligning draft placement with the two-device target context avoids the CUDA1 KV/backend abort seen in the same-build CLI diagnostic.
+
+## D2.1.4D — dual draft devices, exact 128K baseline
+
+- Diagnostic ID: `DIAG-GEMMA4-MTP-DUAL-DRAFT-B10775-20260924-001`
+- Measured C1: no
+- Target topology: TP2 layer split
+- Context: 131072
+- Target offload: all
+- Sole change from failed baseline: `--spec-draft-device CUDA0 -> CUDA0,CUDA1`
+- Verdict: **PASS_STARTUP**
+- Cleanup exit: **0**
+
+This is the decisive isolation result. The CUDA0-only same-build CLI diagnostic exposed `cache_k_l28` in a CUDA1 buffer failing backend operation compatibility during speculative context reservation. When the draft device list was aligned with both devices used by the layer-split target context, the server reached healthy state without changing build, artifacts, context size, quantization, KV type, split mode, or MTP depth.
+
+Operational conclusion for this pinned V100 runtime: use `--spec-draft-device CUDA0,CUDA1` for Gemma4 MTP. Unsloth's generic multi-GPU documentation currently shows CUDA0-only; this project records the hardware/runtime-specific override proven by the single-variable startup diagnostic.
