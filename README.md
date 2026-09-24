@@ -1,10 +1,10 @@
 # v100-llm-test
 
-Final serving acceptance tests for a Lenovo P520 with 2× Tesla V100 16GB.
+Serving acceptance and performance-recipe tests for a Lenovo P520 with 2× Tesla V100 16GB.
 
 ## Goal
 
-Determine which model/runtime/topology can reliably serve independent single-agent coding projects with:
+Determine which model/runtime/topology can reliably serve independent single-agent coding projects, then retain reproducible per-model serving recipes with:
 - per-agent context ceiling: 128K
 - normal concurrency: C1
 - required peak concurrency: C2
@@ -74,3 +74,5 @@ Before execution:
     python3 -m unittest discover -s tests -v
 
 Exact runtime/model compatibility and local artifact identities still require fresh verification on p520-llm before measured GPU runs.
+
+The project ends with validated/bounded recipes per model/runtime/topology. It does not choose or deploy one final production configuration; recipe selection is left to the user.

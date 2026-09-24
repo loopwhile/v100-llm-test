@@ -25,3 +25,16 @@
 - Conclusion: The hypothesis that exact duplicate-heavy synthetic padding is a **necessary cause** is rejected because repetition collapse also reproduced on a 116-file diversified snapshot. Broader prompt-composition / ultra-long code-dump effects remain possible. Qwen3.8-specific long-context runtime/checkpoint/KV/kernel interaction hypotheses are strengthened, but no single root cause is proven.
 - Note: WBS 2.2.1 verdict remains `CLOSED — 128K CAPACITY PASS / OUTPUT INTEGRITY FAIL` (unchanged). Single measured inference budget exhausted; stopped.
 
+
+## Next planned work after current stop
+
+- Remaining project scope is WBS 3, WBS 4, and revised WBS 5 only. There is no separate deployment-selection phase.
+- WBS 3: C2 capacity/residency/active-overlap testing for eligible C1 lanes.
+- WBS 4: Ornith 1.5 9B 1GPU×2 + LiteLLM topology validation.
+- WBS 5: performance optimization and per-model/per-runtime final recipe capture.
+- Qwen3.8 1Cat-vLLM receives one additional bounded recovery diagnostic before further performance tuning:
+  - reproduce the historical clean 64K C1 recipe from qwen3.8-bench EXP-Q38-1CAT-NVFP4-FP8E5M2-NONE-C1-64K-442;
+  - E5M2 KV, max_model_len=65536, max_num_seqs=1, MBT=2048, util=0.90, GDN Triton prefill, VLLM_SM70_GDN_DECODE_FLASHQLA=0, thinking=false, eager;
+  - exactly one measured inference;
+  - diagnostic only; it does not alter the existing 128K E4M3 verdict.
+- Historical p520-inference-lab Profile 007 fast-path results may guide WBS 5 option candidates, but are not imported as fresh acceptance evidence.

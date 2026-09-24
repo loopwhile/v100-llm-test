@@ -443,180 +443,163 @@ Shared TP2와 다음 항목을 비교한다.
 - 운영 단순성.
 - raw config/report/CSV에 LiteLLM version/commit/image/routing identity가 보존되는지.
 
-## 5. 성능 비교 및 lane 축소 [TODO]
+## 5. 성능 최적화 및 모델별 최종 레시피 확정 [TODO]
 
-capacity/correctness가 유효한 설정만 성능 비교 대상으로 포함한다. 지속적인 C2 decode 측정에는 workloads/performance/v1.json을 사용한다. 이 workload는 output 4K를 예약하고 실제 1K 이상 출력을 요구하며, NGRAM 비교가 단순 반복 문자열에 과도하게 유리하지 않도록 section별 identifier를 다르게 만든다.
+WBS 3과 WBS 4에서 capacity/correctness/topology가 검증된 lane을 대상으로 성능을 비교하고,
+각 모델·런타임별로 재현 가능한 **최종 serving recipe**를 남긴다.
 
-### 5.1 llama.cpp
-동일한 model/artifact/KV/topology 조건에서 비교한다.
-- TARGET vs NGRAM.
-- MTP vs MTP_NGRAM.
-- 지원되는 경우 TARGET vs MTP.
+이 프로젝트는 실제 배포 대상을 선택하거나 서비스를 배포하지 않는다.
+사용자는 완료된 recipe 중 필요한 구성을 이후 직접 선택해서 사용한다.
+따라서 별도의 "최종 배포 결정" Phase는 두지 않으며 WBS 5 완료가 이 저장소의 종결점이다.
+
+과거 `p520-inference-lab` 및 `qwen3.8-bench` 결과는 acceptance PASS를 소급 부여하는 증거로 사용하지 않는다.
+다만 이미 실측으로 검증된 옵션 조합을 **최적화 후보/재현 recipe의 출처**로 사용할 수 있으며,
+이 저장소의 최종 recipe에는 반드시 이 저장소에서 얻은 fresh evidence를 연결한다.
+
+### 5.1 공통 performance 비교
+
+capacity/correctness가 유효한 설정만 정식 performance 비교 대상으로 포함한다.
+지속적인 C2 decode 측정에는 `workloads/performance/v1.json`을 사용한다.
+이 workload는 output 4K를 예약하고 실제 1K 이상 출력을 요구하며,
+NGRAM 비교가 단순 반복 문자열에 과도하게 유리하지 않도록 section별 identifier를 다르게 만든다.
+
+공통 비교:
 - C1 대비 C2 성능 저하.
-
-### 5.2 1Cat-vLLM
-
-현재 하드웨어에서 성능 비교 대상으로 승격할 수 있는 것은 C1/C2를 PASS한 STOCK lane이다.
-
-Qwen3.8 SKINNY는 WBS 1.4에서 `FAIL_OOM_MODEL_LOAD`로 종료됐으므로 현재 2×V100-16GB에서는 throughput A/B 대상으로 포함하지 않는다. SKINNY 결과는 runtime/kernel bootstrap PASS와 model-load OOM이라는 terminal preflight evidence로 보존한다.
-
-향후 다른 하드웨어에서 SKINNY가 실제 서빙에 성공하더라도 checkpoint, KV, speculative, runtime identity 차이를 명시하며 STOCK과의 차이를 단순 kernel-only causal A/B로 해석하지 않는다.
-
-### 5.3 Metrics
-가능한 경우 다음 항목을 보존한다.
-- TTFT.
-- prefill tok/s.
+- TTFT / prefill tok/s.
 - mean request decode tok/s.
 - aggregate decode tok/s.
 - end-to-end output tok/s.
 - batch wall time.
 - GPU0/GPU1 VRAM.
-- power.
-- temperature.
-- clocks.
-- speculative acceptance evidence.
+- power / temperature / clocks.
+- output integrity.
+- speculative lane은 draft / accepted / acceptance ratio.
 
-### 5.4 Qwen3.8-27B 1Cat-vLLM 추가 최적화 특성화
+### 5.2 llama.cpp 모델별 recipe 최적화
 
-이 섹션은 기존 C1/C2 acceptance scope를 변경하지 않는 supplemental experiment다.
-WBS 2.2.1 및 3.2.1의 STOCK target-only 결과는 그대로 유지하며,
-해당 결과가 완료된 이후 Qwen3.8-27B의 추가적인 speculative/runtime 최적화 가능성을 별도로 측정한다.
+WBS 2/3에서 유효한 exact model/artifact/KV/topology를 유지한 상태에서,
+각 모델마다 실제로 의미 있는 옵션만 제한적으로 최적화한다.
 
-참고 사례:
-- `skrodahl/qwen38-27B-dual-rtx5060`
-- 2× RTX 5060 Ti 16GB / TP2 / Qwen3.8-27B NVFP4
-- FP8 KV, MTP k sweep, long-context decode, KV-capacity 및 CUDA Graph 영향 측정
+공통 후보:
+- TARGET vs NGRAM.
+- MTP 지원 모델은 MTP vs MTP_NGRAM 및 TARGET vs MTP.
+- `-b / -ub` 조합.
+- CUDA Graph / graph-related runtime option이 현재 pinned build에서 실제 제어 가능할 경우 graph on/off 또는 validated variant.
+- TP2 shared C2에서는 WBS 3에서 검증된 `--parallel`, `--ctx-size`, `--kv-unified`, `--kv-unified-per-slot` contract를 보존한다.
+- speculative depth는 모델이 실제 지원하는 범위 안에서만 조정하며, acceptance와 output integrity를 동시에 확인한다.
 
-이 사례의 수치는 Blackwell 환경의 결과이므로 V100 성능 기대값으로 사용하지 않는다.
-실험 설계 참고자료로만 사용한다.
+모델별 목적:
+- Qwen3.8-27B: TARGET/NGRAM 성능과 batch/ubatch/graph 계열 최적점을 확보한다. 현재 artifact에는 MTP lane을 새로 만들지 않는다.
+- Ornith 1.5 9B: TARGET/NGRAM/MTP/MTP_NGRAM과 TP2 shared, WBS 4의 1GPU×2 + LiteLLM 결과를 함께 이용해 topology별 recipe를 남긴다.
+- Ornith 1.5 35B-A3B: TARGET/NGRAM/MTP/MTP_NGRAM 중 유효한 조합과 native MTP depth의 실효성을 비교한다.
+- Gemma4 26B-A4B: TARGET/NGRAM 및 corrected dual-draft-device MTP/MTP_NGRAM contract를 기준으로 최적점을 비교한다.
 
-#### 5.4.1 MTP sweep
+불필요한 exhaustive grid는 금지한다.
+기존 evidence로 명백히 열세인 옵션은 반복하지 않고, 후보마다 변경 이유와 stop condition을 기록한다.
 
-기존 STOCK target-only 결과를 baseline(k=0)으로 보존한다.
+### 5.3 1Cat-vLLM 모델별 recipe 최적화
 
-1Cat-vLLM에서 현재 Qwen3.8-27B artifact/runtime 조합이 Native MTP를 지원하고
-추가 VRAM budget 안에서 실행 가능한 경우에만 다음 supplemental configuration을 수행한다.
+현재 하드웨어에서 실제 기동 및 유효 출력을 증명한 STOCK lane만 정식 최적화 대상으로 삼는다.
+v100-skinny는 현재 2×V100-16GB에서 model-load OOM으로 종료됐으므로 성능 튜닝 대상이 아니다.
 
-- MTP k=2
-- MTP k=4
+공통 후보:
+- `max_num_batched_tokens`.
+- `max_num_seqs`.
+- `gpu_memory_utilization`.
+- eager vs CUDA Graph / capture size 조합.
+- model-specific SM70 fast-path environment option.
+- KV dtype은 **이미 해당 model/runtime에서 호환성이 증명된 후보만** 비교한다.
+- speculative decoding은 model-specific compatibility가 확인된 경우에만 비교한다.
+- output integrity를 throughput보다 우선한다.
 
-필요한 경우 최적점 확인을 위해 k=3을 추가할 수 있다.
+#### 5.3.1 Qwen3.8-27B known-good recipe recovery diagnostic [TODO — 1 measured inference only]
 
-측정:
-- decode tok/s
-- speculative acceptance
-- accepted tokens/step
-- peak VRAM
-- KV capacity
-- TTFT
-- prefill tok/s
-- output validity
+현재 WBS 2.2.1의 공식 verdict는 그대로 유지한다.
 
-MTP configuration은 기존 C1/C2 STOCK PASS/FAIL을 대체하거나 수정하지 않는다.
+`CLOSED — 128K CAPACITY PASS / OUTPUT INTEGRITY FAIL`
 
-#### 5.4.2 Context-depth decode profile
+이 verdict는 E4M3 KV + 128K acceptance lane의 결과이며,
+과거 저장소의 성공 결과로 소급 변경하지 않는다.
 
-target-only와 WBS 5.4.1에서 가장 유효했던 MTP configuration을 대상으로
-live context 증가에 따른 decode degradation을 측정한다.
+다만 과거 두 저장소에는 현재 문제를 분리하는 데 유용한 실제 PASS recipe가 존재한다.
 
-고정 checkpoint:
-- near-empty / short context
-- 32K live context
-- 128K live context
+`qwen3.8-bench` fresh historical evidence:
+- experiment: `EXP-Q38-1CAT-NVFP4-FP8E5M2-NONE-C1-64K-442`
+- 1Cat-vLLM 1.5.0 exact wheel SHA256 `2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b`
+- Qwen3.8-27B QUASAR NVFP4 / TP2 / `FLASH_ATTN_V100`
+- KV: `fp8_e5m2`
+- `max_model_len=65536`
+- `max_num_seqs=1`
+- `max_num_batched_tokens=2048`
+- `gpu_memory_utilization=0.90`
+- `--additional-config '{"gdn_prefill_backend":"triton"}'`
+- `VLLM_SM70_GDN_DECODE_FLASHQLA=0`
+- `enable_thinking=false`
+- eager mode
+- actual prompt 64,968 tokens + 512 output
+- verdict PASS, TTFT 117.97 s, decode 9.22 tok/s, no repetition collapse.
 
-각 depth에서 동일한 output workload를 사용한다.
+같은 당시 E5M2 configuration은 96K에서 startup capacity에 실패했으므로,
+이 historical clean recipe를 "128K PASS recipe"로 오해하지 않는다.
 
-측정:
-- target decode tok/s
-- effective speculative decode tok/s
-- acceptance
-- VRAM
-- KV usage
-- power / clocks
+`p520-inference-lab`의 후속 성능 최적화는 별도의 참고 근거로 사용한다.
+- target-only Profile 007: E5M2 KV + CUDA Graph [1,2] + LM-head top1 + P2P/custom-allreduce에서 short C1 33.54 tok/s E2E clean output.
+- C5 batch profile은 MBT=8192가 retained operating point.
+- 단, thinking-enabled quality lane에서는 별도의 NaN/repetition 문제가 있었으므로 이 옵션을 현재 128K correctness 해결책으로 간주하지 않는다.
 
-목적은 128K capacity PASS 여부를 다시 판정하는 것이 아니라,
-실제 long-running coding-agent session에서 context 증가에 따른 성능 저하를 정량화하는 것이다.
+이번 recovery diagnostic의 목적은 **과거 clean 64K baseline을 현재 저장소/현재 harness에서 한 번 정확히 재현**하는 것이다.
+새 measured inference는 정확히 1회만 허용한다.
 
-#### 5.4.3 Runtime memory / KV budget characterization
+판정 해석:
+- 64K known-good reproduction PASS → 현재 1Cat/Qwen stack이 전반적으로 깨진 것은 아니며, 128K E4M3/long-context path 또는 그 조합에 문제가 국소화될 가능성이 커진다.
+- 동일 recipe 64K에서도 repetition FAIL → 현재 저장소의 request/template/harness/runtime invocation과 historical working path 사이의 차이를 우선 조사한다.
+- 어느 결과든 WBS 2.2.1의 128K acceptance verdict를 자동 변경하지 않는다.
 
-각 추가 configuration의 server startup evidence에서 가능한 경우 다음을 기록한다.
+### 5.4 Qwen3.8-27B 1Cat 추가 성능 특성화
 
-- model weight allocation
-- non-model/runtime allocation
-- CUDA Graph allocation
-- speculative decoding allocation
-- available KV cache
-- KV token capacity
+5.3.1 recovery diagnostic이 PASS한 경우에만 Qwen 1Cat을 성능 최적화 후보로 유지한다.
+FAIL이면 이 저장소에서는 추가 throughput tuning을 중단하고 bounded failure recipe를 기록한다.
 
-최소 비교:
-- target-only
-- MTP k=2
-- MTP k=4
+PASS 시 과거 evidence를 참고해 다음 중 필요한 최소 실험만 수행한다.
+- target-only CUDA Graph capture [1,2] recovery.
+- LM-head top1.
+- P2P/custom all-reduce.
+- MBT 2048 → 4096 → 8192는 concurrency/topology와 메모리 여유가 실제로 필요할 때만 단계적으로 검증한다.
+- Native MTP1은 현재 artifact/runtime이 지원하고 historical compatible contract를 재현할 수 있을 때만 별도 configuration으로 검증한다.
+- historical evidence에서 MTP1은 LM-head top1 OFF, P2P/custom-allreduce OFF가 호환 조건이었으므로 target-only fast-path 옵션을 그대로 혼합하지 않는다.
 
-`max_num_seqs`와 `max_model_len` 선언값만으로 동시 수용 capacity를 추정하지 않고,
-실제 KV token capacity 및 measured C1/C2 결과와 구분한다.
+128K E4M3 acceptance 실패와 64K/short E5M2 performance recipe를 하나의 동일 profile로 합치지 않는다.
+최종 recipe에는 각각의 context ceiling과 output-integrity 범위를 명시한다.
 
-#### 5.4.4 Batched-token sensitivity
+### 5.5 모델·런타임별 최종 recipe 기록
 
-현재 1Cat-vLLM runtime에서 대응 옵션이 지원되는 경우에만 수행한다.
+WBS 5 종료 시 **실제로 검증된 각 모델·런타임 조합별 recipe**를 남긴다.
+하나의 overall winner나 자동 배포 구성을 선택하지 않는다.
 
-baseline runtime configuration을 유지한 채:
-- current/default value
-- 4096
+각 recipe에 반드시 포함:
+- exact model repository/revision/local artifact identity.
+- runtime/version/commit 또는 wheel/image digest.
+- weight quant / KV dtype.
+- speculative method/depth.
+- topology.
+- exact launch command.
+- relevant environment variables.
+- context ceiling 및 concurrency envelope.
+- batch/ubatch 또는 max-num-batched-tokens/max-num-seqs.
+- graph/eager 설정.
+- measured C1/C2 성능.
+- peak VRAM 및 주요 telemetry.
+- output-integrity verdict.
+- known limitations / unsupported combinations.
+- 근거 experiment IDs.
 
-를 비교한다.
+recipe 상태는 다음처럼 구분한다.
+- `VALIDATED_RECIPE`: 정의된 범위에서 capacity/correctness/performance가 모두 유효.
+- `BOUNDED_RECIPE`: 특정 context/concurrency까지만 유효함이 증명됨.
+- `FAILED/UNSUPPORTED`: 재현 가능한 실패 조건만 보존하며 사용 recipe로 승격하지 않음.
 
-측정:
-- startup VRAM
-- KV capacity
-- prefill tok/s
-- decode tok/s
-- 128K request viability
-
-5060 Ti 사례의 4096 값을 V100의 정답으로 간주하지 않는다.
-
-#### 5.4.5 Output integrity / CUDA Graph 확인
-
-추가 speculative 또는 graph configuration에서는 throughput뿐 아니라
-실제 출력 정상성을 함께 검증한다.
-
-다음을 FAIL로 취급한다.
-- empty response
-- truncated response
-- malformed tool call / structured output
-- obvious repetition loop
-- silent corruption
-- server process는 생존했으나 요청 결과가 invalid한 경우
-
-CUDA Graph mode 변경이 필요한 경우에는 새로운 experiment ID를 사용하고
-기존 STOCK 결과와 별도 configuration으로 기록한다.
-
-#### 5.4.6 Supplemental 결과 판정
-
-이 섹션의 결과는 기존 C1/C2 verdict를 변경하지 않는다.
-
-결과는 다음 용도로만 사용한다.
-- production STOCK configuration의 후속 최적화 후보 선정
-- long-context performance degradation 파악
-- speculative decoding의 VRAM/throughput trade-off 파악
-- 최종 배포 설정에서 target-only와 MTP 중 선택할 근거 제공
-
-## 6. 최종 배포 결정 [TODO]
-
-최종 보고서는 다음 세 가지 질문에 답해야 한다.
-1. 단일 128K single-agent 프로젝트를 안정적으로 실행할 수 있는가?
-2. 독립적인 128K 프로젝트 2개를 동시에 resident 상태로 유지하고 실제로 동시에 실행할 수 있는가?
-3. PASS한 구성 중 일상적인 coding-agent 운영에 가장 실용적인 topology는 무엇인가?
-
-다음을 반드시 포함한다.
-- exact model/runtime/quant/KV/spec/topology.
-- C1 결과.
-- C2 resident 결과.
-- C2 active 결과.
-- 측정 성능.
-- 운영상 제약 및 주의점.
-
-먼저 서빙 가능성을 검증한다. 모델 품질과 coding-agent 실사용성은 그 이후 별도의 최종 판단 요소로 다룬다.
+WBS 5 완료 후 사용자가 필요에 따라 recipe를 직접 선택한다.
+이 저장소에서는 별도의 배포/production selection phase를 수행하지 않는다.
 
 ## 실행 규칙
 - 별도 승인이 없는 한 선언된 configuration당 measured execution은 1회만 수행한다.
