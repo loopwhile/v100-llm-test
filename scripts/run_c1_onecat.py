@@ -85,6 +85,7 @@ def measure(raw):
         config["model"],
         thinking=config.get("thinking", False),
         chat_template_kwargs=config.get("chat_template_kwargs"),
+        sampling=config.get("sampling"),
     )
     checkpoint(
         raw,
@@ -127,8 +128,13 @@ def run_locked(args):
 
     thinking = True if args.model == "qwen3.8-27b" else False
     reasoning_effort = "medium" if args.model == "qwen3.8-27b" else None
+    sampling = (
+        {"temperature": 0.7, "top_p": 0.8, "seed": 520}
+        if args.model == "qwen3.8-27b"
+        else None
+    )
     chat_template = (
-        "HF tokenizer chat template; enable_thinking=true; reasoning_effort=medium"
+        "HF tokenizer chat template; enable_thinking=true; reasoning_effort=medium; temperature=0.7"
         if args.model == "qwen3.8-27b"
         else "HF tokenizer chat template; enable_thinking=false"
     )
@@ -152,6 +158,7 @@ def run_locked(args):
             tool_parser="none",
             thinking=thinking,
             reasoning_effort=reasoning_effort,
+            sampling=sampling,
             chat_template_kwargs=template_kwargs,
             endpoint=plan["endpoints"][0],
             notes=(

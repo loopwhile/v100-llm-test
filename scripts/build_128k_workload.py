@@ -153,8 +153,12 @@ def build(
     model: str,
     thinking: bool = False,
     chat_template_kwargs: dict | None = None,
+    sampling: dict | None = None,
 ) -> dict:
     requests, evidence = [], []
+    sampling_dict = dict(manifest.get("sampling", {}))
+    if sampling:
+        sampling_dict.update(sampling)
     for spec in manifest["requests"]:
         request, item = calibrate(adapter, manifest, spec, model, thinking, chat_template_kwargs)
         requests.append(request)
@@ -169,7 +173,7 @@ def build(
         "mode": manifest.get("mode"),
         "source_manifest_sha256": sha(canon(manifest)),
         "context_tokens": manifest["context_tokens"],
-        "sampling": manifest.get("sampling", {}),
+        "sampling": sampling_dict,
         "requests": requests,
         "build_evidence": evidence,
     }

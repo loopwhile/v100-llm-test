@@ -295,6 +295,8 @@ def cases(workload,n):
 
 def body(config,workload,case):
  out={"model":config.get("served_model",config["model"]),"messages":case["messages"],"max_tokens":case["max_tokens"],"stream":True,**workload.get("sampling",{})}
+ if config.get("sampling"):
+  out.update(config["sampling"])
  kwargs={"enable_thinking":config["thinking"]}
  if "reasoning_effort" in config and config["reasoning_effort"] is not None:
   kwargs["reasoning_effort"]=config["reasoning_effort"]

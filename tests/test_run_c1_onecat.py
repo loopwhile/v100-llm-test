@@ -31,6 +31,7 @@ class OneCatC1RunnerTests(unittest.TestCase):
         source=(ROOT/"scripts/run_c1_onecat.py").read_text()
         self.assertIn('thinking = True if args.model == "qwen3.8-27b" else False', source)
         self.assertIn('reasoning_effort = "medium" if args.model == "qwen3.8-27b" else None', source)
+        self.assertIn('"temperature": 0.7', source)
         self.assertIn('reasoning_effort=medium', source)
 
 

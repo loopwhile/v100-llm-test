@@ -212,6 +212,10 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
   - 조치: Qwen 3.8 27B 추론 모델 특성에 맞춰 `thinking=True` 및 `reasoning_effort="medium"` 설정 반영, harness `detect_repetition` 검사 통과 여부 검증.
   - 결과: 128K Capacity 및 서버 안정성은 완전 유지 (TTFT 742.54 s, Decode 9.69 tok/s, Batch Wall 953.90 s, Peak VRAM 15,287 MiB, OOM 없음, Post-health PASS).
   - 출력 무결성 분석: 첫 부분(약 256토큰)에서는 `PageIndex`, `Transaction` 및 `test_snapshot.py`의 구조와 메서드를 정확히 파악하여 정상 분석을 시작했으나, 1,333개 반복 섹션을 갖는 합성 프롬프트 특성과 greedy (`temperature=0`, penalty=0) 디코딩이 결합되어 3개 파일 기술 블록을 20회 이상 반복 열거하는 축퇴 루프에 진입. 새로 구현된 `detect_repetition()`에 의해 `FAIL_OUTPUT`으로 정확히 감지 및 차단됨.
+- experiment ID 005: `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-C1-128K-20260924-005` — `FAIL_OUTPUT`.
+  - 조치: greedy 디코딩 루프 방지를 위해 `temperature=0.7`, `top_p=0.8`, `seed=520` 및 `reasoning_effort="medium"` 적용.
+  - 결과: 128K Capacity 및 서버 안정성은 완전 유지 (TTFT 742.53 s, Decode 9.83 tok/s, Batch Wall 950.92 s, Peak VRAM 15,287 MiB, OOM 없음, Post-health PASS).
+  - 출력 무결성 분석: 초반 약 800토큰(2,500자) 이상에서 `PageIndex` 및 `Transaction` 클래스의 세부 구현과 정합성 리스크를 매우 우수하고 논리적으로 분석함. 그러나 `presence_penalty` 부재로 인해 특정 구문(`( the code might crash. For example, \`page_id = "10"\` ( ...`)이 n-gram 반복 트랩에 빠져 2,048 토큰까지 반복되며 `detect_repetition()`에 의해 `FAIL_OUTPUT`으로 판정됨.
 
 #### 2.2.2 Ornith 1.5 9B STOCK [DONE — PASS_C1_128K]
 - artifact: `ornith-ai/Ornith-1.5-9B-NVFP4@155f200d85ad58464571c77d5e1122ea5d419d7b`.
