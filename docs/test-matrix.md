@@ -25,7 +25,7 @@ C1/C2 NGRAM rows are compatibility/capacity checks, not acceleration benchmarks.
 | Model | Backend | Weight | KV | Spec | Topology | Required result |
 | --- | --- | --- | --- | --- | --- | --- |
 | Qwen3.8-27B | STOCK 1Cat 1.5.0 acceptance lane | QUASAR NVFP4 | FP8 E4M3 | Target-only | TP2 shared | C1 128K: capacity PASS / output integrity FAIL; C2 not eligible |
-| Qwen3.8-27B | STOCK 1Cat 1.5.0 recovery diagnostic | QUASAR NVFP4 | FP8 E5M2 | Target-only | TP2 shared | one-shot historical known-good 64K C1 reproduction; diagnostic only, does not replace 128K verdict |
+| Qwen3.8-27B | STOCK 1Cat 1.5.0 recovery recipe | QUASAR NVFP4 | FP8 E5M2 | Target-only | TP2 shared | one-shot 128K recovery validation using LM-only/util0.92/partition256 + historical E5M2/GDN path |
 | Qwen3.8-27B | SKINNY v1.1 / 1Cat 1.2.2 | RadixArk mixed NVFP4/FP8 | FP16 contract | MTP k=3 contract | TP2 experimental | PRECHECK `FAIL_OOM_MODEL_LOAD`; boot gate NOT_REACHED; no C1/C2 scheduling |
 | Ornith 1.5 35B-A3B | STOCK | NVFP4 artifact verified | FP8 pending | Target-only | TP2 shared | runtime compatibility pending → C1/C2 or UNSUPPORTED |
 | Ornith 1.5 35B-A3B | SKINNY | no pinned v1.1 contract | — | — | TP2 | support resolution / UNSUPPORTED |
@@ -55,7 +55,7 @@ Shared STOCK C2:
 - max_num_seqs: 2
 - TP: 2
 - Qwen3.8 STOCK is currently not eligible because its 128K acceptance lane is capacity PASS / output-integrity FAIL.
-- the separate Qwen E5M2 64K recovery diagnostic is not a C2 promotion gate.
+- Qwen E5M2 128K recovery remains a separate configuration; C2 eligibility requires that new 128K configuration itself to PASS output integrity before any promotion.
 
 SKINNY is excluded from C2 on the current P520 because WBS 1.4 failed during model-load QPN prepack before server boot.
 

@@ -515,52 +515,78 @@ v100-skinny는 현재 2×V100-16GB에서 model-load OOM으로 종료됐으므로
 - speculative decoding은 model-specific compatibility가 확인된 경우에만 비교한다.
 - output integrity를 throughput보다 우선한다.
 
-#### 5.3.1 Qwen3.8-27B known-good recipe recovery diagnostic [TODO — 1 measured inference only]
+#### 5.3.1 Qwen3.8-27B 128K recovery recipe validation [TODO — 1 measured inference only]
 
-현재 WBS 2.2.1의 공식 verdict는 그대로 유지한다.
+현재 WBS 2.2.1의 기존 E4M3 acceptance verdict는 증거로 보존한다.
 
 `CLOSED — 128K CAPACITY PASS / OUTPUT INTEGRITY FAIL`
 
-이 verdict는 E4M3 KV + 128K acceptance lane의 결과이며,
-과거 저장소의 성공 결과로 소급 변경하지 않는다.
+추가 1회 실험의 목적은 64K 재현이 아니라,
+**2×V100-16GB에서 Qwen3.8-27B + 1Cat-vLLM의 128K 정상 출력 recipe를 recovery할 수 있는지 검증하는 것**이다.
 
-다만 과거 두 저장소에는 현재 문제를 분리하는 데 유용한 실제 PASS recipe가 존재한다.
+과거 저장소에서 정상 출력이 확인된 Qwen 1Cat 경로는 다음 특성을 갖는다.
+- QUASAR NVFP4 / TP2 / `FLASH_ATTN_V100`
+- KV `fp8_e5m2`
+- GDN prefill backend `triton`
+- `VLLM_SM70_GDN_DECODE_FLASHQLA=0`
+- thinking off
+- eager mode
+- target-only.
 
-`qwen3.8-bench` fresh historical evidence:
-- experiment: `EXP-Q38-1CAT-NVFP4-FP8E5M2-NONE-C1-64K-442`
-- 1Cat-vLLM 1.5.0 exact wheel SHA256 `2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b`
-- Qwen3.8-27B QUASAR NVFP4 / TP2 / `FLASH_ATTN_V100`
-- KV: `fp8_e5m2`
-- `max_model_len=65536`
+현재 v100-llm-test에서 128K physical capacity와 decode 진입을 성공시킨 요소는 다음이다.
+- `--language-model-only`
+- `gpu_memory_utilization=0.92`
+- `max_model_len=131072`
 - `max_num_seqs=1`
-- `max_num_batched_tokens=2048`
-- `gpu_memory_utilization=0.90`
+- `VLLM_FLASH_V100_DECODE_PARTITION_SIZE=256`.
+
+따라서 이번 single recovery candidate는 두 evidence를 결합하되,
+성능 최적화 요소(CUDA Graph, LM-head top1, P2P/custom-allreduce, MTP)는 넣지 않는다.
+
+128K recovery candidate:
+- model: Qwen3.8-27B QUASAR NVFP4
+- runtime: pinned 1Cat-vLLM 1.5.0
+- topology: TP2 shared
+- attention: `FLASH_ATTN_V100`
+- KV: **`fp8_e5m2`**
+- target-only
+- `max_model_len=131072`
+- `max_num_seqs=1`
+- `--language-model-only`
+- `gpu_memory_utilization=0.92`
 - `--additional-config '{"gdn_prefill_backend":"triton"}'`
 - `VLLM_SM70_GDN_DECODE_FLASHQLA=0`
-- `enable_thinking=false`
+- `VLLM_FLASH_V100_DECODE_PARTITION_SIZE=256`
 - eager mode
-- actual prompt 64,968 tokens + 512 output
-- verdict PASS, TTFT 117.97 s, decode 9.22 tok/s, no repetition collapse.
+- thinking=false
+- historical conservative sampling: temperature=0, top_p=1, seed=38.
 
-같은 당시 E5M2 configuration은 96K에서 startup capacity에 실패했으므로,
-이 historical clean recipe를 "128K PASS recipe"로 오해하지 않는다.
+워크로드는 기존 128K acceptance와 동일한 token budget을 유지한다.
+가능하면 기존 diversified realistic 128K workload를 재사용하여
+prompt composition 변화가 결과를 혼동하지 않도록 한다.
+목표는 post-template prompt 약 128.8K~129.0K + output reserve 2048,
+총 131072 이내다.
 
-`p520-inference-lab`의 후속 성능 최적화는 별도의 참고 근거로 사용한다.
-- target-only Profile 007: E5M2 KV + CUDA Graph [1,2] + LM-head top1 + P2P/custom-allreduce에서 short C1 33.54 tok/s E2E clean output.
-- C5 batch profile은 MBT=8192가 retained operating point.
-- 단, thinking-enabled quality lane에서는 별도의 NaN/repetition 문제가 있었으므로 이 옵션을 현재 128K correctness 해결책으로 간주하지 않는다.
-
-이번 recovery diagnostic의 목적은 **과거 clean 64K baseline을 현재 저장소/현재 harness에서 한 번 정확히 재현**하는 것이다.
 새 measured inference는 정확히 1회만 허용한다.
 
-판정 해석:
-- 64K known-good reproduction PASS → 현재 1Cat/Qwen stack이 전반적으로 깨진 것은 아니며, 128K E4M3/long-context path 또는 그 조합에 문제가 국소화될 가능성이 커진다.
-- 동일 recipe 64K에서도 repetition FAIL → 현재 저장소의 request/template/harness/runtime invocation과 historical working path 사이의 차이를 우선 조사한다.
-- 어느 결과든 WBS 2.2.1의 128K acceptance verdict를 자동 변경하지 않는다.
+판정:
+- 정상 128K output PASS → 새 E5M2/GDN 기반 128K `VALIDATED_RECIPE` 후보로 승격 가능. 기존 E4M3 실패 evidence는 그대로 보존하고, 두 configuration을 구분한다.
+- startup/capacity FAIL → 해당 E5M2/GDN 128K recipe는 current hardware에서 실패로 기록한다. E4M3 capacity PASS는 그대로 보존한다.
+- repetition/invalid output FAIL → Qwen 1Cat 128K recovery 실패로 종료하고 WBS 5에서 Qwen 1Cat throughput tuning을 진행하지 않는다.
+
+이번 1회에서 금지:
+- 64K/96K diagnostic
+- context sweep
+- presence-penalty sweep
+- CUDA Graph
+- LM-head top1
+- P2P/custom-allreduce tuning
+- MTP/DFlash2
+- 추가 retry.
 
 ### 5.4 Qwen3.8-27B 1Cat 추가 성능 특성화
 
-5.3.1 recovery diagnostic이 PASS한 경우에만 Qwen 1Cat을 성능 최적화 후보로 유지한다.
+5.3.1의 128K recovery recipe validation이 PASS한 경우에만 Qwen 1Cat을 성능 최적화 후보로 유지한다.
 FAIL이면 이 저장소에서는 추가 throughput tuning을 중단하고 bounded failure recipe를 기록한다.
 
 PASS 시 과거 evidence를 참고해 다음 중 필요한 최소 실험만 수행한다.
@@ -571,7 +597,7 @@ PASS 시 과거 evidence를 참고해 다음 중 필요한 최소 실험만 수�
 - Native MTP1은 현재 artifact/runtime이 지원하고 historical compatible contract를 재현할 수 있을 때만 별도 configuration으로 검증한다.
 - historical evidence에서 MTP1은 LM-head top1 OFF, P2P/custom-allreduce OFF가 호환 조건이었으므로 target-only fast-path 옵션을 그대로 혼합하지 않는다.
 
-128K E4M3 acceptance 실패와 64K/short E5M2 performance recipe를 하나의 동일 profile로 합치지 않는다.
+기존 128K E4M3 실패 profile과 새 128K E5M2/GDN recovery profile은 서로 다른 configuration으로 명확히 분리한다.
 최종 recipe에는 각각의 context ceiling과 output-integrity 범위를 명시한다.
 
 ### 5.5 모델·런타임별 최종 recipe 기록

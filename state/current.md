@@ -32,9 +32,10 @@
 - WBS 3: C2 capacity/residency/active-overlap testing for eligible C1 lanes.
 - WBS 4: Ornith 1.5 9B 1GPU×2 + LiteLLM topology validation.
 - WBS 5: performance optimization and per-model/per-runtime final recipe capture.
-- Qwen3.8 1Cat-vLLM receives one additional bounded recovery diagnostic before further performance tuning:
-  - reproduce the historical clean 64K C1 recipe from qwen3.8-bench EXP-Q38-1CAT-NVFP4-FP8E5M2-NONE-C1-64K-442;
-  - E5M2 KV, max_model_len=65536, max_num_seqs=1, MBT=2048, util=0.90, GDN Triton prefill, VLLM_SM70_GDN_DECODE_FLASHQLA=0, thinking=false, eager;
+- Qwen3.8 1Cat-vLLM receives one additional bounded **128K recovery recipe validation** before further performance tuning:
+  - keep 128K (`max_model_len=131072`) and the proven capacity enablers `--language-model-only`, util=0.92, and `VLLM_FLASH_V100_DECODE_PARTITION_SIZE=256`;
+  - switch to the historically stable Qwen 1Cat path: E5M2 KV, GDN Triton prefill, `VLLM_SM70_GDN_DECODE_FLASHQLA=0`, thinking=false, eager, target-only;
+  - use a 128K workload, not 64K/96K;
   - exactly one measured inference;
-  - diagnostic only; it does not alter the existing 128K E4M3 verdict.
+  - preserve the old E4M3 128K failure as a separate configuration.
 - Historical p520-inference-lab Profile 007 fast-path results may guide WBS 5 option candidates, but are not imported as fresh acceptance evidence.
