@@ -1,0 +1,47 @@
+{
+  "reviewed_at_utc": "2026-09-24T07:42:56Z",
+  "verdict": "PASS_C1_128K",
+  "prompt_receipt_matches_usage": true,
+  "token_budget": "129024 prompt + 2048 reserve = 131072 / 131072",
+  "completion_tokens": 818,
+  "finish_reason": "stop",
+  "runtime_truncated": 0,
+  "post_health_healthy": true,
+  "target_sha256_match": true,
+  "mtp_companion_sha256_match": true,
+  "mtp_companion_quant": "smart Q4_0",
+  "mtp_draft_n_max": 4,
+  "mtp_draft_devices": "CUDA0,CUDA1",
+  "speculative_types": [
+    "draft-mtp",
+    "ngram-simple"
+  ],
+  "speculative_evidence": {
+    "draft_generated": 1088,
+    "draft_accepted": 548,
+    "acceptance": 0.5036764705882353,
+    "mean_len": 3.01
+  },
+  "performance": {
+    "ttft_ms": 249193.38124800014,
+    "prefill_tps": 518.2784061015714,
+    "decode_tps": 45.532546603007304,
+    "aggregate_decode_tps": 45.57449045032872,
+    "batch_wall_s": 267.15088006099995,
+    "peak_vram_gpu0_mib": 8983,
+    "peak_vram_gpu1_mib": 9121
+  },
+  "mtp_only_comparison": {
+    "mtp_experiment": "EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C1-128K-20260924-002",
+    "prefill_delta_percent": -1.652371129934148,
+    "decode_delta_percent": 0.10266279571286863,
+    "ttft_delta_percent": 1.6778560186403433,
+    "wall_delta_percent": 1.556507668275887,
+    "gpu0_peak_delta_mib": 0,
+    "gpu1_peak_delta_mib": 20,
+    "mtp_counters_identical": true
+  },
+  "ngram_interpretation": "Composite MTP+NGRAM compatibility/capacity PASS. Incremental NGRAM acceleration effectiveness is not a C1 gate and is deferred to Phase 5.",
+  "content_review": "Coherent and non-truncated. The response assumes ACID-style transaction atomicity/isolation is required by the code contract; that severity conclusion is contract-dependent and is model-quality evidence only.",
+  "cleanup": "owned container stopped; server exit 0"
+}
