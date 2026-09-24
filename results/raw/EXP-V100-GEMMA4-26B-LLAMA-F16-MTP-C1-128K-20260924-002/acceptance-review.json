@@ -1,0 +1,33 @@
+{
+  "reviewed_at_utc": "2026-09-24T07:30:00+00:00",
+  "verdict": "PASS_C1_128K",
+  "prompt_receipt_matches_usage": true,
+  "token_budget": "129024 prompt + 2048 reserve = 131072 / 131072",
+  "completion_tokens": 818,
+  "finish_reason": "stop",
+  "runtime_truncated": 0,
+  "post_health_healthy": true,
+  "target_sha256_match": true,
+  "mtp_companion_sha256_match": true,
+  "mtp_companion_quant": "smart Q4_0",
+  "mtp_draft_n_max": 4,
+  "mtp_draft_devices": "CUDA0,CUDA1",
+  "speculative_evidence": {
+    "draft_generated": 1088,
+    "draft_accepted": 548,
+    "acceptance": 0.5036764705882353,
+    "mean_len": 3.01
+  },
+  "performance": {
+    "ttft_ms": 245081.27040199997,
+    "prefill_tps": 526.9861734910827,
+    "decode_tps": 45.48584955819711,
+    "aggregate_decode_tps": 45.52829905244756,
+    "peak_vram_gpu0_mib": 8983,
+    "peak_vram_gpu1_mib": 9101
+  },
+  "content_review": "Coherent and non-truncated. As with TARGET/NGRAM, the response assumes ACID-style transaction atomicity/isolation is required by the code contract; that severity conclusion is contract-dependent and is recorded as model-quality evidence only.",
+  "acceptance_scope": "C1 validates 128K capacity/correctness/output integrity. MTP throughput effectiveness versus TARGET is deferred to Phase 5.",
+  "root_cause_note": "The prior -001 CUDA0-only drafter configuration failed startup. A single-variable diagnostic changing draft devices to CUDA0,CUDA1 passed startup, and this corrected -002 configuration completed the full 128K request. Operationally, the V100 TP2 layer-split contract requires dual draft devices for this pinned b10775 setup.",
+  "cleanup": "owned container stopped; server exit 0"
+}
