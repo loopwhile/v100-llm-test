@@ -48,6 +48,14 @@ A C2 result must distinguish:
 
 Client socket overlap or `parallel=2` / `max_num_seqs=2` configuration alone does not prove active C2. Shared llama.cpp evidence samples `llamacpp:requests_processing`, `llamacpp:requests_deferred` and `/slots`; shared vLLM evidence samples `vllm:num_requests_running` and `vllm:num_requests_waiting`. For Ornith 9B 1GPU×2, both requests are sent to one LiteLLM endpoint. Acceptance requires overlapping decode lifetimes plus evidence that both backend deployments participated, using backend processing samples and/or distinct LiteLLM deployment response headers. Direct client routing to backend A/B is diagnostic only.
 
+### 3.1 Authoritative WBS 3 C2 workload
+
+`workloads/concurrency/v1.json` is historical evidence only. WBS 3 final acceptance uses `workloads/concurrency/v2.json`.
+
+v2 contains one pre-registered seeded defect per project in a non-repeated anchor and fills the remaining 128K budget with semantically-neutral section-variant padding. The semantic oracle is frozen before execution in `workloads/concurrency/v2-ground-truth.json`.
+
+C2 records three independent dimensions: runtime concurrency topology, mechanical output integrity, and oracle-grounded semantic correctness. Output failure must not erase scheduler evidence; runtime C2 success does not convert a semantically wrong answer into a correctness PASS.
+
 ## 4. Required request and batch evidence
 
 Per request, preserve where available:

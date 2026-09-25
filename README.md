@@ -47,12 +47,14 @@ Shared llama.cpp C2 explicitly requests a 256K logical aggregate KV pool with a 
 ## Workloads
 Compact deterministic manifests:
 - workloads/capacity/v1.json
-- workloads/concurrency/v1.json
+- workloads/concurrency/v2.json — authoritative WBS 3 C2 workload
+- workloads/concurrency/v2-ground-truth.json — pre-registered semantic oracle
+- workloads/concurrency/v1.json — historical C2 evidence only
 - workloads/performance/v1.json
 
 scripts/build_128k_workload.py materializes them with the exact live tokenizer so prompt plus reserved output stays within 131072 tokens while filling at least 99% of the budget.
 
-C2 uses unrelated Project A and Project B material with distinct hashes. Capacity/C2 reserve 2048 output tokens and require at least 256 actual completion tokens. The performance workload reserves 4096 and requires at least 1024; it diversifies repeated identifiers so NGRAM performance is not dominated by trivial exact repetition.
+C2 uses unrelated Project A and Project B material with distinct hashes. Authoritative v2 contains one known seeded bug per project anchor plus semantically-neutral section-variant padding; semantic review uses the frozen ground-truth oracle instead of forcing an unspecified risk. Capacity/C2 reserve 2048 output tokens and require at least 256 actual completion tokens. Runtime concurrency evidence is preserved independently from mechanical/semantic output verdicts. The performance workload reserves 4096 and requires at least 1024.
 
 ## Evidence
 Fresh runs write raw evidence under results/raw/<EXPERIMENT_ID>/, one Markdown report under reports/, and normalized rows in:

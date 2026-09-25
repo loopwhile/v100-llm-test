@@ -33,6 +33,13 @@ def load_manifest(path: Path) -> dict:
         raise ValueError("project_id values must be non-empty and unique")
     if len(requests) == 2 and not manifest.get("independent_projects_required"):
         raise ValueError("C2 manifest must require independent projects")
+    for item in requests:
+        blocks = item.get("padding_blocks") or item.get("seed_blocks")
+        if not isinstance(blocks, list) or not blocks or not all(isinstance(x, str) and x for x in blocks):
+            raise ValueError("each request requires non-empty seed_blocks or padding_blocks")
+        anchors = item.get("anchor_blocks", [])
+        if not isinstance(anchors, list) or not all(isinstance(x, str) and x for x in anchors):
+            raise ValueError("anchor_blocks must be a list of non-empty strings")
     return manifest
 
 
@@ -49,10 +56,14 @@ def diversify_block(block: str, project_id: str, section: int) -> str:
 def render(spec: dict, units: int, pad_units: int = 0, *, diversify_identifiers: bool = False) -> str:
     if units < 1 or pad_units < 0:
         raise ValueError("invalid render size")
-    blocks = spec["seed_blocks"]
+    blocks = spec.get("padding_blocks") or spec.get("seed_blocks")
+    anchors = spec.get("anchor_blocks") or []
     parts = [f"# {spec['title']}\n", f"# project_id={spec['project_id']}\n", "# Synthetic deterministic benchmark material follows.\n"]
+    for i, anchor in enumerate(anchors, 1):
+        parts.append(f"\n# === {spec['project_id']} GROUND-TRUTH ANCHOR {i:02d} ===\n{anchor.rstrip()}\n")
     for i in range(units):
         block = blocks[i % len(blocks)]
+        block = block.replace("{{SECTION}}", f"{i + 1:06d}").replace("{{PROJECT}}", spec["project_id"])
         if diversify_identifiers:
             block = diversify_block(block, spec["project_id"], i + 1)
         parts.append(f"\n# --- {spec['project_id']} SECTION {i + 1:06d} ---\n{block.rstrip()}\n")
@@ -168,7 +179,7 @@ def build(
     if len(hashes) == 2 and len(set(hashes)) != 2:
         raise ValueError("C2 materialized prompts are not independent")
 
-    return {
+    result = {
         "version": manifest["workload_id"],
         "mode": manifest.get("mode"),
         "source_manifest_sha256": sha(canon(manifest)),
@@ -177,6 +188,10 @@ def build(
         "requests": requests,
         "build_evidence": evidence,
     }
+    for key in ("semantic_oracle", "acceptance_contract"):
+        if key in manifest:
+            result[key] = manifest[key]
+    return result
 
 
 def main() -> int:

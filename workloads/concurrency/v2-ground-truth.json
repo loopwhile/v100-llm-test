@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "workload_id": "V100-CONCURRENCY-C2-128K-v2",
+  "purpose": "Pre-registered semantic oracle for WBS3 C2. Review model answers against these seeded defects; do not invent post-hoc acceptance criteria.",
+  "projects": {
+    "A": {
+      "expected_bug_id": "clear-pending-inside-commit-loop",
+      "exact_location": "Transaction.commit",
+      "required_claims": [
+        "self.pending.clear() executes inside the for-loop",
+        "clearing the list being iterated after the first put causes later staged writes to be skipped",
+        "a two-write transaction can persist alpha while failing to persist beta"
+      ],
+      "required_reproduction": "Stage at least two distinct writes, call commit, and assert both writes are present.",
+      "acceptable_fixes": [
+        "move self.pending.clear() after the loop",
+        "copy/drain pending atomically and clear only after all entries have been applied"
+      ],
+      "disallowed_substitutions": [
+        "claim that PageIndex.version must count distinct keys",
+        "claim an unspecified multithreaded dictionary race is the seeded defect"
+      ]
+    },
+    "B": {
+      "expected_bug_id": "async-yield-between-empty-check-and-heappop",
+      "exact_location": "JobQueue.pop",
+      "required_claims": [
+        "the explicit await asyncio.sleep(0) yields after the nonempty check and before heapq.heappop",
+        "with one queued job, two workers can both pass the nonempty check before either pop completes",
+        "after one worker removes the only item, the other worker can execute heappop on an empty heap and raise IndexError"
+      ],
+      "required_reproduction": "Queue one job and concurrently await two Worker.run_once calls on the same queue; assert one execution, one None result, and no exception.",
+      "acceptable_fixes": [
+        "remove the yield so check and pop are atomic with respect to cooperative task switching",
+        "protect the check/pop critical section with an asyncio.Lock"
+      ],
+      "disallowed_substitutions": [
+        "claim a module-level singleton exists",
+        "claim thread preemption between non-await statements",
+        "claim the old v1 check-to-pop race where no await existed"
+      ]
+    }
+  },
+  "semantic_pass_rule": {
+    "all_projects_required": true,
+    "must_identify_expected_bug": true,
+    "must_explain_failure_mechanism": true,
+    "must_propose_grounded_reproduction": true,
+    "must_not_replace_seeded_bug_with_disallowed_claim": true
+  }
+}

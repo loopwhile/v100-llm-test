@@ -1,18 +1,18 @@
 # Current execution
 
-## Stop checkpoint — 2026-09-25
+## WBS 3 authoritative workload reset — 2026-09-25
 
-- Active WBS: **3.2.2 — DONE**. Latest user instruction: complete only 3.2.2, commit/push and stop. Do not automatically launch 3.2.3 or other work.
-- Active experiment: none. Last experiment `EXP-V100-ORN15-9B-1CAT-F16-MTP1-C2-128K-20260925-002`, phase `results_saved / finished`; cleanup completed 2026-09-25 11:20:45 UTC.
-- Host `p520-llm`, boot `59fcfe5b-e97f-4f8e-9d44-62d1dff336c1`: no remaining benchmark GPU processes, server port 18080, or containers after cleanup.
-- Result: raw harness / hardware capacity **PASS_C2_ACTIVE**; mechanical output integrity PASS; publication semantic verdict **FAIL_OUTPUT**. Two independent 128K requests completed with overlapping decode; answer correctness failed review.
-- Interrupted original `EXP-V100-ORN15-9B-1CAT-F16-MTP1-C2-128K-20260925-001`: INCONCLUSIVE due to host reboot during startup; measurement NOT_REACHED. Original hashes preserved in `recovery.json`; retry reason `infrastructure_failure`.
-- Remote artifacts: `/home/loopwhile/v100-llm-test-wbs22-20260924/results/raw/` plus the two experiment IDs above. Local artifacts: corresponding `results/raw/<ID>/`; reports: `reports/ornith-1.5-9b/<ID>.md`.
-- Recovery changes: independently persist each completed request; record retry reason, command/workload/hook hashes and server PID/start ticks. Serving parameters and hardware settings preserved.
-- Validation: repository contract PASS; 75 tests passed; original interrupted evidence hashes verified.
-- WBS 3.2 remains IN_PROGRESS: 3.2.1 preserved; 3.2.2 complete; 3.2.3 TODO; 3.2.4 ineligible from C1 failure. WBS 3.2 overall is not complete.
-- Next action: STOP. A new user request is required before WBS 3.2.3. This closeout belongs to the recovery commit, pushed together with existing 3.2.1 commit `c826409`; verify local HEAD against `origin/main` when resuming.
-- Protected: GPU controls, installed runtime and existing runtime hooks; no active owned process remains.
+- User approved redesigning the flawed C2 workload and rerunning **all runnable WBS 3 lanes**, including Qwen3.8 and Ornith 9B.
+- Authoritative WBS 3 workload: `workloads/concurrency/v2.json`; semantic oracle: `workloads/concurrency/v2-ground-truth.json`.
+- `workloads/concurrency/v1.json` and all existing v1 raw artifacts remain immutable historical evidence.
+- v2 uses one seeded defect per project anchor, one-time anchor inclusion, safe `{{SECTION}}`-variant calibration padding, structured 300+ token engineering output, and pre-registered semantic criteria.
+- Harness concurrency evidence is now independent of output verdict; output underfill/wrong semantics cannot erase observed `QUEUE_ONLY` or active-overlap topology.
+- WBS 3.1 llama.cpp v2 scope: Qwen TARGET/NGRAM; Ornith 9B TARGET/NGRAM/MTP/MTP_NGRAM; Ornith 35B TARGET/NGRAM/MTP/MTP_NGRAM; Gemma4 TARGET/NGRAM/corrected-MTP/corrected-MTP_NGRAM.
+- WBS 3.2 1Cat v2 scope: Qwen3.8 B200-aligned E4M3, Ornith 9B MTP1/FP16, Ornith 35B target-only/E5M2. Gemma4 remains ineligible from C1 FAIL_TIMEOUT.
+- v100-skinny remains CLOSED/UNSUPPORTED and is not rerun.
+- Historical v1 Qwen/Ornith9 C2 results remain diagnostics, not authoritative v2 acceptance.
+- No GPU experiment is launched by this design commit. Use fresh experiment IDs for v2.
+- Do not advance to WBS 4/5 until WBS 3 v2 matrix is complete.
 
 ## Previous execution record
 
@@ -102,7 +102,7 @@
 
 ## Next planned work after current stop
 
-- Remaining project scope is WBS 3 (3.2.3 Ornith 35B C2; stopped pending a new user request), WBS 4, and revised WBS 5.
-- WBS 3.2: 3.2.1 Qwen3.8-27B C2 executed (Queue-Only behavior confirmed, FAIL_OUTPUT on token length underfill). 3.2.2 is now complete; 3.2.3 remains TODO and must not auto-start.
+- Remaining project scope is authoritative WBS 3 v2 revalidation across all runnable llama.cpp/1Cat lanes, then WBS 4 and WBS 5.
+- Existing WBS 3 v1 Qwen/Ornith9 results are historical diagnostics; final WBS 3 acceptance is reset to v2.
 - WBS 4: Ornith 1.5 9B 1GPU×2 + LiteLLM topology validation.
 - WBS 5: performance optimization and per-model/per-runtime final recipe capture.

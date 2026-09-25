@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "workload_id": "V100-CONCURRENCY-C2-128K-v2",
+  "mode": "concurrency",
+  "context_tokens": 131072,
+  "output_tokens": 2048,
+  "min_context_utilization": 0.99,
+  "independent_projects_required": true,
+  "source": "ground-truth synthetic C2 workload; one seeded defect per project anchor plus semantically neutral section-variant calibration padding",
+  "semantic_oracle": "workloads/concurrency/v2-ground-truth.json",
+  "acceptance_contract": {
+    "ground_truth_required": true,
+    "mechanical_output_required": true,
+    "semantic_correctness_required": true,
+    "concurrency_evidence_independent_of_output_verdict": true
+  },
+  "sampling": {
+    "temperature": 0,
+    "top_p": 1,
+    "seed": 520
+  },
+  "requests": [
+    {
+      "id": "project-a",
+      "project_id": "A",
+      "title": "Project A - transactional storage commit",
+      "final_instruction": "Review Project A only. The non-padding anchor code intentionally contains exactly one seeded correctness defect. Ignore CALIBRATION PADDING as application logic and do not invent unrelated risks. Produce a complete engineering report of at least 300 tokens with these sections: (1) Root Cause — name the exact function and faulty operation, (2) Failure Trace — walk through a concrete two-write example step by step, (3) Reproduction — provide an executable pytest-style regression test, and (4) Minimal Fix — show the smallest code change that resolves the seeded defect while preserving the intended contract.",
+      "anchor_blocks": [
+        "# Project A / storage/index.py\nclass PageIndex:\n    def __init__(self):\n        self.pages = {}\n        self.version = 0\n\n    def put(self, key, page_id):\n        self.pages[key] = page_id\n        self.version += 1\n\n# Project A / storage/transaction.py\nclass Transaction:\n    def __init__(self, index):\n        self.index = index\n        self.pending = []\n\n    def stage(self, key, page_id):\n        self.pending.append((key, page_id))\n\n    def commit(self):\n        for key, page_id in self.pending:\n            self.index.put(key, page_id)\n            self.pending.clear()\n\n# Project A / tests/test_transaction.py\ndef test_commit_persists_all_staged_writes():\n    index = PageIndex()\n    tx = Transaction(index)\n    tx.stage(\"alpha\", 10)\n    tx.stage(\"beta\", 20)\n    tx.commit()\n    assert index.pages == {\"alpha\": 10, \"beta\": 20}\n    assert tx.pending == []\n"
+      ],
+      "padding_blocks": [
+        "# CALIBRATION PADDING / Project A / telemetry/storage_{{SECTION}}.py\nclass StorageTelemetry_{{SECTION}}:\n    section_id = \"{{SECTION}}\"\n    subsystem = \"storage\"\n    def label(self):\n        return self.subsystem + \":\" + self.section_id\n",
+        "# CALIBRATION PADDING / Project A / diagnostics/checksum_{{SECTION}}.py\ndef checksum_probe_{{SECTION}}(items):\n    return tuple(sorted(items))\n",
+        "# CALIBRATION PADDING / Project A / metadata/recovery_{{SECTION}}.py\nclass RecoveryMarker_{{SECTION}}:\n    name = \"recovery-{{SECTION}}\"\n    stable = True\n",
+        "# CALIBRATION PADDING / Project A / tests/test_metadata_{{SECTION}}.py\ndef test_metadata_identity_{{SECTION}}():\n    value = \"A-{{SECTION}}\"\n    assert value == \"A-{{SECTION}}\"\n"
+      ]
+    },
+    {
+      "id": "project-b",
+      "project_id": "B",
+      "title": "Project B - cooperative asyncio job queue",
+      "final_instruction": "Review Project B only. The non-padding anchor code intentionally contains exactly one seeded concurrency defect. This is a single-threaded cooperative Python asyncio event loop: task switches occur at explicit await points. Ignore CALIBRATION PADDING as application logic and do not assume module singletons or thread preemption. Produce a complete engineering report of at least 300 tokens with these sections: (1) Root Cause — name the exact function and yield/mutation sequence, (2) Failure Trace — show the interleaving of two workers and one queued job, (3) Reproduction — provide an executable pytest-asyncio regression test, and (4) Minimal Fix — show the smallest synchronization or atomicity change that resolves the seeded defect.",
+      "anchor_blocks": [
+        "# Project B / scheduler/queue.py\nimport asyncio\nimport heapq\n\nclass JobQueue:\n    def __init__(self):\n        self._heap = []\n        self._sequence = 0\n\n    def push(self, priority, job):\n        self._sequence += 1\n        heapq.heappush(self._heap, (priority, self._sequence, job))\n\n    async def pop(self):\n        if not self._heap:\n            return None\n        await asyncio.sleep(0)\n        return heapq.heappop(self._heap)[2]\n\n# Project B / scheduler/worker.py\nclass Worker:\n    def __init__(self, queue):\n        self.queue = queue\n\n    async def run_once(self):\n        job = await self.queue.pop()\n        if job is None:\n            return None\n        return await job()\n\n# Project B / tests/test_scheduler.py\nasync def test_two_workers_one_job():\n    queue = JobQueue()\n    seen = []\n    async def job():\n        seen.append(\"job\")\n        return \"done\"\n    queue.push(5, job)\n    left = Worker(queue)\n    right = Worker(queue)\n    results = await asyncio.gather(left.run_once(), right.run_once(), return_exceptions=True)\n    assert not any(isinstance(item, Exception) for item in results)\n    assert results.count(None) == 1\n    assert seen == [\"job\"]\n"
+      ],
+      "padding_blocks": [
+        "# CALIBRATION PADDING / Project B / telemetry/worker_{{SECTION}}.py\nclass WorkerTelemetry_{{SECTION}}:\n    section_id = \"{{SECTION}}\"\n    subsystem = \"scheduler\"\n    def label(self):\n        return self.subsystem + \":\" + self.section_id\n",
+        "# CALIBRATION PADDING / Project B / diagnostics/priority_{{SECTION}}.py\ndef priority_label_{{SECTION}}(priority):\n    return (\"priority\", priority, \"{{SECTION}}\")\n",
+        "# CALIBRATION PADDING / Project B / metadata/queue_{{SECTION}}.py\nclass QueueMarker_{{SECTION}}:\n    name = \"queue-{{SECTION}}\"\n    stable = True\n",
+        "# CALIBRATION PADDING / Project B / tests/test_metadata_{{SECTION}}.py\ndef test_metadata_identity_{{SECTION}}():\n    value = \"B-{{SECTION}}\"\n    assert value == \"B-{{SECTION}}\"\n"
+      ]
+    }
+  ],
+  "min_output_tokens": 256
+}

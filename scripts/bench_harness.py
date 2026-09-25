@@ -77,6 +77,9 @@ def resident_slots(slots):
   if vals and max(vals)>0:count+=1
  return count if witnessed else None
 
+def runtime_completed(records):
+ return [r for r in records if isinstance(r.get("first_abs"),(int,float)) and isinstance(r.get("end_abs"),(int,float)) and r["end_abs"]>=r["first_abs"]]
+
 class HTTPAdapter:
  def __init__(self,base_url,runtime,timeout_s=1800):
   self.base=base_url.rstrip("/");self.runtime=runtime;self.timeout=timeout_s;self._probe_samples=[];self._probe_stop=None;self._probe_thread=None
@@ -162,13 +165,13 @@ class HTTPAdapter:
  def overlap_evidence(self,records):
   samples=list(self._probe_samples);processing=[x["processing"] for x in samples if isinstance(x.get("processing"),(int,float))];waiting=[x["waiting"] for x in samples if isinstance(x.get("waiting"),(int,float))];resident=[x["resident_slots"] for x in samples if isinstance(x.get("resident_slots"),(int,float))]
   peak_processing=max(processing) if processing else None;peak_waiting=max(waiting) if waiting else None;peak_resident=max(resident) if resident else None
-  ok=[r for r in records if r.get("verdict")==PASS];decode_start=decode_end=None
-  if len(ok)==2 and all(r.get("first_abs") and r.get("end_abs") for r in ok):decode_start=max(r["first_abs"] for r in ok);decode_end=min(r["end_abs"] for r in ok)
+  completed=runtime_completed(records);decode_start=decode_end=None
+  if len(completed)==2:decode_start=max(r["first_abs"] for r in completed);decode_end=min(r["end_abs"] for r in completed)
   active=None
   if decode_start is not None and decode_end is not None and decode_start<decode_end:
    window=[x for x in samples if decode_start<=x["monotonic_s"]<=decode_end]
    if any((x.get("processing") or 0)>=2 for x in window):active=True
-  queued=bool(len(ok)==2 and peak_waiting is not None and peak_waiting>=1 and (peak_processing or 0)<=1)
+  queued=bool(peak_waiting is not None and peak_waiting>=1 and (peak_processing or 0)<=1)
   if active is None and queued:active=False
   resident_ok=True if (peak_processing or 0)>=2 or (peak_resident or 0)>=2 else (False if queued else None)
   return {"source":f"{self.runtime} server metrics/slots sampler","resident":resident_ok,"active_overlap":active,"queue_only":queued,"peak_processing":peak_processing,"peak_waiting":peak_waiting,"peak_resident_slots":peak_resident,"sample_count":len(samples),"samples":samples}
@@ -192,8 +195,8 @@ class MultiEndpointAdapter:
   for a in self.adapters:
    try:children.append(a.overlap_evidence([]))
    except Exception as e:children.append({"source":"child probe failed","error":str(e)})
-  ok=[r for r in records if r.get("verdict")==PASS];active=None
-  if len(ok)==2 and all(r.get("first_abs") and r.get("end_abs") for r in ok):active=max(r["first_abs"] for r in ok)<min(r["end_abs"] for r in ok)
+  completed=runtime_completed(records);active=None
+  if len(completed)==2:active=max(r["first_abs"] for r in completed)<min(r["end_abs"] for r in completed)
   return {"source":"independent endpoints: per-request routing plus overlapping decode lifetimes","resident":True if active else None,"active_overlap":active,"queue_only":False if active else None,"children":children}
 
 class LiteLLMGatewayAdapter:
@@ -219,20 +222,20 @@ class LiteLLMGatewayAdapter:
  def stop_overlap_probe(self):
   for a in self.backends:a.stop_overlap_probe()
  def overlap_evidence(self,records):
-  ok=[r for r in records if r.get("verdict")==PASS];decode_start=decode_end=None
-  if len(ok)==2 and all(r.get("first_abs") and r.get("end_abs") for r in ok):
-   decode_start=max(r["first_abs"] for r in ok);decode_end=min(r["end_abs"] for r in ok)
+  completed=runtime_completed(records);decode_start=decode_end=None
+  if len(completed)==2:
+   decode_start=max(r["first_abs"] for r in completed);decode_end=min(r["end_abs"] for r in completed)
   decode_overlap=bool(decode_start is not None and decode_end is not None and decode_start<decode_end)
   children=[a.probe_summary(decode_start,decode_end) if decode_overlap else a.probe_summary() for a in self.backends]
   backend_active=decode_overlap and all((x.get("peak_processing") or 0)>=1 for x in children)
-  ids=[r.get("gateway_deployment_id") for r in ok if r.get("gateway_deployment_id")]
-  bases=[r.get("gateway_api_base") for r in ok if r.get("gateway_api_base")]
-  distinct_ids=(len(ids)==2 and len(set(ids))==2) if len(ok)==2 else None
-  distinct_bases=(len(bases)==2 and len(set(bases))==2) if len(ok)==2 else None
+  ids=[r.get("gateway_deployment_id") for r in completed if r.get("gateway_deployment_id")]
+  bases=[r.get("gateway_api_base") for r in completed if r.get("gateway_api_base")]
+  distinct_ids=(len(ids)==2 and len(set(ids))==2) if len(completed)==2 else None
+  distinct_bases=(len(bases)==2 and len(set(bases))==2) if len(completed)==2 else None
   route_proven=distinct_bases is True or distinct_ids is True
-  active=True if decode_overlap and (backend_active or route_proven) else (False if len(ok)==2 and not decode_overlap else None)
+  active=True if decode_overlap and (backend_active or route_proven) else (False if len(completed)==2 and not decode_overlap else None)
   resident=True if active is True else None
-  queue_only=True if len(ok)==2 and active is False else (False if active is True else None)
+  queue_only=True if len(completed)==2 and active is False else (False if active is True else None)
   return {"source":"LiteLLM single gateway endpoint + backend runtime probes + deployment response headers","resident":resident,"active_overlap":active,"queue_only":queue_only,"gateway_distinct_deployment_ids":distinct_ids,"gateway_distinct_api_bases":distinct_bases,"gateway_deployment_ids":ids,"gateway_api_bases":bases,"backend_active_in_common_decode_window":backend_active,"children":children}
 
 def make_adapter(endpoints,runtime,timeout_s=1800,gateway_endpoint=None):
@@ -328,8 +331,8 @@ def worker(adapter,barrier,origin,rec,payload,case,receipt):
 
 
 def summarize(config,records,evidence,verdict,gpu_summary):
- ok=[r for r in records if r.get("verdict")==PASS];submitted=[r["submitted_s"] for r in records if "submitted_s" in r];terminal=[r["terminal_s"] for r in records if "terminal_s" in r];first=[r["first_abs"] for r in ok if r.get("first_abs")];ends=[r["end_abs"] for r in ok if r.get("end_abs")];tokens=sum(r.get("actual_output_tokens") or 0 for r in ok);batch=max(terminal)-min(submitted) if submitted and terminal else None;window=max(ends)-min(first) if first and ends else None;dec=[r["decode_tps"] for r in ok if r.get("decode_tps") is not None];ttft=[r["ttft_ms"] for r in ok if r.get("ttft_ms") is not None];pref=[r["prefill_tps"] for r in ok if r.get("prefill_tps") is not None];peaks=gpu_summary.get("peak_memory_mib",{})
- return {"context_tokens":config["context_tokens"],"concurrency":config["concurrency"],"intended_requests":config["concurrency"],"completed_requests":len(ok),"batch_wall_s":batch,"submission_skew_s":max(submitted)-min(submitted) if len(submitted)>1 else 0.0,"ttft_ms":sum(ttft)/len(ttft) if ttft else None,"prefill_tps":sum(pref)/len(pref) if pref else None,"mean_request_decode_tps":sum(dec)/len(dec) if dec else None,"aggregate_decode_tps":tokens/window if window and window>0 else None,"end_to_end_output_tps":tokens/batch if batch and batch>0 else None,"server_overlap":evidence,"c1_128k":verdict=="PASS_C1_128K","c2_resident":evidence.get("resident"),"c2_active":evidence.get("active_overlap"),"queue_only":evidence.get("queue_only"),"peak_vram_gpu0_mib":peaks.get(0),"peak_vram_gpu1_mib":peaks.get(1),"gpu_peak_probe":gpu_summary}
+ completed=runtime_completed(records);ok=[r for r in records if r.get("verdict")==PASS];submitted=[r["submitted_s"] for r in records if "submitted_s" in r];terminal=[r["terminal_s"] for r in records if "terminal_s" in r];first=[r["first_abs"] for r in completed];ends=[r["end_abs"] for r in completed];tokens=sum(r.get("actual_output_tokens") or 0 for r in completed);batch=max(terminal)-min(submitted) if submitted and terminal else None;window=max(ends)-min(first) if first and ends else None;dec=[r["decode_tps"] for r in completed if r.get("decode_tps") is not None];ttft=[r["ttft_ms"] for r in completed if r.get("ttft_ms") is not None];pref=[r["prefill_tps"] for r in completed if r.get("prefill_tps") is not None];peaks=gpu_summary.get("peak_memory_mib",{})
+ return {"context_tokens":config["context_tokens"],"concurrency":config["concurrency"],"intended_requests":config["concurrency"],"completed_requests":len(completed),"output_passed_requests":len(ok),"batch_wall_s":batch,"submission_skew_s":max(submitted)-min(submitted) if len(submitted)>1 else 0.0,"ttft_ms":sum(ttft)/len(ttft) if ttft else None,"prefill_tps":sum(pref)/len(pref) if pref else None,"mean_request_decode_tps":sum(dec)/len(dec) if dec else None,"aggregate_decode_tps":tokens/window if window and window>0 else None,"end_to_end_output_tps":tokens/batch if batch and batch>0 else None,"server_overlap":evidence,"c1_128k":verdict=="PASS_C1_128K","c2_resident":evidence.get("resident"),"c2_active":evidence.get("active_overlap"),"queue_only":evidence.get("queue_only"),"peak_vram_gpu0_mib":peaks.get(0),"peak_vram_gpu1_mib":peaks.get(1),"gpu_peak_probe":gpu_summary}
 
 
 def run_batch(output,config,workload,adapter):
@@ -369,15 +372,18 @@ def run_batch(output,config,workload,adapter):
  except Exception as e:evidence={"source":"overlap probe failed","resident":None,"active_overlap":None,"queue_only":None,"error":str(e)}
  for k in ("resident","active_overlap","queue_only"):evidence.setdefault(k,None)
  save(output/"overlap-evidence.json",evidence);values={r.get("verdict") for r in records};failure=None if values=={PASS} else next((x for x in FAILS if x in values),"INCONCLUSIVE")
+ concurrency_verdict=None
+ if config["concurrency"]==2:
+  if evidence.get("active_overlap") is True:concurrency_verdict="PASS_C2_ACTIVE"
+  elif evidence.get("queue_only") is True:concurrency_verdict="QUEUE_ONLY"
+  elif evidence.get("resident") is True:concurrency_verdict="PASS_C2_RESIDENT"
+  else:concurrency_verdict="INCONCLUSIVE"
  if not after.get("healthy") and before.get("healthy"):verdict="FAIL_CRASH"
  elif failure:verdict=failure
  elif config["concurrency"]==1:verdict="PASS_C1_128K" if config["context_tokens"]==131072 else "PASS"
- elif evidence.get("active_overlap") is True:verdict="PASS_C2_ACTIVE"
- elif evidence.get("queue_only") is True:verdict="QUEUE_ONLY"
- elif evidence.get("resident") is True:verdict="PASS_C2_RESIDENT"
- else:verdict="INCONCLUSIVE"
+ else:verdict=concurrency_verdict
  if verdict not in VALID:raise AssertionError(verdict)
- m=summarize(config,records,evidence,verdict,gpu_summary);m["verdict"]=verdict;save(output/"metrics.json",m);save(output/"completion.json",{"experiment_id":config["experiment_id"],"verdict":verdict,"completed_at_utc":utc(),"post_health":after});return verdict
+ m=summarize(config,records,evidence,verdict,gpu_summary);m["verdict"]=verdict;m["concurrency_verdict"]=concurrency_verdict;m["mechanical_output_verdict"]="PASS" if values=={PASS} else ("FAIL_OUTPUT" if "FAIL_OUTPUT" in values else "NOT_ALL_PASS");save(output/"metrics.json",m);save(output/"completion.json",{"experiment_id":config["experiment_id"],"verdict":verdict,"completed_at_utc":utc(),"post_health":after});return verdict
 
 
 def inspect_run(output):

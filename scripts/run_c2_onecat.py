@@ -26,6 +26,8 @@ import runtime_launcher as launcher
 from measurement_policy import RETRY_REASONS, future_config
 
 ROOT = Path(__file__).resolve().parents[1]
+WORKLOAD_MANIFEST = ROOT / "workloads/concurrency/v2.json"
+SEMANTIC_ORACLE = ROOT / "workloads/concurrency/v2-ground-truth.json"
 
 MODEL_WBS = {
     "qwen3.8-27b": "3.2.1",
@@ -79,7 +81,7 @@ def measure(raw):
     adapter = h.HTTPAdapter(config["endpoint"], "1Cat-vLLM", timeout_s=2400)
     checkpoint(raw, "running", step="materializing_live_tokenizer_workload")
     workload = w.build(
-        w.load_manifest(ROOT / "workloads/concurrency/v1.json"),
+        w.load_manifest(WORKLOAD_MANIFEST),
         adapter,
         config["model"],
         thinking=config.get("thinking", False),
@@ -203,6 +205,7 @@ def run_locked(args):
             notes=(
                 f"WBS {wbs}; two concurrent independent 128K requests (C2); "
                 "server startup is the compatibility gate; one measured C2 batch after healthy startup; "
+                "authoritative workload=concurrency/v2 with pre-registered semantic oracle; "
                 "2048 output reserve, minimum 256 per request."
             ),
         )
@@ -236,7 +239,8 @@ def run_locked(args):
         cleanup_policy="owned process group only",
         planned_config_sha256=h.sha(h.canon(config)),
         launch_command_sha256=h.sha(config["launch_command"].encode()),
-        workload_manifest_sha256=h.sha((ROOT / "workloads/concurrency/v1.json").read_bytes()),
+        workload_manifest_sha256=h.sha(WORKLOAD_MANIFEST.read_bytes()),
+        semantic_oracle_sha256=h.sha(SEMANTIC_ORACLE.read_bytes()),
         runtime_hook_sha256=h.sha((ROOT / "scripts/runtime_hooks/sitecustomize.py").read_bytes()),
         source_sha256={
             str(p.relative_to(ROOT)): h.sha(p.read_bytes())

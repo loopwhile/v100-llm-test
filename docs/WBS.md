@@ -360,103 +360,66 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - pinned v100-skinny v1.1 standalone model contract가 없다.
 - current project에서는 C1/C2 실행 대상으로 예약하지 않는다.
 
-## 3. C2 — 독립적인 128K 에이전트 2개 [TODO]
+## 3. C2 — 독립적인 128K 에이전트 2개 [TODO — authoritative v2 revalidation]
 
-공통 선행 조건:
-- 동일한 exact lane이 C1 128K를 PASS해야 한다.
-- 단, C2 capacity 한계 자체를 확인하기 위한 의도적인 failure-boundary 실험은 예외로 한다.
-- `workloads/concurrency/v1.json`을 사용한다.
-- Project A와 Project B는 서로 무관한 프로젝트이며 prompt hash가 달라야 한다.
-- 인위적으로 큰 shared prefix를 만들지 않는다.
+### 3.0 WBS 3 workload reset (2026-09-25)
 
-### 3.1 Shared TP2 llama.cpp
+기존 `workloads/concurrency/v1.json`은 raw/historical evidence로 보존하지만 WBS 3의 최종 acceptance에는 더 이상 사용하지 않는다.
 
-공통 설정:
-- `parallel=2`.
-- `ctx-size=262144`.
-- `kv-unified`.
-- `kv-unified-per-slot=131072`.
+v1의 구조적 결함:
+- 소수 seed block을 약 128K까지 반복하여 long-context repetition bias를 만들었다.
+- 실제 결함 존재가 보장되지 않은 코드에 "concrete risk 하나"를 강제하여 unsupported bug를 만들어낼 유인을 만들었다.
+- "minimal plan"과 별개로 최소 256 output tokens를 강제하여 짧지만 정상적인 답변도 mechanical FAIL_OUTPUT이 될 수 있었다.
+- 기존 harness는 output PASS와 runtime topology를 결합하여 output underfill 시 실제 queue evidence까지 잃을 수 있었다.
 
-#### 3.1.1 Qwen3.8-27B [TODO after 2.1.1]
-- C1을 PASS한 `TARGET`, `NGRAM` lane만 C2로 승격한다.
-- `MTP`, `MTP_NGRAM`은 범위 밖이다.
+WBS 3 authoritative workload는 `workloads/concurrency/v2.json`이다.
+- Project A/B 각각 non-padding anchor에 정확히 하나의 pre-registered seeded bug를 둔다.
+- semantic oracle은 `workloads/concurrency/v2-ground-truth.json`에 사전 고정한다.
+- anchor는 한 번만 포함하고 나머지 128K는 `{{SECTION}}` 기반 semantically-neutral padding으로 채운다.
+- 응답은 Root Cause / Failure Trace / executable reproduction / Minimal Fix를 요구한다.
+- runtime capacity/concurrency, mechanical output, semantic correctness를 별도 축으로 기록한다.
+- 최종 acceptance에는 mechanical PASS와 oracle 기반 semantic PASS가 필요하다.
+- `QUEUE_ONLY`를 `PASS_C2_ACTIVE`로 승격하지 않는다.
 
-#### 3.1.2 Ornith 1.5 9B [TODO after 2.1.2]
-- C1을 PASS한 `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM` lane만 C2로 승격한다.
+기존 v1 실험은 삭제하거나 소급 변경하지 않는다. Qwen v1 queue-only와 Ornith 9B v1 active-overlap은 historical diagnostic으로 유지한다.
 
-#### 3.1.3 Ornith 1.5 35B-A3B [TODO after 2.1.3]
-- C1을 PASS한 `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM` lane만 C2로 승격한다.
+### 3.1 Shared TP2 llama.cpp [TODO — all runnable lanes use concurrency/v2]
+- 공통: `parallel=2`, `ctx-size=262144`, `kv-unified`, `kv-unified-per-slot=131072`.
+- 3.1.1 Qwen3.8-27B: `TARGET`, `NGRAM`.
+- 3.1.2 Ornith 1.5 9B: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
+- 3.1.3 Ornith 1.5 35B-A3B: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
+- 3.1.4 Gemma4 26B-A4B: `TARGET`, `NGRAM`, corrected `MTP`, corrected `MTP_NGRAM`; MTP는 validated `CUDA0,CUDA1` draft contract 유지.
 
-#### 3.1.4 Gemma4 26B-A4B [TODO after 2.1.4]
-- C1을 PASS한 `TARGET`, `NGRAM`, corrected `MTP`, corrected `MTP_NGRAM` 네 lane을 C2로 승격한다.
-- MTP 계열은 반드시 validated `--spec-draft-device CUDA0,CUDA1` contract를 유지한다.
+### 3.2 Shared TP2 1Cat-vLLM STOCK [TODO — v2 revalidation]
+- 공통: TP2, `max_model_len=131072`, `max_num_seqs=2`, C1에서 검증된 exact serving configuration 유지.
+- `scripts/run_c2_onecat.py`는 v2 manifest와 semantic-oracle hash를 evidence에 고정한다.
 
-### 3.2 Shared TP2 1Cat-vLLM STOCK [IN_PROGRESS — stopped after 3.2.2 per user]
+#### 3.2.1 Qwen3.8-27B STOCK [TODO — v2 revalidation authorized]
+- B200-aligned E4M3 serving recipe로 새 v2 experiment를 실행한다.
+- 기존 v1 `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C2-128K-20260925-001`은 historical evidence다.
+- v1에서 OOM 없이 `peak_processing=1`, `peak_waiting=1` 순차 queue가 관찰됐지만 Project A 135-token underfill 때문에 final FAIL_OUTPUT이었다. v2에서는 scheduler topology와 output correctness를 독립 판정한다.
+- 이 재검증은 과거 C1 semantic FAIL을 소급 PASS로 바꾸지 않는다.
 
-공통 설정:
-- TP2.
-- `max_model_len=131072`.
-- `max_num_seqs=2`.
-- C1에서 검증된 exact artifact/runtime configuration을 그대로 사용한다.
+#### 3.2.2 Ornith 1.5 9B STOCK [TODO — v2 revalidation]
+- 동일 TP2/MTP1/FP16 serving contract로 새 v2 experiment를 실행한다.
+- reboot-interrupted v1 `-001`과 recovery v1 `-002`는 historical evidence로 유지한다.
+- v1 `-002`의 two-request active overlap/peak processing 2/OOM-free evidence는 보존하되, v2 oracle로 correctness를 다시 판정한다.
 
-#### 3.2.1 Qwen3.8-27B STOCK [DONE — CAPACITY PASS / QUEUE_ONLY / FAIL_OUTPUT]
-- 사용자 지시에 따라 C1 128K B200 공식 레시피 검증(`EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C1-128K-20260925-001`, raw harness PASS_C1_128K, repetition collapse 해소)을 기반으로 C2 측정을 실행함.
-- 측정 실행: `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C2-128K-20260925-001` (2026-09-25).
-- 하드웨어 / 서빙: 2× V100 16GB TP2 shared, KV `fp8_e4m3`, context 131,072, `concurrency=2` (`max_num_seqs=2`), B200 공식 얼라인먼트 (`--reasoning-parser qwen3`, `--tool-call-parser qwen3_coder`, `--default-chat-template-kwargs '{"enable_thinking": false}'`, `VLLM_FLASH_V100_DECODE_PARTITION_SIZE=256`, `max_num_batched_tokens=2048`, `top_k=20`, `presence_penalty=0.15`, `thinking=False`).
-- 워크로드: `workloads/concurrency/v1.json` (Project A + Project B 독립적 워크로드, 에이전트당 128K, 총 258,047 프롬프트 토큰).
-- 결과:
-  - **128K Hardware Capacity**: **PASS** (Peak VRAM 15,575 MiB / 16,384 MiB, OOM 없음, post-health PASS).
-  - **동시성 거동 (Concurrency Architecture)**: **순차 큐잉 (Queue-Only)** 실측 확인.
-    - 2× V100 16GB 환경에서 가용 KV 캐시 용량이 187,869 토큰(131,072 요청 기준 1.43x)에 그쳐 2개 요청의 동시 Active 처리는 물리적으로 불가능함.
-    - vLLM 스케줄러가 2개 요청을 정상 접수한 후, Project A를 먼저 러닝(`vllm:num_requests_running=1`)하고 Project B를 대기(`vllm:num_requests_waiting=1`)시킴.
-    - Project A 완주(759초) 후 반환된 KV 블록을 활용하여 Project B가 즉시 프리필/디코딩되어 1,532초에 정상 완주함.
-  - **출력 무결성 (Output Integrity)**: **FAIL_OUTPUT**.
-    - Project B는 271 토큰으로 계약상 최소 출력 기준(256 토큰)을 정상 충족하여 PASS함.
-    - Project A는 간결한 3개 항목 검증 계획을 정상 제시하며 stop 종료되었으나, 생성 토큰이 135 토큰으로 계약상 최소 요구치인 `minimum_output_tokens=256`에 미달하여 하네스 규칙상 `FAIL_OUTPUT`으로 판정됨.
-  - 성능: Batch Wall Time 1532.48s (약 25.5분), Mean Decode 9.31 tok/s, End-to-end 0.18 tok/s.
-  - 결론: 2× V100 16GB 하드웨어에서 Qwen3.8-27B 128K C2는 OOM 크래시 없이 안전하게 큐잉되어 순차 처리(`QUEUE_ONLY` 거동)됨을 증명함. 단, Project A의 토큰 길이 미달로 최종 publication 판정은 `FAIL_OUTPUT`으로 기록됨.
+#### 3.2.3 Ornith 1.5 35B-A3B STOCK [TODO — v2]
+- 검증된 TP2/target-only/E5M2 configuration으로 v2 C2를 실행한다.
 
-#### 3.2.2 Ornith 1.5 9B STOCK [DONE — CAPACITY PASS_C2_ACTIVE / semantic FAIL_OUTPUT]
-- 재부팅으로 중단된 `EXP-V100-ORN15-9B-1CAT-F16-MTP1-C2-128K-20260925-001`은 startup 단계에서 종료됐으며 measured request는 NOT_REACHED다. 원본을 보존하고 recovery verdict `INCONCLUSIVE`로 기록했다.
-- 동일 TP2/MTP1/FP16 설정의 infrastructure retry `EXP-V100-ORN15-9B-1CAT-F16-MTP1-C2-128K-20260925-002`를 1회 실행했다. C1 대비 serving command 변경은 `max_num_seqs=2`이며, 중단된 원본과 동일한 기존 runtime hook을 유지했다.
-- **Raw harness / capacity: PASS_C2_ACTIVE**. 독립된 128K Project A/B가 모두 완료됐고, 실제 overlapping decode window에서 running=2가 확인됐다. 출력은 각각 372 / 477 tokens, post-health 정상, OOM 없음.
-- **Publication: FAIL_OUTPUT**. 기계적 출력 검사는 통과했으나 의미 감사에서 Project B가 존재하지 않는 module-level singleton과 await가 없는 check→pop 구간의 asyncio race를 주장했다. Project A도 version을 distinct-write counter로 가정했지만 코드에 그런 계약은 없다. Capacity와 의미 정확성을 분리하며 raw PASS는 수정하지 않는다.
-- 성능: mean TTFT 316.52s, mean request decode 8.49 tok/s, aggregate decode 14.67 tok/s, batch wall 372.11s, peak VRAM GPU0/GPU1 각각 13,901 MiB.
-- 2026-09-25 11:20:45 UTC runner cleanup 완료; GPU process / port 18080 / container 없음.
-- 사용자 범위 변경에 따라 **3.2.2까지만 완료하고 커밋·푸시 후 중단**한다. 3.2.3은 실행하지 않았다.
-
-#### 3.2.3 Ornith 1.5 35B-A3B STOCK [TODO — ELIGIBLE]
-- WBS 2.2.3에서 V100 runtime compatibility 및 C1 128K를 PASS했다.
-- 검증된 exact TP2/target-only/E5M2 configuration을 유지하여 C2 resident 및 active-overlap을 측정한다.
-
-#### 3.2.4 Gemma4 26B-A4B STOCK [NOT ELIGIBLE — WBS 2.2.4 FAIL_TIMEOUT]
-- pinned 1Cat-vLLM 1.5.0 SM70 NVFP4 및 AWQ INT4 revalidation (최대 3회 bounded recovery 포함)에서 WBS 2.2.4가 terminal FAIL_TIMEOUT으로 종료됐다.
-- 현재 STOCK lane으로 C2를 실행하지 않는다.
+#### 3.2.4 Gemma4 26B-A4B STOCK [NOT ELIGIBLE — C1 FAIL_TIMEOUT]
+- 1Cat-vLLM C1 128K가 terminal FAIL_TIMEOUT이므로 v2 C2 대상이 아니다.
 
 ### 3.3 v100-skinny SKINNY
-
-#### 3.3.1 Qwen3.8-27B SKINNY [CLOSED BY WBS 1.4]
-- `FAIL_OOM_MODEL_LOAD`가 server boot 이전에 확정됐으므로 C2를 실행하지 않는다.
-
-#### 3.3.2 Ornith 1.5 9B SKINNY [UNSUPPORTED]
-- WBS 2.3.2의 unsupported verdict를 유지하며 C2를 실행하지 않는다.
-
-#### 3.3.3 Ornith 1.5 35B-A3B SKINNY [UNSUPPORTED]
-- WBS 2.3.3의 unsupported verdict를 유지하며 C2를 실행하지 않는다.
-
-#### 3.3.4 Gemma4 26B-A4B SKINNY [UNSUPPORTED]
-- WBS 2.3.4의 unsupported verdict를 유지하며 C2를 실행하지 않는다.
+- Qwen3.8: CLOSED BY WBS 1.4 (`FAIL_OOM_MODEL_LOAD`).
+- Ornith 9B / Ornith 35B / Gemma4: UNSUPPORTED.
+- 현재 하드웨어에서 재실행하지 않는다.
 
 ### 3.4 공통 C2 판정 및 측정
+각 runnable lane에서 API admission/completion, concurrent residency, active decode overlap, queue/preemption, mechanical output, oracle semantic correctness, per-request/aggregate 성능을 독립 기록한다.
 
-runnable한 3.1/3.2 lane에서 다음 항목을 각각 분리해서 기록한다.
-- 두 request가 모두 admission 되었는가.
-- 두 context가 동시에 resident 상태였는가.
-- sampled runtime state 기준 실제 active decode overlap이 있었는가.
-- queue/preemption 동작(llama.cpp requests_processing/requests_deferred + slots, vLLM num_requests_running/num_requests_waiting).
-- request별 성능 및 aggregate 성능.
-
-`QUEUE_ONLY`를 `PASS_C2_ACTIVE`로 판정해서는 안 된다.
+runtime concurrency classification은 output PASS 여부와 결합하지 않는다. 한 응답이 FAIL_OUTPUT이어도 sampled evidence가 `peak_waiting>=1`, `peak_processing<=1`이면 scheduler topology는 `QUEUE_ONLY`로 보존한다.
 
 ## 4. Ornith 1.5 9B — 1GPU×2 + LiteLLM topology [TODO]
 

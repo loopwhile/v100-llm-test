@@ -1,6 +1,6 @@
 # Final Test Matrix
 
-C1 is tested first. C2 is executed only for viable lanes unless a deliberate failure-boundary experiment is recorded.
+C1 is tested first. WBS 3 authoritative C2 uses `workloads/concurrency/v2.json` for every runnable lane. Historical v1 C2 runs remain diagnostic evidence only.
 
 ## llama.cpp matrix
 
@@ -24,15 +24,15 @@ C1/C2 NGRAM rows are compatibility/capacity checks, not acceleration benchmarks.
 
 | Model | Backend | Weight | KV | Spec | Topology | Required result |
 | --- | --- | --- | --- | --- | --- | --- |
-| Qwen3.8-27B | STOCK 1Cat 1.5.0 acceptance lane | QUASAR NVFP4 | FP8 E4M3 | Target-only | TP2 shared | C1 128K: capacity PASS / output integrity FAIL; C2 not eligible |
+| Qwen3.8-27B | STOCK 1Cat 1.5.0 B200-aligned revalidation lane | QUASAR NVFP4 | FP8 E4M3 | Target-only | TP2 shared | WBS3 v2 C2 revalidation authorized; v1 queue-only/output-fail retained historically |
 | Qwen3.8-27B | STOCK 1Cat 1.5.0 recovery recipe | QUASAR NVFP4 | FP8 E5M2 | Target-only | TP2 shared | one-shot 128K recovery validation using LM-only/util0.92/partition256 + historical E5M2/GDN path |
 | Qwen3.8-27B | SKINNY v1.1 / 1Cat 1.2.2 | RadixArk mixed NVFP4/FP8 | FP16 contract | MTP k=3 contract | TP2 experimental | PRECHECK `FAIL_OOM_MODEL_LOAD`; boot gate NOT_REACHED; no C1/C2 scheduling |
-| Ornith 1.5 35B-A3B | STOCK | NVFP4 artifact verified | FP8 pending | Target-only | TP2 shared | runtime compatibility pending → C1/C2 or UNSUPPORTED |
+| Ornith 1.5 35B-A3B | STOCK | NVFP4 | FP8 E5M2 | Target-only | TP2 shared | C1 PASS; WBS3 v2 C2 TODO |
 | Ornith 1.5 35B-A3B | SKINNY | no pinned v1.1 contract | — | — | TP2 | support resolution / UNSUPPORTED |
-| Ornith 1.5 9B | STOCK | NVFP4 artifact verified | FP16 candidate | MTP candidate | TP2 shared | runtime compatibility pending → C1/C2 or UNSUPPORTED |
+| Ornith 1.5 9B | STOCK | NVFP4 | FP16 | MTP1 | TP2 shared | C1 PASS; v1 active evidence historical; WBS3 v2 C2 TODO |
 | Ornith 1.5 9B | STOCK | NVFP4 artifact verified | FP16 candidate | MTP candidate | 1GPU×2 + LiteLLM | runtime compatibility pending → two TP1 servers + LiteLLM or UNSUPPORTED |
 | Ornith 1.5 9B | SKINNY | no pinned v1.1 contract | — | — | TP2 | support resolution / UNSUPPORTED |
-| Gemma4 26B-A4B | STOCK | exact artifact pending | FP8 candidate | Target-only candidate | TP2 shared | PENDING |
+| Gemma4 26B-A4B | STOCK | AWQ INT4 compressed-tensors | FP16 | Target-only | TP2 shared | C1 FAIL_TIMEOUT; C2 not eligible |
 | Gemma4 26B-A4B | SKINNY | no pinned v1.1 contract | — | — | TP2 | support resolution / UNSUPPORTED |
 
 ## Primary capacity target
@@ -50,12 +50,11 @@ Shared llama.cpp C2:
 - parallel: 2
 
 Shared STOCK C2:
-- only lanes with a valid C1 128K output-integrity PASS are eligible.
-- max_model_len: 131072
-- max_num_seqs: 2
-- TP: 2
-- Qwen3.8 STOCK is currently not eligible because its 128K acceptance lane is capacity PASS / output-integrity FAIL.
-- Qwen E5M2 128K recovery remains a separate configuration; C2 eligibility requires that new 128K configuration itself to PASS output integrity before any promotion.
+- authoritative workload: `workloads/concurrency/v2.json`.
+- max_model_len: 131072; max_num_seqs: 2; TP: 2.
+- Ornith 9B and 35B use their C1-validated exact serving contracts.
+- Qwen3.8 receives a user-authorized v2 revalidation with the B200-aligned E4M3 recipe; this does not retroactively change the older C1 semantic verdict.
+- Gemma4 remains excluded because C1 128K ended FAIL_TIMEOUT.
 
 SKINNY is excluded from C2 on the current P520 because WBS 1.4 failed during model-load QPN prepack before server boot.
 
