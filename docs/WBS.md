@@ -383,7 +383,7 @@ WBS 3 authoritative workload는 `workloads/concurrency/v2.json`이다.
 
 기존 v1 실험은 삭제하거나 소급 변경하지 않는다. Qwen v1 queue-only와 Ornith 9B v1 active-overlap은 historical diagnostic으로 유지한다.
 
-### 3.1 Shared TP2 llama.cpp [IN PROGRESS — all runnable lanes use concurrency/v2]
+### 3.1 Shared TP2 llama.cpp [DONE — Qwen, Ornith 9B, Ornith 35B complete; Gemma4 deferred per user instruction]
 - 실행 runner: `scripts/run_c2_llama.py`.
 - 공통: `parallel=2`, `ctx-size=262144`, `kv-unified`, `kv-unified-per-slot=131072`.
 
@@ -444,7 +444,7 @@ WBS 3 authoritative workload는 `workloads/concurrency/v2.json`이다.
     - Project B: 1,168 tokens 생성, `JobQueue._sequence` 비원자적 RMW 결함 완벽 분석 및 재현/수정안 제시 (PASS).
   - 네 lane(TARGET, NGRAM, MTP, MTP_NGRAM) 모두 128K C2 Active Overlap 및 semantic oracle 검증을 완벽하게 통과함.
 
-#### 3.1.3 Ornith 1.5 35B-A3B [IN PROGRESS]
+#### 3.1.3 Ornith 1.5 35B-A3B [DONE]
 - artifact: `Q4_K_M`.
 - KV: `Q8_0`.
 - 실행 lane: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
@@ -471,12 +471,21 @@ WBS 3 authoritative workload는 `workloads/concurrency/v2.json`이다.
   - Output analysis:
     - Project A: 1,030 tokens 생성, `Transaction.commit` 결함 완벽 분석 및 재현/수정안 제시 (PASS).
     - Project B: 1,566 tokens 생성, `JobQueue.pop` 비원자적 race 결함 완벽 분석 및 재현/수정안 제시 (PASS).
-- MTP_NGRAM: `EXP-V100-ORN15-35B-LLAMA-Q80-MTP-NGRAM-C2-128K-20260925-001` [TODO]
+- MTP_NGRAM: `EXP-V100-ORN15-35B-LLAMA-Q80-MTP-NGRAM-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (`peak_processing: 2.0`, `peak_waiting: 0.0`). 2× V100 16GB TP2 환경에서 composite `draft-mtp,ngram-simple` 활성 상태로 2개 독립 128K 세션 동시 상주 및 병렬 디코드 완벽 통과.
+  - TTFT (Batch Mean): 860.09s, Prefill 180.10 tok/s, Mean Decode 15.43 tok/s, Aggregate Decode 2.70 tok/s, End-to-End Output 1.59 tok/s, Batch Wall 1,240.18s (~20.67분).
+  - Speculative 통계: Project A (draft 759, accepted 445, **58.6%**; 단독 decode **29.38 tok/s**), Project B (draft 858, accepted 463, **54.0%**).
+  - Peak VRAM: GPU0 12,897 MiB / GPU1 13,737 MiB (16GB 한도 내 여유: GPU0 ~3.4 GiB, GPU1 ~2.6 GiB).
+  - Output analysis:
+    - Project A: 905 tokens 생성, `Transaction.commit` 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+    - Project B: 1,065 tokens 생성, `JobQueue.pop` 비원자적 race 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+  - 네 lane(TARGET, NGRAM, MTP, MTP_NGRAM) 모두 128K C2 Active Overlap 및 semantic oracle 검증을 완벽하게 통과함.
 
-#### 3.1.4 Gemma4 26B-A4B [TODO]
+#### 3.1.4 Gemma4 26B-A4B [DEFERRED — manual execution guide provided in docs/WBS-3.1.4-gemma4-execution-guide.md]
 - artifact: `UD-Q4_K_XL`.
 - KV: `FP16`.
 - 실행 lane: `TARGET`, `NGRAM`, corrected `MTP`, corrected `MTP_NGRAM`; MTP는 validated `CUDA0,CUDA1` draft contract 유지.
+- 사용자 요청에 따라 자동 실행을 중단하고 수동 실행 가이드 문서 작성으로 갈음함 (`docs/WBS-3.1.4-gemma4-execution-guide.md`). 필요 시 해당 가이드에 따라 개별 실행 및 커밋 가능.
 
 ### 3.2 Shared TP2 1Cat-vLLM STOCK [TODO — v2 revalidation]
 - 공통: TP2, `max_model_len=131072`, `max_num_seqs=2`, C1에서 검증된 exact serving configuration 유지.
