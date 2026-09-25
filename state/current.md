@@ -7,7 +7,7 @@
 - All WBS 2.1 llama.cpp C1 model items are complete.
 - WBS 2.2 execution contract is prepared in `docs/WBS-2.2-execution-manifest.md`.
 - WBS 2.2 measured runner: `scripts/run_c1_onecat.py`.
-- 2.2.1 Qwen3.8 STOCK: CLOSED — 128K CAPACITY PASS / OUTPUT INTEGRITY FAIL (Attempt 002~007 verified 128K hardware capacity PASS, but failed output integrity due to repetition loop across greedy, stochastic, thinking-off, and reasoning-effort low modes; measured inference budget 2/2 exhausted; closed as FAIL_OUTPUT).
+- 2.2.1 Qwen3.8 STOCK: CLOSED — 128K CAPACITY PASS / OUTPUT INTEGRITY FAIL. Attempts 002~007 reproduced repetition failure. A later B200-aligned E4M3 diagnostic preserved 128K capacity and completed non-repetitively, but post-hoc semantic audit found that the 280-token answer did not substantiate the requested concrete cross-file/component correctness risk; its raw harness PASS is preserved while publication remains FAIL_OUTPUT.
 - 2.2.2 Ornith 9B STOCK: DONE — PASS_C1_128K (EXP-V100-ORN15-9B-1CAT-F16-MTP1-C1-128K-20260924-003; TTFT 165.43s, Decode 8.98 tok/s, Wall 201.64s).
 - 2.2.3 Ornith 35B STOCK: DONE — PASS_C1_128K (EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C1-128K-20260924-002; TTFT 62.05s, Decode 10.45 tok/s, Wall 118.88s).
 - 2.2.4 Gemma4 26B STOCK: CLOSED — FAIL_STARTUP (EXP-V100-GEMMA4-26B-1CAT-F16-TARGET-C1-128K-20260924-002; 1Cat-vLLM 1.5.0 SM70 TurboMind NVFP4 MoE does not support Gemma4 MoE architecture shape (2816, 704, 128, 8) and gelu_pytorch_tanh activation).
@@ -40,23 +40,24 @@
   - Qwen 1Cat 128K recovery test is concluded as failed. Qwen 1Cat is not eligible for WBS 5 throughput optimization.
 - Policy Enforcement: Exactly 1 measured inference completed. All further automatic sweeps, retries, and tuning are strictly STOPPED per policy.
 
-## 128K Recipe Validation: Qwen3.8-27B 1Cat-vLLM B200-Recipe Alignment (2026-09-25)
-- Purpose: Apply official vLLM B200 serving recipe alignments (reasoning-parser qwen3, tool-call-parser qwen3_coder, default-chat-template-kwargs enable_thinking=false, top_k=20, presence_penalty=0.15) to V100 16GB TP2 E4M3 serving to recover 128K output integrity and eliminate repetition collapse.
+## 128K Recipe Diagnostic: Qwen3.8-27B 1Cat-vLLM B200-Aligned Candidate (2026-09-25)
+- Purpose: Test a B200-aligned candidate configuration (reasoning-parser qwen3, tool-call-parser qwen3_coder, default-chat-template-kwargs enable_thinking=false, top_k=20, presence_penalty=0.15) on V100 16GB TP2 E4M3. The raw artifact does not preserve an upstream URL/revision receipt, so 'official' provenance is not independently asserted here.
 - Measured Inference: Exactly 1 run executed (`EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C1-128K-20260925-001`).
 - Hardware / Serving: 2x V100 16GB TP2 shared, KV `fp8_e4m3`, context 131,072, `temperature=1.0`, `top_p=0.95`, `top_k=20`, `presence_penalty=0.15`, `frequency_penalty=0.05`, `thinking=False`, `--language-model-only`, `gpu_memory_utilization=0.92`, `VLLM_FLASH_V100_DECODE_PARTITION_SIZE=256`, `--reasoning-parser qwen3`, `--tool-call-parser qwen3_coder`, `--default-chat-template-kwargs '{"enable_thinking": false}'`.
 - Results:
   - Hardware Capacity: **PASS** (128,834 prompt tokens prefill in 740.60s, decode 9.27 tok/s, Peak VRAM 15,567 MiB GPU0/1, OOM none, post-health 200 OK).
-  - Output Integrity: **PASS** (280 tokens generated; zero repetition loop, zero periodic collapse, coherent semantic cross-file risk review, finished cleanly with `finish_reason=stop`).
-  - Final Verdict: **PASS_C1_128K**.
+  - Mechanical output integrity: **PASS** for this run (280 tokens, `finish_reason=stop`, no repetition loop/periodic collapse observed).
+  - Semantic correctness: **FAIL_OUTPUT**. The answer did not substantiate the requested concrete cross-file/component correctness risk; it only described a generic possible `apply_record` / `stage_artifact` mismatch.
+  - Raw harness verdict: `PASS_C1_128K`; authoritative publication verdict after semantic audit: **FAIL_OUTPUT**.
 - Conclusion:
-  - The combination of **fp8_e4m3 KV** (providing 2.8~3.1 GiB capacity pool) and the **official B200 recipe flags/sampling** (`--reasoning-parser qwen3`, `enable_thinking=false`, `top_k=20`, `presence_penalty=0.15`) completely resolved the repetition collapse bug on 128K context.
-  - Qwen3.8-27B 1Cat-vLLM now possesses a fully validated 128K serving recipe (`EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C1-128K-20260925-001`).
-  - Qwen 1Cat is restored as eligible for C2 capacity evaluation and WBS 5 performance optimization.
+  - This run is valid evidence that the tested configuration can hold 128K and can terminate without the earlier repetition collapse in at least one measured execution.
+  - It does **not** prove which setting removed repetition, that the effect is repeatable, or that task-level output correctness is recovered.
+  - Qwen 1Cat remains **not eligible** for formal C2 promotion or WBS 5 throughput optimization until a user-authorized fresh 128K semantic revalidation passes.
 
 ## Next planned work after current stop
 
 - Remaining project scope is WBS 3, WBS 4, and revised WBS 5.
-- WBS 3: C2 capacity/residency/active-overlap testing for eligible C1 lanes (including restored Qwen3.8-27B 1Cat-vLLM validated B200 recipe).
+- WBS 3: C2 capacity/residency/active-overlap testing for eligible C1 lanes. Qwen3.8-27B 1Cat-vLLM remains excluded pending a fresh 128K semantic PASS.
 - WBS 4: Ornith 1.5 9B 1GPU×2 + LiteLLM topology validation.
 - WBS 5: performance optimization and per-model/per-runtime final recipe capture.
 - Automatic execution beyond current stop is forbidden without explicit user instruction.

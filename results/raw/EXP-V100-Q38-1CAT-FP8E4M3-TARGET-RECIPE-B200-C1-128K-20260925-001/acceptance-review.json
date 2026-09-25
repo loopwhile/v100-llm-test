@@ -1,9 +1,9 @@
 {
   "reviewed_at_utc": "2026-09-25T07:40:00.000000+00:00",
-  "verdict": "PASS_C1_128K",
+  "verdict": "FAIL_OUTPUT",
   "harness_verdict": "PASS_C1_128K",
   "capacity_verdict": "PASS_C1_128K",
-  "integrity_verdict": "PASS",
+  "integrity_verdict": "FAIL_OUTPUT",
   "prompt_receipt_matches_usage": true,
   "reserved_budget_tokens": 131072,
   "prompt_tokens": 128834,
@@ -12,10 +12,11 @@
   "runtime_truncated": 0,
   "post_health_healthy": true,
   "capacity_summary": "PASS (128,834 prompt tokens prefill + 280 output tokens decode 성공, Peak VRAM GPU0 15,567 MiB / GPU1 15,567 MiB로 OOM 없음, post-health 정상).",
-  "integrity_summary": "PASS (116개 고유 파일로 구성된 realistic diversified snapshot에 대해 반복 루프나 주기적 붕괴 전혀 없이 정확한 의미론적 코드 분석을 완수하고 finish_reason=stop으로 정상 종료함).",
-  "diagnostic_summary": "공식 vLLM B200 서빙 레시피(reasoning-parser qwen3, tool-call-parser qwen3_coder, default-chat-template-kwargs enable_thinking=false, top_k=20, presence_penalty=0.15)를 V100 16GB TP2 E4M3 환경에 적용한 결과, 128K 가용 메모리(2.8~3.1 GiB)를 안정적으로 유지하면서 기존 128K의 고질적 repetition collapse를 완벽하게 극복하고 128K OUTPUT INTEGRITY 회복(PASS)에 성공함.",
-  "key_note": "128K B200-recipe validation PASS: E4M3 KV + reasoning-parser qwen3 + thinking=false + top_k=20/presence_penalty=0.15 completely eliminated repetition collapse; generated coherent answer and exited with finish_reason=stop at 280 tokens.",
-  "content_review": "PASS: Coherent, non-repetitive structural analysis of the multi-file snapshot. No repetition loop or periodic enumeration. Exited cleanly with stop.",
+  "integrity_summary": "FAIL_OUTPUT (반복 루프/주기적 붕괴 없이 finish_reason=stop으로 종료했으나, 응답은 task가 요구한 '두 파일/컴포넌트에 걸친 구체적인 correctness risk'를 실제 snapshot 근거로 특정하지 못했다. apply_record와 stage_artifact의 일반적인 mismatch 가능성을 반복 서술했을 뿐 구체적 충돌 지점이나 구현 근거를 제시하지 않았다).",
+  "diagnostic_summary": "B200-aligned candidate 설정(E4M3 KV, reasoning-parser qwen3, tool-call-parser qwen3_coder, thinking=false, top_k=20, presence_penalty=0.15)을 적용한 단일 measured run에서 128K capacity와 비반복 종료는 확인했다. 그러나 semantic audit에서 task-specific correctness를 충족하지 못해 최종 publication verdict는 FAIL_OUTPUT이다. 이 1회 결과만으로 repetition 원인이나 recipe의 반복 재현성을 확정하지 않는다.",
+  "key_note": "Raw harness PASS_C1_128K is preserved as capacity/non-repetition evidence; semantic audit overrides publication to FAIL_OUTPUT because the response did not substantiate a concrete cross-file/component correctness risk.",
+  "content_review": "FAIL: Output is coherent and non-repetitive, but the requested task required one concrete correctness risk involving at least two files/components with a specific reason and verification plan. The answer only asserted a generic apply_record/stage_artifact mismatch possibility without identifying concrete conflicting code or evidence in the supplied snapshot.",
   "runtime_errors": [],
-  "cleanup": "cleaned (all processes terminated cleanly, port released)"
+  "cleanup": "cleaned (all processes terminated cleanly, port released)",
+  "review_note": "Post-hoc audit correction: separate mechanical output integrity (nonempty/non-repetitive) from task-level semantic correctness. Raw completion/metrics remain unchanged."
 }

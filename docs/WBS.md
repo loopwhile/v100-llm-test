@@ -224,9 +224,13 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
   - 조치: reasoning_effort 변경 효과를 검증하기 위해 명시적인 간결성 제어 시스템 지시문("Keep your thinking brief and focused, moving directly to the conclusion without unnecessary elaboration.")이 주입되는 `--thinking --reasoning-effort low` 적용.
   - 결과: 128K Capacity 완전 성공 (TTFT 742.67 s, Decode 9.68 tok/s, Batch Wall 954.25 s, Peak VRAM 15,287 MiB, OOM 없음, Post-health PASS).
   - 출력 분석: 시스템 프롬프트가 정상 주입되었으나, 모델이 프롬프트 지시문을 요약하는 첫 문장("The user wants me to review...")을 반복 출력하는 루프에 빠져 2,048 토큰 한도에 도달 (`finish_reason=length`).
+- post-close diagnostic: `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C1-128K-20260925-001` — raw harness `PASS_C1_128K`, semantic audit **FAIL_OUTPUT**.
+  - 128,834 prompt tokens + 280 completion tokens, Peak VRAM 15,567 MiB/GPU, `finish_reason=stop`; 이전 repetition loop는 이 1회에서 관찰되지 않음.
+  - 그러나 task가 요구한 구체적인 cross-file/component correctness risk를 실제 snapshot 근거로 특정하지 못하고 `apply_record` / `stage_artifact` mismatch 가능성을 일반론으로만 제시함. 저장소의 semantic-audit override 규칙에 따라 publication verdict는 `FAIL_OUTPUT`으로 정정.
+  - 여러 serving/sampling 설정을 동시에 바꾼 1회 실행이므로 특정 옵션이 repetition 원인이라고 귀속하거나 완전 해결로 일반화하지 않음.
 - 2.2.1 종합 판정: `CLOSED — 128K CAPACITY PASS / OUTPUT INTEGRITY FAIL`
-  - **128K Hardware / Runtime Capacity**: **PASS** (Attempt 002~007까지 6회 연속 OOM 없음, 129K 프롬프트 수용, Peak VRAM 15,287 MiB 안정 동작, Flash-V100 E4M3 XQA 디코딩 완료).
-  - **Output Integrity (출력 무결성)**: **FAIL_OUTPUT** (Thinking OFF/ON, Greedy/Stochastic, Medium/Low 전 조건에서 128K 합성 프롬프트 특유의 디코딩 반복 루프가 지속됨). WBS 2.2.1은 최대 허용 추론 횟수 2회 소진 후 정해진 규칙에 따라 CLOSED 처리.
+  - **128K Hardware / Runtime Capacity**: **PASS** (기존 Attempt 002~007 및 B200-aligned diagnostic에서 128K 수용 증거 확보).
+  - **Output Integrity / Semantic correctness**: **FAIL_OUTPUT**. 기존 acceptance runs는 repetition collapse로 실패했고, 후속 B200-aligned diagnostic은 비반복 종료에는 성공했지만 task-level semantic correctness를 충족하지 못했다. 따라서 formal C1 PASS와 C2 promotion gate는 여전히 미충족.
 
   #### 2.2.1 Root-Cause 분석 및 해석 정비
 
@@ -366,9 +370,9 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - C1에서 검증된 exact artifact/runtime configuration을 그대로 사용한다.
 
 #### 3.2.1 Qwen3.8-27B STOCK [NOT ELIGIBLE — C1 OUTPUT INTEGRITY FAIL]
-- WBS 2.2.1은 128K capacity는 PASS했지만 output integrity가 FAIL이므로 정식 C2 lane으로 승격하지 않는다.
-- WBS 5.3.1의 E5M2 64K known-good recovery diagnostic은 원인 분리를 위한 별도 1회 진단이며 128K C2 promotion gate가 아니다.
-- 별도 사용자 승인에 따른 failure-boundary diagnostic이 아닌 한 Qwen STOCK C2를 실행하지 않는다.
+- WBS 2.2.1은 128K hardware/runtime capacity는 PASS했지만 formal output-integrity/semantic gate가 FAIL이므로 정식 C2 lane으로 승격하지 않는다.
+- `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C1-128K-20260925-001`은 raw harness상 `PASS_C1_128K`였고 repetition-free 종료를 보였지만, post-hoc semantic audit가 구체적인 cross-file/component correctness risk를 입증하지 못한 응답으로 판단하여 publication verdict를 `FAIL_OUTPUT`으로 override했다.
+- 따라서 이 diagnostic은 C2 promotion gate를 충족하지 않는다. 별도 사용자 승인에 따른 fresh 128K semantic revalidation이 PASS하기 전에는 Qwen STOCK C2를 실행하지 않는다.
 
 #### 3.2.2 Ornith 1.5 9B STOCK [TODO — ELIGIBLE]
 - WBS 2.2.2에서 V100 runtime compatibility 및 C1 128K를 PASS했다.
@@ -590,15 +594,18 @@ prompt composition 변화가 결과를 혼동하지 않도록 한다.
 - Peak VRAM: GPU0 13,987 MiB / GPU1 13,987 MiB.
 - 결론: E5M2 + GDN Triton prefill 128K candidate는 2×V100 16GB에서 capacity-compatible하지 않음. 기존 E4M3 128K capacity PASS는 그대로 보존됨.
 
-**공식 vLLM B200 서빙 레시피 적용 128K 결과 (`EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C1-128K-20260925-001`):**
-- 판정: **PASS_C1_128K** (Capacity: PASS_C1_128K, Integrity: PASS)
-- 구성: Qwen3.8-27B QUASAR NVFP4 + TP2 + E4M3 KV (가용 풀 2.8~3.1 GiB) + `--reasoning-parser qwen3` + `--tool-call-parser qwen3_coder` + `--default-chat-template-kwargs '{"enable_thinking": false}'` + decode partition 256 + LM-only + util 0.92 + sampling (`temperature: 1.0`, `top_p: 0.95`, `top_k: 20`, `presence_penalty: 0.15`).
-- 측정 결과: 128,834 prompt 토큰 수용, TTFT 740.60s, decode 9.27 tok/s, 280 토큰 출력 후 `finish_reason=stop` 정상 종료. Repetition collapse 완전 소멸.
-- 결론: Qwen3.8-27B 1Cat-vLLM의 128K 정상 구동 및 출력 무결성 레시피 검증 완료. WBS 5 성능 최적화 및 C2 평가 후보로 공식 복원.
+**B200-aligned candidate 128K diagnostic 결과 (`EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C1-128K-20260925-001`):**
+- raw harness 판정: `PASS_C1_128K`; post-hoc semantic audit publication 판정: **FAIL_OUTPUT**.
+- 구성: Qwen3.8-27B QUASAR NVFP4 + TP2 + E4M3 KV + `--reasoning-parser qwen3` + `--tool-call-parser qwen3_coder` + `--default-chat-template-kwargs '{"enable_thinking": false}'` + decode partition 256 + LM-only + util 0.92 + sampling (`temperature: 1.0`, `top_p: 0.95`, `top_k: 20`, `presence_penalty: 0.15`).
+- 측정 결과: 128,834 prompt 토큰 수용, TTFT 740.60s, decode 9.27 tok/s, 280 토큰 출력 후 `finish_reason=stop`. 이 1회에서는 repetition collapse가 관찰되지 않았다.
+- semantic audit: 응답이 task가 요구한 구체적인 cross-file/component correctness risk를 snapshot 근거로 특정하지 못했으므로 `FAIL_OUTPUT`. mechanical non-repetition과 task-level correctness를 분리한다.
+- provenance caveat: raw artifact에는 upstream B200 recipe URL/revision receipt가 없으므로 'official' 출처를 독립 검증하지 않는다.
+- 결론: 128K capacity 및 단일 non-repetition 실행 증거는 보존하지만 formal C1 PASS로 승격하지 않는다. Qwen 1Cat의 C2 및 throughput tuning eligibility는 복원하지 않는다.
 
-### 5.4 Qwen3.8-27B 1Cat 추가 성능 특성화
+### 5.4 Qwen3.8-27B 1Cat 추가 성능 특성화 [BLOCKED — semantic revalidation required]
 
-5.3.2의 128K B200-recipe validation이 PASS_C1_128K로 성공하였으므로, Qwen 1Cat은 성능 최적화 후보로 공식 복원된다.
+현재 authoritative publication verdict가 `FAIL_OUTPUT`이므로 Qwen 1Cat은 정식 성능 최적화 대상이 아니다.
+사용자가 fresh 128K semantic revalidation을 명시적으로 승인하고 그 실행이 PASS한 경우에만 아래 후보를 검토한다.
 
 PASS 시 과거 evidence를 참고해 다음 중 필요한 최소 실험만 수행한다.
 - target-only CUDA Graph capture [1,2] recovery.
@@ -608,8 +615,8 @@ PASS 시 과거 evidence를 참고해 다음 중 필요한 최소 실험만 수�
 - Native MTP1은 현재 artifact/runtime이 지원하고 historical compatible contract를 재현할 수 있을 때만 별도 configuration으로 검증한다.
 - historical evidence에서 MTP1은 LM-head top1 OFF, P2P/custom-allreduce OFF가 호환 조건이었으므로 target-only fast-path 옵션을 그대로 혼합하지 않는다.
 
-기존 128K E4M3 실패 profile과 새 128K E5M2/GDN recovery profile은 서로 다른 configuration으로 명확히 분리한다.
-최종 recipe에는 각각의 context ceiling과 output-integrity 범위를 명시한다.
+기존 128K E4M3 failure profiles, E5M2/GDN capacity failure, B200-aligned E4M3 diagnostic은 서로 다른 configuration/evidence로 명확히 분리한다.
+B200-aligned diagnostic은 현재 validated final recipe가 아니며, fresh semantic PASS 전에는 최종 recipe/C2 lane으로 승격하지 않는다.
 
 ### 5.5 모델·런타임별 최종 recipe 기록
 
