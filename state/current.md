@@ -40,10 +40,23 @@
   - Qwen 1Cat 128K recovery test is concluded as failed. Qwen 1Cat is not eligible for WBS 5 throughput optimization.
 - Policy Enforcement: Exactly 1 measured inference completed. All further automatic sweeps, retries, and tuning are strictly STOPPED per policy.
 
+## 128K Recipe Validation: Qwen3.8-27B 1Cat-vLLM B200-Recipe Alignment (2026-09-25)
+- Purpose: Apply official vLLM B200 serving recipe alignments (reasoning-parser qwen3, tool-call-parser qwen3_coder, default-chat-template-kwargs enable_thinking=false, top_k=20, presence_penalty=0.15) to V100 16GB TP2 E4M3 serving to recover 128K output integrity and eliminate repetition collapse.
+- Measured Inference: Exactly 1 run executed (`EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C1-128K-20260925-001`).
+- Hardware / Serving: 2x V100 16GB TP2 shared, KV `fp8_e4m3`, context 131,072, `temperature=1.0`, `top_p=0.95`, `top_k=20`, `presence_penalty=0.15`, `frequency_penalty=0.05`, `thinking=False`, `--language-model-only`, `gpu_memory_utilization=0.92`, `VLLM_FLASH_V100_DECODE_PARTITION_SIZE=256`, `--reasoning-parser qwen3`, `--tool-call-parser qwen3_coder`, `--default-chat-template-kwargs '{"enable_thinking": false}'`.
+- Results:
+  - Hardware Capacity: **PASS** (128,834 prompt tokens prefill in 740.60s, decode 9.27 tok/s, Peak VRAM 15,567 MiB GPU0/1, OOM none, post-health 200 OK).
+  - Output Integrity: **PASS** (280 tokens generated; zero repetition loop, zero periodic collapse, coherent semantic cross-file risk review, finished cleanly with `finish_reason=stop`).
+  - Final Verdict: **PASS_C1_128K**.
+- Conclusion:
+  - The combination of **fp8_e4m3 KV** (providing 2.8~3.1 GiB capacity pool) and the **official B200 recipe flags/sampling** (`--reasoning-parser qwen3`, `enable_thinking=false`, `top_k=20`, `presence_penalty=0.15`) completely resolved the repetition collapse bug on 128K context.
+  - Qwen3.8-27B 1Cat-vLLM now possesses a fully validated 128K serving recipe (`EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C1-128K-20260925-001`).
+  - Qwen 1Cat is restored as eligible for C2 capacity evaluation and WBS 5 performance optimization.
+
 ## Next planned work after current stop
 
-- Remaining project scope is WBS 3, WBS 4, and revised WBS 5 only. There is no separate deployment-selection phase.
-- WBS 3: C2 capacity/residency/active-overlap testing for eligible C1 lanes (Ornith 1.5 9B STOCK/LLAMA, Ornith 1.5 35B-A3B LLAMA/STOCK, Gemma4 LLAMA, Qwen3.8 LLAMA; Qwen 1Cat is ineligible).
+- Remaining project scope is WBS 3, WBS 4, and revised WBS 5.
+- WBS 3: C2 capacity/residency/active-overlap testing for eligible C1 lanes (including restored Qwen3.8-27B 1Cat-vLLM validated B200 recipe).
 - WBS 4: Ornith 1.5 9B 1GPU×2 + LiteLLM topology validation.
-- WBS 5: performance optimization and per-model/per-runtime final recipe capture for eligible models.
+- WBS 5: performance optimization and per-model/per-runtime final recipe capture.
 - Automatic execution beyond current stop is forbidden without explicit user instruction.

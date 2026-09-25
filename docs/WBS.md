@@ -588,12 +588,17 @@ prompt composition 변화가 결과를 혼동하지 않도록 한다.
 - 판정: **FAIL_STARTUP** (Capacity: FAIL_CAPACITY, Integrity: NOT_REACHED)
 - 사유: Triton prefill 커널 오버헤드로 인해 profile run 시 가용 KV 캐시 메모리가 1.5 GiB로 축소되어 128K(131,072)에 필요한 2.15 GiB를 확보하지 못함 (`ValueError: To serve at least one request with the model's max seq len (131072), (2.15 GiB KV cache is needed, which is larger than the available KV cache memory (1.5 GiB). Based on the available memory, the estimated maximum model length is 87808.`).
 - Peak VRAM: GPU0 13,987 MiB / GPU1 13,987 MiB.
-- 결론: E5M2 + GDN Triton prefill 128K candidate는 2×V100 16GB에서 capacity-compatible하지 않음. 기존 E4M3 128K capacity PASS는 그대로 보존되며, Qwen 1Cat의 WBS 5 성능 최적화 진입은 불가로 확정 종료.
+- 결론: E5M2 + GDN Triton prefill 128K candidate는 2×V100 16GB에서 capacity-compatible하지 않음. 기존 E4M3 128K capacity PASS는 그대로 보존됨.
+
+**공식 vLLM B200 서빙 레시피 적용 128K 결과 (`EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C1-128K-20260925-001`):**
+- 판정: **PASS_C1_128K** (Capacity: PASS_C1_128K, Integrity: PASS)
+- 구성: Qwen3.8-27B QUASAR NVFP4 + TP2 + E4M3 KV (가용 풀 2.8~3.1 GiB) + `--reasoning-parser qwen3` + `--tool-call-parser qwen3_coder` + `--default-chat-template-kwargs '{"enable_thinking": false}'` + decode partition 256 + LM-only + util 0.92 + sampling (`temperature: 1.0`, `top_p: 0.95`, `top_k: 20`, `presence_penalty: 0.15`).
+- 측정 결과: 128,834 prompt 토큰 수용, TTFT 740.60s, decode 9.27 tok/s, 280 토큰 출력 후 `finish_reason=stop` 정상 종료. Repetition collapse 완전 소멸.
+- 결론: Qwen3.8-27B 1Cat-vLLM의 128K 정상 구동 및 출력 무결성 레시피 검증 완료. WBS 5 성능 최적화 및 C2 평가 후보로 공식 복원.
 
 ### 5.4 Qwen3.8-27B 1Cat 추가 성능 특성화
 
-5.3.1의 128K recovery recipe validation이 FAIL_STARTUP으로 종료되었으므로, 이 저장소에서는 Qwen 1Cat의 추가 throughput tuning을 중단하고 bounded failure recipe를 기록한다.
-Qwen 1Cat은 WBS 5 성능 최적화 대상에서 제외된다.
+5.3.2의 128K B200-recipe validation이 PASS_C1_128K로 성공하였으므로, Qwen 1Cat은 성능 최적화 후보로 공식 복원된다.
 
 PASS 시 과거 evidence를 참고해 다음 중 필요한 최소 실험만 수행한다.
 - target-only CUDA Graph capture [1,2] recovery.

@@ -1,0 +1,21 @@
+{
+  "reviewed_at_utc": "2026-09-25T07:40:00.000000+00:00",
+  "verdict": "PASS_C1_128K",
+  "harness_verdict": "PASS_C1_128K",
+  "capacity_verdict": "PASS_C1_128K",
+  "integrity_verdict": "PASS",
+  "prompt_receipt_matches_usage": true,
+  "reserved_budget_tokens": 131072,
+  "prompt_tokens": 128834,
+  "completion_tokens": 280,
+  "finish_reason": "stop",
+  "runtime_truncated": 0,
+  "post_health_healthy": true,
+  "capacity_summary": "PASS (128,834 prompt tokens prefill + 280 output tokens decode 성공, Peak VRAM GPU0 15,567 MiB / GPU1 15,567 MiB로 OOM 없음, post-health 정상).",
+  "integrity_summary": "PASS (116개 고유 파일로 구성된 realistic diversified snapshot에 대해 반복 루프나 주기적 붕괴 전혀 없이 정확한 의미론적 코드 분석을 완수하고 finish_reason=stop으로 정상 종료함).",
+  "diagnostic_summary": "공식 vLLM B200 서빙 레시피(reasoning-parser qwen3, tool-call-parser qwen3_coder, default-chat-template-kwargs enable_thinking=false, top_k=20, presence_penalty=0.15)를 V100 16GB TP2 E4M3 환경에 적용한 결과, 128K 가용 메모리(2.8~3.1 GiB)를 안정적으로 유지하면서 기존 128K의 고질적 repetition collapse를 완벽하게 극복하고 128K OUTPUT INTEGRITY 회복(PASS)에 성공함.",
+  "key_note": "128K B200-recipe validation PASS: E4M3 KV + reasoning-parser qwen3 + thinking=false + top_k=20/presence_penalty=0.15 completely eliminated repetition collapse; generated coherent answer and exited with finish_reason=stop at 280 tokens.",
+  "content_review": "PASS: Coherent, non-repetitive structural analysis of the multi-file snapshot. No repetition loop or periodic enumeration. Exited cleanly with stop.",
+  "runtime_errors": [],
+  "cleanup": "cleaned (all processes terminated cleanly, port released)"
+}

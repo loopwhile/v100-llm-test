@@ -1,0 +1,40 @@
+[
+  {
+    "request_id": "diag-realistic-project",
+    "project_id": "REALISTIC-SNAPSHOT",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "82178160e07333e7c75a0b83728053f3ab1fe95d15d3c827c038341a882239e7",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.0009692640001048858,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "Based on the provided project snapshot, here is a specific and concise identification of the one concrete correctness risk that involves at least two files or components.\n\n## **Concrete Correctness Risk**\n**Risk:** The mismatch between the `apply_record` data and the `stage_artifact` data creates an opportunity for incorrect execution. This is a risk in the context of the \"logical relationship\" between the data structures, which can lead to incorrect execution if there is a mismatch in the structure.\n\n## **Minimal Verification Plan**\n1. **Verify the data structure consistency**: Compare the `apply_record` data against the `stage_artifact` data to ensure that there is no mismatch in the structure. This is a critical check to prevent incorrect execution.\n2. **Check the logical relationships**: Ensure that the `execution_record` correctly links to the `stage_artifact` and that the `stage_artifact` correctly links to the `apply_record`. This is a critical check to prevent incorrect execution.\n\n## **Specific and Concise**\n- **Focus**: Focus on the data structure (apply_record vs. stage_artifact) and ensure that there is no mismatch. This is a critical check to prevent incorrect execution.\n- **Verification**: Verify that the data structure is consistent and that there is no mismatch in the structure. This is a critical check to prevent incorrect execution."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 128834,
+        "total_tokens": 129114,
+        "completion_tokens": 280
+      }
+    },
+    "actual_output_tokens": 280,
+    "post_template_prompt_tokens": 128834,
+    "ttft_ms": 740596.441139,
+    "first_abs": 3192.303836591,
+    "end_abs": 3222.508475717,
+    "wall_s": 770.8010802649997,
+    "prefill_tps": null,
+    "decode_tps": 9.270099166951509,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 770.820542083
+  }
+]
