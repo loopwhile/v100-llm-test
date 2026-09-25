@@ -75,6 +75,12 @@ def validate():
  check(g4.get("attention_backend")=="TRITON_ATTN" and g4.get("speculative_candidates")==["target-only"] and g4.get("quantization")=="compressed-tensors","WBS 2.2.4 Gemma runtime contract drift")
  check((ROOT/"docs/WBS-2.2-execution-manifest.md").is_file(),"missing WBS 2.2 execution manifest")
  check((ROOT/"scripts/run_c1_onecat.py").is_file(),"missing 1Cat C1 runner")
+ check((ROOT/"scripts/run_c2_llama.py").is_file(),"missing authoritative llama C2 runner")
+ check((ROOT/"scripts/run_c2_onecat.py").is_file(),"missing authoritative 1Cat C2 runner")
+ c2_llama_source=(ROOT/"scripts/run_c2_llama.py").read_text() if (ROOT/"scripts/run_c2_llama.py").is_file() else ""
+ c2_onecat_source=(ROOT/"scripts/run_c2_onecat.py").read_text() if (ROOT/"scripts/run_c2_onecat.py").is_file() else ""
+ check('workloads/concurrency/v2.json' in c2_llama_source,"llama C2 runner must use concurrency/v2")
+ check('workloads/concurrency/v2.json' in c2_onecat_source,"1Cat C2 runner must use concurrency/v2")
 
  check(cap["context_tokens"]==131072 and len(cap["requests"])==1,"capacity workload mismatch")
  check(cap.get("output_tokens")==2048 and cap.get("min_output_tokens")==256,"capacity output objective mismatch")

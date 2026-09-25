@@ -11,7 +11,8 @@
 - WBS 3.2 1Cat v2 scope: Qwen3.8 B200-aligned E4M3, Ornith 9B MTP1/FP16, Ornith 35B target-only/E5M2. Gemma4 remains ineligible from C1 FAIL_TIMEOUT.
 - v100-skinny remains CLOSED/UNSUPPORTED and is not rerun.
 - Historical v1 Qwen/Ornith9 C2 results remain diagnostics, not authoritative v2 acceptance.
-- No GPU experiment is launched by this design commit. Use fresh experiment IDs for v2.
+- No GPU experiment is launched by these design commits. Use fresh experiment IDs for v2.
+- Execution runners are now wired for both shared-TP2 families: `scripts/run_c2_llama.py` and `scripts/run_c2_onecat.py`.
 - Do not advance to WBS 4/5 until WBS 3 v2 matrix is complete.
 
 ## Previous execution record

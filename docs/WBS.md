@@ -384,6 +384,7 @@ WBS 3 authoritative workload는 `workloads/concurrency/v2.json`이다.
 기존 v1 실험은 삭제하거나 소급 변경하지 않는다. Qwen v1 queue-only와 Ornith 9B v1 active-overlap은 historical diagnostic으로 유지한다.
 
 ### 3.1 Shared TP2 llama.cpp [TODO — all runnable lanes use concurrency/v2]
+- 실행 runner: `scripts/run_c2_llama.py`.
 - 공통: `parallel=2`, `ctx-size=262144`, `kv-unified`, `kv-unified-per-slot=131072`.
 - 3.1.1 Qwen3.8-27B: `TARGET`, `NGRAM`.
 - 3.1.2 Ornith 1.5 9B: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.

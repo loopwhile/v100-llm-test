@@ -35,6 +35,13 @@ class WBS3V2ContractTests(unittest.TestCase):
         self.assertEqual(result["semantic_oracle"],m["semantic_oracle"])
         self.assertEqual(len({x["raw_prompt_sha256"] for x in result["build_evidence"]}),2)
 
+    def test_authoritative_runners_are_wired_to_v2(self):
+        llama=(ROOT/"scripts/run_c2_llama.py").read_text()
+        onecat=(ROOT/"scripts/run_c2_onecat.py").read_text()
+        for source in (llama,onecat):
+            self.assertIn("workloads/concurrency/v2.json",source)
+            self.assertIn("v2-ground-truth.json",source)
+
     def test_queue_evidence_survives_output_failure(self):
         a=h.HTTPAdapter("http://mock","1Cat-vLLM")
         a._probe_samples=[{"monotonic_s":10.0,"processing":1.0,"waiting":1.0,"resident_slots":None},{"monotonic_s":20.0,"processing":1.0,"waiting":0.0,"resident_slots":None}]
