@@ -404,10 +404,15 @@ WBS 3 authoritative workload는 `workloads/concurrency/v2.json`이다.
   - Project B: 165 tokens 생성 후 반복 구문과 함께 조기 중단되어 최소 토큰 요구량(256 tokens) 미달 및 semantic 검증 실패로 `FAIL_OUTPUT`.
 - 이 결과는 과거 C1 semantic FAIL 및 C2 queue-only 제약을 재확인함. Qwen3.8 1Cat은 C2 동시 상주(active overlap)가 불가능하며 WBS 5 최적화 대상에서 제외됨.
 
-#### 3.2.2 Ornith 1.5 9B STOCK [TODO — v2 revalidation]
-- 동일 TP2/MTP1/FP16 serving contract로 새 v2 experiment를 실행한다.
-- reboot-interrupted v1 `-001`과 recovery v1 `-002`는 historical evidence로 유지한다.
-- v1 `-002`의 two-request active overlap/peak processing 2/OOM-free evidence는 보존하되, v2 oracle로 correctness를 다시 판정한다.
+#### 3.2.2 Ornith 1.5 9B STOCK [DONE — PASS_C2_ACTIVE]
+- 동일 TP2/MTP1/FP16 serving contract로 v2 experiment `EXP-V100-ORN15-9B-1CAT-F16-MTP1-C2-128K-20260925-003` 실행 완료.
+- 판정: **`PASS_C2_ACTIVE`** (128K C2 capacity, active decode overlap, semantic output 모두 PASS).
+- Concurrency evidence: `resident: true`, `active_overlap: true`, `queue_only: false` (`peak_processing=2.0`, `peak_waiting=0.0`). 두 개의 128K 요청이 2× V100 16GB TP2에서 완전히 동시 상주(Peak VRAM 13,901 MiB)하며 큐잉 없이 병렬 디코딩 수행.
+- TTFT 310.90s, Mean Decode 9.94 tok/s, Aggregate Decode 15.60 tok/s, Batch Wall 458.71s.
+- Output analysis:
+  - Project A: 865 tokens 생성, `Transaction.commit` 루프 내 조기 clear 결함 완벽 분석/재현 (PASS).
+  - Project B: 1,460 tokens 생성, `JobQueue._sequence` 비원자적 RMW 및 tiebreaker 중복 문제 정확 분석/재현 (PASS).
+- Ornith 1.5 9B는 1Cat-vLLM STOCK 환경에서 C2 128K active overlap 및 semantic correctness를 완벽히 통과하여 WBS 5 최적화 자격을 유지함.
 
 #### 3.2.3 Ornith 1.5 35B-A3B STOCK [TODO — v2]
 - 검증된 TP2/target-only/E5M2 configuration으로 v2 C2를 실행한다.
