@@ -205,46 +205,58 @@ ssh p520-llm 'cd /home/loopwhile/v100-llm-test-wbs22-20260924 && \
 
 ## 2.2.4 Gemma4 26B-A4B STOCK
 
-Status before host run: **REMOTE ARTIFACT PINNED; LOCAL DOWNLOAD REQUIRED**.
+### Historical NVFP4 Runs (Preserved Evidence)
+
+The initial WBS 2.2.4 runs tested `nvidia/Gemma-4-26B-A4B-NVFP4@a19cfe00be84568a6867111c9a68c9c44fdcffe6` at `/srv/models/gemma-4-26b-a4b-nvfp4`:
+- `EXP-V100-GEMMA4-26B-1CAT-F16-TARGET-C1-128K-20260924-001` — `FAIL_STARTUP` (transformers 5.16 HeterogeneousConfigMixin per-layer attribute access error).
+- `EXP-V100-GEMMA4-26B-1CAT-F16-TARGET-C1-128K-20260924-002` — `FAIL_STARTUP` (1Cat-vLLM 1.5.0 SM70 TurboMind NVFP4 MoE does not support shape `(2816, 704, 128, 8)` and `gelu_pytorch_tanh` activation).
+
+These historical failures are artifact-specific and preserved as immutable evidence. The NVFP4 checkpoint has since been deleted from the host.
+
+### Revalidation Contract: AWQ INT4 (compressed-tensors)
+
+User-authorized revalidation replaces the NVFP4 artifact with the AWQ INT4 compressed-tensors artifact, avoiding the unsupported NVFP4 SM70 TurboMind MoE gate by selecting SM70 Marlin MoE (`VLLM_SM70_QUANT_BACKEND=marlin`).
+
+Status: **CLOSED — FAIL_STARTUP**.
 
 Pinned contract:
 
-- model: `nvidia/Gemma-4-26B-A4B-NVFP4`
-- revision: `a19cfe00be84568a6867111c9a68c9c44fdcffe6`
-- local path: `/srv/models/gemma-4-26b-a4b-nvfp4`
-- weight: NVFP4
-- KV: FP16
+- model: `cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4`
+- revision: `18a3c7285c33ee39d3e5e16ee6fb2c18f4955ef9`
+- local path: `/srv/models/gemma-4-26b-a4b-it-qat-awq-int4`
+- weight: AWQ INT4 (`quant_method: compressed-tensors`, `format: pack-quantized`, `int4`, `group_size: 32`)
+- quantization flag: `--quantization compressed-tensors`
+- KV: FP16 (`float16`)
 - speculative: target-only
 - attention backend: `TRITON_ATTN`
+- environment: `VLLM_SM70_QUANT_BACKEND=marlin`
 - topology: TP2 shared
 - experiment ID:
-  `EXP-V100-GEMMA4-26B-1CAT-F16-TARGET-C1-128K-20260924-001`
+  `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-001`
 
-Before the run, the exact revision must be downloaded to the configured local
-path. Preferred command when the `hf` CLI is already installed:
+Receipts:
+- `config.json`: `8b82e08dc8a4f3a0e7002f88b94d6d3b30d8f136295a30fc5c3144da7bc6d93d`
+- `tokenizer_config.json`: `a1bab8c81ed15fa6ce912ec993c66cb49392e0487fb1ea5f5f11ea3618683627`
+- `chat_template.jinja`: `94899c0f917d93f6fe81c95744d1e8ddab2d21d39228d2e4aec1fb2a25bff413`
+- `model.safetensors`: `c0b6bbe9bacded55f45cd600c703ca299ebfb79efb2ec25023bc6bb563deb201`
 
-```bash
-ssh p520-llm 'hf download nvidia/Gemma-4-26B-A4B-NVFP4 \
-  --revision a19cfe00be84568a6867111c9a68c9c44fdcffe6 \
-  --local-dir /srv/models/gemma-4-26b-a4b-nvfp4'
-```
-
-Do not install a new download tool silently. If `hf` is unavailable, report
-the missing prerequisite.
-
-After the exact artifact exists:
+Command:
 
 ```bash
 ssh p520-llm 'cd /home/loopwhile/v100-llm-test-wbs22-20260924 && \
   V100_1CAT_PYTHON=/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python \
+  VLLM_SM70_QUANT_BACKEND=marlin \
   python3 scripts/run_c1_onecat.py \
-    --experiment-id EXP-V100-GEMMA4-26B-1CAT-F16-TARGET-C1-128K-20260924-001 \
+    --experiment-id EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-001 \
     --model gemma4-26b-a4b'
 ```
 
-FP8 KV is not substituted automatically. The current 1Cat SM70 release matrix
-specifically records Gemma4 NVFP4 + E5M2 KV as a rejected diagnostic
-combination; the compatibility profile therefore starts with FP16 KV.
+Outcome:
+- Server startup failed during shard loading (`0%` progress).
+- SM70 Marlin MoE path verified active: `Using MarlinLinearKernel for CompressedTensorsWNA16`, `Using CompressedTensorsWNA16MoEMethod`.
+- Root cause: `AssertionError: Attempted to load weight (torch.Size([512])) into parameter (torch.Size([256]))` when loading layer 5 `k_norm.weight`. Under `transformers 5.16.1`, `global_head_dim` is stripped into `per_layer_config`, causing `gemma4.py` to default full-attention layers to `head_dim=256` instead of `512`.
+- Measured 128K request: not reached.
+- Closeout verdict: `FAIL_STARTUP`. Stopped per policy.
 
 ## Per-item closeout
 

@@ -37,12 +37,13 @@
     "mtp_draft_device_note": "On this pinned b10775 + 2x V100 layer-split topology, CUDA0-only drafter startup aborts while CUDA0,CUDA1 startup passes at 128K. This overrides Unsloth's generic multi-GPU CUDA0 example for this validated hardware/runtime."
   },
   "onecat_vllm": {
-    "status": "exact_remote_artifact_pinned_local_download_pending",
+    "status": "verified_local_artifact",
     "planning_ready": true,
-    "repository": "nvidia/Gemma-4-26B-A4B-NVFP4",
-    "revision": "a19cfe00be84568a6867111c9a68c9c44fdcffe6",
-    "path": "/srv/models/gemma-4-26b-a4b-nvfp4",
-    "weight_quant": "NVFP4",
+    "repository": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+    "revision": "18a3c7285c33ee39d3e5e16ee6fb2c18f4955ef9",
+    "path": "/srv/models/gemma-4-26b-a4b-it-qat-awq-int4",
+    "weight_quant": "AWQ INT4 (compressed-tensors)",
+    "quantization": "compressed-tensors",
     "kv_candidates": [
       "FP16"
     ],
@@ -50,8 +51,17 @@
       "target-only"
     ],
     "attention_backend": "TRITON_ATTN",
-    "artifact_note": "Exact remote NVFP4 artifact is pinned; local download to the configured path is required before preflight can pass.",
-    "kv_contract_note": "Use FP16 KV for the initial SM70 compatibility lane. 1Cat's SM70 release matrix records Gemma4 NVFP4 + fp8_e5m2 KV as a rejected diagnostic combination, so FP8 KV must not be substituted automatically.",
+    "environment": {
+      "VLLM_SM70_QUANT_BACKEND": "marlin"
+    },
+    "artifact_note": "Verified local AWQ INT4 compressed-tensors artifact at /srv/models/gemma-4-26b-a4b-it-qat-awq-int4; single model.safetensors ~17GB; SM70 Marlin MoE path selected via VLLM_SM70_QUANT_BACKEND=marlin.",
+    "kv_contract_note": "Use FP16 KV for the SM70 compatibility lane per contract.",
+    "file_receipts": {
+      "config.json": "8b82e08dc8a4f3a0e7002f88b94d6d3b30d8f136295a30fc5c3144da7bc6d93d",
+      "tokenizer_config.json": "a1bab8c81ed15fa6ce912ec993c66cb49392e0487fb1ea5f5f11ea3618683627",
+      "chat_template.jinja": "94899c0f917d93f6fe81c95744d1e8ddab2d21d39228d2e4aec1fb2a25bff413",
+      "model.safetensors": "c0b6bbe9bacded55f45cd600c703ca299ebfb79efb2ec25023bc6bb563deb201"
+    },
     "required_backend_lanes": [
       "stock",
       "v100-skinny"

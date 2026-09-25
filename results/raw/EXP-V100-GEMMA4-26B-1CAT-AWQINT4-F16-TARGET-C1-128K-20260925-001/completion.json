@@ -1,0 +1,6 @@
+{
+  "experiment_id": "EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-001",
+  "verdict": "FAIL_STARTUP",
+  "completed_at_utc": "2026-09-25T08:38:03.192389+00:00",
+  "error": "server exited during compatibility startup"
+}

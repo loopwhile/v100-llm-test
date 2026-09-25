@@ -107,8 +107,9 @@ def onecat_plan(lock,m,lane,c,topology,port,gateway_port=18079):
    spec_args=["--speculative-config",json.dumps(spec_cfg,separators=(",",":"))]
   gpu_util=str(mc.get("gpu_memory_utilization","0.90"))
   mm_args=["--language-model-only"] if mc.get("language_model_only") else []
+  quant_args=["--quantization",str(mc["quantization"])] if mc.get("quantization") else []
   def command(p,tp,max_seqs):
-   return [py,"-m","vllm.entrypoints.openai.api_server","--model",mc["path"],"--served-model-name",m["model_id"],"--trust-remote-code","--dtype","half","--attention-backend",attention_backend,"--tensor-parallel-size",str(tp),"--kv-cache-dtype",kv(kv_value,"1Cat-vLLM"),"--max-model-len","131072","--max-num-seqs",str(max_seqs),"--max-num-batched-tokens","4096","--gpu-memory-utilization",gpu_util,"--enforce-eager",*mm_args,*spec_args,"--host","127.0.0.1","--port",str(p)]
+   return [py,"-m","vllm.entrypoints.openai.api_server","--model",mc["path"],"--served-model-name",m["model_id"],"--trust-remote-code","--dtype","half","--attention-backend",attention_backend,"--tensor-parallel-size",str(tp),"--kv-cache-dtype",kv(kv_value,"1Cat-vLLM"),"--max-model-len","131072","--max-num-seqs",str(max_seqs),"--max-num-batched-tokens","4096","--gpu-memory-utilization",gpu_util,"--enforce-eager",*mm_args,*quant_args,*spec_args,"--host","127.0.0.1","--port",str(p)]
   hook_dir=str(ROOT/"scripts/runtime_hooks")
   py_path=hook_dir if not os.environ.get("PYTHONPATH") else f"{hook_dir}:{os.environ['PYTHONPATH']}"
   extra_env={str(k):str(v) for k,v in mc.get("environment",{}).items()}

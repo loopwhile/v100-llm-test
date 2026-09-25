@@ -1,0 +1,300 @@
+(APIServer pid=48566) INFO 09-25 17:37:14 [utils.py:344] 
+(APIServer pid=48566) INFO 09-25 17:37:14 [utils.py:344]        █     █     █▄   ▄█
+(APIServer pid=48566) INFO 09-25 17:37:14 [utils.py:344]  ▄▄ ▄█ █     █     █ ▀▄▀ █  version 1.5.0
+(APIServer pid=48566) INFO 09-25 17:37:14 [utils.py:344]   █▄█▀ █     █     █     █  model   /srv/models/gemma-4-26b-a4b-it-qat-awq-int4
+(APIServer pid=48566) INFO 09-25 17:37:14 [utils.py:344]    ▀▀  ▀▀▀▀▀ ▀▀▀▀▀ ▀     ▀
+(APIServer pid=48566) INFO 09-25 17:37:14 [utils.py:344] 
+(APIServer pid=48566) INFO 09-25 17:37:14 [utils.py:278] non-default args: {'host': '127.0.0.1', 'port': 18080, 'model': '/srv/models/gemma-4-26b-a4b-it-qat-awq-int4', 'trust_remote_code': True, 'dtype': 'half', 'max_model_len': 131072, 'quantization': 'compressed-tensors', 'enforce_eager': True, 'served_model_name': ['Gemma4-26B-A4B-IT-QAT'], 'attention_backend': 'TRITON_ATTN', 'tensor_parallel_size': 2, 'gpu_memory_utilization': 0.9, 'kv_cache_dtype': 'float16', 'max_num_batched_tokens': 4096, 'max_num_seqs': 1}
+(APIServer pid=48566) WARNING 09-25 17:37:14 [envs.py:4449] Unknown vLLM environment variable detected: VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL
+(APIServer pid=48566) [transformers] Reading global config value for per-layer attribute `num_key_value_heads` on a heterogeneous config. Only do this if the caller can safely handle heterogeneous configs; code that assumes a homogeneous model may use the global value incorrectly.
+(APIServer pid=48566) [transformers] Reading global config value for per-layer attribute `head_dim` on a heterogeneous config. Only do this if the caller can safely handle heterogeneous configs; code that assumes a homogeneous model may use the global value incorrectly.
+(APIServer pid=48566) INFO 09-25 17:37:14 [model.py:617] Resolved architecture: Gemma4ForConditionalGeneration
+(APIServer pid=48566) INFO 09-25 17:37:14 [model.py:1751] Using max model len 131072
+(APIServer pid=48566) INFO 09-25 17:37:16 [scheduler.py:243] Chunked prefill is enabled with max_num_batched_tokens=4096.
+(APIServer pid=48566) INFO 09-25 17:37:16 [vllm.py:1324] Asynchronous scheduling is enabled.
+(APIServer pid=48566) WARNING 09-25 17:37:16 [vllm.py:1412] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+(APIServer pid=48566) INFO 09-25 17:37:16 [kernel.py:270] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(APIServer pid=48566) INFO 09-25 17:37:16 [vllm.py:2062] Cudagraph is disabled under eager mode
+(APIServer pid=48566) WARNING 09-25 17:37:16 [cuda.py:262] Forcing --disable_chunked_mm_input for models with multimodal-bidirectional attention.
+(APIServer pid=48566) INFO 09-25 17:37:16 [compilation.py:321] Enabled custom fusions: norm_quant, act_quant
+(EngineCore pid=48657) INFO 09-25 17:37:36 [core.py:112] Initializing a V1 LLM engine (v1.5.0) with config: model='/srv/models/gemma-4-26b-a4b-it-qat-awq-int4', speculative_config=None, tokenizer='/srv/models/gemma-4-26b-a4b-it-qat-awq-int4', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.float16, max_seq_len=131072, download_dir=None, load_format=auto, tensor_parallel_size=2, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=compressed-tensors, quantization_config=None, enforce_eager=True, enable_return_routed_experts=False, kv_cache_dtype=float16, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False), seed=0, served_model_name=Gemma4-26B-A4B-IT-QAT, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['all'], 'ir_enable_torch_wrap': False, 'splitting_ops': [], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': [], 'compile_ranges_endpoints': [4096], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'size_asserts': False, 'alignment_asserts': False, 'scalar_asserts': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': True, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native']), enable_flashinfer_autotune=True, moe_backend='auto', linear_backend='auto')
+(EngineCore pid=48657) INFO 09-25 17:37:36 [multiproc_executor.py:140] DP group leader: node_rank=0, node_rank_within_dp=0, master_addr=127.0.0.1, mq_connect_ip=172.30.1.153 (local), world_size=2, local_world_size=2
+[transformers] Reading global config value for per-layer attribute `num_key_value_heads` on a heterogeneous config. Only do this if the caller can safely handle heterogeneous configs; code that assumes a homogeneous model may use the global value incorrectly.
+[transformers] Reading global config value for per-layer attribute `head_dim` on a heterogeneous config. Only do this if the caller can safely handle heterogeneous configs; code that assumes a homogeneous model may use the global value incorrectly.
+[transformers] Reading global config value for per-layer attribute `num_key_value_heads` on a heterogeneous config. Only do this if the caller can safely handle heterogeneous configs; code that assumes a homogeneous model may use the global value incorrectly.
+[transformers] Reading global config value for per-layer attribute `head_dim` on a heterogeneous config. Only do this if the caller can safely handle heterogeneous configs; code that assumes a homogeneous model may use the global value incorrectly.
+(Worker pid=48712) INFO 09-25 17:37:49 [parallel_state.py:1782] world_size=2 rank=0 local_rank=0 distributed_init_method=tcp://127.0.0.1:40425 backend=nccl
+(Worker pid=48713) INFO 09-25 17:37:49 [parallel_state.py:1782] world_size=2 rank=1 local_rank=1 distributed_init_method=tcp://127.0.0.1:40425 backend=nccl
+(Worker pid=48712) INFO 09-25 17:37:50 [pynccl.py:113] vLLM is using nccl==2.27.5
+(Worker pid=48712) INFO 09-25 17:37:50 [cuda_communicator.py:324] Using ['CUSTOM', 'PYNCCL'] all-reduce backends (in dispatch order) for group 'tp:0' out of potential backends: ['NCCL_SYMM_MEM', 'QUICK_REDUCE', 'FLASHINFER', 'CUSTOM', 'SYMM_MEM', 'PYNCCL'].
+(Worker pid=48712) INFO 09-25 17:37:50 [cuda_communicator.py:324] Using ['PYNCCL'] all-reduce backends (in dispatch order) for group 'ep:0' out of potential backends: ['NCCL_SYMM_MEM', 'QUICK_REDUCE', 'FLASHINFER', 'CUSTOM', 'SYMM_MEM', 'PYNCCL'].
+(Worker pid=48712) INFO 09-25 17:37:50 [parallel_state.py:2095] rank 0 in world size 2 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank 0, EPLB rank N/A
+(Worker_TP0 pid=48712) INFO 09-25 17:37:51 [gpu_model_runner.py:10153] Starting to load model /srv/models/gemma-4-26b-a4b-it-qat-awq-int4...
+(Worker_TP1 pid=48713) WARNING 09-25 17:37:51 [vllm.py:1412] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+(Worker_TP1 pid=48713) INFO 09-25 17:37:51 [kernel.py:270] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP1 pid=48713) INFO 09-25 17:37:51 [vllm.py:2062] Cudagraph is disabled under eager mode
+(Worker_TP1 pid=48713) INFO 09-25 17:37:51 [compressed_tensors_wNa16.py:119] Using MarlinLinearKernel for CompressedTensorsWNA16
+(Worker_TP0 pid=48712) INFO 09-25 17:37:51 [vllm.py:1324] Asynchronous scheduling is enabled.
+(Worker_TP0 pid=48712) WARNING 09-25 17:37:51 [vllm.py:1412] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+(Worker_TP0 pid=48712) INFO 09-25 17:37:51 [kernel.py:270] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP0 pid=48712) INFO 09-25 17:37:51 [vllm.py:2062] Cudagraph is disabled under eager mode
+(Worker_TP0 pid=48712) INFO 09-25 17:37:51 [compilation.py:321] Enabled custom fusions: norm_quant, act_quant
+(Worker_TP0 pid=48712) INFO 09-25 17:37:51 [__init__.py:677] Using MarlinLinearKernel for mixed-precision linear
+(Worker_TP0 pid=48712) INFO 09-25 17:37:51 [compressed_tensors_wNa16.py:119] Using MarlinLinearKernel for CompressedTensorsWNA16
+(Worker_TP1 pid=48713) INFO 09-25 17:37:51 [cuda.py:349] Using AttentionBackendEnum.TRITON_ATTN backend.
+(Worker_TP0 pid=48712) INFO 09-25 17:37:51 [cuda.py:349] Using AttentionBackendEnum.TRITON_ATTN backend.
+(Worker_TP0 pid=48712) INFO 09-25 17:37:51 [compressed_tensors_moe.py:113] Using CompressedTensorsWNA16MoEMethod
+(Worker_TP0 pid=48712) INFO 09-25 17:37:52 [weight_utils.py:960] Filesystem type for checkpoints: EXT4. Checkpoint size: 16.01 GiB. Available RAM: 54.61 GiB.
+(Worker_TP0 pid=48712) INFO 09-25 17:37:52 [weight_utils.py:983] Auto-prefetch is disabled because the filesystem (EXT4) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+(Worker_TP0 pid=48712) Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880] WorkerProc failed to start.
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880] Traceback (most recent call last):
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 847, in worker_main
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     worker = WorkerProc(*args, **kwargs)
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     return func(*args, **kwargs)
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]            ^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 624, in __init__
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     self.worker.load_model()
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 444, in load_model
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     self.model_runner.load_model(load_dummy_weights=load_dummy_weights)
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     return func(*args, **kwargs)
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]            ^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 10169, in load_model
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     self.model = model_loader.load_model(
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]                  ^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     return func(*args, **kwargs)
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]            ^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/model_loader/base_loader.py", line 64, in load_model
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     self.load_weights(model, model_config)
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     return func(*args, **kwargs)
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]            ^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/model_loader/default_loader.py", line 427, in load_weights
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     loaded_weights = model.load_weights(self.get_all_weights(model_config, model))
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/models/gemma4_mm.py", line 1619, in load_weights
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     return loader.load_weights(weights, mapper=self.hf_to_vllm_mapper)
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/model_loader/reload/torchao_decorator.py", line 50, in patched_model_load_weights
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     return original_load_weights(self, weights, *args, **kwargs)
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/models/utils.py", line 383, in load_weights
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     autoloaded_weights = set(self._load_module("", self.module, weights))
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/models/utils.py", line 330, in _load_module
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     yield from self._load_module(
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/models/utils.py", line 303, in _load_module
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     loaded_params = module_load_weights(weights)
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/models/gemma4.py", line 1721, in load_weights
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     return loader.load_weights(_weight_iterator())
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/model_loader/reload/torchao_decorator.py", line 50, in patched_model_load_weights
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     return original_load_weights(self, weights, *args, **kwargs)
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/models/utils.py", line 383, in load_weights
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     autoloaded_weights = set(self._load_module("", self.module, weights))
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/models/utils.py", line 330, in _load_module
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     yield from self._load_module(
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/models/utils.py", line 303, in _load_module
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     loaded_params = module_load_weights(weights)
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/models/gemma4.py", line 1500, in load_weights
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     weight_loader(param, loaded_weight)
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/model_loader/weight_utils.py", line 1456, in default_weight_loader
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     assert param.size() == loaded_weight.size(), (
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP1 pid=48713) ERROR 09-25 17:37:55 [multiproc_executor.py:880] AssertionError: Attempted to load weight (torch.Size([512])) into parameter (torch.Size([256]))
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880] WorkerProc failed to start.
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880] Traceback (most recent call last):
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 847, in worker_main
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     worker = WorkerProc(*args, **kwargs)
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     return func(*args, **kwargs)
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]            ^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 624, in __init__
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     self.worker.load_model()
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 444, in load_model
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     self.model_runner.load_model(load_dummy_weights=load_dummy_weights)
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     return func(*args, **kwargs)
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]            ^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 10169, in load_model
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     self.model = model_loader.load_model(
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]                  ^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     return func(*args, **kwargs)
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]            ^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/model_loader/base_loader.py", line 64, in load_model
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     self.load_weights(model, model_config)
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     return func(*args, **kwargs)
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]            ^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/model_loader/default_loader.py", line 427, in load_weights
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     loaded_weights = model.load_weights(self.get_all_weights(model_config, model))
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/models/gemma4_mm.py", line 1619, in load_weights
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     return loader.load_weights(weights, mapper=self.hf_to_vllm_mapper)
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/model_loader/reload/torchao_decorator.py", line 50, in patched_model_load_weights
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     return original_load_weights(self, weights, *args, **kwargs)
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/models/utils.py", line 383, in load_weights
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     autoloaded_weights = set(self._load_module("", self.module, weights))
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/models/utils.py", line 330, in _load_module
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     yield from self._load_module(
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/models/utils.py", line 303, in _load_module
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     loaded_params = module_load_weights(weights)
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/models/gemma4.py", line 1721, in load_weights
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     return loader.load_weights(_weight_iterator())
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/model_loader/reload/torchao_decorator.py", line 50, in patched_model_load_weights
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     return original_load_weights(self, weights, *args, **kwargs)
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/models/utils.py", line 383, in load_weights
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     autoloaded_weights = set(self._load_module("", self.module, weights))
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/models/utils.py", line 330, in _load_module
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     yield from self._load_module(
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/models/utils.py", line 303, in _load_module
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     loaded_params = module_load_weights(weights)
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/models/gemma4.py", line 1500, in load_weights
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     weight_loader(param, loaded_weight)
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/model_loader/weight_utils.py", line 1456, in default_weight_loader
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]     assert param.size() == loaded_weight.size(), (
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(Worker_TP0 pid=48712) ERROR 09-25 17:37:55 [multiproc_executor.py:880] AssertionError: Attempted to load weight (torch.Size([512])) into parameter (torch.Size([256]))
+(Worker_TP0 pid=48712) Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:03<?, ?it/s]
+(Worker_TP0 pid=48712) 
+[rank0]:[W925 17:37:56.485630984 ProcessGroupNCCL.cpp:1553] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346] EngineCore failed to start.
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346] Traceback (most recent call last):
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1320, in run_engine_core
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]     engine_core = EngineCoreProc(*args, engine_index=dp_rank, **kwargs)
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]     return func(*args, **kwargs)
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1086, in __init__
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]     super().__init__(
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 121, in __init__
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]     self.model_executor = executor_class(vllm_config)
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 108, in __init__
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]     super().__init__(vllm_config)
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]     return func(*args, **kwargs)
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 109, in __init__
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]     self._init_executor()
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 201, in _init_executor
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]     self.workers = WorkerProc.wait_for_ready(unready_workers)
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 754, in wait_for_ready
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346]     raise e from None
+(EngineCore pid=48657) ERROR 09-25 17:37:57 [core.py:1346] Exception: WorkerProc initialization failed due to an exception in a background process. See stack trace for root cause.
+(EngineCore pid=48657) Process EngineCore:
+(EngineCore pid=48657) Traceback (most recent call last):
+(EngineCore pid=48657)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+(EngineCore pid=48657)     self.run()
+(EngineCore pid=48657)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/multiprocessing/process.py", line 108, in run
+(EngineCore pid=48657)     self._target(*self._args, **self._kwargs)
+(EngineCore pid=48657)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1350, in run_engine_core
+(EngineCore pid=48657)     raise e
+(EngineCore pid=48657)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1320, in run_engine_core
+(EngineCore pid=48657)     engine_core = EngineCoreProc(*args, engine_index=dp_rank, **kwargs)
+(EngineCore pid=48657)                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=48657)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=48657)     return func(*args, **kwargs)
+(EngineCore pid=48657)            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=48657)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1086, in __init__
+(EngineCore pid=48657)     super().__init__(
+(EngineCore pid=48657)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 121, in __init__
+(EngineCore pid=48657)     self.model_executor = executor_class(vllm_config)
+(EngineCore pid=48657)                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=48657)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 108, in __init__
+(EngineCore pid=48657)     super().__init__(vllm_config)
+(EngineCore pid=48657)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=48657)     return func(*args, **kwargs)
+(EngineCore pid=48657)            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=48657)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 109, in __init__
+(EngineCore pid=48657)     self._init_executor()
+(EngineCore pid=48657)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 201, in _init_executor
+(EngineCore pid=48657)     self.workers = WorkerProc.wait_for_ready(unready_workers)
+(EngineCore pid=48657)                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=48657)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 754, in wait_for_ready
+(EngineCore pid=48657)     raise e from None
+(EngineCore pid=48657) Exception: WorkerProc initialization failed due to an exception in a background process. See stack trace for root cause.
+(APIServer pid=48566) Traceback (most recent call last):
+(APIServer pid=48566)   File "<frozen runpy>", line 198, in _run_module_as_main
+(APIServer pid=48566)   File "<frozen runpy>", line 88, in _run_code
+(APIServer pid=48566)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 718, in <module>
+(APIServer pid=48566)     uvloop.run(run_server(args))
+(APIServer pid=48566)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/uvloop/__init__.py", line 96, in run
+(APIServer pid=48566)     return __asyncio.run(
+(APIServer pid=48566)            ^^^^^^^^^^^^^^
+(APIServer pid=48566)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 195, in run
+(APIServer pid=48566)     return runner.run(main)
+(APIServer pid=48566)            ^^^^^^^^^^^^^^^^
+(APIServer pid=48566)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 118, in run
+(APIServer pid=48566)     return self._loop.run_until_complete(task)
+(APIServer pid=48566)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=48566)   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+(APIServer pid=48566)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/uvloop/__init__.py", line 48, in wrapper
+(APIServer pid=48566)     return await main
+(APIServer pid=48566)            ^^^^^^^^^^
+(APIServer pid=48566)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 678, in run_server
+(APIServer pid=48566)     await run_server_worker(listen_address, sock, args, **uvicorn_kwargs)
+(APIServer pid=48566)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 692, in run_server_worker
+(APIServer pid=48566)     async with build_async_engine_client(
+(APIServer pid=48566)                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=48566)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 210, in __aenter__
+(APIServer pid=48566)     return await anext(self.gen)
+(APIServer pid=48566)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=48566)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 100, in build_async_engine_client
+(APIServer pid=48566)     async with build_async_engine_client_from_engine_args(
+(APIServer pid=48566)                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=48566)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 210, in __aenter__
+(APIServer pid=48566)     return await anext(self.gen)
+(APIServer pid=48566)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=48566)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 136, in build_async_engine_client_from_engine_args
+(APIServer pid=48566)     async_llm = AsyncLLM.from_vllm_config(
+(APIServer pid=48566)                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=48566)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/async_llm.py", line 217, in from_vllm_config
+(APIServer pid=48566)     return cls(
+(APIServer pid=48566)            ^^^^
+(APIServer pid=48566)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/async_llm.py", line 146, in __init__
+(APIServer pid=48566)     self.engine_core = EngineCoreClient.make_async_mp_client(
+(APIServer pid=48566)                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=48566)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(APIServer pid=48566)     return func(*args, **kwargs)
+(APIServer pid=48566)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=48566)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 131, in make_async_mp_client
+(APIServer pid=48566)     return AsyncMPClient(*client_args)
+(APIServer pid=48566)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=48566)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(APIServer pid=48566)     return func(*args, **kwargs)
+(APIServer pid=48566)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=48566)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 932, in __init__
+(APIServer pid=48566)     super().__init__(
+(APIServer pid=48566)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 567, in __init__
+(APIServer pid=48566)     with launch_core_engines(
+(APIServer pid=48566)          ^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=48566)   File "/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 144, in __exit__
+(APIServer pid=48566)     next(self.gen)
+(APIServer pid=48566)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/utils.py", line 1150, in launch_core_engines
+(APIServer pid=48566)     wait_for_engine_startup(
+(APIServer pid=48566)   File "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/engine/utils.py", line 1209, in wait_for_engine_startup
+(APIServer pid=48566)     raise RuntimeError(
+(APIServer pid=48566) RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}
+/home/loopwhile/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked shared_memory objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '

@@ -82,11 +82,12 @@ class RuntimePlanTests(unittest.TestCase):
  def test_gemma_stock_contract_is_pinned_for_download_and_host_gate(self):
   p=r.build_plan(ROOT,"gemma4-26b-a4b","STOCK",1,"tp2-shared");c=p["commands"][0]
   self.assertTrue(p["supported_for_planning"])
-  self.assertEqual(p["model_identity"]["repository"],"nvidia/Gemma-4-26B-A4B-NVFP4")
-  self.assertEqual(p["model_identity"]["revision"],"a19cfe00be84568a6867111c9a68c9c44fdcffe6")
+  self.assertEqual(p["model_identity"]["repository"],"cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4")
+  self.assertEqual(p["model_identity"]["revision"],"18a3c7285c33ee39d3e5e16ee6fb2c18f4955ef9")
   self.assertEqual(c[c.index("--attention-backend")+1],"TRITON_ATTN")
   self.assertEqual(c[c.index("--kv-cache-dtype")+1],"float16")
   self.assertEqual(c[c.index("--max-num-batched-tokens")+1],"4096")
+  self.assertEqual(c[c.index("--quantization")+1],"compressed-tensors")
   self.assertNotIn("--speculative-config",c)
  def test_fp8_kv_subtypes_must_be_explicit(self):
   self.assertEqual(r.kv("fp8_e4m3"),"fp8_e4m3")

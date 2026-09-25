@@ -10,8 +10,10 @@
 - 2.2.1 Qwen3.8 STOCK: CLOSED — 128K CAPACITY PASS / OUTPUT INTEGRITY FAIL. Attempts 002~007 reproduced repetition failure. A later B200-aligned E4M3 diagnostic preserved 128K capacity and completed non-repetitively, but post-hoc semantic audit found that the 280-token answer did not substantiate the requested concrete cross-file/component correctness risk; its raw harness PASS is preserved while publication remains FAIL_OUTPUT.
 - 2.2.2 Ornith 9B STOCK: DONE — PASS_C1_128K (EXP-V100-ORN15-9B-1CAT-F16-MTP1-C1-128K-20260924-003; TTFT 165.43s, Decode 8.98 tok/s, Wall 201.64s).
 - 2.2.3 Ornith 35B STOCK: DONE — PASS_C1_128K (EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C1-128K-20260924-002; TTFT 62.05s, Decode 10.45 tok/s, Wall 118.88s).
-- 2.2.4 Gemma4 26B STOCK: CLOSED — FAIL_STARTUP (EXP-V100-GEMMA4-26B-1CAT-F16-TARGET-C1-128K-20260924-002; 1Cat-vLLM 1.5.0 SM70 TurboMind NVFP4 MoE does not support Gemma4 MoE architecture shape (2816, 704, 128, 8) and gelu_pytorch_tanh activation).
-- Current task: WBS 2.2 all 4 items are evaluated and closed. WBS 2.2.1 measured inference limit (2/2) reached. Stopped per policy.
+- 2.2.4 Gemma4 26B STOCK: CLOSED — FAIL_STARTUP.
+  - Historical NVFP4 run: `EXP-V100-GEMMA4-26B-1CAT-F16-TARGET-C1-128K-20260924-002` failed at startup because 1Cat-vLLM 1.5.0 SM70 TurboMind NVFP4 MoE does not support Gemma4 MoE architecture shape (2816, 704, 128, 8) and gelu_pytorch_tanh activation.
+  - Revalidation AWQ INT4 run: `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-001` failed at startup (`FAIL_STARTUP`). The SM70 Marlin MoE path was successfully selected (`Using MarlinLinearKernel for CompressedTensorsWNA16`, `Using CompressedTensorsWNA16MoEMethod`), but 1Cat-vLLM 1.5.0's `gemma4.py` heterogeneous `head_dim` initialization failed under `transformers 5.16.1` (global `global_head_dim` stripped into `per_layer_config`, causing full-attention layers 5, 11, 17, 23, 29 to fall back to `head_dim=256` instead of `512`), resulting in `AssertionError: Attempted to load weight (torch.Size([512])) into parameter (torch.Size([256]))` during shard loading. Gemma4 1Cat-vLLM remains ineligible for C2 / WBS 5.
+- Current task: WBS 2.2.4 AWQ INT4 C1 revalidation completed and closed as FAIL_STARTUP. Stopped per policy.
 - Do not launch work beyond WBS 2.2 automatically.
 
 ## Root-Cause Diagnostic: Qwen3.8-27B 1Cat-vLLM 128K Realistic Workload (2026-09-25)
@@ -53,6 +55,27 @@
   - This run is valid evidence that the tested configuration can hold 128K and can terminate without the earlier repetition collapse in at least one measured execution.
   - It does **not** prove which setting removed repetition, that the effect is repeatable, or that task-level output correctness is recovered.
   - Qwen 1Cat remains **not eligible** for formal C2 promotion or WBS 5 throughput optimization until a user-authorized fresh 128K semantic revalidation passes.
+
+## Gemma4 26B-A4B 1Cat-vLLM AWQ INT4 C1 Revalidation (2026-09-25)
+- Purpose: Revalidate Gemma4 26B-A4B on 1Cat-vLLM 1.5.0 using the newly downloaded AWQ INT4 (`compressed-tensors`) artifact (`cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4@18a3c7285c33ee39d3e5e16ee6fb2c18f4955ef9`), bypassing the previously failed SM70 TurboMind NVFP4 MoE gate via `VLLM_SM70_QUANT_BACKEND=marlin`.
+- Measured Inference: Not reached (`EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-001`).
+- Hardware / Serving: 2x V100 16GB TP2 shared, KV `FP16` (`float16`), context 131,072, `--quantization compressed-tensors`, `VLLM_SM70_QUANT_BACKEND=marlin`, `attention-backend TRITON_ATTN`, `max_num_batched_tokens=4096`, `gpu_memory_utilization=0.90`.
+- Results:
+  - Final Verdict: **FAIL_STARTUP**.
+  - Backend Selection Evidence: SM70 Marlin backend was successfully selected and active:
+    - `Using MarlinLinearKernel for CompressedTensorsWNA16`
+    - `Using MarlinLinearKernel for mixed-precision linear`
+    - `Using CompressedTensorsWNA16MoEMethod`
+    - SM70 TurboMind NVFP4 MoE path was bypassed as intended.
+  - Failure Stage & Root Cause: Model weight loading (`load_weights`) failed at 0% shard progress with:
+    `AssertionError: Attempted to load weight (torch.Size([512])) into parameter (torch.Size([256]))`
+    at `vllm/model_executor/model_loader/weight_utils.py:1456` via `gemma4.py:1500`.
+    - Specific parameter: Layer 5's `k_norm.weight` (and `q_norm.weight`), which in Gemma4's heterogeneous attention architecture has `head_dim = 512` for full-attention layers (layers 5, 11, 17, 23, 29) versus `head_dim = 256` for sliding-attention layers.
+    - Upstream defect: Under `transformers 5.16.1`, the heterogeneous configuration mechanism strips global attributes into `per_layer_config[i]`. In 1Cat-vLLM 1.5.0, `Gemma4DecoderLayer` attempts to read `getattr(config, "global_head_dim", config.head_dim)`, which falls back to global default `head_dim = 256` because `global_head_dim` is absent on `Gemma4TextConfig`. Full-attention layers are therefore instantiated with head dimension 256 instead of 512, crashing when loading the 512-element norm weights.
+- Conclusion:
+  - Gemma4 26B-A4B fails at the compatibility startup gate in 1Cat-vLLM 1.5.0 across both tested quantization formats (historical NVFP4: TurboMind MoE shape rejection; AWQ INT4: heterogeneous full-attention `head_dim` parameter shape mismatch).
+  - Gemma4 1Cat-vLLM remains **not eligible** for C2 capacity testing or WBS 5 throughput optimization.
+- Policy Enforcement: Stopped per policy. Raw evidence is preserved under `results/raw/EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-001/`.
 
 ## Next planned work after current stop
 
