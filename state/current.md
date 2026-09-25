@@ -25,17 +25,25 @@
 - Conclusion: The hypothesis that exact duplicate-heavy synthetic padding is a **necessary cause** is rejected because repetition collapse also reproduced on a 116-file diversified snapshot. Broader prompt-composition / ultra-long code-dump effects remain possible. Qwen3.8-specific long-context runtime/checkpoint/KV/kernel interaction hypotheses are strengthened, but no single root cause is proven.
 - Note: WBS 2.2.1 verdict remains `CLOSED — 128K CAPACITY PASS / OUTPUT INTEGRITY FAIL` (unchanged). Single measured inference budget exhausted; stopped.
 
+## 128K Recovery Validation: Qwen3.8-27B 1Cat-vLLM E5M2/GDN Triton Path (2026-09-25)
+- Purpose: Verify whether combining the historically clean Qwen 1Cat execution path (fp8_e5m2 KV, GDN Triton prefill, VLLM_SM70_GDN_DECODE_FLASHQLA=0, FLASH_ATTN_V100, thinking=false, temp=0, top_p=1, seed=38) with proven 128K capacity settings (--language-model-only, util=0.92, partition 256) recovers 128K output integrity.
+- Measured Inference: Exactly 1 run attempted (`EXP-V100-Q38-1CAT-FP8E5M2-TARGET-RECOVERY-C1-128K-20260925-001`).
+- Hardware / Serving: 2x V100 16GB TP2 shared, KV `fp8_e5m2`, context 131,072, `temperature=0`, `top_p=1`, `seed=38`, `thinking=False`, `--language-model-only`, `gpu_memory_utilization=0.92`, `VLLM_FLASH_V100_DECODE_PARTITION_SIZE=256`, `VLLM_SM70_GDN_DECODE_FLASHQLA=0`, `--additional-config '{"gdn_prefill_backend":"triton"}'`.
+- Results:
+  - Final Verdict: **FAIL_STARTUP** (Capacity: **FAIL_CAPACITY**, Integrity: **NOT_REACHED**).
+  - Cause: During engine core initialization profiling, Triton prefill kernel memory overhead reduced available KV cache memory to 1.5 GiB, which is insufficient for 131,072 max_model_len requiring 2.15 GiB (`ValueError: To serve at least one request with the model's max seq len (131072), (2.15 GiB KV cache is needed, which is larger than the available KV cache memory (1.5 GiB). Based on the available memory, the estimated maximum model length is 87808.`). Server exited prematurely before measured inference.
+  - Peak VRAM: GPU0 13,987 MiB / GPU1 13,987 MiB during profile crash.
+- Conclusion:
+  - The E5M2 + GDN Triton prefill candidate is **not capacity-compatible with 128K on 2× V100 16GB** (ceiling is ~87.8K tokens).
+  - Existing E4M3 128K capacity PASS evidence remains preserved as an independent configuration (`E4M3 128K = Capacity PASS / Output Integrity FAIL`).
+  - E5M2-GDN 128K recovery candidate is closed as `FAIL_STARTUP / FAIL_CAPACITY`.
+  - Qwen 1Cat 128K recovery test is concluded as failed. Qwen 1Cat is not eligible for WBS 5 throughput optimization.
+- Policy Enforcement: Exactly 1 measured inference completed. All further automatic sweeps, retries, and tuning are strictly STOPPED per policy.
 
 ## Next planned work after current stop
 
 - Remaining project scope is WBS 3, WBS 4, and revised WBS 5 only. There is no separate deployment-selection phase.
-- WBS 3: C2 capacity/residency/active-overlap testing for eligible C1 lanes.
+- WBS 3: C2 capacity/residency/active-overlap testing for eligible C1 lanes (Ornith 1.5 9B STOCK/LLAMA, Ornith 1.5 35B-A3B LLAMA/STOCK, Gemma4 LLAMA, Qwen3.8 LLAMA; Qwen 1Cat is ineligible).
 - WBS 4: Ornith 1.5 9B 1GPU×2 + LiteLLM topology validation.
-- WBS 5: performance optimization and per-model/per-runtime final recipe capture.
-- Qwen3.8 1Cat-vLLM receives one additional bounded **128K recovery recipe validation** before further performance tuning:
-  - keep 128K (`max_model_len=131072`) and the proven capacity enablers `--language-model-only`, util=0.92, and `VLLM_FLASH_V100_DECODE_PARTITION_SIZE=256`;
-  - switch to the historically stable Qwen 1Cat path: E5M2 KV, GDN Triton prefill, `VLLM_SM70_GDN_DECODE_FLASHQLA=0`, thinking=false, eager, target-only;
-  - use a 128K workload, not 64K/96K;
-  - exactly one measured inference;
-  - preserve the old E4M3 128K failure as a separate configuration.
-- Historical p520-inference-lab Profile 007 fast-path results may guide WBS 5 option candidates, but are not imported as fresh acceptance evidence.
+- WBS 5: performance optimization and per-model/per-runtime final recipe capture for eligible models.
+- Automatic execution beyond current stop is forbidden without explicit user instruction.

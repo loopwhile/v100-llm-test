@@ -1,0 +1,23 @@
+{
+  "reviewed_at_utc": "2026-09-25T07:11:23.154262+00:00",
+  "verdict": "FAIL_STARTUP",
+  "harness_verdict": "FAIL_STARTUP",
+  "capacity_verdict": "FAIL_CAPACITY",
+  "integrity_verdict": "NOT_REACHED",
+  "prompt_receipt_matches_usage": false,
+  "reserved_budget_tokens": 131072,
+  "prompt_tokens": 0,
+  "completion_tokens": 0,
+  "finish_reason": null,
+  "runtime_truncated": 0,
+  "post_health_healthy": false,
+  "capacity_summary": "FAIL_CAPACITY: Qwen3.8-27B QUASAR NVFP4 + 1Cat-vLLM 1.5.0 TP2 + FP8 E5M2 + GDN Triton prefill path failed during engine core initialization profile run. Available KV cache memory shrank to 1.5 GiB, which is insufficient for 131,072 max_model_len requiring 2.15 GiB (estimated max model length 87,808). Server exited prematurely before measured inference.",
+  "integrity_summary": "NOT_REACHED: Measured inference was never dispatched due to engine startup capacity failure.",
+  "diagnostic_summary": "과거 64K clean-output evidence에서 가져온 E5M2 KV + GDN Triton prefill path를 현재 128K context 설정에 결합한 결과, Triton prefill 커널 프로파일링 오버헤드로 인해 가용 KV 캐시 메모리가 1.5 GiB로 감소하여 128K 수용에 필요한 2.15 GiB를 확보하지 못하고 startup capacity에서 즉시 실패함 (estimated max context: 87,808). 반면 기존 E4M3 path는 2.8 GiB 가용 메모리로 128K capacity를 통과했으므로, E5M2/GDN Triton path는 현재 2x V100 16GB 환경에서 128K capacity-compatible하지 않음이 확인됨.",
+  "key_note": "128K recovery validation FAIL_STARTUP: E5M2 + GDN Triton prefill path reduced available KV cache to 1.5 GiB, failing 128K allocation (needed 2.15 GiB, estimated max len 87,808); inference not reached. E4M3 128K capacity PASS evidence remains preserved.",
+  "content_review": "NOT_REACHED: Server failed during initialization; no output generated.",
+  "runtime_errors": [
+    "ValueError: To serve at least one request with the model's max seq len (131072), (2.15 GiB KV cache is needed, which is larger than the available KV cache memory (1.5 GiB). Based on the available memory, the estimated maximum model length is 87808."
+  ],
+  "cleanup": "cleaned (all residual processes terminated, ports released)"
+}

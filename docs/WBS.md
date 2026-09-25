@@ -584,10 +584,16 @@ prompt composition 변화가 결과를 혼동하지 않도록 한다.
 - MTP/DFlash2
 - 추가 retry.
 
+**실행 결과 (`EXP-V100-Q38-1CAT-FP8E5M2-TARGET-RECOVERY-C1-128K-20260925-001`):**
+- 판정: **FAIL_STARTUP** (Capacity: FAIL_CAPACITY, Integrity: NOT_REACHED)
+- 사유: Triton prefill 커널 오버헤드로 인해 profile run 시 가용 KV 캐시 메모리가 1.5 GiB로 축소되어 128K(131,072)에 필요한 2.15 GiB를 확보하지 못함 (`ValueError: To serve at least one request with the model's max seq len (131072), (2.15 GiB KV cache is needed, which is larger than the available KV cache memory (1.5 GiB). Based on the available memory, the estimated maximum model length is 87808.`).
+- Peak VRAM: GPU0 13,987 MiB / GPU1 13,987 MiB.
+- 결론: E5M2 + GDN Triton prefill 128K candidate는 2×V100 16GB에서 capacity-compatible하지 않음. 기존 E4M3 128K capacity PASS는 그대로 보존되며, Qwen 1Cat의 WBS 5 성능 최적화 진입은 불가로 확정 종료.
+
 ### 5.4 Qwen3.8-27B 1Cat 추가 성능 특성화
 
-5.3.1의 128K recovery recipe validation이 PASS한 경우에만 Qwen 1Cat을 성능 최적화 후보로 유지한다.
-FAIL이면 이 저장소에서는 추가 throughput tuning을 중단하고 bounded failure recipe를 기록한다.
+5.3.1의 128K recovery recipe validation이 FAIL_STARTUP으로 종료되었으므로, 이 저장소에서는 Qwen 1Cat의 추가 throughput tuning을 중단하고 bounded failure recipe를 기록한다.
+Qwen 1Cat은 WBS 5 성능 최적화 대상에서 제외된다.
 
 PASS 시 과거 evidence를 참고해 다음 중 필요한 최소 실험만 수행한다.
 - target-only CUDA Graph capture [1,2] recovery.
