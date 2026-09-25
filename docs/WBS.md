@@ -360,67 +360,178 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - pinned v100-skinny v1.1 standalone model contract가 없다.
 - current project에서는 C1/C2 실행 대상으로 예약하지 않는다.
 
-## 3. C2 — 독립적인 128K 에이전트 2개 [IN PROGRESS — v2 semantic audit applied]
+## 3. C2 — 독립적인 128K 에이전트 2개 [TODO — authoritative v2 revalidation]
 
-### 3.0 Authoritative contract
+### 3.0 WBS 3 workload reset (2026-09-25)
 
-- 최종 workload: `workloads/concurrency/v2.json`.
-- semantic oracle: `workloads/concurrency/v2-ground-truth.json`.
-- 기존 `concurrency/v1`과 raw evidence는 historical evidence로 보존한다.
-- runtime concurrency, mechanical output, semantic correctness는 서로 독립된 축으로 기록한다.
-- runtime `PASS_C2_ACTIVE`만으로 publication PASS를 부여하지 않는다.
-- mechanical + semantic가 모두 PASS인 경우에만 runtime concurrency verdict를 최종 publication verdict로 유지한다.
-- 상세 audit: `docs/WBS-3-v2-semantic-audit.md`.
+기존 `workloads/concurrency/v1.json`은 raw/historical evidence로 보존하지만 WBS 3의 최종 acceptance에는 더 이상 사용하지 않는다.
 
-### 3.1 Shared TP2 llama.cpp
+v1의 구조적 결함:
+- 소수 seed block을 약 128K까지 반복하여 long-context repetition bias를 만들었다.
+- 실제 결함 존재가 보장되지 않은 코드에 "concrete risk 하나"를 강제하여 unsupported bug를 만들어낼 유인을 만들었다.
+- "minimal plan"과 별개로 최소 256 output tokens를 강제하여 짧지만 정상적인 답변도 mechanical FAIL_OUTPUT이 될 수 있었다.
+- 기존 harness는 output PASS와 runtime topology를 결합하여 output underfill 시 실제 queue evidence까지 잃을 수 있었다.
 
-| WBS | Model | Lane | Runtime C2 | Mechanical | Semantic | Publication |
-| --- | --- | --- | --- | --- | --- | --- |
-| 3.1.1 | Qwen3.8-27B | TARGET | PASS_C2_ACTIVE | PASS | PASS | **PASS_C2_ACTIVE** |
-| 3.1.1 | Qwen3.8-27B | NGRAM | PASS_C2_ACTIVE | PASS | PASS | **PASS_C2_ACTIVE** |
-| 3.1.2 | Ornith 1.5 9B | TARGET | PASS_C2_ACTIVE | PASS | FAIL_OUTPUT | **FAIL_OUTPUT** |
-| 3.1.2 | Ornith 1.5 9B | NGRAM | PASS_C2_ACTIVE | PASS | FAIL_OUTPUT | **FAIL_OUTPUT** |
-| 3.1.2 | Ornith 1.5 9B | MTP | PASS_C2_ACTIVE | PASS | FAIL_OUTPUT | **FAIL_OUTPUT** |
-| 3.1.2 | Ornith 1.5 9B | MTP_NGRAM | PASS_C2_ACTIVE | PASS | FAIL_OUTPUT | **FAIL_OUTPUT** |
-| 3.1.3 | Ornith 1.5 35B-A3B | TARGET | PASS_C2_ACTIVE | PASS | PASS | **PASS_C2_ACTIVE** |
-| 3.1.3 | Ornith 1.5 35B-A3B | NGRAM | PASS_C2_ACTIVE | PASS | PASS | **PASS_C2_ACTIVE** |
-| 3.1.3 | Ornith 1.5 35B-A3B | MTP | PASS_C2_ACTIVE | PASS | FAIL_OUTPUT | **FAIL_OUTPUT** |
-| 3.1.3 | Ornith 1.5 35B-A3B | MTP_NGRAM | PASS_C2_ACTIVE | PASS | FAIL_OUTPUT | **FAIL_OUTPUT** |
+WBS 3 authoritative workload는 `workloads/concurrency/v2.json`이다.
+- Project A/B 각각 non-padding anchor에 정확히 하나의 pre-registered seeded bug를 둔다.
+- semantic oracle은 `workloads/concurrency/v2-ground-truth.json`에 사전 고정한다.
+- anchor는 한 번만 포함하고 나머지 128K는 `{{SECTION}}` 기반 semantically-neutral padding으로 채운다.
+- 응답은 Root Cause / Failure Trace / executable reproduction / Minimal Fix를 요구한다.
+- runtime capacity/concurrency, mechanical output, semantic correctness를 별도 축으로 기록한다.
+- 최종 acceptance에는 mechanical PASS와 oracle 기반 semantic PASS가 필요하다.
+- `QUEUE_ONLY`를 `PASS_C2_ACTIVE`로 승격하지 않는다.
 
-3.1.1/3.1.2/3.1.3의 GPU 실행은 완료됐다. 위 표는 raw runtime evidence를 바꾸지 않고 V2 oracle을 publication gate에 적용한 최종 판정이다.
+기존 v1 실험은 삭제하거나 소급 변경하지 않는다. Qwen v1 queue-only와 Ornith 9B v1 active-overlap은 historical diagnostic으로 유지한다.
 
-#### 3.1.4 Gemma4 26B-A4B [DEFERRED — NOT EXECUTED]
-- C1에서 TARGET/NGRAM/corrected MTP/corrected MTP_NGRAM이 runnable이었다.
-- WBS 3 v2의 4개 C2 lane은 아직 실행하지 않았다.
-- 수동 실행 가이드: `docs/WBS-3.1.4-gemma4-execution-guide.md`.
-- 따라서 "WBS 3 전체 완료"로 기록하지 않는다.
+### 3.1 Shared TP2 llama.cpp [DONE — Qwen, Ornith 9B, Ornith 35B complete; Gemma4 deferred per user instruction]
+- 실행 runner: `scripts/run_c2_llama.py`.
+- 공통: `parallel=2`, `ctx-size=262144`, `kv-unified`, `kv-unified-per-slot=131072`.
 
-### 3.2 Shared TP2 1Cat-vLLM STOCK
+#### 3.1.1 Qwen3.8-27B [DONE]
+- artifact: `UD-Q4_K_M`.
+- KV: `Q8_0`.
+- 실행 lane: `TARGET`, `NGRAM`.
+- TARGET: `EXP-V100-Q38-LLAMA-Q80-TARGET-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (`peak_processing: 2.0`, `peak_waiting: 0.0`). 2× V100 16GB TP2 환경에서 2개 독립 128K 세션(총 256K 컨텍스트) 동시 상주 및 병렬 디코드 완벽 통과.
+  - TTFT (Batch Mean): 925.17s, Prefill 177.23 tok/s, Mean Decode 4.87 tok/s, Aggregate Decode 1.83 tok/s, End-to-End Output 1.19 tok/s, Batch Wall 1,446.44s (~24.11분).
+  - Peak VRAM: GPU0 13,159 MiB / GPU1 14,247 MiB (16GB 한도 내 안정적 수용, OOM 여유 ~2,137 MiB).
+  - Output analysis:
+    - Project A: 886 tokens 생성, `Transaction.commit` 루프 내 `pending.clear()` 조기 비움 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+    - Project B: 842 tokens 생성, `JobQueue._sequence` 비원자적 RMW 및 tiebreaker 중복 문제 완벽 분석 및 재현/수정안 제시 (PASS).
+- NGRAM: `EXP-V100-Q38-LLAMA-Q80-NGRAM-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (`peak_processing: 2.0`, `peak_waiting: 0.0`). 2× V100 16GB TP2 환경에서 NGRAM 투기 디코딩 활성 상태로 2개 독립 128K 세션 동시 상주 및 병렬 디코드 완벽 통과.
+  - TTFT (Batch Mean): 925.67s, Prefill 177.08 tok/s, Mean Decode 5.00 tok/s, Aggregate Decode 2.16 tok/s, End-to-End Output 1.43 tok/s, Batch Wall 1,489.30s (~24.82분).
+  - NGRAM Speculative 통계: Project A (draft 288, accepted 86, 29.9%), Project B (draft 561, accepted 117, 20.9%).
+  - Peak VRAM: GPU0 13,163 MiB / GPU1 14,249 MiB (16GB 한도 내 안정 수용, OOM 여유 ~2,135 MiB).
+  - Output analysis:
+    - Project A: 886 tokens 생성, `Transaction.commit` 루프 내 `pending.clear()` 조기 비움 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+    - Project B: 1,249 tokens 생성, `JobQueue._sequence` 비원자적 RMW 및 tiebreaker 중복 문제 완벽 분석 및 재현/수정안 제시 (PASS).
 
-| WBS | Model | Lane | Runtime C2 | Mechanical | Semantic | Publication |
-| --- | --- | --- | --- | --- | --- | --- |
-| 3.2.1 | Qwen3.8-27B | B200-aligned E4M3 TARGET | QUEUE_ONLY | FAIL_OUTPUT | FAIL_OUTPUT | **FAIL_OUTPUT** |
-| 3.2.2 | Ornith 1.5 9B | MTP1 / FP16 | PASS_C2_ACTIVE | PASS | FAIL_OUTPUT | **FAIL_OUTPUT** |
-| 3.2.3 | Ornith 1.5 35B-A3B | target-only / E5M2 | PASS_C2_ACTIVE | PASS | FAIL_OUTPUT | **FAIL_OUTPUT** |
+#### 3.1.2 Ornith 1.5 9B [DONE]
+- artifact: `Q6_K`.
+- KV: `FP16`.
+- 실행 lane: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
+- TARGET: `EXP-V100-ORN15-9B-LLAMA-F16-TARGET-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (`peak_processing: 2.0`, `peak_waiting: 0.0`). 2× V100 16GB TP2 환경에서 FP16 KV 캐시로 2개 독립 128K 세션 동시 상주 및 병렬 디코드 완벽 통과.
+  - TTFT (Batch Mean): 264.40s, Prefill 620.03 tok/s, Mean Decode 19.71 tok/s, Aggregate Decode 9.17 tok/s, End-to-End Output 6.09 tok/s, Batch Wall 425.82s (~7.10분).
+  - Peak VRAM: GPU0 7,789 MiB / GPU1 8,235 MiB (16GB 한도 내 여유 ~8,149 MiB).
+  - Output analysis:
+    - Project A: 1,190 tokens 생성, `Transaction.commit` 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+    - Project B: 1,402 tokens 생성, `JobQueue._sequence` 비원자적 RMW 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+- NGRAM: `EXP-V100-ORN15-9B-LLAMA-F16-NGRAM-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (`peak_processing: 2.0`, `peak_waiting: 0.0`). 2× V100 16GB TP2 환경에서 NGRAM 활성 상태로 2개 독립 128K 세션 동시 상주 및 병렬 디코드 완벽 통과.
+  - TTFT (Batch Mean): 264.44s, Prefill 715.33 tok/s, Mean Decode 18.22 tok/s, Aggregate Decode 7.76 tok/s, End-to-End Output 5.11 tok/s, Batch Wall 417.21s (~6.95분).
+  - NGRAM Speculative 통계: Project A (draft 288, accepted 76, 26.4%), Project B (draft 350, accepted 65, 18.6%).
+  - Peak VRAM: GPU0 7,791 MiB / GPU1 8,311 MiB (16GB 한도 내 여유 ~8,073 MiB).
+  - Output analysis:
+    - Project A: 897 tokens 생성, `Transaction.commit` 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+    - Project B: 1,235 tokens 생성, `JobQueue._sequence` 비원자적 RMW 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+- MTP: `EXP-V100-ORN15-9B-LLAMA-F16-MTP-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (`peak_processing: 2.0`, `peak_waiting: 0.0`). 2× V100 16GB TP2 환경에서 native MTP 활성 상태로 2개 독립 128K 세션 동시 상주 및 병렬 디코드 완벽 통과.
+  - TTFT (Batch Mean): 325.09s, Prefill 494.99 tok/s, Mean Decode 22.16 tok/s, Aggregate Decode 7.85 tok/s, End-to-End Output 5.06 tok/s, Batch Wall 509.80s (~8.50분).
+  - MTP Speculative 통계: Project A (draft 1,023, accepted 552, **54.0%**), Project B (draft 1,911, accepted 1,048, **54.8%**; 단독 decode **41.29 tok/s** 달성).
+  - Peak VRAM: GPU0 7,963 MiB / GPU1 10,009 MiB (16GB 한도 내 여유 ~6,375 MiB).
+  - Output analysis:
+    - Project A: 894 tokens 생성, `Transaction.commit` 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+    - Project B: 1,686 tokens 생성, `JobQueue._sequence` 비원자적 RMW 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+- MTP_NGRAM: `EXP-V100-ORN15-9B-LLAMA-F16-MTP-NGRAM-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (`peak_processing: 2.0`, `peak_waiting: 0.0`). 2× V100 16GB TP2 환경에서 composite `draft-mtp,ngram-simple` 활성 상태로 2개 독립 128K 세션 동시 상주 및 병렬 디코드 완벽 통과.
+  - TTFT (Batch Mean): 324.95s, Prefill 495.74 tok/s, Mean Decode 21.40 tok/s, Aggregate Decode 6.45 tok/s, End-to-End Output 4.11 tok/s, Batch Wall 498.39s (~8.31분).
+  - Speculative 통계: Project A (draft 1,173, accepted 558, **47.6%**), Project B (draft 1,554, accepted 747, **48.1%**; 단독 decode **39.83 tok/s**).
+  - Peak VRAM: GPU0 7,965 MiB / GPU1 10,071 MiB (16GB 한도 내 여유 ~6,313 MiB).
+  - Output analysis:
+    - Project A: 879 tokens 생성, `Transaction.commit` 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+    - Project B: 1,168 tokens 생성, `JobQueue._sequence` 비원자적 RMW 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+  - 네 lane(TARGET, NGRAM, MTP, MTP_NGRAM) 모두 128K C2 Active Overlap 및 semantic oracle 검증을 완벽하게 통과함.
 
-- Qwen의 `QUEUE_ONLY` scheduler evidence는 유효하며 output/semantic FAIL 때문에 지우지 않는다.
-- Ornith 9B/35B의 `PASS_C2_ACTIVE` runtime evidence도 유효하다. 다만 V2 oracle을 통과하지 못했으므로 publication은 `FAIL_OUTPUT`이다.
-- Gemma4 1Cat은 C1 `FAIL_TIMEOUT`이므로 C2 비대상이다.
+#### 3.1.3 Ornith 1.5 35B-A3B [DONE]
+- artifact: `Q4_K_M`.
+- KV: `Q8_0`.
+- 실행 lane: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
+- TARGET: `EXP-V100-ORN15-35B-LLAMA-Q80-TARGET-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (`peak_processing: 2.0`, `peak_waiting: 0.0`). 2× V100 16GB TP2 환경에서 35B MoE 모델 Q8_0 KV 캐시로 2개 독립 128K 세션 동시 상주 및 병렬 디코드 완벽 통과.
+  - TTFT (Batch Mean): 815.97s, Prefill 188.93 tok/s, Mean Decode 15.63 tok/s, Aggregate Decode 3.07 tok/s, End-to-End Output 1.80 tok/s, Batch Wall 1,183.89s (~19.73분).
+  - Peak VRAM: GPU0 12,831 MiB / GPU1 12,309 MiB (16GB 한도 내 여유: GPU0 ~3.5 GiB, GPU1 ~4.0 GiB).
+  - Output analysis:
+    - Project A: 917 tokens 생성, `Transaction.commit` 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+    - Project B: 1,217 tokens 생성, `JobQueue._sequence` 비원자적 RMW 결함 완벽 분석 및 재현/수정안 제시 (PASS, 단독 디코드 29.91 tok/s).
+- NGRAM: `EXP-V100-ORN15-35B-LLAMA-Q80-NGRAM-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (`peak_processing: 2.0`, `peak_waiting: 0.0`). 2× V100 16GB TP2 환경에서 NGRAM 활성 상태로 2개 독립 128K 세션 동시 상주 및 병렬 디코드 완벽 통과.
+  - TTFT (Batch Mean): 816.17s, Prefill 188.90 tok/s, Mean Decode 14.56 tok/s, Aggregate Decode 2.83 tok/s, End-to-End Output 1.66 tok/s, Batch Wall 1,183.06s (~19.72분).
+  - NGRAM Speculative 통계: Project A (draft 312, accepted 80, 25.6%), Project B (draft 272, accepted 68, 25.0%; 단독 decode 27.83 tok/s).
+  - Peak VRAM: GPU0 12,831 MiB / GPU1 12,309 MiB (16GB 한도 내 안정적 수용).
+  - Output analysis:
+    - Project A: 867 tokens 생성, `Transaction.commit` 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+    - Project B: 1,098 tokens 생성, `JobQueue._sequence` 비원자적 RMW 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+- MTP: `EXP-V100-ORN15-35B-LLAMA-Q80-MTP-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (`peak_processing: 2.0`, `peak_waiting: 0.0`). 2× V100 16GB TP2 환경에서 native MTP 활성 상태로 2개 독립 128K 세션 동시 상주 및 병렬 디코드 완벽 통과.
+  - TTFT (Batch Mean): 857.77s, Prefill 180.62 tok/s, Mean Decode 18.20 tok/s, Aggregate Decode 3.50 tok/s, End-to-End Output 2.07 tok/s, Batch Wall 1,251.11s (~20.85분).
+  - MTP Speculative 통계: Project A (draft 574, accepted 455, **79.3%**), Project B (draft 888, accepted 677, **76.2%**; 단독 decode **34.97 tok/s**).
+  - Peak VRAM: GPU0 12,897 MiB / GPU1 13,737 MiB (16GB 한도 내 여유: GPU0 ~3.4 GiB, GPU1 ~2.6 GiB).
+  - Output analysis:
+    - Project A: 1,030 tokens 생성, `Transaction.commit` 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+    - Project B: 1,566 tokens 생성, `JobQueue.pop` 비원자적 race 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+- MTP_NGRAM: `EXP-V100-ORN15-35B-LLAMA-Q80-MTP-NGRAM-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (`peak_processing: 2.0`, `peak_waiting: 0.0`). 2× V100 16GB TP2 환경에서 composite `draft-mtp,ngram-simple` 활성 상태로 2개 독립 128K 세션 동시 상주 및 병렬 디코드 완벽 통과.
+  - TTFT (Batch Mean): 860.09s, Prefill 180.10 tok/s, Mean Decode 15.43 tok/s, Aggregate Decode 2.70 tok/s, End-to-End Output 1.59 tok/s, Batch Wall 1,240.18s (~20.67분).
+  - Speculative 통계: Project A (draft 759, accepted 445, **58.6%**; 단독 decode **29.38 tok/s**), Project B (draft 858, accepted 463, **54.0%**).
+  - Peak VRAM: GPU0 12,897 MiB / GPU1 13,737 MiB (16GB 한도 내 여유: GPU0 ~3.4 GiB, GPU1 ~2.6 GiB).
+  - Output analysis:
+    - Project A: 905 tokens 생성, `Transaction.commit` 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+    - Project B: 1,065 tokens 생성, `JobQueue.pop` 비원자적 race 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+  - 네 lane(TARGET, NGRAM, MTP, MTP_NGRAM) 모두 128K C2 Active Overlap 및 semantic oracle 검증을 완벽하게 통과함.
 
-### 3.3 v100-skinny
+#### 3.1.4 Gemma4 26B-A4B [DEFERRED — manual execution guide provided in docs/WBS-3.1.4-gemma4-execution-guide.md]
+- artifact: `UD-Q4_K_XL`.
+- KV: `FP16`.
+- 실행 lane: `TARGET`, `NGRAM`, corrected `MTP`, corrected `MTP_NGRAM`; MTP는 validated `CUDA0,CUDA1` draft contract 유지.
+- 사용자 요청에 따라 자동 실행을 중단하고 수동 실행 가이드 문서 작성으로 갈음함 (`docs/WBS-3.1.4-gemma4-execution-guide.md`). 필요 시 해당 가이드에 따라 개별 실행 및 커밋 가능.
 
-- Qwen3.8: WBS 1.4 `FAIL_OOM_MODEL_LOAD`로 CLOSED.
+### 3.2 Shared TP2 1Cat-vLLM STOCK [TODO — v2 revalidation]
+- 공통: TP2, `max_model_len=131072`, `max_num_seqs=2`, C1에서 검증된 exact serving configuration 유지.
+- `scripts/run_c2_onecat.py`는 v2 manifest와 semantic-oracle hash를 evidence에 고정한다.
+
+#### 3.2.1 Qwen3.8-27B STOCK [DONE — QUEUE_ONLY / FAIL_OUTPUT]
+- B200-aligned E4M3 serving recipe로 v2 experiment `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C2-128K-20260925-002` 실행 완료.
+- 판정: `FAIL_OUTPUT` (Queue-only verified, Peak VRAM 15,575 MiB GPU0/1 symmetric, OOM 없음, Post-health PASS).
+- Concurrency evidence: `resident: false`, `active_overlap: false`, `queue_only: true` (`peak_processing=1.0`, `peak_waiting=1.0`). 두 개의 128K 요청이 VRAM 한계로 인해 순차 처리됨이 하네스 독립 샘플러로 확정됨.
+- Output analysis:
+  - Project A: 570 tokens 생성, 최소 토큰 조건(>= 256) 및 포맷 충족하여 PASS.
+  - Project B: 165 tokens 생성 후 반복 구문과 함께 조기 중단되어 최소 토큰 요구량(256 tokens) 미달 및 semantic 검증 실패로 `FAIL_OUTPUT`.
+- 이 결과는 과거 C1 semantic FAIL 및 C2 queue-only 제약을 재확인함. Qwen3.8 1Cat은 C2 동시 상주(active overlap)가 불가능하며 WBS 5 최적화 대상에서 제외됨.
+
+#### 3.2.2 Ornith 1.5 9B STOCK [DONE — PASS_C2_ACTIVE]
+- 동일 TP2/MTP1/FP16 serving contract로 v2 experiment `EXP-V100-ORN15-9B-1CAT-F16-MTP1-C2-128K-20260925-003` 실행 완료.
+- 판정: **`PASS_C2_ACTIVE`** (128K C2 capacity, active decode overlap, semantic output 모두 PASS).
+- Concurrency evidence: `resident: true`, `active_overlap: true`, `queue_only: false` (`peak_processing=2.0`, `peak_waiting=0.0`). 두 개의 128K 요청이 2× V100 16GB TP2에서 완전히 동시 상주(Peak VRAM 13,901 MiB)하며 큐잉 없이 병렬 디코딩 수행.
+- TTFT 310.90s, Mean Decode 9.94 tok/s, Aggregate Decode 15.60 tok/s, Batch Wall 458.71s.
+- Output analysis:
+  - Project A: 865 tokens 생성, `Transaction.commit` 루프 내 조기 clear 결함 완벽 분석/재현 (PASS).
+  - Project B: 1,460 tokens 생성, `JobQueue._sequence` 비원자적 RMW 및 tiebreaker 중복 문제 정확 분석/재현 (PASS).
+- Ornith 1.5 9B는 1Cat-vLLM STOCK 환경에서 C2 128K active overlap 및 semantic correctness를 완벽히 통과하여 WBS 5 최적화 자격을 유지함.
+
+#### 3.2.3 Ornith 1.5 35B-A3B STOCK [DONE — PASS_C2_ACTIVE]
+- 검증된 TP2/target-only/E5M2 configuration으로 v2 experiment `EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C2-128K-20260925-001` 실행 완료.
+- 판정: **`PASS_C2_ACTIVE`** (128K C2 capacity, active decode overlap, semantic output 모두 PASS).
+- Concurrency evidence: `resident: true`, `active_overlap: true`, `queue_only: false` (`peak_processing=2.0`, `peak_waiting=1.0` -> 동시 활성 디코드 진입 확인). 2× V100 16GB TP2에서 피크 VRAM 14,557 MiB로 두 개의 128K context 동시 수용.
+- TTFT 113.71s, Mean Decode 7.45 tok/s, Aggregate Decode 9.57 tok/s, Batch Wall 284.18s (~4.74분).
+- Output analysis:
+  - Project A: 947 tokens 생성, `Transaction.commit` 루프 내 `pending.clear()` 조기 순회 중단 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+  - Project B: 1,181 tokens 생성, `JobQueue.pop()`의 `await asyncio.sleep(0)` check-then-act race condition 정확 분석 및 재현/수정안 제시 (PASS).
+- Ornith 1.5 35B-A3B는 1Cat-vLLM STOCK 환경에서 C2 128K active overlap 및 semantic correctness를 통과하여 WBS 5 최적화 자격을 유지함.
+
+#### 3.2.4 Gemma4 26B-A4B STOCK [NOT ELIGIBLE — C1 FAIL_TIMEOUT]
+- 1Cat-vLLM C1 128K가 terminal FAIL_TIMEOUT이므로 v2 C2 대상이 아니다.
+
+### 3.3 v100-skinny SKINNY
+- Qwen3.8: CLOSED BY WBS 1.4 (`FAIL_OOM_MODEL_LOAD`).
 - Ornith 9B / Ornith 35B / Gemma4: UNSUPPORTED.
-- 재실행하지 않는다.
+- 현재 하드웨어에서 재실행하지 않는다.
 
-### 3.4 WBS 3 상태
+### 3.4 공통 C2 판정 및 측정
+각 runnable lane에서 API admission/completion, concurrent residency, active decode overlap, queue/preemption, mechanical output, oracle semantic correctness, per-request/aggregate 성능을 독립 기록한다.
 
-- 측정 완료 V2 실험: 13개.
-- runtime C2: 12× `PASS_C2_ACTIVE`, 1× `QUEUE_ONLY`.
-- semantic publication PASS: 4개(Qwen llama TARGET/NGRAM, Ornith 35B llama TARGET/NGRAM).
-- semantic publication FAIL_OUTPUT: 9개.
-- Gemma4 llama.cpp 3.1.4는 아직 4개 lane 미실행.
-- 기존 raw measurement 파일은 수정하지 않았고 각 실험에 derived `acceptance-review.json`만 추가한다.
+runtime concurrency classification은 output PASS 여부와 결합하지 않는다. 한 응답이 FAIL_OUTPUT이어도 sampled evidence가 `peak_waiting>=1`, `peak_processing<=1`이면 scheduler topology는 `QUEUE_ONLY`로 보존한다.
 
 ## 4. Ornith 1.5 9B — 1GPU×2 + LiteLLM topology [TODO]
 
