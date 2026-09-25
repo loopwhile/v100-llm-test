@@ -414,8 +414,15 @@ WBS 3 authoritative workload는 `workloads/concurrency/v2.json`이다.
   - Project B: 1,460 tokens 생성, `JobQueue._sequence` 비원자적 RMW 및 tiebreaker 중복 문제 정확 분석/재현 (PASS).
 - Ornith 1.5 9B는 1Cat-vLLM STOCK 환경에서 C2 128K active overlap 및 semantic correctness를 완벽히 통과하여 WBS 5 최적화 자격을 유지함.
 
-#### 3.2.3 Ornith 1.5 35B-A3B STOCK [TODO — v2]
-- 검증된 TP2/target-only/E5M2 configuration으로 v2 C2를 실행한다.
+#### 3.2.3 Ornith 1.5 35B-A3B STOCK [DONE — PASS_C2_ACTIVE]
+- 검증된 TP2/target-only/E5M2 configuration으로 v2 experiment `EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C2-128K-20260925-001` 실행 완료.
+- 판정: **`PASS_C2_ACTIVE`** (128K C2 capacity, active decode overlap, semantic output 모두 PASS).
+- Concurrency evidence: `resident: true`, `active_overlap: true`, `queue_only: false` (`peak_processing=2.0`, `peak_waiting=1.0` -> 동시 활성 디코드 진입 확인). 2× V100 16GB TP2에서 피크 VRAM 14,557 MiB로 두 개의 128K context 동시 수용.
+- TTFT 113.71s, Mean Decode 7.45 tok/s, Aggregate Decode 9.57 tok/s, Batch Wall 284.18s (~4.74분).
+- Output analysis:
+  - Project A: 947 tokens 생성, `Transaction.commit` 루프 내 `pending.clear()` 조기 순회 중단 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+  - Project B: 1,181 tokens 생성, `JobQueue.pop()`의 `await asyncio.sleep(0)` check-then-act race condition 정확 분석 및 재현/수정안 제시 (PASS).
+- Ornith 1.5 35B-A3B는 1Cat-vLLM STOCK 환경에서 C2 128K active overlap 및 semantic correctness를 통과하여 WBS 5 최적화 자격을 유지함.
 
 #### 3.2.4 Gemma4 26B-A4B STOCK [NOT ELIGIBLE — C1 FAIL_TIMEOUT]
 - 1Cat-vLLM C1 128K가 terminal FAIL_TIMEOUT이므로 v2 C2 대상이 아니다.

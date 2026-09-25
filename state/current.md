@@ -33,8 +33,11 @@
   - Bounded Recovery Attempt 1: `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-002` — `FAIL_CRASH` (heterogeneous hook fixed all 30 layers; shard loaded 100%; startup healthy; crashed during 128K prefill with Triton CUDA OOM; peak VRAM 15,243 MiB).
   - Bounded Recovery Attempt 2: `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-003` — `FAIL_CRASH` (`--language-model-only` disabled vision tower; but `gpu_memory_utilization=0.90` expanded KV cache to 4.78 GiB, leaving 1.13 GiB free VRAM; Triton kernel spilled 10,896 B/thread requiring 1.66 GiB driver local stack, causing `cuLaunchKernel` OOM; peak VRAM 15,253 MiB).
   - Bounded Recovery Attempt 3 (Final): `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-004` — `FAIL_TIMEOUT` (`gpu_memory_utilization=0.80`, `VLLM_SM70_TRITON_ATTN_PREFILL_TILE_SIZE=16`, `SAFE_DEFAULTS=1`; startup healthy, VRAM rock solid at 13,663 MiB with 2.7 GiB headroom; no OOM, no crash, post-health 100% OK; but 128K chunked prefill with 512-dim attention on SM70 took > 1,800s, reaching client HTTP timeout).
-- Previous task: WBS 3.2.2 Ornith 1.5 9B STOCK C2 v2 execution complete (`EXP-V100-ORN15-9B-1CAT-F16-MTP1-C2-128K-20260925-003`). Verdict is PASS_C2_ACTIVE (Peak processing 2.0, Peak waiting 0.0, resident true, active_overlap true; TTFT 310.90s, Aggregate decode 15.60 tok/s, Wall 458.71s; Peak VRAM 13,901 MiB; Project A 865 tokens PASS, Project B 1,460 tokens PASS).
-- Next task: WBS 3.2.3 Ornith 1.5 35B-A3B STOCK C2 v2 (`EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C2-128K-20260925-001`).
+- Previous task: WBS 3.2 (1Cat-vLLM STOCK C2 v2) execution complete:
+  - 3.2.1 Qwen3.8-27B (`EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C2-128K-20260925-002`): QUEUE_ONLY / FAIL_OUTPUT (Project A passed, Project B failed length/repetition; queue_only confirmed).
+  - 3.2.2 Ornith 1.5 9B (`EXP-V100-ORN15-9B-1CAT-F16-MTP1-C2-128K-20260925-003`): PASS_C2_ACTIVE (Peak processing 2.0, resident true, active_overlap true; TTFT 310.90s, Aggregate decode 15.60 tok/s; Project A 865 tok PASS, Project B 1460 tok PASS).
+  - 3.2.3 Ornith 1.5 35B-A3B (`EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C2-128K-20260925-001`): PASS_C2_ACTIVE (Peak processing 2.0, resident true, active_overlap true; TTFT 113.71s, Aggregate decode 9.57 tok/s; Project A 947 tok PASS, Project B 1181 tok PASS).
+- Next task: WBS 3.1 llama.cpp C2 v2 matrix (Qwen3.8, Ornith 9B, Ornith 35B, Gemma4) or next user scope.
 
 ## Root-Cause Diagnostic: Qwen3.8-27B 1Cat-vLLM 128K Realistic Workload (2026-09-25)
 - Purpose: Distinguish whether Qwen3.8 128K repetition collapse is artifact of synthetic repetition-heavy workload (1,333 duplicate sections) or general 1Cat-vLLM 128K path issue.

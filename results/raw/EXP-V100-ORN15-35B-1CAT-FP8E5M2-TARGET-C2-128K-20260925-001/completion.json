@@ -1,0 +1,9 @@
+{
+  "experiment_id": "EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C2-128K-20260925-001",
+  "verdict": "PASS_C2_ACTIVE",
+  "completed_at_utc": "2026-09-25T13:27:28.605744+00:00",
+  "post_health": {
+    "healthy": true,
+    "at_utc": "2026-09-25T13:27:28.490377+00:00"
+  }
+}
