@@ -387,7 +387,7 @@ WBS 3 authoritative workload는 `workloads/concurrency/v2.json`이다.
 - 실행 runner: `scripts/run_c2_llama.py`.
 - 공통: `parallel=2`, `ctx-size=262144`, `kv-unified`, `kv-unified-per-slot=131072`.
 
-#### 3.1.1 Qwen3.8-27B [IN PROGRESS]
+#### 3.1.1 Qwen3.8-27B [DONE]
 - artifact: `UD-Q4_K_M`.
 - KV: `Q8_0`.
 - 실행 lane: `TARGET`, `NGRAM`.
@@ -398,7 +398,14 @@ WBS 3 authoritative workload는 `workloads/concurrency/v2.json`이다.
   - Output analysis:
     - Project A: 886 tokens 생성, `Transaction.commit` 루프 내 `pending.clear()` 조기 비움 결함 완벽 분석 및 재현/수정안 제시 (PASS).
     - Project B: 842 tokens 생성, `JobQueue._sequence` 비원자적 RMW 및 tiebreaker 중복 문제 완벽 분석 및 재현/수정안 제시 (PASS).
-- NGRAM: `EXP-V100-Q38-LLAMA-Q80-NGRAM-C2-128K-20260925-001` [TODO]
+- NGRAM: `EXP-V100-Q38-LLAMA-Q80-NGRAM-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (`peak_processing: 2.0`, `peak_waiting: 0.0`). 2× V100 16GB TP2 환경에서 NGRAM 투기 디코딩 활성 상태로 2개 독립 128K 세션 동시 상주 및 병렬 디코드 완벽 통과.
+  - TTFT (Batch Mean): 925.67s, Prefill 177.08 tok/s, Mean Decode 5.00 tok/s, Aggregate Decode 2.16 tok/s, End-to-End Output 1.43 tok/s, Batch Wall 1,489.30s (~24.82분).
+  - NGRAM Speculative 통계: Project A (draft 288, accepted 86, 29.9%), Project B (draft 561, accepted 117, 20.9%).
+  - Peak VRAM: GPU0 13,163 MiB / GPU1 14,249 MiB (16GB 한도 내 안정 수용, OOM 여유 ~2,135 MiB).
+  - Output analysis:
+    - Project A: 886 tokens 생성, `Transaction.commit` 루프 내 `pending.clear()` 조기 비움 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+    - Project B: 1,249 tokens 생성, `JobQueue._sequence` 비원자적 RMW 및 tiebreaker 중복 문제 완벽 분석 및 재현/수정안 제시 (PASS).
 
 #### 3.1.2 Ornith 1.5 9B [TODO]
 - artifact: `Q6_K`.
