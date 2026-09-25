@@ -407,10 +407,20 @@ WBS 3 authoritative workload는 `workloads/concurrency/v2.json`이다.
     - Project A: 886 tokens 생성, `Transaction.commit` 루프 내 `pending.clear()` 조기 비움 결함 완벽 분석 및 재현/수정안 제시 (PASS).
     - Project B: 1,249 tokens 생성, `JobQueue._sequence` 비원자적 RMW 및 tiebreaker 중복 문제 완벽 분석 및 재현/수정안 제시 (PASS).
 
-#### 3.1.2 Ornith 1.5 9B [TODO]
+#### 3.1.2 Ornith 1.5 9B [IN PROGRESS]
 - artifact: `Q6_K`.
 - KV: `FP16`.
 - 실행 lane: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
+- TARGET: `EXP-V100-ORN15-9B-LLAMA-F16-TARGET-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (`peak_processing: 2.0`, `peak_waiting: 0.0`). 2× V100 16GB TP2 환경에서 FP16 KV 캐시로 2개 독립 128K 세션 동시 상주 및 병렬 디코드 완벽 통과.
+  - TTFT (Batch Mean): 264.40s, Prefill 620.03 tok/s, Mean Decode 19.71 tok/s, Aggregate Decode 9.17 tok/s, End-to-End Output 6.09 tok/s, Batch Wall 425.82s (~7.10분).
+  - Peak VRAM: GPU0 7,789 MiB / GPU1 8,235 MiB (16GB 한도 내 여유 ~8,149 MiB).
+  - Output analysis:
+    - Project A: 1,190 tokens 생성, `Transaction.commit` 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+    - Project B: 1,402 tokens 생성, `JobQueue._sequence` 비원자적 RMW 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+- NGRAM: `EXP-V100-ORN15-9B-LLAMA-F16-NGRAM-C2-128K-20260925-001` [TODO]
+- MTP: `EXP-V100-ORN15-9B-LLAMA-F16-MTP-C2-128K-20260925-001` [TODO]
+- MTP_NGRAM: `EXP-V100-ORN15-9B-LLAMA-F16-MTP-NGRAM-C2-128K-20260925-001` [TODO]
 
 #### 3.1.3 Ornith 1.5 35B-A3B [TODO]
 - artifact: `Q4_K_M`.

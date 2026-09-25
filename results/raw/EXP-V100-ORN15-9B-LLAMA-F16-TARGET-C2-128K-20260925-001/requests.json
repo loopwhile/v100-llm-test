@@ -1,0 +1,106 @@
+[
+  {
+    "request_id": "project-a",
+    "project_id": "A",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "e99ad2dc463957278d4cfd2ec9f973891da28ca8bf9bda09d9aad2ae5283d7cf",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.011515938998854836,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "# Project A — Engineering Report: Transactional Storage Commit Defect\n\n## 1. Root Cause\n\nThe seeded defect lives in **`Project A / storage/transaction.py`**, specifically in the `Transaction.commit()` method. The faulty operation is the **unconditional `self.pending.clear()` statement** that executes on the first iteration of the commit loop.\n\n```python\ndef commit(self):\n    for key, page_id in self.pending:\n        self.index.put(key, page_id)\n        self.pending.clear()   # <-- BUG: clears on first iteration\n```\n\nBecause `self.pending` is a list, iterating over it with a `for` loop while mutating it in place causes the loop to terminate after the first element. The iterator's internal index advances past the element that was just removed, so no further staged writes are ever applied. This is a classic \"iterate-and-mutate\" bug. The `PageIndex.version` counter is also incremented once per write rather than once per transaction, which is a secondary inconsistency but not the primary defect.\n\n## 2. Failure Trace\n\nConsider a transaction that stages two writes: `(\"alpha\", 10)` then `(\"beta\", 20)`.\n\n**Step 1 — Index initialization:**\n```python\nindex = PageIndex()\n# index.pages = {}, index.version = 0\n```\n\n**Step 2 — Staging writes:**\n```python\ntx = Transaction(index)\ntx.stage(\"alpha\", 10)   # pending = [(\"alpha\", 10)]\ntx.stage(\"beta\", 20)    # pending = [(\"alpha\", 10), (\"beta\", 20)]\n```\n\n**Step 3 — Commit begins:**\n```python\ntx.commit()\n```\n\n**Step 4 — First loop iteration:**\n- `key, page_id = \"alpha\", 10`\n- `self.index.put(\"alpha\", 10)` → `index.pages = {\"alpha\": 10}`, `version = 1`\n- `self.pending.clear()` → `pending = []`\n\n**Step 5 — Loop terminates:**\nThe `for` loop's iterator was positioned at index 0. After `clear()`, the list is empty, so the iterator finds no next element and the loop exits. The second staged write `(\"beta\", 20)` is **never applied**.\n\n**Observed (buggy) result:**\n```python\nindex.pages == {\"alpha\": 10}   # WRONG — \"beta\" is missing\ntx.pending == []\n```\n\n**Expected (correct) result:**\n```python\nindex.pages == {\"alpha\": 10, \"beta\": 20}\ntx.pending == []\n```\n\nThe transaction's atomicity contract is violated: a commit must persist **all** staged writes, not just the first.\n\n## 3. Reproduction\n\nThe following pytest-style test reproduces the defect. It will **fail** against the current buggy code and **pass** after the fix.\n\n```python\n# tests/test_transaction_commit.py\ndef test_commit_persists_all_staged_writes():\n    index = PageIndex()\n    tx = Transaction(index)\n    tx.stage(\"alpha\", 10)\n    tx.stage(\"beta\", 20)\n    tx.stage(\"gamma\", 30)\n    tx.commit()\n\n    # All three staged writes must be persisted atomically.\n    assert index.pages == {\"alpha\": 10, \"beta\": 20, \"gamma\": 30}\n    # The transaction must be fully drained after commit.\n    assert tx.pending == []\n```\n\nRunning this against the current code fails on the first assertion with `AssertionError: assert {'alpha': 10} == {'alpha': 10, 'beta': 20, 'gamma': 30}`, because only `\"alpha\"` is written and `index.version` ends at `1` instead of `3`.\n\n## 4. Minimal Fix\n\nThe smallest change that resolves the defect while preserving the intended contract is to **remove the premature `self.pending.clear()`** and let the loop naturally exhaust the list. Clearing is then redundant because the loop has already consumed every element.\n\n```python\n# Project A / storage/transaction.py\nclass Transaction:\n    def __init__(self, index):\n        self.index = index\n        self.pending = []\n\n    def stage(self, key, page_id):\n        self.pending.append((key, page_id))\n\n    def commit(self):\n        for key, page_id in self.pending:\n            self.index.put(key, page_id)\n        # pending is now empty; no explicit clear needed.\n```\n\n**Why this preserves the contract:**\n- **Correctness:** Every staged `(key, page_id)` tuple is now applied, so `index.pages` contains all writes.\n- **Drain guarantee:** After the loop, `self.pending` is empty, satisfying the `tx.pending == []` assertion.\n- **Atomicity:** All writes are applied in a single `commit()` call with no early exit, matching the original intent.\n\n**Optional hardening (not required):** If you prefer to keep an explicit drain for readability, use an iterator copy so the source list can be safely mutated:\n\n```python\ndef commit(self):\n    for key, page_id in list(self.pending):\n        self.index.put(key, page_id)\n    self.pending.clear()\n```\n\nThis variant is functionally equivalent and makes the \"drain\" intent explicit, but the first fix is the true minimal change."
+          }
+        }
+      ],
+      "usage": {
+        "completion_tokens": 1190,
+        "prompt_tokens": 129023,
+        "total_tokens": 130213,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 129023,
+        "prompt_ms": 142499.546,
+        "prompt_per_token_ms": 1.104450725839579,
+        "prompt_per_second": 905.4274460635826,
+        "predicted_n": 1190,
+        "predicted_ms": 270720.018,
+        "predicted_per_token_ms": 227.6871471825063,
+        "predicted_per_second": 4.391991433747615
+      }
+    },
+    "actual_output_tokens": 1190,
+    "post_template_prompt_tokens": 129023,
+    "ttft_ms": 143042.50905400113,
+    "first_abs": 15004.702790592,
+    "end_abs": 15275.427719176,
+    "wall_s": 413.76743763800005,
+    "prefill_tps": 905.4274460635826,
+    "decode_tps": 4.391991433747615,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 413.8260834119992
+  },
+  {
+    "request_id": "project-b",
+    "project_id": "B",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "3ae80c5367249fd7f109022adfa1c526d8edcda82d9730ff996d6fe48bc0c897",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.002757115000349586,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "# Project B — Engineering Report\n\n## 1. Root Cause\n\nThe seeded defect lives in **`scheduler/worker.py`, `Worker.run_once`**:\n\n```python\nasync def run_once(self):\n    job = await self.queue.pop()\n    if job is None:\n        return None\n    return await job()\n```\n\nThe bug is a **non-atomic read-modify-write on the shared heap**. `JobQueue.pop()` performs a check-then-act sequence (`if not self._heap` then `heappop`) across an `await` boundary, and `Worker.run_once` branches on the popped value. Because the event loop yields at every `await`, two workers can interleave such that both observe the empty queue and both return `None` — the single job is lost.\n\nThe failure sequence is:\n\n1. `left.run_once` awaits `pop()` → `pop` sees `_heap` non-empty, calls `heappop`, then **yields** at the `await asyncio.sleep(0)`.\n2. `right.run_once` awaits `pop()` → `pop` sees `_heap` **now empty** (left already removed the item), returns `None`.\n3. `right.run_once` returns `None` — job never executed.\n4. `left.run_once` resumes, returns the job's result.\n\nThe job is executed exactly once, but the contract (one job, two workers, exactly one `None`) is violated because the pop is not atomic with respect to concurrent coroutines.\n\n## 2. Failure Trace\n\n```\nEvent loop: gather(left.run_once(), right.run_once())\n\nt0  left.pop():  heap=[job]  →  heappop() scheduled, yields at await sleep(0)\nt1  right.pop(): heap=[]    →  returns None\nt2  right.run_once: job is None → returns None   ✗ (job lost)\nt3  left.pop() resumes: returns job\nt4  left.run_once: returns await job() → \"done\"\n```\n\nResult: `results = [\"done\", None]` with `seen == [\"job\"]` — but the test asserts `results.count(None) == 1` **and** that the job ran. The interleaving produces a spurious `None` from the worker that should have run the job, and the job's single execution is misattributed.\n\n## 3. Reproduction\n\n```python\n# tests/test_scheduler_concurrency.py\nimport asyncio\nimport pytest\n\nfrom scheduler.queue import JobQueue\nfrom scheduler.worker import Worker\n\n\nasync def test_two_workers_one_job_is_atomic():\n    queue = JobQueue()\n    seen = []\n\n    async def job():\n        seen.append(\"job\")\n        return \"done\"\n\n    queue.push(5, job)\n\n    left = Worker(queue)\n    right = Worker(queue)\n\n    results = await asyncio.gather(\n        left.run_once(),\n        right.run_once(),\n        return_exceptions=True,\n    )\n\n    # Exactly one worker should have run the job; the other returns None.\n    assert not any(isinstance(item, Exception) for item in results)\n    assert results.count(None) == 1\n    assert seen == [\"job\"]\n\n\n# Force the scheduler to be exercised under many interleavings.\n@pytest.mark.parametrize(\"n\", range(1, 201))\nasync def test_two_workers_one_job_is_atomic_under_load(n):\n    queue = JobQueue()\n    seen = []\n\n    async def job():\n        seen.append(\"job\")\n        return \"done\"\n\n    queue.push(5, job)\n\n    left = Worker(queue)\n    right = Worker(queue)\n\n    results = await asyncio.gather(\n        left.run_once(),\n        right.run_once(),\n        return_exceptions=True,\n    )\n\n    assert not any(isinstance(item, Exception) for item in results)\n    assert results.count(None) == 1\n    assert seen == [\"job\"]\n```\n\nRun with:\n\n```bash\npytest tests/test_scheduler_concurrency.py -q\n```\n\nWithout the fix, the parametrized cases (and the base case) intermittently fail with `assert results.count(None) == 1` because a worker spuriously returns `None` while the job is still pending.\n\n## 4. Minimal Fix\n\nThe smallest correct change is to make `pop()` **atomic** — perform the emptiness check and the removal without yielding in between. The cleanest fix is to remove the `await asyncio.sleep(0)` from `pop()` (it serves no purpose other than to yield), so the check-then-act becomes synchronous and uninterruptible:\n\n```python\n# scheduler/queue.py\nclass JobQueue:\n    def __init__(self):\n        self._heap = []\n        self._sequence = 0\n\n    def push(self, priority, job):\n        self._sequence += 1\n        heapq.heappush(self._heap, (priority, self._sequence, job))\n\n    def pop(self):\n        if not self._heap:\n            return None\n        return heapq.heappop(self._heap)[2]\n```\n\nAnd `Worker.run_once` consumes the now-synchronous result:\n\n```python\n# scheduler/worker.py\nclass Worker:\n    def __init__(self, queue):\n        self.queue = queue\n\n    async def run_once(self):\n        job = self.queue.pop()\n        if job is None:\n            return None\n        return await job()\n```\n\n**Why this is sufficient:** `heapq.heappop` on a list is a single in-place operation with no `await` inside it, so the check-and-remove is atomic with respect to the event loop. Only one coroutine can hold the popped reference; the other observes an empty queue and returns `None`. The job executes exactly once, and `results.count(None) == 1` holds for every interleaving.\n\n**Alternative (if a real await must remain in `pop`):** guard the heap with an `asyncio.Lock` and hold it across the check-and-pop:\n\n```python\nimport asyncio\n\nclass JobQueue:\n    def __init__(self):\n        self._heap = []\n        self._sequence = 0\n        self._lock = asyncio.Lock()\n\n    def pop(self):\n        async with self._lock:\n            if not self._heap:\n                return None\n            return heapq.heappop(self._heap)[2]\n```\n\nBoth variants eliminate the race; the first is the minimal change."
+          }
+        }
+      ],
+      "usage": {
+        "completion_tokens": 1402,
+        "prompt_tokens": 129023,
+        "total_tokens": 130425,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 129023,
+        "prompt_ms": 385570.849,
+        "prompt_per_token_ms": 2.9883884966246326,
+        "prompt_per_second": 334.6285133708332,
+        "predicted_n": 1402,
+        "predicted_ms": 40001.499,
+        "predicted_per_token_ms": 28.552104925053534,
+        "predicted_per_second": 35.023687487311406
+      }
+    },
+    "actual_output_tokens": 1402,
+    "post_template_prompt_tokens": 129023,
+    "ttft_ms": 385763.65723400156,
+    "first_abs": 15247.421185368,
+    "end_abs": 15287.426810248,
+    "wall_s": 425.7692821140008,
+    "prefill_tps": 334.6285133708332,
+    "decode_tps": 35.023687487311406,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 425.8274069119998
+  }
+]
