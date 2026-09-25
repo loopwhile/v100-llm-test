@@ -1,67 +1,39 @@
-# WBS 3.1.4 Gemma4 26B-A4B llama.cpp C2 128K 실행 가이드 및 명령어 모음
+# WBS 3.1.4 Gemma4 26B-A4B llama.cpp C2 128K 전체 실행 가이드 및 명령어 모음
 
-본 문서는 **WBS 3.1.4 Gemma4 26B-A4B-IT-QAT** 모델을 2× Tesla V100 16GB TP2 환경에서 `llama.cpp` C2 (독립 128K 에이전트 2개 병렬)로 직접 실행하고 검증하기 위한 가이드 및 명령어 모음이다.
-
----
-
-## 1. 개요 및 실험 계약 (Execution Contract)
-
-- **대상 모델**: `Gemma4-26B-A4B-IT-QAT` (UD-Q4_K_XL)
-- **KV 캐시 포맷**: `FP16` (float16)
-- **런타임**: `llama.cpp` (pinned b10775 / `67a17c17caa95742186f8b1ecadd1b5abd6d5ebb`)
-- **Docker 이미지**: `kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149`
-- **호스트**: `p520-llm` (스냅샷: `/home/loopwhile/v100-llm-test-wbs22-20260924`)
-- **컨텍스트 설정**: 슬롯당 131,072 토큰 (총 262,144 토큰 KV pool, `--kv-unified --kv-unified-per-slot 131072`)
-- **동시성 (Concurrency)**: `C2` (독립 128K 세션 2개 동시 처리)
-- **공식 워크로드**: `workloads/concurrency/v2.json`
-- **시맨틱 오라클**: `workloads/concurrency/v2-ground-truth.json`
-
-### 고유 특수 계약 (Important Gemma4 Specifics)
-> [!IMPORTANT]
-> - **MTP 어시스턴트 모델 필수**: Gemma4의 MTP 계열은 타깃 GGUF 내장 MTP가 아닌 별도 스마트 Q4_0 어시스턴트 GGUF(`/srv/models/gemma-4-26b-a4b-it-qat-gguf/mtp-gemma-4-26B-A4B-it.gguf`)가 필요하다.
-> - **듀얼 드래프트 디바이스 (`--spec-draft-device CUDA0,CUDA1`)**: b10775 TP2 layer-split 환경에서 CUDA0 단독 드래프트는 기동 크래시(`FAIL_STARTUP`)를 유발하므로, 반드시 `CUDA0,CUDA1` 양쪽 GPU에 분산 적재해야 128K 기동이 성공한다.
-> - **예상 VRAM**: GPU0 약 8,983 ~ 9,150 MiB, GPU1 약 9,120 ~ 9,300 MiB로 16GB 한도 내에서 2개 슬롯 모두 여유 있게 상주한다 (OOM 여유 ~7.0 GiB).
+본 문서는 **WBS 3.1.4 (Gemma4 26B-A4B-IT-QAT, UD-Q4_K_XL, FP16 KV)**의 4개 레인을 오케스트레이터와 서브에이전트가 수행해 온 라이프사이클(사전 검증 -> P520 동기화 -> 벤치마크 실행 -> 결과 회수 -> 리포트 생성 -> WBS/state 갱신 -> Git 커밋/푸시)과 **100% 동일하게 직접 순차 진행할 수 있도록 작성된 완전 자동/복사 실행 매뉴얼**입니다.
 
 ---
 
-## 2. 레인별 실험 ID 및 매트릭스
+## 📌 전체 실행 순서 요약
 
-| 번호 | 레인 | Speculative 설정 | 계획된 실험 ID | 예상 소요 시간 |
-|---|---|---|---|---|
-| **3.1.4.1** | `TARGET` | target-only (off) | `EXP-V100-GEMMA4-26B-LLAMA-F16-TARGET-C2-128K-20260925-001` | 약 12~15분 |
-| **3.1.4.2** | `NGRAM` | ngram-simple (`--draft-min 1 --draft-max 4`) | `EXP-V100-GEMMA4-26B-LLAMA-F16-NGRAM-C2-128K-20260925-001` | 약 12~15분 |
-| **3.1.4.3** | `MTP` | smart Q4_0 companion, `n=4`, `CUDA0,CUDA1` | `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C2-128K-20260925-001` | 약 13~16분 |
-| **3.1.4.4** | `MTP_NGRAM` | composite `draft-mtp,ngram-simple` | `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-NGRAM-C2-128K-20260925-001` | 약 13~16분 |
+1. **3.1.4.1 TARGET**: `EXP-V100-GEMMA4-26B-LLAMA-F16-TARGET-C2-128K-20260925-001`
+2. **3.1.4.2 NGRAM**: `EXP-V100-GEMMA4-26B-LLAMA-F16-NGRAM-C2-128K-20260925-001`
+3. **3.1.4.3 MTP**: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C2-128K-20260925-001` (Dual Draft `CUDA0,CUDA1`)
+4. **3.1.4.4 MTP_NGRAM**: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-NGRAM-C2-128K-20260925-001` (Composite Speculative)
+5. **최종 WBS 3.1 종결 처리 및 푸시**
 
 ---
 
-## 3. 사전 준비 (Pre-execution)
+## [Step 1] 3.1.4.1 Gemma4 TARGET C2 실행
 
-실행 전 ThinkPad 워크스페이스에서 레포 계약을 검증하고 P520 호스트로 최신 코드를 동기화한다.
-
+### 1-1. 사전 점검 및 P520 스냅샷 동기화 (ThinkPad에서 실행)
 ```bash
-# 1. ThinkPad 로컬 계약 검증
 cd /home/loopwhile/Data/Workspace_VSCode/v100-llm-test
+
+# 1. 저장소 계약 검증 (반드시 PASS 확인)
 python3 scripts/validate_repo.py
 
-# 2. P520 호스트 스냅샷으로 rsync 동기화
+# 2. P520 호스트로 최신 코드 rsync 동기화
 rsync -avu --exclude='.git' --exclude='results/raw' --exclude='reports' \
   /home/loopwhile/Data/Workspace_VSCode/v100-llm-test/ \
   p520-llm:/home/loopwhile/v100-llm-test-wbs22-20260924/
 
-# 3. P520 호스트의 GPU 상태 및 18080 포트 확인 (점유 프로세스 없어야 함)
-ssh p520-llm "nvidia-smi && ss -ltnp | grep 18080 || echo 'Port 18080 is clean'"
+# 3. P520 GPU 및 18080 포트 클린 여부 확인
+ssh p520-llm "nvidia-smi --query-compute-apps=pid --format=csv,noheader && ss -ltnp | grep 18080 || echo 'Clean'"
 ```
 
----
-
-## 4. 원클릭 자동 벤치마크 실행 명령어 (권장 방식)
-
-`scripts/run_c2_llama.py` 스크립트는 Docker 컨테이너 기동, 128K 토크나이저 캘리브레이션, 동시성 측정(Active Overlap 샘플링), 시맨틱 오라클 판정, 컨테이너 종료 및 클린업을 완전 자동 수행한다.
-
-### 4.1 TARGET 레인 실행
+### 1-2. 벤치마크 실행 (P520에서 백그라운드 또는 포그라운드 실행)
 ```bash
-# SSH를 통한 P520 실행
 ssh p520-llm "cd /home/loopwhile/v100-llm-test-wbs22-20260924 && \
 python3 scripts/run_c2_llama.py \
   --experiment-id EXP-V100-GEMMA4-26B-LLAMA-F16-TARGET-C2-128K-20260925-001 \
@@ -69,8 +41,71 @@ python3 scripts/run_c2_llama.py \
   --lane TARGET \
   --port 18080"
 ```
+*(예상 소요 시간: 약 12~15분. 완료 시 exit code 0 및 결과 저장됨)*
 
-### 4.2 NGRAM 레인 실행
+> **실행 중 모니터링 명령어 (새 터미널에서 확인 시)**:
+> ```bash
+> ssh p520-llm "tail -n 20 /home/loopwhile/v100-llm-test-wbs22-20260924/results/raw/EXP-V100-GEMMA4-26B-LLAMA-F16-TARGET-C2-128K-20260925-001/runtime/server-0.log"
+> ```
+
+### 1-3. 결과 회수 및 리포트 생성 (ThinkPad에서 실행)
+```bash
+cd /home/loopwhile/Data/Workspace_VSCode/v100-llm-test
+EXP=EXP-V100-GEMMA4-26B-LLAMA-F16-TARGET-C2-128K-20260925-001
+
+# 1. P520의 Raw 결과 회수
+rsync -avu p520-llm:/home/loopwhile/v100-llm-test-wbs22-20260924/results/raw/$EXP/ results/raw/$EXP/
+
+# 2. Markdown 리포트 생성 및 summary.csv / comparison.csv 갱신
+python3 scripts/report_experiment.py results/raw/$EXP
+
+# 3. 완료 판정 확인 (PASS_C2_ACTIVE 확인)
+cat results/raw/$EXP/completion.json
+```
+
+### 1-4. WBS 및 State 문서 갱신
+- `docs/WBS.md`의 `#### 3.1.4 Gemma4 26B-A4B` 섹션을 다음과 같이 수정:
+```markdown
+#### 3.1.4 Gemma4 26B-A4B [IN PROGRESS]
+- artifact: `UD-Q4_K_XL`.
+- KV: `FP16`.
+- 실행 lane: `TARGET`, `NGRAM`, corrected `MTP`, corrected `MTP_NGRAM`; MTP는 validated `CUDA0,CUDA1` draft contract 유지.
+- TARGET: `EXP-V100-GEMMA4-26B-LLAMA-F16-TARGET-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (peak_processing: 2.0, peak_waiting: 0.0). 2× V100 16GB TP2 환경에서 2개 독립 128K 세션 동시 상주 및 병렬 디코드 완벽 통과.
+- NGRAM: `EXP-V100-GEMMA4-26B-LLAMA-F16-NGRAM-C2-128K-20260925-001` [TODO]
+- MTP: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C2-128K-20260925-001` [TODO]
+- MTP_NGRAM: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-NGRAM-C2-128K-20260925-001` [TODO]
+```
+- `state/current.md`의 `Current task:` 섹션에 `3.1.4 Gemma4 TARGET PASS_C2_ACTIVE` 기록 및 다음 작업 `NGRAM` 반영.
+
+### 1-5. 계약 검증 및 Git 커밋/푸시
+```bash
+# 계약 검증
+python3 scripts/validate_repo.py
+
+# Git 커밋 및 푸시
+git add docs/WBS.md state/current.md reports/ results/
+git commit -m "test(wbs3): execute Gemma4 26B-A4B llama.cpp TARGET C2 v2 (PASS_C2_ACTIVE)"
+git push origin main
+```
+
+---
+
+## [Step 2] 3.1.4.2 Gemma4 NGRAM C2 실행
+
+### 2-1. 사전 점검 및 동기화 (ThinkPad에서 실행)
+```bash
+cd /home/loopwhile/Data/Workspace_VSCode/v100-llm-test
+python3 scripts/validate_repo.py
+
+rsync -avu --exclude='.git' --exclude='results/raw' --exclude='reports' \
+  /home/loopwhile/Data/Workspace_VSCode/v100-llm-test/ \
+  p520-llm:/home/loopwhile/v100-llm-test-wbs22-20260924/
+
+ssh p520-llm "nvidia-smi --query-compute-apps=pid --format=csv,noheader && ss -ltnp | grep 18080 || echo 'Clean'"
+```
+
+### 2-2. 벤치마크 실행 (P520)
 ```bash
 ssh p520-llm "cd /home/loopwhile/v100-llm-test-wbs22-20260924 && \
 python3 scripts/run_c2_llama.py \
@@ -79,8 +114,56 @@ python3 scripts/run_c2_llama.py \
   --lane NGRAM \
   --port 18080"
 ```
+*(예상 소요 시간: 약 12~15분)*
 
-### 4.3 MTP 레인 실행
+### 2-3. 결과 회수 및 리포트 생성 (ThinkPad)
+```bash
+cd /home/loopwhile/Data/Workspace_VSCode/v100-llm-test
+EXP=EXP-V100-GEMMA4-26B-LLAMA-F16-NGRAM-C2-128K-20260925-001
+
+rsync -avu p520-llm:/home/loopwhile/v100-llm-test-wbs22-20260924/results/raw/$EXP/ results/raw/$EXP/
+python3 scripts/report_experiment.py results/raw/$EXP
+cat results/raw/$EXP/completion.json
+```
+
+### 2-4. WBS 및 State 문서 갱신
+- `docs/WBS.md`에 NGRAM 결과 기록:
+```markdown
+- NGRAM: `EXP-V100-GEMMA4-26B-LLAMA-F16-NGRAM-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (peak_processing: 2.0, peak_waiting: 0.0). NGRAM 활성 상태에서 2개 독립 128K 세션 동시 상주 및 병렬 디코드 완벽 통과.
+- MTP: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C2-128K-20260925-001` [TODO]
+```
+- `state/current.md`에 다음 작업을 `MTP`로 갱신.
+
+### 2-5. 계약 검증 및 Git 커밋/푸시
+```bash
+python3 scripts/validate_repo.py
+
+git add docs/WBS.md state/current.md reports/ results/
+git commit -m "test(wbs3): execute Gemma4 26B-A4B llama.cpp NGRAM C2 v2 (PASS_C2_ACTIVE)"
+git push origin main
+```
+
+---
+
+## [Step 3] 3.1.4.3 Gemma4 MTP (Dual Draft) C2 실행
+
+### 3-1. 사전 점검 및 동기화 (ThinkPad에서 실행)
+```bash
+cd /home/loopwhile/Data/Workspace_VSCode/v100-llm-test
+python3 scripts/validate_repo.py
+
+rsync -avu --exclude='.git' --exclude='results/raw' --exclude='reports' \
+  /home/loopwhile/Data/Workspace_VSCode/v100-llm-test/ \
+  p520-llm:/home/loopwhile/v100-llm-test-wbs22-20260924/
+
+ssh p520-llm "nvidia-smi --query-compute-apps=pid --format=csv,noheader && ss -ltnp | grep 18080 || echo 'Clean'"
+```
+
+### 3-2. 벤치마크 실행 (P520)
+> [!NOTE]
+> `run_c2_llama.py` 내부에서 Gemma4 설정 파일에 정의된 스마트 어시스턴트 모델(`mtp-gemma-4-26B-A4B-it.gguf`), `--spec-draft-n-max 4`, `--spec-draft-device CUDA0,CUDA1` 플래그를 자동으로 주입하여 실행합니다.
+
 ```bash
 ssh p520-llm "cd /home/loopwhile/v100-llm-test-wbs22-20260924 && \
 python3 scripts/run_c2_llama.py \
@@ -89,8 +172,53 @@ python3 scripts/run_c2_llama.py \
   --lane MTP \
   --port 18080"
 ```
+*(예상 소요 시간: 약 13~16분)*
 
-### 4.4 MTP_NGRAM 레인 실행
+### 3-3. 결과 회수 및 리포트 생성 (ThinkPad)
+```bash
+cd /home/loopwhile/Data/Workspace_VSCode/v100-llm-test
+EXP=EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C2-128K-20260925-001
+
+rsync -avu p520-llm:/home/loopwhile/v100-llm-test-wbs22-20260924/results/raw/$EXP/ results/raw/$EXP/
+python3 scripts/report_experiment.py results/raw/$EXP
+cat results/raw/$EXP/completion.json
+```
+
+### 3-4. WBS 및 State 문서 갱신
+- `docs/WBS.md`에 MTP 결과 기록:
+```markdown
+- MTP: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (peak_processing: 2.0, peak_waiting: 0.0). smart Q4_0 drafter (n=4, CUDA0,CUDA1) 활성 상태에서 2개 독립 128K 세션 동시 상주 및 병렬 디코드 완벽 통과.
+- MTP_NGRAM: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-NGRAM-C2-128K-20260925-001` [TODO]
+```
+- `state/current.md`에 다음 작업을 `MTP_NGRAM`으로 갱신.
+
+### 3-5. 계약 검증 및 Git 커밋/푸시
+```bash
+python3 scripts/validate_repo.py
+
+git add docs/WBS.md state/current.md reports/ results/
+git commit -m "test(wbs3): execute Gemma4 26B-A4B llama.cpp MTP C2 v2 (PASS_C2_ACTIVE)"
+git push origin main
+```
+
+---
+
+## [Step 4] 3.1.4.4 Gemma4 MTP_NGRAM (Composite) C2 실행
+
+### 4-1. 사전 점검 및 동기화 (ThinkPad에서 실행)
+```bash
+cd /home/loopwhile/Data/Workspace_VSCode/v100-llm-test
+python3 scripts/validate_repo.py
+
+rsync -avu --exclude='.git' --exclude='results/raw' --exclude='reports' \
+  /home/loopwhile/Data/Workspace_VSCode/v100-llm-test/ \
+  p520-llm:/home/loopwhile/v100-llm-test-wbs22-20260924/
+
+ssh p520-llm "nvidia-smi --query-compute-apps=pid --format=csv,noheader && ss -ltnp | grep 18080 || echo 'Clean'"
+```
+
+### 4-2. 벤치마크 실행 (P520)
 ```bash
 ssh p520-llm "cd /home/loopwhile/v100-llm-test-wbs22-20260924 && \
 python3 scripts/run_c2_llama.py \
@@ -99,89 +227,54 @@ python3 scripts/run_c2_llama.py \
   --lane MTP_NGRAM \
   --port 18080"
 ```
+*(예상 소요 시간: 약 13~16분)*
 
----
-
-## 5. 사후 처리 및 리포트 생성 (Post-execution)
-
-실험 완료 후 생성된 raw 증거를 ThinkPad 워크스페이스로 rsync하고 Markdown 리포트와 CSV를 생성한다.
-
+### 4-3. 결과 회수 및 리포트 생성 (ThinkPad)
 ```bash
-EXP_ID="EXP-V100-GEMMA4-26B-LLAMA-F16-TARGET-C2-128K-20260925-001" # 또는 해당 EXP_ID
+cd /home/loopwhile/Data/Workspace_VSCode/v100-llm-test
+EXP=EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-NGRAM-C2-128K-20260925-001
 
-# 1. Raw 결과 ThinkPad로 회수
-rsync -avu p520-llm:/home/loopwhile/v100-llm-test-wbs22-20260924/results/raw/${EXP_ID}/ \
-  results/raw/${EXP_ID}/
+rsync -avu p520-llm:/home/loopwhile/v100-llm-test-wbs22-20260924/results/raw/$EXP/ results/raw/$EXP/
+python3 scripts/report_experiment.py results/raw/$EXP
+cat results/raw/$EXP/completion.json
+```
 
-# 2. Markdown 리포트 생성 및 results/summary.csv, reports/comparison.csv 자동 갱신
-python3 scripts/report_experiment.py results/raw/${EXP_ID}
+### 4-4. WBS 및 State 문서 갱신 (3.1.4 및 WBS 3.1 전체 완료)
+- `docs/WBS.md`의 `#### 3.1.4 Gemma4 26B-A4B [IN PROGRESS]`를 `#### 3.1.4 Gemma4 26B-A4B [DONE]`으로 변경:
+```markdown
+#### 3.1.4 Gemma4 26B-A4B [DONE]
+- artifact: `UD-Q4_K_XL`.
+- KV: `FP16`.
+- 실행 lane: `TARGET`, `NGRAM`, corrected `MTP`, corrected `MTP_NGRAM`; MTP는 validated `CUDA0,CUDA1` draft contract 유지.
+- TARGET: `EXP-V100-GEMMA4-26B-LLAMA-F16-TARGET-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+- NGRAM: `EXP-V100-GEMMA4-26B-LLAMA-F16-NGRAM-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+- MTP: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+- MTP_NGRAM: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-NGRAM-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+  - 네 lane 모두 128K C2 Active Overlap 및 semantic oracle 검증을 완벽하게 통과함.
+```
+- `docs/WBS.md` 상단 `### 3.1 Shared TP2 llama.cpp [IN PROGRESS ...]`를 `### 3.1 Shared TP2 llama.cpp [DONE]`으로 변경.
+- `state/current.md`의 `Current task:` 섹션을 WBS 3.1 전체 완료 및 다음 단계 WBS 4로 변경.
 
-# 3. 완료 확인
-cat results/raw/${EXP_ID}/completion.json
+### 4-5. 계약 검증 및 최종 Git 커밋/푸시
+```bash
+python3 scripts/validate_repo.py
+
+git add docs/WBS.md state/current.md reports/ results/
+git commit -m "test(wbs3): execute Gemma4 26B-A4B llama.cpp MTP_NGRAM C2 v2 (PASS_C2_ACTIVE) and close WBS 3.1"
+git push origin main
 ```
 
 ---
 
-## 6. 수동 Docker 서버 단독 기동 명령어 (디버깅 / 단독 서빙용)
+## 🔍 비상 시 트러블슈팅 가이드
 
-하네스 없이 `llama-server` 컨테이너만 수동으로 띄워 테스트하고자 할 때 사용하는 원본 Docker 명령어이다.
-
-### 6.1 TARGET 단독 기동
-```bash
-docker run --rm --pull=never \
-  --name v100-gemma4-target-c2 \
-  --label project=v100-llm-test \
-  --gpus '"device=0,1"' \
-  -p 127.0.0.1:18080:8080 \
-  -v /srv/models/gemma-4-26b-a4b-it-qat-gguf/gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf:/model/target.gguf:ro \
-  --entrypoint llama-server \
-  kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149 \
-  -m /model/target.gguf \
-  --host 0.0.0.0 --port 8080 -ngl all \
-  --split-mode layer --tensor-split 1,1 \
-  --ctx-size 262144 --parallel 2 --kv-unified --kv-unified-per-slot 131072 \
-  --batch-size 512 --ubatch-size 128 \
-  --cache-type-k f16 --cache-type-v f16 --flash-attn on \
-  --spec-type none \
-  --jinja --reasoning off --metrics --slots --no-warmup
-```
-
-### 6.2 MTP (Dual Draft) 단독 기동
-```bash
-docker run --rm --pull=never \
-  --name v100-gemma4-mtp-c2 \
-  --label project=v100-llm-test \
-  --gpus '"device=0,1"' \
-  -p 127.0.0.1:18080:8080 \
-  -v /srv/models/gemma-4-26b-a4b-it-qat-gguf/gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf:/model/target.gguf:ro \
-  -v /srv/models/gemma-4-26b-a4b-it-qat-gguf/mtp-gemma-4-26B-A4B-it.gguf:/model/draft.gguf:ro \
-  --entrypoint llama-server \
-  kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149 \
-  -m /model/target.gguf \
-  --host 0.0.0.0 --port 8080 -ngl all \
-  --split-mode layer --tensor-split 1,1 \
-  --ctx-size 262144 --parallel 2 --kv-unified --kv-unified-per-slot 131072 \
-  --batch-size 512 --ubatch-size 128 \
-  --cache-type-k f16 --cache-type-v f16 --flash-attn on \
-  --spec-type draft-mtp --spec-draft-n-max 4 --draft-min 1 --draft-max 4 \
-  --model-draft /model/draft.gguf \
-  --spec-draft-device CUDA0,CUDA1 \
-  --jinja --reasoning off --metrics --slots --no-warmup
-```
-
----
-
-## 7. 실시간 모니터링 및 상태 확인
-
-실행 중 P520에서 실시간 진행 상황을 점검하려면 다음 명령어를 활용한다:
-
-```bash
-# 1. 진행 단계 확인 (prepared, running, results_saved 등)
-ssh p520-llm "cat /home/loopwhile/v100-llm-test-wbs22-20260924/results/raw/${EXP_ID}/runtime/progress.json | jq"
-
-# 2. 실시간 서버 로그 (prefill progress 및 decode 속도)
-ssh p520-llm "tail -f /home/loopwhile/v100-llm-test-wbs22-20260924/results/raw/${EXP_ID}/runtime/server-0.log"
-
-# 3. GPU VRAM 및 부하 상태
-ssh p520-llm "nvidia-smi -l 2"
-```
+1. **Docker 컨테이너가 남아있거나 포트가 점유된 경우**:
+   ```bash
+   ssh p520-llm "docker ps -q --filter 'label=project=v100-llm-test' | xargs -r docker stop"
+   ```
+2. **GPU 프로세스 강제 확인**:
+   ```bash
+   ssh p520-llm "fuser -v /dev/nvidia* || true"
+   ```
+3. **P520 스냅샷 위치 주의**:
+   - P520 스냅샷은 Git 저장소가 아니므로 P520 내에서 `git pull`을 실행하지 마시고, 반드시 ThinkPad에서 `rsync`로만 동기화하십시오.
