@@ -1,0 +1,106 @@
+[
+  {
+    "request_id": "project-a",
+    "project_id": "A",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "e99ad2dc463957278d4cfd2ec9f973891da28ca8bf9bda09d9aad2ae5283d7cf",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.013777676998870447,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "# Project A — Engineering Report: Transactional Storage Commit Defect\n\n## 1. Root Cause\n\n**Faulty function:** `Transaction.commit` in `Project A / storage/transaction.py`\n\n**Faulty operation:** The `self.pending.clear()` call is placed **inside** the `for` loop that iterates over `self.pending`.\n\n```python\ndef commit(self):\n    for key, page_id in self.pending:   # <-- iterating over the list\n        self.index.put(key, page_id)\n        self.pending.clear()            # <-- mutating the list mid-iteration\n```\n\nIterating over a list while clearing it is undefined in effect: the first iteration commits the first staged write, then `clear()` empties the list. On the next loop check, the (now-cleared) list is empty, so the loop terminates. The result is that **only the first staged write is ever committed**; all subsequent staged writes are silently dropped.\n\nThis also violates the documented contract asserted by the anchor test `test_commit_persists_all_staged_writes`, which expects **both** `\"alpha\"` and `\"beta\"` to be persisted and `pending` to be empty.\n\n## 2. Failure Trace (concrete two-write example)\n\nUsing the scenario from `tests/test_transaction.py`:\n\n1. `tx.stage(\"alpha\", 10)` → `pending = [(\"alpha\", 10)]`\n2. `tx.stage(\"beta\", 20)` → `pending = [(\"alpha\", 10), (\"beta\", 20)]`\n3. `tx.commit()` is called:\n   - **Iteration 1:** `for` yields `(\"alpha\", 10)`. `self.index.put(\"alpha\", 10)` runs → `index.pages == {\"alpha\": 10}`. Then `self.pending.clear()` → `pending == []`.\n   - **Iteration 2:** The `for` loop re-evaluates the (now empty) list → **loop ends immediately**. `(\"beta\", 20)` is never committed.\n4. Post-commit state:\n   - `index.pages == {\"alpha\": 10}` ❌ (expected `{\"alpha\": 10, \"beta\": 20}`)\n   - `tx.pending == []` ✓\n\nThe assertion `assert index.pages == {\"alpha\": 10, \"beta\": 20}` fails. The defect is a classic *mutation-during-iteration* bug: the accumulator being consumed is also being destroyed mid-consumption.\n\n## 3. Reproduction (regression test)\n\n```python\n# tests/test_transaction_commit_regression.py\nfrom storage.transaction import Transaction\nfrom storage.index import PageIndex\n\n\ndef test_commit_persists_all_staged_writes():\n    index = PageIndex()\n    tx = Transaction(index)\n    tx.stage(\"alpha\", 10)\n    tx.stage(\"beta\", 20)\n    tx.commit()\n    assert index.pages == {\"alpha\": 10, \"beta\": 20}\n    assert tx.pending == []\n\n\ndef test_commit_persists_three_writes():\n    index = PageIndex()\n    tx = Transaction(index)\n    tx.stage(\"a\", 1)\n    tx.stage(\"b\", 2)\n    tx.stage(\"c\", 3)\n    tx.commit()\n    assert index.pages == {\"a\": 1, \"b\": 2, \"c\": 3}\n    assert tx.pending == []\n```\n\nEither test fails against the current code (only the first write survives) and passes after the fix.\n\n## 4. Minimal Fix\n\nMove `self.pending.clear()` **outside** the loop so all writes are committed before the pending buffer is drained:\n\n```python\ndef commit(self):\n    for key, page_id in self.pending:\n        self.index.put(key, page_id)\n    self.pending.clear()\n```\n\nThis is the smallest change that preserves the intended contract: every staged write is applied exactly once, and the pending queue is emptied after the loop. (An equally valid alternative is to iterate over a snapshot — `for key, page_id in list(self.pending): self.index.put(key, page_id)` — but relocating the `clear()` is the minimal, intent-preserving fix.)"
+          }
+        }
+      ],
+      "usage": {
+        "completion_tokens": 917,
+        "prompt_tokens": 129023,
+        "total_tokens": 129940,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 129023,
+        "prompt_ms": 486934.996,
+        "prompt_per_token_ms": 3.7740170047200885,
+        "prompt_per_second": 264.96965931772957,
+        "predicted_n": 917,
+        "predicted_ms": 679145.699,
+        "predicted_per_token_ms": 741.4254355895197,
+        "predicted_per_second": 1.3487532960140265
+      }
+    },
+    "actual_output_tokens": 917,
+    "post_template_prompt_tokens": 129023,
+    "ttft_ms": 488759.84244199935,
+    "first_abs": 18232.6426912,
+    "end_abs": 18911.792958909,
+    "wall_s": 1167.9101101510023,
+    "prefill_tps": 264.96965931772957,
+    "decode_tps": 1.3487532960140265,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 1167.9583130419996
+  },
+  {
+    "request_id": "project-b",
+    "project_id": "B",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "3ae80c5367249fd7f109022adfa1c526d8edcda82d9730ff996d6fe48bc0c897",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.0029948810006317217,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "# Project B — Engineering Report: Concurrency Defect in Cooperative Job Queue\n\n## (1) Root Cause\n\n**Defective function:** `JobQueue.pop` in `scheduler/queue.py`.\n\nThe seeded defect is a **check-then-act race on a shared mutable heap** inside a cooperative async context. The method performs a non-atomic sequence:\n\n1. `if not self._heap: return None` — the *check*\n2. `await asyncio.sleep(0)` — the *yield point*\n3. `heapq.heappop(self._heap)[2]` — the *act*\n\nBecause this is a single-threaded cooperative event loop, task switches occur **only at `await` points**. The guard check and the `heappop` are separated by an `await`, which yields control back to the event loop. Between the check and the pop, any number of other coroutines (e.g. additional `Worker.run_once` tasks) can run and drain the same queue. The `self._sequence` monotonic counter used for tie-breaking does nothing to protect this window — it only orders equal-priority entries. The heap is a plain `list` with no lock, and there is no re-validation of emptiness after the `await`. Thus two workers can both pass the `not self._heap` guard against a single remaining job and both attempt to pop it.\n\nThe `asyncio.sleep(0)` is the smoking gun: it is a deliberate, unconditional yield that guarantees the interleaving window exists on every non-empty pop, converting a latent race into a deterministic one.\n\n## (2) Failure Trace\n\nConsider the scenario in `test_two_workers_one_job`: one job queued, two workers (`left`, `right`) launched via `asyncio.gather`.\n\n```\nheap = [(5, 1, job)]\n\nleft.run_once():\n  -> queue.pop()\n       check: not self._heap  -> False (job present)   [PASS guard]\n       await asyncio.sleep(0)   <-- control returns to loop\n                                   \nright.run_once():\n  -> queue.pop()\n       check: not self._heap  -> False (job still present)  [PASS guard]\n       await asyncio.sleep(0)   <-- control returns to loop\n                                   \nleft resumes:\n       heappop -> returns job, heap now []\n       returns \"done\"\n                                   \nright resumes:\n       heappop on EMPTY heap  -> IndexError (or pops nothing / misorders)\n```\n\nBecause both coroutines evaluated the emptiness guard *before* either performed the pop, both observe a non-empty queue. The first `heappop` empties the heap; the second `heappop` operates on an empty (or corrupted) heap. The job is either raised as an exception (surfaced through `gather(..., return_exceptions=True)` as a non-`None` result, failing `assert not any(isinstance(item, Exception) ...)`) or the sequence counter and heap invariant are violated. Either way the contract \"exactly one worker runs the job, the other gets `None`\" is broken. The defect is **deterministic** here precisely because `sleep(0)` forces the interleaving at the exact check/pop boundary.\n\n## (3) Reproduction\n\n```python\n# tests/test_repro_queue_race.py\nimport asyncio\nimport pytest\nfrom scheduler.queue import JobQueue\nfrom scheduler.worker import Worker\n\n\nasync def _run_two_workers_one_job():\n    queue = JobQueue()\n    seen = []\n\n    async def job():\n        seen.append(\"job\")\n        return \"done\"\n\n    queue.push(5, job)\n    left = Worker(queue)\n    right = Worker(queue)\n    return await asyncio.gather(\n        left.run_once(), right.run_once(), return_exceptions=True\n    ), seen\n\n\ndef test_two_workers_one_job_race():\n    results, seen = asyncio.run(_run_two_workers_one_job())\n    assert not any(isinstance(item, Exception) for item in results)\n    assert results.count(None) == 1\n    assert seen == [\"job\"]\n```\n\nRun with `pytest-asyncio`. Under the current `JobQueue.pop` this fails: the second worker's `heappop` hits the empty heap, producing an exception in `results` (failing the first assertion) and/or a non-`None`/non-`None` outcome (failing the second).\n\n## (4) Minimal Fix\n\nMake the emptiness check and the pop **atomic** by removing the unconditional yield between them. The smallest correct change is to drop the `await asyncio.sleep(0)` so the guard and `heappop` execute back-to-back without yielding:\n\n```python\nasync def pop(self):\n    if not self._heap:\n        return None\n    return heapq.heappop(self._heap)[2]\n```\n\nThis restores atomicity of the read-check-act sequence within a single event-loop tick: no other coroutine can interleave between the guard and the pop, so only one worker drains the single job and the other observes the now-empty heap and returns `None`.\n\nIf a yield is genuinely required for fairness, re-validate after the await instead of relying on the pre-check:\n\n```python\nasync def pop(self):\n    item = None\n    while True:\n        if not self._heap:\n            return None\n        item = heapq.heappop(self._heap)[2]\n        await asyncio.sleep(0)\n        if item is not None:\n            return item\n```\n\nThe first (drop-the-yield) variant is the minimal fix and is recommended: it eliminates the race window entirely without introducing locks, which is unnecessary given the single-threaded cooperative model."
+          }
+        }
+      ],
+      "usage": {
+        "completion_tokens": 1217,
+        "prompt_tokens": 129023,
+        "total_tokens": 130240,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 129023,
+        "prompt_ms": 1142970.029,
+        "prompt_per_token_ms": 8.858653333126652,
+        "prompt_per_second": 112.88397484305338,
+        "predicted_n": 1217,
+        "predicted_ms": 40661.863,
+        "predicted_per_token_ms": 33.43903207236842,
+        "predicted_per_second": 29.90517183140379
+      }
+    },
+    "actual_output_tokens": 1217,
+    "post_template_prompt_tokens": 129023,
+    "ttft_ms": 1143171.8850119978,
+    "first_abs": 18887.043798376,
+    "end_abs": 18927.70976412,
+    "wall_s": 1183.837850756001,
+    "prefill_tps": 112.88397484305338,
+    "decode_tps": 29.90517183140379,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 1183.8928777830006
+  }
+]
