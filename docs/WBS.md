@@ -391,7 +391,7 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - C1을 PASS한 `TARGET`, `NGRAM`, corrected `MTP`, corrected `MTP_NGRAM` 네 lane을 C2로 승격한다.
 - MTP 계열은 반드시 validated `--spec-draft-device CUDA0,CUDA1` contract를 유지한다.
 
-### 3.2 Shared TP2 1Cat-vLLM STOCK
+### 3.2 Shared TP2 1Cat-vLLM STOCK [IN_PROGRESS — stopped after 3.2.2 per user]
 
 공통 설정:
 - TP2.
@@ -416,9 +416,14 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
   - 성능: Batch Wall Time 1532.48s (약 25.5분), Mean Decode 9.31 tok/s, End-to-end 0.18 tok/s.
   - 결론: 2× V100 16GB 하드웨어에서 Qwen3.8-27B 128K C2는 OOM 크래시 없이 안전하게 큐잉되어 순차 처리(`QUEUE_ONLY` 거동)됨을 증명함. 단, Project A의 토큰 길이 미달로 최종 publication 판정은 `FAIL_OUTPUT`으로 기록됨.
 
-#### 3.2.2 Ornith 1.5 9B STOCK [TODO — ELIGIBLE]
-- WBS 2.2.2에서 V100 runtime compatibility 및 C1 128K를 PASS했다.
-- 검증된 exact TP2/MTP1/FP16 configuration을 유지하여 C2 resident 및 active-overlap을 측정한다.
+#### 3.2.2 Ornith 1.5 9B STOCK [DONE — CAPACITY PASS_C2_ACTIVE / semantic FAIL_OUTPUT]
+- 재부팅으로 중단된 `EXP-V100-ORN15-9B-1CAT-F16-MTP1-C2-128K-20260925-001`은 startup 단계에서 종료됐으며 measured request는 NOT_REACHED다. 원본을 보존하고 recovery verdict `INCONCLUSIVE`로 기록했다.
+- 동일 TP2/MTP1/FP16 설정의 infrastructure retry `EXP-V100-ORN15-9B-1CAT-F16-MTP1-C2-128K-20260925-002`를 1회 실행했다. C1 대비 serving command 변경은 `max_num_seqs=2`이며, 중단된 원본과 동일한 기존 runtime hook을 유지했다.
+- **Raw harness / capacity: PASS_C2_ACTIVE**. 독립된 128K Project A/B가 모두 완료됐고, 실제 overlapping decode window에서 running=2가 확인됐다. 출력은 각각 372 / 477 tokens, post-health 정상, OOM 없음.
+- **Publication: FAIL_OUTPUT**. 기계적 출력 검사는 통과했으나 의미 감사에서 Project B가 존재하지 않는 module-level singleton과 await가 없는 check→pop 구간의 asyncio race를 주장했다. Project A도 version을 distinct-write counter로 가정했지만 코드에 그런 계약은 없다. Capacity와 의미 정확성을 분리하며 raw PASS는 수정하지 않는다.
+- 성능: mean TTFT 316.52s, mean request decode 8.49 tok/s, aggregate decode 14.67 tok/s, batch wall 372.11s, peak VRAM GPU0/GPU1 각각 13,901 MiB.
+- 2026-09-25 11:20:45 UTC runner cleanup 완료; GPU process / port 18080 / container 없음.
+- 사용자 범위 변경에 따라 **3.2.2까지만 완료하고 커밋·푸시 후 중단**한다. 3.2.3은 실행하지 않았다.
 
 #### 3.2.3 Ornith 1.5 35B-A3B STOCK [TODO — ELIGIBLE]
 - WBS 2.2.3에서 V100 runtime compatibility 및 C1 128K를 PASS했다.

@@ -1,0 +1,7 @@
+{
+  "checked_at_utc": "2026-09-25T11:22:18.588915+00:00",
+  "boot_id": "59fcfe5b-e97f-4f8e-9d44-62d1dff336c1",
+  "experiment_lock_available": true,
+  "gpu_processes": "pid, process_name\n",
+  "listening_ports": "State  Recv-Q Send-Q               Local Address:Port  Peer Address:PortProcess\nLISTEN 0      4096                     127.0.0.1:43837      0.0.0.0:*          \nLISTEN 0      4096                 100.122.70.67:52285      0.0.0.0:*          \nLISTEN 0      4096                       0.0.0.0:22         0.0.0.0:*          \nLISTEN 0      4096                    127.0.0.54:53         0.0.0.0:*          \nLISTEN 0      4096                 127.0.0.53%lo:53         0.0.0.0:*          \nLISTEN 0      4096   [fd7a:115c:a1e0::f430:4644]:53640         [::]:*          \nLISTEN 0      4096                          [::]:22            [::]:*          \nLISTEN 0      4096                             *:9100             *:*          \nLISTEN 0      4096                             *:9835             *:*          \n"
+}

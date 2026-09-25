@@ -1,5 +1,21 @@
 # Current execution
 
+## Stop checkpoint — 2026-09-25
+
+- Active WBS: **3.2.2 — DONE**. Latest user instruction: complete only 3.2.2, commit/push and stop. Do not automatically launch 3.2.3 or other work.
+- Active experiment: none. Last experiment `EXP-V100-ORN15-9B-1CAT-F16-MTP1-C2-128K-20260925-002`, phase `results_saved / finished`; cleanup completed 2026-09-25 11:20:45 UTC.
+- Host `p520-llm`, boot `59fcfe5b-e97f-4f8e-9d44-62d1dff336c1`: no remaining benchmark GPU processes, server port 18080, or containers after cleanup.
+- Result: raw harness / hardware capacity **PASS_C2_ACTIVE**; mechanical output integrity PASS; publication semantic verdict **FAIL_OUTPUT**. Two independent 128K requests completed with overlapping decode; answer correctness failed review.
+- Interrupted original `EXP-V100-ORN15-9B-1CAT-F16-MTP1-C2-128K-20260925-001`: INCONCLUSIVE due to host reboot during startup; measurement NOT_REACHED. Original hashes preserved in `recovery.json`; retry reason `infrastructure_failure`.
+- Remote artifacts: `/home/loopwhile/v100-llm-test-wbs22-20260924/results/raw/` plus the two experiment IDs above. Local artifacts: corresponding `results/raw/<ID>/`; reports: `reports/ornith-1.5-9b/<ID>.md`.
+- Recovery changes: independently persist each completed request; record retry reason, command/workload/hook hashes and server PID/start ticks. Serving parameters and hardware settings preserved.
+- Validation: repository contract PASS; 75 tests passed; original interrupted evidence hashes verified.
+- WBS 3.2 remains IN_PROGRESS: 3.2.1 preserved; 3.2.2 complete; 3.2.3 TODO; 3.2.4 ineligible from C1 failure. WBS 3.2 overall is not complete.
+- Next action: STOP. A new user request is required before WBS 3.2.3. This closeout belongs to the recovery commit, pushed together with existing 3.2.1 commit `c826409`; verify local HEAD against `origin/main` when resuming.
+- Protected: GPU controls, installed runtime and existing runtime hooks; no active owned process remains.
+
+## Previous execution record
+
 - WBS 2.1.1 Qwen3.8-27B llama.cpp C1: DONE.
 - WBS 2.1.2 Ornith 1.5 9B llama.cpp C1: DONE.
 - WBS 2.1.3 Ornith 1.5 35B-A3B llama.cpp C1: DONE.
@@ -16,8 +32,8 @@
   - Bounded Recovery Attempt 1: `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-002` — `FAIL_CRASH` (heterogeneous hook fixed all 30 layers; shard loaded 100%; startup healthy; crashed during 128K prefill with Triton CUDA OOM; peak VRAM 15,243 MiB).
   - Bounded Recovery Attempt 2: `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-003` — `FAIL_CRASH` (`--language-model-only` disabled vision tower; but `gpu_memory_utilization=0.90` expanded KV cache to 4.78 GiB, leaving 1.13 GiB free VRAM; Triton kernel spilled 10,896 B/thread requiring 1.66 GiB driver local stack, causing `cuLaunchKernel` OOM; peak VRAM 15,253 MiB).
   - Bounded Recovery Attempt 3 (Final): `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-004` — `FAIL_TIMEOUT` (`gpu_memory_utilization=0.80`, `VLLM_SM70_TRITON_ATTN_PREFILL_TILE_SIZE=16`, `SAFE_DEFAULTS=1`; startup healthy, VRAM rock solid at 13,663 MiB with 2.7 GiB headroom; no OOM, no crash, post-health 100% OK; but 128K chunked prefill with 512-dim attention on SM70 took > 1,800s, reaching client HTTP timeout).
-- Current task: WBS 3.2.1 Qwen3.8-27B STOCK B200 C2 execution complete. 128K hardware capacity passed (Peak VRAM 15,575 MiB, OOM none); sequential queue-only behavior verified (peak_processing=1, peak_waiting=1, Project A wall 759s, Project B wall 1532s); final harness verdict is FAIL_OUTPUT due to Project A output length underfill (135 tokens < 256 minimum; Project B passed with 271 tokens).
-- Next task: WBS 3.2.2 Ornith 1.5 9B STOCK C2 (`EXP-V100-ORN15-9B-1CAT-F16-MTP1-C2-128K-20260925-001`).
+- Previous task: WBS 3.2.1 Qwen3.8-27B STOCK B200 C2 execution complete. 128K hardware capacity passed (Peak VRAM 15,575 MiB, OOM none); sequential queue-only behavior verified (peak_processing=1, peak_waiting=1, Project A wall 759s, Project B wall 1532s); final harness verdict is FAIL_OUTPUT due to Project A output length underfill (135 tokens < 256 minimum; Project B passed with 271 tokens).
+- Superseded next task: WBS 3.2.2, now completed above.
 
 ## Root-Cause Diagnostic: Qwen3.8-27B 1Cat-vLLM 128K Realistic Workload (2026-09-25)
 - Purpose: Distinguish whether Qwen3.8 128K repetition collapse is artifact of synthetic repetition-heavy workload (1,333 duplicate sections) or general 1Cat-vLLM 128K path issue.
@@ -86,7 +102,7 @@
 
 ## Next planned work after current stop
 
-- Remaining project scope is WBS 3 (3.2.2 Ornith 9B, 3.2.3 Ornith 35B C2), WBS 4, and revised WBS 5.
-- WBS 3.2: 3.2.1 Qwen3.8-27B C2 executed (Queue-Only behavior confirmed, FAIL_OUTPUT on token length underfill). Next is 3.2.2 Ornith 1.5 9B STOCK C2.
+- Remaining project scope is WBS 3 (3.2.3 Ornith 35B C2; stopped pending a new user request), WBS 4, and revised WBS 5.
+- WBS 3.2: 3.2.1 Qwen3.8-27B C2 executed (Queue-Only behavior confirmed, FAIL_OUTPUT on token length underfill). 3.2.2 is now complete; 3.2.3 remains TODO and must not auto-start.
 - WBS 4: Ornith 1.5 9B 1GPU×2 + LiteLLM topology validation.
 - WBS 5: performance optimization and per-model/per-runtime final recipe capture.

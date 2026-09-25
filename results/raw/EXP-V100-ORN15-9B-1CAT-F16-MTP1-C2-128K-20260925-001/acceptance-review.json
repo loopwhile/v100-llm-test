@@ -1,0 +1,8 @@
+{
+  "verdict": "INCONCLUSIVE",
+  "integrity_verdict": "NOT_REACHED",
+  "capacity_verdict": "NOT_REACHED",
+  "key_note": "Host reboot interrupted server startup before health-ready or measured workload; original boot 2c9e2a5b-3393-4385-8a16-2ba6d4f4dafb differs from recovered boot 59fcfe5b-e97f-4f8e-9d44-62d1dff336c1. No measured requests or completion evidence exists; reboot cause unknown.",
+  "diagnostic_summary": "Host reboot interrupted server startup before health-ready or measured workload; original boot 2c9e2a5b-3393-4385-8a16-2ba6d4f4dafb differs from recovered boot 59fcfe5b-e97f-4f8e-9d44-62d1dff336c1. No measured requests or completion evidence exists; reboot cause unknown.",
+  "content_review": "Measurement NOT_REACHED: workload.json, payloads.json, tokenization.json, requests.json, overlap-evidence.json, health-before.json, health-after.json and server snapshots are absent. The generic evidence list above is not an inventory of existing files. config.json was reconstructed from preserved runtime/planned-config.json; metrics/completion are explicit recovery classifications, not runner completion. Original runtime/progress.json and logs remain byte-identical."
+}

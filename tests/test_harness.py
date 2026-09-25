@@ -43,6 +43,30 @@ class HarnessTests(unittest.TestCase):
  def test_multi_endpoint_routes_independent_servers(self):
   cfg=CONFIG|{"experiment_id":"EXP-V100-ORN9-LLAMA-F16-MTP-C2-128K-001","concurrency":2,"topology":"diagnostic-direct-backends"}
   self.assertEqual(self.run_case("independent-diagnostic",h.MultiEndpointAdapter([Mock(),Mock()]),cfg)[1],"PASS_C2_ACTIVE")
+ def test_each_completed_request_is_durable_before_other_request_finishes(self):
+  release=threading.Event(); persisted=threading.Event(); errors=[]
+  class Blocking(Mock):
+   def stream_complete(self,payload):
+    if "project A" in payload["messages"][0]["content"]:
+     if not release.wait(5):raise TimeoutError("test release deadline")
+    return super().stream_complete(payload)
+  out=self.root/"partial"; original_save=h.save
+  def observed_save(path,value):
+   original_save(path,value)
+   if Path(path).name=="requests.json" and any(r.get("verdict")=="PASS" for r in value):persisted.set()
+  def run():
+   try:h.run_batch(out,CONFIG|{"concurrency":2},WORKLOAD,Blocking())
+   except BaseException as exc:errors.append(exc)
+  with patch.object(h,"save",side_effect=observed_save):
+   thread=threading.Thread(target=run);thread.start()
+   try:
+    self.assertTrue(persisted.wait(3),"second request must persist while first remains blocked")
+    records=json.loads((out/"requests.json").read_text())
+    self.assertEqual([r["request_id"] for r in records],["project-a","project-b"])
+    self.assertIsNone(records[0]["verdict"]);self.assertEqual(records[1]["verdict"],"PASS")
+    self.assertFalse((out/"completion.json").exists())
+   finally:release.set();thread.join(5)
+  self.assertFalse(thread.is_alive());self.assertEqual(errors,[])
  def test_independent_acceptance_rejects_direct_backend_adapter(self):
   cfg=CONFIG|{"experiment_id":"EXP-V100-ORN9-LLAMA-F16-MTP-C2-128K-002","concurrency":2,"topology":"1gpu-x2-independent","gateway":{"runtime":"LiteLLM","runtime_revision":"1.101.0 / test","image":"litellm:test","endpoint":"http://127.0.0.1:18079","routing_strategy":"least-busy","backend_max_parallel_requests":1}}
   with self.assertRaisesRegex(ValueError,"LiteLLM"):self.run_case("reject-direct",h.MultiEndpointAdapter([Mock(),Mock()]),cfg)

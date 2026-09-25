@@ -23,7 +23,7 @@ import time
 import bench_harness as h
 import build_128k_workload as w
 import runtime_launcher as launcher
-from measurement_policy import future_config
+from measurement_policy import RETRY_REASONS, future_config
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -210,7 +210,7 @@ def run_locked(args):
     if args.retry_of:
         config.update(
             retry_of=args.retry_of,
-            retry_reason="configuration_fix",
+            retry_reason=args.retry_reason,
             retry_evidence=args.retry_evidence,
         )
         config = future_config(config)
@@ -235,6 +235,9 @@ def run_locked(args):
         scope=f"WBS {wbs}: 1Cat STOCK compatibility gate + one C2 128K batch (concurrency=2)",
         cleanup_policy="owned process group only",
         planned_config_sha256=h.sha(h.canon(config)),
+        launch_command_sha256=h.sha(config["launch_command"].encode()),
+        workload_manifest_sha256=h.sha((ROOT / "workloads/concurrency/v1.json").read_bytes()),
+        runtime_hook_sha256=h.sha((ROOT / "scripts/runtime_hooks/sitecustomize.py").read_bytes()),
         source_sha256={
             str(p.relative_to(ROOT)): h.sha(p.read_bytes())
             for p in sorted((ROOT / "scripts").glob("*.py"))
@@ -316,6 +319,8 @@ def run_locked(args):
                 start_new_session=True,
             )
         (runtime / "server.pid").write_text(str(server.pid) + "\n")
+        checkpoint(raw, "running", server_pid=server.pid,
+                   server_start_ticks=Path(f"/proc/{server.pid}/stat").read_text().split()[21])
 
         adapter = h.HTTPAdapter(config["endpoint"], "1Cat-vLLM", timeout_s=5)
         deadline = time.monotonic() + 900
@@ -430,6 +435,7 @@ if __name__ == "__main__":
     parser.add_argument("--experiment-id")
     parser.add_argument("--retry-of")
     parser.add_argument("--retry-evidence")
+    parser.add_argument("--retry-reason", choices=sorted(RETRY_REASONS), default="configuration_fix")
     parser.add_argument("--model", choices=sorted(MODEL_WBS))
     parser.add_argument("--thinking", action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument("--reasoning-effort", choices=["low", "medium", "xhigh"], default=None)

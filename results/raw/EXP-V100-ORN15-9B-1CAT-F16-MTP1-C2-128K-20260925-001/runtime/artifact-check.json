@@ -1,0 +1,13 @@
+{
+  "path": "/srv/models/ornith-1.5-9b-nvfp4",
+  "repository": "ornith-ai/Ornith-1.5-9B-NVFP4",
+  "revision": "155f200d85ad58464571c77d5e1122ea5d419d7b",
+  "weight_quant": "NVFP4",
+  "metadata_sha256": {
+    "config.json": "84bd143f937ebe7f2eb26fe251c2219d318f1945367d8b332ad74b3a80fdd057",
+    "hf_quant_config.json": "3316235a83349627194f92a27f226bad95e173fc08b741eab681fd6e797adef3",
+    "tokenizer_config.json": "316230d6a809701f4db5ea8f8fc862bc3a6f3229c937c174e674ff3ca0a64ac8",
+    "chat_template.jinja": "9dd2fbd270feaa1fbef2d4f634d7887c9c506e3bde140f8e7351c8944e8fd235"
+  },
+  "note": "Large model tensors are identified by pinned repository/revision; selected local metadata files are hashed as a host receipt."
+}

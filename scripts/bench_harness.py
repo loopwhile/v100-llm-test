@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """C1/C2 OpenAI-compatible benchmark harness. It never owns server lifecycle."""
 import hashlib,json,os,re,shutil,socket,subprocess,threading,time,urllib.error,urllib.request
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime,timezone
 from pathlib import Path
 from measurement_policy import future_config
@@ -355,7 +355,12 @@ def run_batch(output,config,workload,adapter):
   try:
    if config["concurrency"]==2 and hasattr(adapter,"start_overlap_probe"):adapter.start_overlap_probe(2)
    gpu.start()
-   with ThreadPoolExecutor(max_workers=config["concurrency"]) as pool:records=[f.result() for f in [pool.submit(worker,ra,barrier,origin,r,p,c,rc) for ra,r,p,c,rc in zip(request_adapters,records,payloads,selected,receipts)]]
+   with ThreadPoolExecutor(max_workers=config["concurrency"]) as pool:
+    # Workers own their copies; only this collector mutates/persists the ordered snapshot.
+    pending={pool.submit(worker,ra,barrier,origin,dict(r),p,c,rc):i for i,(ra,r,p,c,rc) in enumerate(zip(request_adapters,records,payloads,selected,receipts))}
+    for finished in as_completed(pending):
+     records[pending[finished]]=finished.result()
+     save(output/"requests.json",records)
   finally:
    gpu.stop()
    if config["concurrency"]==2 and hasattr(adapter,"stop_overlap_probe"):adapter.stop_overlap_probe()

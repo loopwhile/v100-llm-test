@@ -1,0 +1,78 @@
+[
+  {
+    "request_id": "project-a",
+    "project_id": "A",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "b201a7f43e5bdf6ceed6fa186c5bb984cdc999bdb5d1607eb6c52bcb01d1700a",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.010463587000003827,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "# Project A — Correctness Risk & Verification Plan\n\n## Identified Risk: Unbounded Version Inflation\n\n`PageIndex.put` increments `self.version` on **every** call, including replay of already-committed entries. In `test_replay_order`, the loop replays the entire `log` against a fresh index, so `version` ends up equal to `len(log)` by coincidence — not because the index is correct. If the real workload ever re-applies a key that was already committed, `version` diverges from the number of *distinct* writes, and the assertion silently masks the bug.\n\n## Minimal Verification Plan\n\n1. **Deterministic replay**: Build a fixed `log` of `(key, page_id)` pairs, run it through `PageIndex`, and assert `index.pages == {k: v for k, v in log}`. This checks *content* correctness, independent of `version`.\n2. **Idempotency probe**: Replay the same `log` twice and confirm `index.pages` is unchanged — the current design would still pass, but it exposes that `version` is not a meaningful dedup signal.\n3. **Counter regression**: Add a test asserting `index.version == len(log)` only when keys are unique; otherwise assert `version >= len(log)`. This turns the current \"coincidence\" into a documented invariant.\n4. **Boundary case**: Insert duplicate keys and confirm `pages` collapses correctly while `version` grows — proving the test's assertion is not a reliable correctness oracle.\n\n## Recommendation\n\nDecouple `version` from `put` (track it only on genuine new keys) or remove it from the assertion entirely. The test as written validates a *symptom*, not the *state*, so it cannot catch replay-order corruption."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 129024,
+        "total_tokens": 129396,
+        "completion_tokens": 372
+      }
+    },
+    "actual_output_tokens": 372,
+    "post_template_prompt_tokens": 129024,
+    "ttft_ms": 318842.5269249999,
+    "first_abs": 2010.550336676,
+    "end_abs": 2053.137043634,
+    "wall_s": 361.4292338829998,
+    "prefill_tps": null,
+    "decode_tps": 8.735120101370498,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 361.45819576300005
+  },
+  {
+    "request_id": "project-b",
+    "project_id": "B",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "79606d4314cf5e0a7760bcdd149338ecd9ea51a44bbd37e2a5d47c727d362661",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.002514911999924152,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "# Project B Concurrency Risk Analysis\n\n## Identified Concurrency Risk: Shared Mutable State in `JobQueue`\n\nThe `JobQueue` class uses a **module-level singleton** pattern where all `Worker` instances share the same `queue` object. The `push()` method mutates `self._sequence` and `self._heap` without any synchronization mechanism.\n\n**The specific race condition:** When multiple `Worker.run_once()` coroutines execute concurrently, they can both read `self._heap` in `run_once()`, then both call `self.queue.pop()`. Since `pop()` performs `heapq.heappop()` which mutates the underlying list, two concurrent pops can corrupt the heap invariant or cause one worker to process a job that another worker already claimed.\n\nThe test itself (`test_priority_order`) only exercises single-threaded, sequential access, so this race is **not caught by the provided test suite**.\n\n## Minimal Verification Plan\n\n1. **Add a stress test** that creates N workers sharing one queue, pushes M jobs, and runs all `run_once()` methods concurrently via `asyncio.gather()`. Assert that exactly M jobs are processed with no exceptions and no duplicate processing.\n\n2. **Introduce a synchronization primitive** — either a `threading.Lock` around `push()`/`pop()`, or better, an `asyncio.Lock` in `run_once()` before the `self.queue._heap` check and `pop()` call. This serializes heap access.\n\n3. **Run under `pytest-asyncio`** with the stress test repeated across multiple event-loop iterations to increase the probability of exposing the race.\n\n4. **Add a job-tracking mechanism** (e.g., a `processed` set) to detect duplicate execution, which would definitively reveal the race if it occurs.\n\n## Recommended Fix\n\nWrap the critical section in `run_once()` with an `asyncio.Lock`:\n\n```python\nasync def run_once(self):\n    async with self.queue._lock:\n        if not self.queue._heap:\n            await asyncio.sleep(0)\n            return None\n        job = self.queue.pop()\n        return await job()\n```\n\nThis ensures only one worker inspects and mutates the heap at a time, preserving correctness under concurrency."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 129023,
+        "total_tokens": 129500,
+        "completion_tokens": 477
+      }
+    },
+    "actual_output_tokens": 477,
+    "post_template_prompt_tokens": 129023,
+    "ttft_ms": 314195.9565540001,
+    "first_abs": 2005.905574697,
+    "end_abs": 2063.793204753,
+    "wall_s": 372.0835866099999,
+    "prefill_tps": null,
+    "decode_tps": 8.24010241114649,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 372.1164092659999
+  }
+]
