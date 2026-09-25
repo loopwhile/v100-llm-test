@@ -1,0 +1,9 @@
+{
+  "experiment_id": "EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C2-128K-20260925-002",
+  "verdict": "FAIL_OUTPUT",
+  "completed_at_utc": "2026-09-25T13:04:29.046419+00:00",
+  "post_health": {
+    "healthy": true,
+    "at_utc": "2026-09-25T13:04:28.694067+00:00"
+  }
+}

@@ -395,11 +395,14 @@ WBS 3 authoritative workload는 `workloads/concurrency/v2.json`이다.
 - 공통: TP2, `max_model_len=131072`, `max_num_seqs=2`, C1에서 검증된 exact serving configuration 유지.
 - `scripts/run_c2_onecat.py`는 v2 manifest와 semantic-oracle hash를 evidence에 고정한다.
 
-#### 3.2.1 Qwen3.8-27B STOCK [TODO — v2 revalidation authorized]
-- B200-aligned E4M3 serving recipe로 새 v2 experiment를 실행한다.
-- 기존 v1 `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C2-128K-20260925-001`은 historical evidence다.
-- v1에서 OOM 없이 `peak_processing=1`, `peak_waiting=1` 순차 queue가 관찰됐지만 Project A 135-token underfill 때문에 final FAIL_OUTPUT이었다. v2에서는 scheduler topology와 output correctness를 독립 판정한다.
-- 이 재검증은 과거 C1 semantic FAIL을 소급 PASS로 바꾸지 않는다.
+#### 3.2.1 Qwen3.8-27B STOCK [DONE — QUEUE_ONLY / FAIL_OUTPUT]
+- B200-aligned E4M3 serving recipe로 v2 experiment `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C2-128K-20260925-002` 실행 완료.
+- 판정: `FAIL_OUTPUT` (Queue-only verified, Peak VRAM 15,575 MiB GPU0/1 symmetric, OOM 없음, Post-health PASS).
+- Concurrency evidence: `resident: false`, `active_overlap: false`, `queue_only: true` (`peak_processing=1.0`, `peak_waiting=1.0`). 두 개의 128K 요청이 VRAM 한계로 인해 순차 처리됨이 하네스 독립 샘플러로 확정됨.
+- Output analysis:
+  - Project A: 570 tokens 생성, 최소 토큰 조건(>= 256) 및 포맷 충족하여 PASS.
+  - Project B: 165 tokens 생성 후 반복 구문과 함께 조기 중단되어 최소 토큰 요구량(256 tokens) 미달 및 semantic 검증 실패로 `FAIL_OUTPUT`.
+- 이 결과는 과거 C1 semantic FAIL 및 C2 queue-only 제약을 재확인함. Qwen3.8 1Cat은 C2 동시 상주(active overlap)가 불가능하며 WBS 5 최적화 대상에서 제외됨.
 
 #### 3.2.2 Ornith 1.5 9B STOCK [TODO — v2 revalidation]
 - 동일 TP2/MTP1/FP16 serving contract로 새 v2 experiment를 실행한다.
