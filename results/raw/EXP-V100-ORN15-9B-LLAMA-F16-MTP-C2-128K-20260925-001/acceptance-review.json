@@ -1,0 +1,36 @@
+{
+  "reviewed_at_utc": "2026-09-25T17:26:00+00:00",
+  "workload_id": "V100-CONCURRENCY-C2-128K-v2",
+  "semantic_oracle": "workloads/concurrency/v2-ground-truth.json",
+  "publication_verdict": "FAIL_OUTPUT",
+  "harness_verdict": "PASS_C2_ACTIVE",
+  "capacity_verdict": "PASS_C2_ACTIVE",
+  "mechanical_output_integrity": "PASS",
+  "semantic_verdict": "FAIL_OUTPUT",
+  "raw_measurement_unchanged": true,
+  "prompt_context_tokens": 131072,
+  "concurrency": 2,
+  "runtime_evidence": {
+    "c2_resident": "true",
+    "c2_active": "true",
+    "queue_only": "false",
+    "ttft_ms": "325092.36276600044",
+    "aggregate_decode_tps": "7.854555483789232",
+    "peak_vram_gpu0_mib": "7963.0",
+    "peak_vram_gpu1_mib": "10009.0"
+  },
+  "content_review": {
+    "project-a": {
+      "verdict": "PASS",
+      "output_tokens": 894,
+      "reason": "Correctly identifies the Transaction.commit in-loop clear, partial commit, regression, and clear-after-loop fix."
+    },
+    "project-b": {
+      "verdict": "FAIL_OUTPUT",
+      "output_tokens": 1686,
+      "reason": "Claims two workers can heappop the same job and uses a two-job reproduction. heapq.heappop removes the item synchronously; with the oracle's one-job case the losing worker raises IndexError. The required grounded reproduction is not supplied."
+    }
+  },
+  "key_note": "Runtime C2 active is valid, but Project B's double-consume mechanism/reproduction does not satisfy the pre-registered oracle.",
+  "review_note": "Post-hoc application of the pre-registered V2 oracle. Existing raw measurement files are unchanged; this file is a derived acceptance review."
+}

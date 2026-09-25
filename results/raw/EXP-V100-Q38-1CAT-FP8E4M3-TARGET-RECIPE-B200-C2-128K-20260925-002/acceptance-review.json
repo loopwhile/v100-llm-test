@@ -1,0 +1,36 @@
+{
+  "reviewed_at_utc": "2026-09-25T17:26:00+00:00",
+  "workload_id": "V100-CONCURRENCY-C2-128K-v2",
+  "semantic_oracle": "workloads/concurrency/v2-ground-truth.json",
+  "publication_verdict": "FAIL_OUTPUT",
+  "harness_verdict": "FAIL_OUTPUT",
+  "capacity_verdict": "QUEUE_ONLY",
+  "mechanical_output_integrity": "FAIL_OUTPUT",
+  "semantic_verdict": "FAIL_OUTPUT",
+  "raw_measurement_unchanged": true,
+  "prompt_context_tokens": 131072,
+  "concurrency": 2,
+  "runtime_evidence": {
+    "c2_resident": "false",
+    "c2_active": "false",
+    "queue_only": "true",
+    "ttft_ms": "1146626.9728745",
+    "aggregate_decode_tps": "0.8922511023545984",
+    "peak_vram_gpu0_mib": "15575.0",
+    "peak_vram_gpu1_mib": "15575.0"
+  },
+  "content_review": {
+    "project-a": {
+      "verdict": "FAIL_OUTPUT",
+      "output_tokens": 570,
+      "reason": "Misidentifies PageIndex.put/version synchronization as the seeded defect and does not identify the in-loop pending.clear() that drops later staged writes."
+    },
+    "project-b": {
+      "verdict": "FAIL_OUTPUT",
+      "output_tokens": 165,
+      "reason": "Stops at 165 tokens with repeated meta-instructions; it never identifies or reproduces the JobQueue.pop check-await-heappop race."
+    }
+  },
+  "key_note": "Project A misses the seeded Transaction.commit defect; Project B underfills and never reaches the seeded JobQueue.pop analysis.",
+  "review_note": "Post-hoc application of the pre-registered V2 oracle. Existing raw measurement files are unchanged; this file is a derived acceptance review."
+}

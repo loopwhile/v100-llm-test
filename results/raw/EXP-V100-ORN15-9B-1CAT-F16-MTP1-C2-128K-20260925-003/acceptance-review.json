@@ -1,0 +1,36 @@
+{
+  "reviewed_at_utc": "2026-09-25T17:26:00+00:00",
+  "workload_id": "V100-CONCURRENCY-C2-128K-v2",
+  "semantic_oracle": "workloads/concurrency/v2-ground-truth.json",
+  "publication_verdict": "FAIL_OUTPUT",
+  "harness_verdict": "PASS_C2_ACTIVE",
+  "capacity_verdict": "PASS_C2_ACTIVE",
+  "mechanical_output_integrity": "PASS",
+  "semantic_verdict": "FAIL_OUTPUT",
+  "raw_measurement_unchanged": true,
+  "prompt_context_tokens": 131072,
+  "concurrency": 2,
+  "runtime_evidence": {
+    "c2_resident": "true",
+    "c2_active": "true",
+    "queue_only": "false",
+    "ttft_ms": "310904.7723304993",
+    "aggregate_decode_tps": "15.597957188897963",
+    "peak_vram_gpu0_mib": "13901.0",
+    "peak_vram_gpu1_mib": "13901.0"
+  },
+  "content_review": {
+    "project-a": {
+      "verdict": "PASS",
+      "output_tokens": 865,
+      "reason": "Correctly identifies pending.clear() inside Transaction.commit, explains loss of later writes, provides a multi-write regression, and moves clear after iteration."
+    },
+    "project-b": {
+      "verdict": "FAIL_OUTPUT",
+      "output_tokens": 1460,
+      "reason": "Substitutes a non-atomic _sequence counter/double-dispatch theory. push() contains no await, so _sequence cannot interleave as claimed; it misses the required second heappop on an empty heap raising IndexError."
+    }
+  },
+  "key_note": "Runtime C2 active is valid, but Project B replaces the seeded pop race with an impossible _sequence race.",
+  "review_note": "Post-hoc application of the pre-registered V2 oracle. Existing raw measurement files are unchanged; this file is a derived acceptance review."
+}

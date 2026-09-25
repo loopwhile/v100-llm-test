@@ -1,19 +1,19 @@
 # Current execution
 
-## WBS 3 authoritative workload reset — 2026-09-25
+## WBS 3 C2 v2 semantic audit — 2026-09-26
 
-- User approved redesigning the flawed C2 workload and rerunning **all runnable WBS 3 lanes**, including Qwen3.8 and Ornith 9B.
-- Authoritative WBS 3 workload: `workloads/concurrency/v2.json`; semantic oracle: `workloads/concurrency/v2-ground-truth.json`.
-- `workloads/concurrency/v1.json` and all existing v1 raw artifacts remain immutable historical evidence.
-- v2 uses one seeded defect per project anchor, one-time anchor inclusion, safe `{{SECTION}}`-variant calibration padding, structured 300+ token engineering output, and pre-registered semantic criteria.
-- Harness concurrency evidence is now independent of output verdict; output underfill/wrong semantics cannot erase observed `QUEUE_ONLY` or active-overlap topology.
-- WBS 3.1 llama.cpp v2 scope: Qwen TARGET/NGRAM; Ornith 9B TARGET/NGRAM/MTP/MTP_NGRAM; Ornith 35B TARGET/NGRAM/MTP/MTP_NGRAM; Gemma4 TARGET/NGRAM/corrected-MTP/corrected-MTP_NGRAM.
-- WBS 3.2 1Cat v2 scope: Qwen3.8 B200-aligned E4M3, Ornith 9B MTP1/FP16, Ornith 35B target-only/E5M2. Gemma4 remains ineligible from C1 FAIL_TIMEOUT.
-- v100-skinny remains CLOSED/UNSUPPORTED and is not rerun.
-- Historical v1 Qwen/Ornith9 C2 results remain diagnostics, not authoritative v2 acceptance.
-- No GPU experiment is launched by these design commits. Use fresh experiment IDs for v2.
-- Execution runners are now wired for both shared-TP2 families: `scripts/run_c2_llama.py` and `scripts/run_c2_onecat.py`.
-- Do not advance to WBS 4/5 until WBS 3 v2 matrix is complete.
+- Authoritative workload/oracle: `workloads/concurrency/v2.json` + `workloads/concurrency/v2-ground-truth.json`.
+- 13 measured V2 experiments were audited without rerunning inference.
+- Existing raw measurement files remain unchanged; each experiment receives a derived `acceptance-review.json`.
+- Runtime evidence: 12 `PASS_C2_ACTIVE`, 1 `QUEUE_ONLY`.
+- Mechanical output: 12 PASS, 1 FAIL_OUTPUT.
+- Semantic oracle: 4 PASS, 9 FAIL_OUTPUT.
+- Publication PASS_C2_ACTIVE: Qwen llama TARGET/NGRAM; Ornith 35B llama TARGET/NGRAM.
+- Publication FAIL_OUTPUT: Qwen 1Cat; Ornith 9B 1Cat; Ornith 35B 1Cat; all four Ornith 9B llama lanes; Ornith 35B llama MTP/MTP_NGRAM.
+- Runtime concurrency evidence remains valid even when publication is FAIL_OUTPUT.
+- Gemma4 llama.cpp WBS 3.1.4 remains DEFERRED / not executed (4 lanes). WBS 3 is therefore not globally complete.
+- Detailed audit: `docs/WBS-3-v2-semantic-audit.md`.
+- Next WBS action remains manual Gemma4 3.1.4 execution or an explicit user scope decision before advancing to WBS 4/5.
 
 ## Previous execution record
 
@@ -33,27 +33,15 @@
   - Bounded Recovery Attempt 1: `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-002` — `FAIL_CRASH` (heterogeneous hook fixed all 30 layers; shard loaded 100%; startup healthy; crashed during 128K prefill with Triton CUDA OOM; peak VRAM 15,243 MiB).
   - Bounded Recovery Attempt 2: `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-003` — `FAIL_CRASH` (`--language-model-only` disabled vision tower; but `gpu_memory_utilization=0.90` expanded KV cache to 4.78 GiB, leaving 1.13 GiB free VRAM; Triton kernel spilled 10,896 B/thread requiring 1.66 GiB driver local stack, causing `cuLaunchKernel` OOM; peak VRAM 15,253 MiB).
   - Bounded Recovery Attempt 3 (Final): `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-004` — `FAIL_TIMEOUT` (`gpu_memory_utilization=0.80`, `VLLM_SM70_TRITON_ATTN_PREFILL_TILE_SIZE=16`, `SAFE_DEFAULTS=1`; startup healthy, VRAM rock solid at 13,663 MiB with 2.7 GiB headroom; no OOM, no crash, post-health 100% OK; but 128K chunked prefill with 512-dim attention on SM70 took > 1,800s, reaching client HTTP timeout).
-- Previous task: WBS 3.2 (1Cat-vLLM STOCK C2 v2) execution complete:
-  - 3.2.1 Qwen3.8-27B (`EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C2-128K-20260925-002`): QUEUE_ONLY / FAIL_OUTPUT (Project A passed, Project B failed length/repetition; queue_only confirmed).
-  - 3.2.2 Ornith 1.5 9B (`EXP-V100-ORN15-9B-1CAT-F16-MTP1-C2-128K-20260925-003`): PASS_C2_ACTIVE (Peak processing 2.0, resident true, active_overlap true; TTFT 310.90s, Aggregate decode 15.60 tok/s; Project A 865 tok PASS, Project B 1460 tok PASS).
-  - 3.2.3 Ornith 1.5 35B-A3B (`EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C2-128K-20260925-001`): PASS_C2_ACTIVE (Peak processing 2.0, resident true, active_overlap true; TTFT 113.71s, Aggregate decode 9.57 tok/s; Project A 947 tok PASS, Project B 1181 tok PASS).
-- Current task: WBS 3.1 llama.cpp C2 v2 matrix execution in progress:
-  - 3.1.1 Qwen3.8-27B [DONE]:
-    - TARGET (`EXP-V100-Q38-LLAMA-Q80-TARGET-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 925.17s, Aggregate decode 1.83 tok/s, Batch Wall 1,446.44s; Project A 886 tok PASS, Project B 842 tok PASS).
-    - NGRAM (`EXP-V100-Q38-LLAMA-Q80-NGRAM-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 925.67s, Aggregate decode 2.16 tok/s, Batch Wall 1,489.30s; Project A 886 tok PASS, Project B 1249 tok PASS; NGRAM draft 288/86 A, 561/117 B).
-  - 3.1.2 Ornith 1.5 9B [DONE]:
-    - TARGET (`EXP-V100-ORN15-9B-LLAMA-F16-TARGET-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 264.40s, Aggregate decode 9.17 tok/s, Batch Wall 425.82s; Project A 1190 tok PASS, Project B 1402 tok PASS; Peak VRAM 8,235 MiB).
-    - NGRAM (`EXP-V100-ORN15-9B-LLAMA-F16-NGRAM-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 264.44s, Aggregate decode 7.76 tok/s, Batch Wall 417.21s; Project A 897 tok PASS, Project B 1235 tok PASS; Peak VRAM 8,311 MiB; NGRAM draft 288/76 A, 350/65 B).
-    - MTP (`EXP-V100-ORN15-9B-LLAMA-F16-MTP-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 325.09s, Aggregate decode 7.85 tok/s, Batch Wall 509.80s; Project A 894 tok PASS, Project B 1686 tok PASS, B decode 41.29 tok/s; Peak VRAM 10,009 MiB; MTP draft 1023/552 54.0% A, 1911/1048 54.8% B).
-    - MTP_NGRAM (`EXP-V100-ORN15-9B-LLAMA-F16-MTP-NGRAM-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 324.95s, Aggregate decode 6.45 tok/s, Batch Wall 498.39s; Project A 879 tok PASS, Project B 1168 tok PASS, B decode 39.83 tok/s; Peak VRAM 10,071 MiB; draft 1173/558 47.6% A, 1554/747 48.1% B).
-  - 3.1.3 Ornith 1.5 35B-A3B [DONE]:
-    - TARGET (`EXP-V100-ORN15-35B-LLAMA-Q80-TARGET-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 815.97s, Aggregate decode 3.07 tok/s, Batch Wall 1,183.89s; Project A 917 tok PASS, Project B 1217 tok PASS, B decode 29.91 tok/s; Peak VRAM 12,831 MiB GPU0 / 12,309 MiB GPU1).
-    - NGRAM (`EXP-V100-ORN15-35B-LLAMA-Q80-NGRAM-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 816.17s, Aggregate decode 2.83 tok/s, Batch Wall 1,183.06s; Project A 867 tok PASS, Project B 1098 tok PASS, B decode 27.83 tok/s; Peak VRAM 12,831 MiB; draft 312/80 25.6% A, 272/68 25.0% B).
-    - MTP (`EXP-V100-ORN15-35B-LLAMA-Q80-MTP-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 857.77s, Aggregate decode 3.50 tok/s, Batch Wall 1,251.11s; Project A 1030 tok PASS, Project B 1566 tok PASS, B decode 34.97 tok/s; Peak VRAM 12,897 MiB GPU0 / 13,737 MiB GPU1; draft 574/455 79.3% A, 888/677 76.2% B).
-    - MTP_NGRAM (`EXP-V100-ORN15-35B-LLAMA-Q80-MTP-NGRAM-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 860.09s, Aggregate decode 2.70 tok/s, Batch Wall 1,240.18s; Project A 905 tok PASS, Project B 1065 tok PASS, A decode 29.38 tok/s; Peak VRAM 12,897 MiB GPU0 / 13,737 MiB GPU1; draft 759/445 58.6% A, 858/463 54.0% B).
-  - 3.1.4 Gemma4 26B-A4B [DEFERRED]: 자동 실행을 생략하고 수동 실행 가이드 문서 작성(`docs/WBS-3.1.4-gemma4-execution-guide.md`)으로 갈음.
-- Current status: WBS 3.1 runnable target models (Qwen3.8-27B, Ornith 1.5 9B, Ornith 1.5 35B-A3B) C2 128K matrix 완료 ([DONE]).
-- Next task: User review / WBS 4 or manual execution of 3.1.4 per guide.
+- WBS 3 v2 audited execution summary:
+  - 3.2.1 Qwen3.8 1Cat: runtime `QUEUE_ONLY`; mechanical/semantic FAIL_OUTPUT; publication `FAIL_OUTPUT`.
+  - 3.2.2 Ornith 9B 1Cat: runtime `PASS_C2_ACTIVE`; mechanical PASS; semantic FAIL_OUTPUT; publication `FAIL_OUTPUT`.
+  - 3.2.3 Ornith 35B 1Cat: runtime `PASS_C2_ACTIVE`; mechanical PASS; semantic FAIL_OUTPUT; publication `FAIL_OUTPUT`.
+  - 3.1.1 Qwen llama TARGET/NGRAM: runtime/mechanical/semantic all PASS; publication `PASS_C2_ACTIVE`.
+  - 3.1.2 Ornith 9B llama four lanes: runtime `PASS_C2_ACTIVE`, mechanical PASS, semantic FAIL_OUTPUT; publication `FAIL_OUTPUT`.
+  - 3.1.3 Ornith 35B llama TARGET/NGRAM: publication `PASS_C2_ACTIVE`; MTP/MTP_NGRAM: runtime active but semantic FAIL_OUTPUT.
+  - 3.1.4 Gemma4 llama: DEFERRED, not executed.
+- Do not interpret a runtime `PASS_C2_ACTIVE` as semantic publication PASS unless the derived acceptance review says so.
 
 ## Root-Cause Diagnostic: Qwen3.8-27B 1Cat-vLLM 128K Realistic Workload (2026-09-25)
 - Purpose: Distinguish whether Qwen3.8 128K repetition collapse is artifact of synthetic repetition-heavy workload (1,333 duplicate sections) or general 1Cat-vLLM 128K path issue.
@@ -122,7 +110,6 @@
 
 ## Next planned work after current stop
 
-- Remaining project scope is authoritative WBS 3 v2 revalidation across all runnable llama.cpp/1Cat lanes, then WBS 4 and WBS 5.
-- Existing WBS 3 v1 Qwen/Ornith9 results are historical diagnostics; final WBS 3 acceptance is reset to v2.
-- WBS 4: Ornith 1.5 9B 1GPU×2 + LiteLLM topology validation.
-- WBS 5: performance optimization and per-model/per-runtime final recipe capture.
+- WBS 3.1.4: Gemma4 llama.cpp v2 C2 TARGET/NGRAM/corrected-MTP/corrected-MTP_NGRAM remains unexecuted.
+- WBS 4: Ornith 1.5 9B 1GPU×2 + LiteLLM topology validation after WBS 3 scope is resolved.
+- WBS 5: only configurations with valid capacity/correctness evidence are eligible for formal performance optimization.

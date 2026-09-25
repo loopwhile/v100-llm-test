@@ -1,0 +1,36 @@
+{
+  "reviewed_at_utc": "2026-09-25T17:26:00+00:00",
+  "workload_id": "V100-CONCURRENCY-C2-128K-v2",
+  "semantic_oracle": "workloads/concurrency/v2-ground-truth.json",
+  "publication_verdict": "PASS_C2_ACTIVE",
+  "harness_verdict": "PASS_C2_ACTIVE",
+  "capacity_verdict": "PASS_C2_ACTIVE",
+  "mechanical_output_integrity": "PASS",
+  "semantic_verdict": "PASS",
+  "raw_measurement_unchanged": true,
+  "prompt_context_tokens": 131072,
+  "concurrency": 2,
+  "runtime_evidence": {
+    "c2_resident": "true",
+    "c2_active": "true",
+    "queue_only": "false",
+    "ttft_ms": "925171.6445185003",
+    "aggregate_decode_tps": "1.82537083965169",
+    "peak_vram_gpu0_mib": "13159.0",
+    "peak_vram_gpu1_mib": "14247.0"
+  },
+  "content_review": {
+    "project-a": {
+      "verdict": "PASS",
+      "output_tokens": 886,
+      "reason": "Correctly identifies Transaction.commit pending.clear() inside the loop, traces alpha persisted/beta skipped, supplies a multi-write regression, and moves clear after the loop."
+    },
+    "project-b": {
+      "verdict": "PASS",
+      "output_tokens": 842,
+      "reason": "Correctly identifies JobQueue.pop check -> await asyncio.sleep(0) -> heappop, shows both workers pass the nonempty check, then the losing worker pops an empty heap and raises IndexError; reproduction and fix are grounded."
+    }
+  },
+  "key_note": "Both seeded defects satisfy the pre-registered oracle; runtime active-overlap evidence remains valid.",
+  "review_note": "Post-hoc application of the pre-registered V2 oracle. Existing raw measurement files are unchanged; this file is a derived acceptance review."
+}
