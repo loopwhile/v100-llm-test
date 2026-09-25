@@ -48,9 +48,10 @@
     - MTP_NGRAM (`EXP-V100-ORN15-9B-LLAMA-F16-MTP-NGRAM-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 324.95s, Aggregate decode 6.45 tok/s, Batch Wall 498.39s; Project A 879 tok PASS, Project B 1168 tok PASS, B decode 39.83 tok/s; Peak VRAM 10,071 MiB; draft 1173/558 47.6% A, 1554/747 48.1% B).
   - 3.1.3 Ornith 1.5 35B-A3B [IN PROGRESS]:
     - TARGET (`EXP-V100-ORN15-35B-LLAMA-Q80-TARGET-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 815.97s, Aggregate decode 3.07 tok/s, Batch Wall 1,183.89s; Project A 917 tok PASS, Project B 1217 tok PASS, B decode 29.91 tok/s; Peak VRAM 12,831 MiB GPU0 / 12,309 MiB GPU1).
-    - NGRAM (`EXP-V100-ORN15-35B-LLAMA-Q80-NGRAM-C2-128K-20260925-001`): NEXT.
-    - MTP, MTP_NGRAM: PENDING.
-- Next task: WBS 3.1.3 NGRAM -> MTP -> MTP_NGRAM -> WBS 3.1.4 Gemma4.
+    - NGRAM (`EXP-V100-ORN15-35B-LLAMA-Q80-NGRAM-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 816.17s, Aggregate decode 2.83 tok/s, Batch Wall 1,183.06s; Project A 867 tok PASS, Project B 1098 tok PASS, B decode 27.83 tok/s; Peak VRAM 12,831 MiB; draft 312/80 25.6% A, 272/68 25.0% B).
+    - MTP (`EXP-V100-ORN15-35B-LLAMA-Q80-MTP-C2-128K-20260925-001`): NEXT.
+    - MTP_NGRAM: PENDING.
+- Next task: WBS 3.1.3 MTP -> MTP_NGRAM -> WBS 3.1.4 Gemma4.
 
 ## Root-Cause Diagnostic: Qwen3.8-27B 1Cat-vLLM 128K Realistic Workload (2026-09-25)
 - Purpose: Distinguish whether Qwen3.8 128K repetition collapse is artifact of synthetic repetition-heavy workload (1,333 duplicate sections) or general 1Cat-vLLM 128K path issue.

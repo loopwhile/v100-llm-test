@@ -1,0 +1,110 @@
+[
+  {
+    "request_id": "project-a",
+    "project_id": "A",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "e99ad2dc463957278d4cfd2ec9f973891da28ca8bf9bda09d9aad2ae5283d7cf",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.010090018000482814,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "# Project A — Engineering Report: Transactional Storage Commit Defect\n\n## 1. Root Cause\n\n**Faulty function:** `Transaction.commit` in `Project A / storage/transaction.py`\n\n**Faulty operation:** The `self.pending.clear()` call is placed **inside** the `for` loop that iterates over `self.pending`.\n\n```python\ndef commit(self):\n    for key, page_id in self.pending:   # <-- iterating over the list\n        self.index.put(key, page_id)\n        self.pending.clear()            # <-- mutating the list mid-iteration\n```\n\nIterating over a list while clearing it is undefined in effect: the first iteration commits the first staged write, then `clear()` empties the list. On the next loop check, the (now-cleared) list is empty, so the loop terminates. The result is that **only the first staged write is ever committed**; all subsequent staged writes are silently dropped.\n\nThis also violates the documented contract asserted by the anchor test `test_commit_persists_all_staged_writes`, which expects **both** `\"alpha\"` and `\"beta\"` to be persisted and `pending` to be empty.\n\n## 2. Failure Trace (concrete two-write example)\n\nUsing the scenario from `tests/test_transaction.py`:\n\n1. `tx.stage(\"alpha\", 10)` → `pending = [(\"alpha\", 10)]`\n2. `tx.stage(\"beta\", 20)` → `pending = [(\"alpha\", 10), (\"beta\", 20)]`\n3. `tx.commit()` is called:\n   - **Iteration 1:** `for` yields `(\"alpha\", 10)`. `self.index.put(\"alpha\", 10)` runs → `index.pages == {\"alpha\": 10}`. Then `self.pending.clear()` → `pending == []`.\n   - **Loop re-check:** The `for` loop inspects `self.pending`, which is now `[]`. Iteration is exhausted.\n   - **Loop exits.**\n4. Final state:\n   - `index.pages == {\"alpha\": 10}` — `\"beta\"` was **never committed**.\n   - `tx.pending == []` — passes that assertion, but masks the dropped write.\n\nThe test's `assert index.pages == {\"alpha\": 10, \"beta\": 20}` therefore **fails**, because `\"beta\": 20` is missing.\n\n## 3. Reproduction (pytest regression test)\n\n```python\nfrom storage.index import PageIndex\nfrom storage.transaction import Transaction\n\n\ndef test_commit_persists_all_staged_writes():\n    index = PageIndex()\n    tx = Transaction(index)\n    tx.stage(\"alpha\", 10)\n    tx.stage(\"beta\", 20)\n    tx.commit()\n    assert index.pages == {\"alpha\": 10, \"beta\": 20}   # FAILS pre-fix: beta dropped\n    assert tx.pending == []\n\n\ndef test_commit_persists_many_staged_writes():\n    index = PageIndex()\n    tx = Transaction(index)\n    for i in range(5):\n        tx.stage(f\"key{i}\", i)\n    tx.commit()\n    assert index.pages == {f\"key{i}\": i for i in range(5)}\n    assert tx.pending == []\n```\n\n## 4. Minimal Fix\n\nMove `self.pending.clear()` **outside** the loop so the entire staged batch is committed before the pending buffer is emptied:\n\n```python\ndef commit(self):\n    for key, page_id in self.pending:\n        self.index.put(key, page_id)\n    self.pending.clear()\n```\n\nThis is the smallest change that preserves the intended contract: all staged writes are applied atomically, and `pending` is reset to `[]` exactly once after the loop. (An even more defensive variant is `for item in list(self.pending): ...`, which guards against any future in-loop mutation, but reordering the `clear()` is the minimal, correct fix.)"
+          }
+        }
+      ],
+      "usage": {
+        "completion_tokens": 867,
+        "prompt_tokens": 129023,
+        "total_tokens": 129890,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 129023,
+        "prompt_ms": 486969.618,
+        "prompt_per_token_ms": 3.774285344473466,
+        "prompt_per_second": 264.9508208128089,
+        "predicted_n": 867,
+        "predicted_ms": 677983.954,
+        "predicted_per_token_ms": 782.8914018475751,
+        "predicted_per_second": 1.2773163655138657,
+        "draft_n": 312,
+        "draft_n_accepted": 80
+      }
+    },
+    "actual_output_tokens": 867,
+    "post_template_prompt_tokens": 129023,
+    "ttft_ms": 488750.32191200077,
+    "first_abs": 19783.313347731,
+    "end_abs": 20461.301331218,
+    "wall_s": 1166.7383053990015,
+    "prefill_tps": 264.9508208128089,
+    "decode_tps": 1.2773163655138657,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 1166.784440739997
+  },
+  {
+    "request_id": "project-b",
+    "project_id": "B",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "3ae80c5367249fd7f109022adfa1c526d8edcda82d9730ff996d6fe48bc0c897",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.003080438997130841,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "# Project B — Engineering Report: Concurrency Defect in Cooperative Job Queue\n\n## (1) Root Cause\n\n**Defective function:** `JobQueue.pop` in `scheduler/queue.py`.\n\nThe seeded defect is a **check-then-act race on a shared mutable heap** inside a cooperative async context. The method performs a non-atomic sequence:\n\n1. `if not self._heap:` — reads the heap state (the \"check\")\n2. `await asyncio.sleep(0)` — **yields control to the event loop**, suspending this coroutine at an explicit await point\n3. `heapq.heappop(self._heap)` — mutates the same heap (the \"act\")\n\nBecause this is a single-threaded cooperative event loop, task switches happen precisely at `await` points. Between the emptiness check and the `heappop`, another coroutine can run, drain the last element, and mutate `self._heap`. The `pop` therefore operates on a heap that has already been emptied by a concurrent worker — a classic **TOCTOU (time-of-check-to-time-of-use)** race. The `asyncio.sleep(0)` is not a harmless yield here; it is the exact seam that makes the interleaving exploitable. The `_sequence` counter gives each entry a stable tiebreaker, but it does nothing to protect the read-modify-write window spanning the await.\n\n## (2) Failure Trace\n\nConsider the scenario in `test_two_workers_one_job`: one job `(5, 1, job)` in the heap, two workers `left` and `right`.\n\n```\n[loop] gather(left.run_once(), right.run_once())  -> schedule both coroutines\n[left] pop() called:  heap=[(5,1,job)]  -> check passes (not empty)\n[left] await asyncio.sleep(0)  -> SUSPEND, yield to loop\n[right] pop() called: heap=[(5,1,job)]  -> check passes (not empty)\n[right] await asyncio.sleep(0)  -> SUSPEND, yield to loop\n[left] RESUME: heapq.heappop(heap) -> returns (5,1,job); heap=[] now\n[left] job() executes -> seen=[\"job\"], returns \"done\"\n[right] RESUME: heapq.heappop(heap) -> heap is EMPTY -> IndexError raised\n```\n\nThe second worker raises `IndexError` because the heap was drained during the window between its check and its act. In the provided test this surfaces as a result item that is an `Exception`, which would violate the `assert not any(isinstance(item, Exception) ...)` guard. The defect is deterministic under this ordering because the event loop schedules the two `sleep(0)` callbacks in submission order, and the single job is consumed by the first resumer.\n\n## (3) Reproduction\n\n```python\n# tests/test_repro_queue_race.py\nimport asyncio\nimport pytest\nfrom scheduler.queue import JobQueue\nfrom scheduler.worker import Worker\n\n@pytest.mark.asyncio\nasync def test_two_workers_one_job_race():\n    queue = JobQueue()\n    seen = []\n    async def job():\n        seen.append(\"job\")\n        return \"done\"\n    queue.push(5, job)\n\n    left = Worker(queue)\n    right = Worker(queue)\n    results = await asyncio.gather(\n        left.run_once(), right.run_once(), return_exceptions=True\n    )\n\n    # Exactly one worker should have run the job; the other must get None.\n    assert seen == [\"job\"]\n    assert results.count(None) == 1\n    assert not any(isinstance(r, Exception) for r in results)\n```\n\nThis test encodes the post-fix contract: exactly one successful run, one `None`, and zero exceptions. Under the current `pop` implementation the `IndexError` from the starving worker fails the last assertion.\n\n## (4) Minimal Fix\n\nSerialize the check-and-pop so no await point falls inside the critical section. The smallest correct change is to **remove the `await` from the read-modify-write path** and return `None` only when the heap is empty at pop time:\n\n```python\nasync def pop(self):\n    if not self._heap:\n        return None\n    return heapq.heappop(self._heap)[2]\n```\n\n`heappop` on an empty heap raises `IndexError`, so the guard now protects the exact mutation. If the API contract requires `pop` to remain a coroutine (e.g., subclassing or interface symmetry), keep the signature but guarantee atomicity by moving the await *outside* any shared-state access — or better, make `pop` a plain synchronous method, since no actual suspension is needed:\n\n```python\ndef pop(self):\n    if not self._heap:\n        return None\n    return heapq.heappop(self._heap)[2]\n```\n\nEither change eliminates the TOCTOU window: the emptiness check and the `heappop` now execute atomically with respect to other tasks, because no `await` occurs between them. No lock is required — the single-threaded event loop provides mutual exclusion as long as the critical section contains no yield point."
+          }
+        }
+      ],
+      "usage": {
+        "completion_tokens": 1098,
+        "prompt_tokens": 129023,
+        "total_tokens": 130121,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 129023,
+        "prompt_ms": 1143390.85,
+        "prompt_per_token_ms": 8.861914929896221,
+        "prompt_per_second": 112.84242829125314,
+        "predicted_n": 1098,
+        "predicted_ms": 39410.915,
+        "predicted_per_token_ms": 35.92608477666363,
+        "predicted_per_second": 27.834928470957852,
+        "draft_n": 272,
+        "draft_n_accepted": 68
+      }
+    },
+    "actual_output_tokens": 1098,
+    "post_template_prompt_tokens": 129023,
+    "ttft_ms": 1143588.2464339994,
+    "first_abs": 20438.150620145,
+    "end_abs": 20477.565645817,
+    "wall_s": 1183.0032721060015,
+    "prefill_tps": 112.84242829125314,
+    "decode_tps": 27.834928470957852,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 1183.0588086209973
+  }
+]
