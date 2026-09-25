@@ -1,0 +1,11 @@
+{
+  "source": "nvidia-smi sampled during measured request window",
+  "interval_s": 0.5,
+  "samples": 2626,
+  "peak_memory_mib": {
+    "0": 13159.0,
+    "1": 14247.0
+  },
+  "error": null,
+  "limitation": "sampled peaks may miss between-sample transients"
+}

@@ -1,0 +1,106 @@
+[
+  {
+    "request_id": "project-a",
+    "project_id": "A",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "e99ad2dc463957278d4cfd2ec9f973891da28ca8bf9bda09d9aad2ae5283d7cf",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.01372695500140253,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "# Engineering Report: Project A Transactional Storage Commit\n\n## 1. Root Cause\nThe defect resides in the `commit` method of the `Transaction` class within `storage/transaction.py`. The faulty operation is the placement of the `self.pending.clear()` call **inside** the `for` loop that iterates over `self.pending`.\n\nIn Python, modifying a list while iterating over it leads to undefined or unexpected behavior. Specifically, calling `.clear()` on the list being iterated causes the iterator to immediately exhaust itself after the first element is processed. Consequently, only the first staged write is applied to the index, and all subsequent staged writes are silently discarded. This violates the atomicity and completeness guarantees expected of a transactional commit.\n\n## 2. Failure Trace\nConsider a concrete scenario where a user stages two writes: `(\"alpha\", 10)` and `(\"beta\", 20)`.\n\n1.  **Initialization**: `tx.pending` is `[(\"alpha\", 10), (\"beta\", 20)]`.\n2.  **Commit Start**: `tx.commit()` is invoked. The `for` loop begins iterating over `self.pending`.\n3.  **First Iteration**:\n    *   The loop unpacks the first item: `key=\"alpha\"`, `page_id=10`.\n    *   `self.index.put(\"alpha\", 10)` is executed. The index now contains `{\"alpha\": 10}`.\n    *   `self.pending.clear()` is executed. The `self.pending` list becomes `[]`.\n4.  **Second Iteration Attempt**:\n    *   The iterator attempts to fetch the next item from `self.pending`.\n    *   Since `self.pending` is now empty, the iterator raises `StopIteration` (internally handled by the `for` loop).\n    *   The loop terminates immediately.\n5.  **Result**: The write for `\"beta\"` is never processed. The final state of `index.pages` is `{\"alpha\": 10}`, but the expected state was `{\"alpha\": 10, \"beta\": 20}`. The transaction failed to persist all staged writes.\n\n## 3. Reproduction\nThe following pytest-style regression test demonstrates the failure. It asserts that both writes are persisted, which will fail with the current implementation.\n\n```python\nimport pytest\nfrom storage.index import PageIndex\nfrom storage.transaction import Transaction\n\ndef test_commit_persists_all_staged_writes_regression():\n    \"\"\"\n    Regression test for the bug where only the first staged write is committed.\n    \"\"\"\n    index = PageIndex()\n    tx = Transaction(index)\n    \n    # Stage multiple writes\n    tx.stage(\"alpha\", 10)\n    tx.stage(\"beta\", 20)\n    tx.stage(\"gamma\", 30)\n    \n    # Commit the transaction\n    tx.commit()\n    \n    # Assert that ALL writes were persisted\n    assert index.pages == {\"alpha\": 10, \"beta\": 20, \"gamma\": 30}, \\\n        f\"Expected all 3 writes, got: {index.pages}\"\n    \n    # Assert that pending is cleared\n    assert tx.pending == []\n```\n\n## 4. Minimal Fix\nThe fix involves moving the `self.pending.clear()` call **outside** the `for` loop. This ensures that the entire list is iterated and all writes are applied to the index before the pending buffer is reset.\n\n**File:** `storage/transaction.py`\n\n```python\nclass Transaction:\n    def __init__(self, index):\n        self.index = index\n        self.pending = []\n\n    def stage(self, key, page_id):\n        self.pending.append((key, page_id))\n\n    def commit(self):\n        for key, page_id in self.pending:\n            self.index.put(key, page_id)\n        # Move clear() outside the loop to ensure all items are processed\n        self.pending.clear()\n```\n\nThis change preserves the intended contract: all staged writes are atomically applied to the index, and the pending buffer is cleared only after the full commit sequence is complete."
+          }
+        }
+      ],
+      "usage": {
+        "completion_tokens": 886,
+        "prompt_tokens": 129023,
+        "total_tokens": 129909,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 129023,
+        "prompt_ms": 498337.47,
+        "prompt_per_token_ms": 3.8623925191632495,
+        "prompt_per_second": 258.9068809134501,
+        "predicted_n": 886,
+        "predicted_ms": 926220.225,
+        "predicted_per_token_ms": 1046.5765254237288,
+        "predicted_per_second": 0.9554963021888234
+      }
+    },
+    "actual_output_tokens": 886,
+    "post_template_prompt_tokens": 129023,
+    "ttft_ms": 499742.14274099906,
+    "first_abs": 11872.737943199,
+    "end_abs": 12798.955221111,
+    "wall_s": 1425.959420653,
+    "prefill_tps": 258.9068809134501,
+    "decode_tps": 0.9554963021888234,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 1426.0092481650008
+  },
+  {
+    "request_id": "project-b",
+    "project_id": "B",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "3ae80c5367249fd7f109022adfa1c526d8edcda82d9730ff996d6fe48bc0c897",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.0028819560011470458,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "# Project B Engineering Report: Cooperative Asyncio Job Queue Defect\n\n## 1. Root Cause\nThe defect resides in the `JobQueue.pop` method within `scheduler/queue.py`. The implementation violates atomicity by introducing an `await` point between the state check and the state mutation. Specifically, the sequence is:\n1. Check if `self._heap` is empty.\n2. **Yield control** via `await asyncio.sleep(0)`.\n3. Mutate state via `heapq.heappop(self._heap)`.\n\nIn a cooperative single-threaded event loop, yielding control allows other tasks to execute. If multiple workers call `pop` concurrently, they can all pass the \"not empty\" check before any of them executes the `heappop`. This results in multiple workers attempting to pop the same single item from the heap, leading to a `heapq.HeapError` (or `IndexError` depending on Python version specifics regarding empty heap pops) for the second worker, or logically consuming the job twice if the heap implementation were different.\n\n## 2. Failure Trace\nConsider the test scenario `test_two_workers_one_job`:\n1. **Setup**: One job is pushed to the queue. `left` and `right` workers are created.\n2. **Start**: `asyncio.gather(left.run_once(), right.run_once())` schedules both coroutines.\n3. **Interleaving**:\n   - `left.run_once()` calls `queue.pop()`.\n   - `left.pop()` checks `if not self._heap`: False (heap has 1 item).\n   - `left.pop()` hits `await asyncio.sleep(0)`. **Control yields to the event loop.**\n   - `right.run_once()` starts executing. It calls `queue.pop()`.\n   - `right.pop()` checks `if not self._heap`: False (heap still has 1 item, as `left` hasn't popped yet).\n   - `right.pop()` hits `await asyncio.sleep(0)`. **Control yields to the event loop.**\n   - `left.pop()` resumes. It executes `heapq.heappop(self._heap)`. The heap is now empty. It returns the job.\n   - `right.pop()` resumes. It executes `heapq.heappop(self._heap)`. **The heap is empty.** This raises an exception (typically `heapq.HeapError` or `IndexError`).\n4. **Result**: `asyncio.gather` captures the exception from `right`. The test assertion `assert not any(isinstance(item, Exception) for item in results)` fails.\n\n## 3. Reproduction\nThe provided test `test_two_workers_one_job` in `tests/test_scheduler.py` is the regression test. To execute it:\n\n```bash\npytest tests/test_scheduler.py -v\n```\n\nThe test will fail because `results` will contain an exception instance from the second worker.\n\n## 4. Minimal Fix\nThe fix is to remove the unnecessary `await` from the `pop` method. Since `heapq.heappop` is a synchronous, non-blocking operation, there is no need to yield control. The check and the pop must be atomic within the same synchronous execution block.\n\n**Modified `scheduler/queue.py`:**\n\n```python\nimport asyncio\nimport heapq\n\nclass JobQueue:\n    def __init__(self):\n        self._heap = []\n        self._sequence = 0\n\n    def push(self, priority, job):\n        self._sequence += 1\n        heapq.heappush(self._heap, (priority, self._sequence, job))\n\n    async def pop(self):\n        if not self._heap:\n            return None\n        # Removed: await asyncio.sleep(0)\n        return heapq.heappop(self._heap)[2]\n```\n\nThis change ensures that the check for emptiness and the removal of the item happen without yielding control to the event loop, preventing the race condition."
+          }
+        }
+      ],
+      "usage": {
+        "completion_tokens": 842,
+        "prompt_tokens": 129023,
+        "total_tokens": 129865,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 129023,
+        "prompt_ms": 1350397.041,
+        "prompt_per_token_ms": 10.466328026785922,
+        "prompt_per_second": 95.54449253269654,
+        "predicted_n": 842,
+        "predicted_ms": 95804.989,
+        "predicted_per_token_ms": 113.91794173602854,
+        "predicted_per_second": 8.778248489752448
+      }
+    },
+    "actual_output_tokens": 842,
+    "post_template_prompt_tokens": 129023,
+    "ttft_ms": 1350601.1462960015,
+    "first_abs": 12723.585421412,
+    "end_abs": 12819.394897755,
+    "wall_s": 1446.4106226390013,
+    "prefill_tps": 95.54449253269654,
+    "decode_tps": 8.778248489752448,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 1446.4473603919996
+  }
+]

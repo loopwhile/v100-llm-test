@@ -1,0 +1,5 @@
+{
+  "path": "/srv/models/qwen3.8-unsloth/Qwen3.8-27B-UD-Q4_K_M.gguf",
+  "sha256": "322e194ff79741c7baa497c240f677f54b201b0efab44ca8e50f122b39123482",
+  "expected": "322e194ff79741c7baa497c240f677f54b201b0efab44ca8e50f122b39123482"
+}

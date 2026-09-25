@@ -383,13 +383,37 @@ WBS 3 authoritative workload는 `workloads/concurrency/v2.json`이다.
 
 기존 v1 실험은 삭제하거나 소급 변경하지 않는다. Qwen v1 queue-only와 Ornith 9B v1 active-overlap은 historical diagnostic으로 유지한다.
 
-### 3.1 Shared TP2 llama.cpp [TODO — all runnable lanes use concurrency/v2]
+### 3.1 Shared TP2 llama.cpp [IN PROGRESS — all runnable lanes use concurrency/v2]
 - 실행 runner: `scripts/run_c2_llama.py`.
 - 공통: `parallel=2`, `ctx-size=262144`, `kv-unified`, `kv-unified-per-slot=131072`.
-- 3.1.1 Qwen3.8-27B: `TARGET`, `NGRAM`.
-- 3.1.2 Ornith 1.5 9B: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
-- 3.1.3 Ornith 1.5 35B-A3B: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
-- 3.1.4 Gemma4 26B-A4B: `TARGET`, `NGRAM`, corrected `MTP`, corrected `MTP_NGRAM`; MTP는 validated `CUDA0,CUDA1` draft contract 유지.
+
+#### 3.1.1 Qwen3.8-27B [IN PROGRESS]
+- artifact: `UD-Q4_K_M`.
+- KV: `Q8_0`.
+- 실행 lane: `TARGET`, `NGRAM`.
+- TARGET: `EXP-V100-Q38-LLAMA-Q80-TARGET-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (`peak_processing: 2.0`, `peak_waiting: 0.0`). 2× V100 16GB TP2 환경에서 2개 독립 128K 세션(총 256K 컨텍스트) 동시 상주 및 병렬 디코드 완벽 통과.
+  - TTFT (Batch Mean): 925.17s, Prefill 177.23 tok/s, Mean Decode 4.87 tok/s, Aggregate Decode 1.83 tok/s, End-to-End Output 1.19 tok/s, Batch Wall 1,446.44s (~24.11분).
+  - Peak VRAM: GPU0 13,159 MiB / GPU1 14,247 MiB (16GB 한도 내 안정적 수용, OOM 여유 ~2,137 MiB).
+  - Output analysis:
+    - Project A: 886 tokens 생성, `Transaction.commit` 루프 내 `pending.clear()` 조기 비움 결함 완벽 분석 및 재현/수정안 제시 (PASS).
+    - Project B: 842 tokens 생성, `JobQueue._sequence` 비원자적 RMW 및 tiebreaker 중복 문제 완벽 분석 및 재현/수정안 제시 (PASS).
+- NGRAM: `EXP-V100-Q38-LLAMA-Q80-NGRAM-C2-128K-20260925-001` [TODO]
+
+#### 3.1.2 Ornith 1.5 9B [TODO]
+- artifact: `Q6_K`.
+- KV: `FP16`.
+- 실행 lane: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
+
+#### 3.1.3 Ornith 1.5 35B-A3B [TODO]
+- artifact: `Q4_K_M`.
+- KV: `Q8_0`.
+- 실행 lane: `TARGET`, `NGRAM`, `MTP`, `MTP_NGRAM`.
+
+#### 3.1.4 Gemma4 26B-A4B [TODO]
+- artifact: `UD-Q4_K_XL`.
+- KV: `FP16`.
+- 실행 lane: `TARGET`, `NGRAM`, corrected `MTP`, corrected `MTP_NGRAM`; MTP는 validated `CUDA0,CUDA1` draft contract 유지.
 
 ### 3.2 Shared TP2 1Cat-vLLM STOCK [TODO — v2 revalidation]
 - 공통: TP2, `max_model_len=131072`, `max_num_seqs=2`, C1에서 검증된 exact serving configuration 유지.
