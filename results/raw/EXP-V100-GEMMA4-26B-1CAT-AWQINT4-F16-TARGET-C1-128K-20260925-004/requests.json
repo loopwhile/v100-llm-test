@@ -1,0 +1,15 @@
+[
+  {
+    "request_id": "project-a",
+    "project_id": "A",
+    "status": "results_saved",
+    "verdict": "FAIL_TIMEOUT",
+    "raw_prompt_sha256": "4ba9115ce1f7f62ffe1fd924370af5941c6e4c92deddb7ee57e7fcd9cf4383c3",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.0013843480010109488,
+    "error": "timed out",
+    "error_body": null,
+    "terminal_s": 1800.4428800349997
+  }
+]

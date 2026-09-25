@@ -10,10 +10,13 @@
 - 2.2.1 Qwen3.8 STOCK: CLOSED — 128K CAPACITY PASS / OUTPUT INTEGRITY FAIL. Attempts 002~007 reproduced repetition failure. A later B200-aligned E4M3 diagnostic preserved 128K capacity and completed non-repetitively, but post-hoc semantic audit found that the 280-token answer did not substantiate the requested concrete cross-file/component correctness risk; its raw harness PASS is preserved while publication remains FAIL_OUTPUT.
 - 2.2.2 Ornith 9B STOCK: DONE — PASS_C1_128K (EXP-V100-ORN15-9B-1CAT-F16-MTP1-C1-128K-20260924-003; TTFT 165.43s, Decode 8.98 tok/s, Wall 201.64s).
 - 2.2.3 Ornith 35B STOCK: DONE — PASS_C1_128K (EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C1-128K-20260924-002; TTFT 62.05s, Decode 10.45 tok/s, Wall 118.88s).
-- 2.2.4 Gemma4 26B STOCK: CLOSED — FAIL_STARTUP.
+- 2.2.4 Gemma4 26B STOCK: CLOSED — FAIL_TIMEOUT (Bounded Recovery Closed).
   - Historical NVFP4 run: `EXP-V100-GEMMA4-26B-1CAT-F16-TARGET-C1-128K-20260924-002` failed at startup because 1Cat-vLLM 1.5.0 SM70 TurboMind NVFP4 MoE does not support Gemma4 MoE architecture shape (2816, 704, 128, 8) and gelu_pytorch_tanh activation.
-  - Revalidation AWQ INT4 run: `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-001` failed at startup (`FAIL_STARTUP`). The SM70 Marlin MoE path was successfully selected (`Using MarlinLinearKernel for CompressedTensorsWNA16`, `Using CompressedTensorsWNA16MoEMethod`), but 1Cat-vLLM 1.5.0's `gemma4.py` heterogeneous `head_dim` initialization failed under `transformers 5.16.1` (global `global_head_dim` stripped into `per_layer_config`, causing full-attention layers 5, 11, 17, 23, 29 to fall back to `head_dim=256` instead of `512`), resulting in `AssertionError: Attempted to load weight (torch.Size([512])) into parameter (torch.Size([256]))` during shard loading. Gemma4 1Cat-vLLM remains ineligible for C2 / WBS 5.
-- Current task: WBS 2.2.4 AWQ INT4 C1 revalidation completed and closed as FAIL_STARTUP. Stopped per policy.
+  - Revalidation AWQ INT4 initial run: `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-001` failed at startup (`FAIL_STARTUP`) due to transformers 5.16.1 heterogeneous attention head_dim initialization defect.
+  - Bounded Recovery Attempt 1: `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-002` — `FAIL_CRASH` (heterogeneous hook fixed all 30 layers; shard loaded 100%; startup healthy; crashed during 128K prefill with Triton CUDA OOM; peak VRAM 15,243 MiB).
+  - Bounded Recovery Attempt 2: `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-003` — `FAIL_CRASH` (`--language-model-only` disabled vision tower; but `gpu_memory_utilization=0.90` expanded KV cache to 4.78 GiB, leaving 1.13 GiB free VRAM; Triton kernel spilled 10,896 B/thread requiring 1.66 GiB driver local stack, causing `cuLaunchKernel` OOM; peak VRAM 15,253 MiB).
+  - Bounded Recovery Attempt 3 (Final): `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-004` — `FAIL_TIMEOUT` (`gpu_memory_utilization=0.80`, `VLLM_SM70_TRITON_ATTN_PREFILL_TILE_SIZE=16`, `SAFE_DEFAULTS=1`; startup healthy, VRAM rock solid at 13,663 MiB with 2.7 GiB headroom; no OOM, no crash, post-health 100% OK; but 128K chunked prefill with 512-dim attention on SM70 took > 1,800s, reaching client HTTP timeout).
+- Current task: WBS 2.2.4 AWQ INT4 C1 revalidation bounded recovery (3 retries: -002, -003, -004) completed and closed as FAIL_TIMEOUT. Stopped per contract. Gemma4 1Cat-vLLM remains ineligible for C2 / WBS 5.
 - Do not launch work beyond WBS 2.2 automatically.
 
 ## Root-Cause Diagnostic: Qwen3.8-27B 1Cat-vLLM 128K Realistic Workload (2026-09-25)
@@ -56,26 +59,30 @@
   - It does **not** prove which setting removed repetition, that the effect is repeatable, or that task-level output correctness is recovered.
   - Qwen 1Cat remains **not eligible** for formal C2 promotion or WBS 5 throughput optimization until a user-authorized fresh 128K semantic revalidation passes.
 
-## Gemma4 26B-A4B 1Cat-vLLM AWQ INT4 C1 Revalidation (2026-09-25)
-- Purpose: Revalidate Gemma4 26B-A4B on 1Cat-vLLM 1.5.0 using the newly downloaded AWQ INT4 (`compressed-tensors`) artifact (`cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4@18a3c7285c33ee39d3e5e16ee6fb2c18f4955ef9`), bypassing the previously failed SM70 TurboMind NVFP4 MoE gate via `VLLM_SM70_QUANT_BACKEND=marlin`.
-- Measured Inference: Not reached (`EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-001`).
-- Hardware / Serving: 2x V100 16GB TP2 shared, KV `FP16` (`float16`), context 131,072, `--quantization compressed-tensors`, `VLLM_SM70_QUANT_BACKEND=marlin`, `attention-backend TRITON_ATTN`, `max_num_batched_tokens=4096`, `gpu_memory_utilization=0.90`.
-- Results:
-  - Final Verdict: **FAIL_STARTUP**.
-  - Backend Selection Evidence: SM70 Marlin backend was successfully selected and active:
-    - `Using MarlinLinearKernel for CompressedTensorsWNA16`
-    - `Using MarlinLinearKernel for mixed-precision linear`
-    - `Using CompressedTensorsWNA16MoEMethod`
-    - SM70 TurboMind NVFP4 MoE path was bypassed as intended.
-  - Failure Stage & Root Cause: Model weight loading (`load_weights`) failed at 0% shard progress with:
-    `AssertionError: Attempted to load weight (torch.Size([512])) into parameter (torch.Size([256]))`
-    at `vllm/model_executor/model_loader/weight_utils.py:1456` via `gemma4.py:1500`.
-    - Specific parameter: Layer 5's `k_norm.weight` (and `q_norm.weight`), which in Gemma4's heterogeneous attention architecture has `head_dim = 512` for full-attention layers (layers 5, 11, 17, 23, 29) versus `head_dim = 256` for sliding-attention layers.
-    - Upstream defect: Under `transformers 5.16.1`, the heterogeneous configuration mechanism strips global attributes into `per_layer_config[i]`. In 1Cat-vLLM 1.5.0, `Gemma4DecoderLayer` attempts to read `getattr(config, "global_head_dim", config.head_dim)`, which falls back to global default `head_dim = 256` because `global_head_dim` is absent on `Gemma4TextConfig`. Full-attention layers are therefore instantiated with head dimension 256 instead of 512, crashing when loading the 512-element norm weights.
+## Gemma4 26B-A4B 1Cat-vLLM AWQ INT4 C1 Revalidation & Bounded Recovery (2026-09-25)
+- Purpose: Revalidate Gemma4 26B-A4B on 1Cat-vLLM 1.5.0 using the AWQ INT4 (`compressed-tensors`) artifact (`cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4@18a3c7285c33ee39d3e5e16ee6fb2c18f4955ef9`), followed by up to 3 user-authorized bounded recovery attempts.
+- Backend Verification Reality:
+  - Dense / mixed-precision linear: `Using MarlinLinearKernel for CompressedTensorsWNA16` and `Using MarlinLinearKernel for mixed-precision linear` (Marlin active).
+  - Gemma4 MoE: `Using CompressedTensorsWNA16MoEMethod` (generic MoE, **not** `CompressedTensorsWNA16MarlinMoEMethod`). Past documentation referring to "SM70 Marlin MoE path" was an overstatement and is corrected.
+  - Attention backend: `TRITON_ATTN`.
+- Execution Sequence & Outcomes (Max 3 retries exhausted):
+  1. `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-001` — **FAIL_STARTUP**:
+     - Model weight loading crashed at 0% shard progress with `AssertionError: Attempted to load weight (torch.Size([512])) into parameter (torch.Size([256]))`.
+     - Root cause: `transformers 5.16.1` moved `global_head_dim` into `per_layer_config`, leaving `Gemma4TextConfig` without the global attribute. `gemma4.py` defaulted full-attention layers (5, 11, 17, 23, 29) to `head_dim=256` instead of `512`.
+  2. Attempt 1: `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-002` — **FAIL_CRASH**:
+     - Key modification: Implemented repo-local runtime hook (`scripts/runtime_hooks/sitecustomize.py`) to preserve `global_head_dim=512` and dynamically wrap `Gemma4DecoderLayer.__init__` to instantiate full-attention layers with 512/2 and sliding layers with 256/8.
+     - Outcome: All 30 layers correctly instantiated; checkpoint shard 100% loaded (16.20s, 9.85 GiB VRAM); server healthy startup achieved. Measured 128K request sent, but crashed during attention prefill with `RuntimeError: Triton Error [CUDA]: out of memory` in `triton_unified_attention.py:1080` (`kernel_unified_attention`). Peak VRAM: 15,243 MiB.
+  3. Attempt 2: `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-003` — **FAIL_CRASH**:
+     - Key modification: Enabled `--language-model-only` via `config/models/gemma4-26b-a4b.json`, turning the multimodal vision tower into `StageMissingLayer` and removing multimodal encoder cache.
+     - Outcome: Model memory decreased, but with `gpu_memory_utilization=0.90`, vLLM expanded KV cache to 4.78 GiB (294,344 tokens), leaving device free memory still at only 1,131 MiB. Triton attention prefill kernel spilled 10,896 bytes/thread to local memory (`n_local`), requiring 1.66 GiB driver local stack, exceeding the 1.13 GiB free memory and causing `cuLaunchKernel` to throw `Triton Error [CUDA]: out of memory`. Peak VRAM: 15,253 MiB.
+  4. Attempt 3 (Final): `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-004` — **FAIL_TIMEOUT**:
+     - Key modification: Decreased `gpu_memory_utilization` to `0.80` (expanding free VRAM headroom to 3.28 GiB while reserving 195,000 KV tokens, well above 128K) and configured SM70 Triton Attention tuning: `VLLM_SM70_TRITON_ATTN_PREFILL_TILE_SIZE=16`, `VLLM_SM70_TRITON_ATTN_SAFE_DEFAULTS=1`.
+     - Outcome: Server started cleanly. VRAM usage remained completely stable at 13,663 MiB (2.7 GiB headroom). No OOM, no crash. Both GPUs sustained 100% compute continuously. However, 128K chunked prefill (31 chunks) with 512 head dimension and tile size 16 on SM70 Volta required > 1,800 seconds, exceeding the benchmark adapter HTTP timeout (`terminal_s: 1800.44s`). Post-test server health check confirmed server remained 100% healthy (`post_health: {"healthy": true}`).
 - Conclusion:
-  - Gemma4 26B-A4B fails at the compatibility startup gate in 1Cat-vLLM 1.5.0 across both tested quantization formats (historical NVFP4: TurboMind MoE shape rejection; AWQ INT4: heterogeneous full-attention `head_dim` parameter shape mismatch).
+  - Gemma4 26B-A4B 1Cat-vLLM AWQ INT4 fails to complete C1 128K measured inference within the 1,800s timeout on 2x V100 SXM2 TP2 (`FAIL_TIMEOUT`).
+  - All 3 user-authorized bounded recovery retries are exhausted. Per policy and user instruction, no fourth retry will be attempted.
   - Gemma4 1Cat-vLLM remains **not eligible** for C2 capacity testing or WBS 5 throughput optimization.
-- Policy Enforcement: Stopped per policy. Raw evidence is preserved under `results/raw/EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-001/`.
+- Policy Enforcement: Stopped per contract. Raw evidence is preserved under `results/raw/EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-001/` through `-004/`.
 
 ## Next planned work after current stop
 

@@ -1,0 +1,122 @@
+{
+  "supported_for_planning": true,
+  "runtime": "1Cat-vLLM",
+  "runtime_revision": "1.5.0 wheel sha256:2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b",
+  "model": "Gemma4-26B-A4B-IT-QAT",
+  "model_identity": {
+    "status": "verified_local_artifact",
+    "planning_ready": true,
+    "repository": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+    "revision": "18a3c7285c33ee39d3e5e16ee6fb2c18f4955ef9",
+    "path": "/srv/models/gemma-4-26b-a4b-it-qat-awq-int4",
+    "weight_quant": "AWQ INT4 (compressed-tensors)",
+    "quantization": "compressed-tensors",
+    "kv_candidates": [
+      "FP16"
+    ],
+    "speculative_candidates": [
+      "target-only"
+    ],
+    "attention_backend": "TRITON_ATTN",
+    "language_model_only": true,
+    "gpu_memory_utilization": "0.80",
+    "environment": {
+      "VLLM_SM70_QUANT_BACKEND": "marlin",
+      "VLLM_SM70_TRITON_ATTN_SAFE_DEFAULTS": "1",
+      "VLLM_SM70_TRITON_ATTN_PREFILL_TILE_SIZE": "16"
+    },
+    "artifact_note": "Verified local AWQ INT4 compressed-tensors artifact at /srv/models/gemma-4-26b-a4b-it-qat-awq-int4; single model.safetensors ~17GB; dense/mixed linear uses MarlinLinearKernel, while Gemma4 MoE uses CompressedTensorsWNA16MoEMethod via VLLM_SM70_QUANT_BACKEND=marlin.",
+    "kv_contract_note": "Use FP16 KV for the SM70 compatibility lane per contract.",
+    "file_receipts": {
+      "config.json": "8b82e08dc8a4f3a0e7002f88b94d6d3b30d8f136295a30fc5c3144da7bc6d93d",
+      "tokenizer_config.json": "a1bab8c81ed15fa6ce912ec993c66cb49392e0487fb1ea5f5f11ea3618683627",
+      "chat_template.jinja": "94899c0f917d93f6fe81c95744d1e8ddab2d21d39228d2e4aec1fb2a25bff413",
+      "model.safetensors": "c0b6bbe9bacded55f45cd600c703ca299ebfb79efb2ec25023bc6bb563deb201"
+    },
+    "required_backend_lanes": [
+      "stock",
+      "v100-skinny"
+    ]
+  },
+  "weight_quant": "AWQ INT4 (compressed-tensors)",
+  "kv_cache": "FP16",
+  "lane": "STOCK",
+  "speculative": "target-only",
+  "speculative_config": null,
+  "attention_backend": "TRITON_ATTN",
+  "ngram": "N/A",
+  "topology": "tp2-shared",
+  "concurrency": 1,
+  "context_tokens_per_agent": 131072,
+  "commands": [
+    [
+      "/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python",
+      "-m",
+      "vllm.entrypoints.openai.api_server",
+      "--model",
+      "/srv/models/gemma-4-26b-a4b-it-qat-awq-int4",
+      "--served-model-name",
+      "Gemma4-26B-A4B-IT-QAT",
+      "--trust-remote-code",
+      "--dtype",
+      "half",
+      "--attention-backend",
+      "TRITON_ATTN",
+      "--tensor-parallel-size",
+      "2",
+      "--kv-cache-dtype",
+      "float16",
+      "--max-model-len",
+      "131072",
+      "--max-num-seqs",
+      "1",
+      "--max-num-batched-tokens",
+      "4096",
+      "--gpu-memory-utilization",
+      "0.80",
+      "--enforce-eager",
+      "--language-model-only",
+      "--quantization",
+      "compressed-tensors",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18080"
+    ]
+  ],
+  "environment": {},
+  "command_environments": [
+    {
+      "CUDA_VISIBLE_DEVICES": "0,1",
+      "VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL": "0",
+      "PYTHONPATH": "/home/loopwhile/v100-llm-test-wbs22-20260924/scripts/runtime_hooks",
+      "VLLM_SM70_QUANT_BACKEND": "marlin",
+      "VLLM_SM70_TRITON_ATTN_SAFE_DEFAULTS": "1",
+      "VLLM_SM70_TRITON_ATTN_PREFILL_TILE_SIZE": "16"
+    }
+  ],
+  "endpoints": [
+    "http://127.0.0.1:18080"
+  ],
+  "experiment_id": "EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-004",
+  "launch_command": "/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python -m vllm.entrypoints.openai.api_server --model /srv/models/gemma-4-26b-a4b-it-qat-awq-int4 --served-model-name Gemma4-26B-A4B-IT-QAT --trust-remote-code --dtype half --attention-backend TRITON_ATTN --tensor-parallel-size 2 --kv-cache-dtype float16 --max-model-len 131072 --max-num-seqs 1 --max-num-batched-tokens 4096 --gpu-memory-utilization 0.80 --enforce-eager --language-model-only --quantization compressed-tensors --host 127.0.0.1 --port 18080",
+  "backend_variant": "stock",
+  "context_tokens": 131072,
+  "context_test": true,
+  "min_context_utilization": 0.99,
+  "prefix_cache_lane": "cold-independent",
+  "chat_template": "HF tokenizer chat template; enable_thinking=false",
+  "tool_parser": "none",
+  "thinking": false,
+  "reasoning_effort": null,
+  "sampling": null,
+  "chat_template_kwargs": {
+    "enable_thinking": false
+  },
+  "endpoint": "http://127.0.0.1:18080",
+  "notes": "WBS 2.2.4; server startup is the compatibility gate; one measured request only after healthy startup; no full-size warmup; 2048 output reserve, minimum 256.",
+  "measurement_policy": "v100-c1-c2-single-execution-v1",
+  "measured_repetitions": 1,
+  "repetition_count": 1,
+  "warmup_count": 0
+}

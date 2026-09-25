@@ -51,10 +51,14 @@
       "target-only"
     ],
     "attention_backend": "TRITON_ATTN",
+    "language_model_only": true,
+    "gpu_memory_utilization": "0.80",
     "environment": {
-      "VLLM_SM70_QUANT_BACKEND": "marlin"
+      "VLLM_SM70_QUANT_BACKEND": "marlin",
+      "VLLM_SM70_TRITON_ATTN_SAFE_DEFAULTS": "1",
+      "VLLM_SM70_TRITON_ATTN_PREFILL_TILE_SIZE": "16"
     },
-    "artifact_note": "Verified local AWQ INT4 compressed-tensors artifact at /srv/models/gemma-4-26b-a4b-it-qat-awq-int4; single model.safetensors ~17GB; SM70 Marlin MoE path selected via VLLM_SM70_QUANT_BACKEND=marlin.",
+    "artifact_note": "Verified local AWQ INT4 compressed-tensors artifact at /srv/models/gemma-4-26b-a4b-it-qat-awq-int4; single model.safetensors ~17GB; dense/mixed linear uses MarlinLinearKernel, while Gemma4 MoE uses CompressedTensorsWNA16MoEMethod via VLLM_SM70_QUANT_BACKEND=marlin.",
     "kv_contract_note": "Use FP16 KV for the SM70 compatibility lane per contract.",
     "file_receipts": {
       "config.json": "8b82e08dc8a4f3a0e7002f88b94d6d3b30d8f136295a30fc5c3144da7bc6d93d",

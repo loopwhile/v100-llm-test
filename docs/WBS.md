@@ -293,7 +293,7 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
   - Peak VRAM: GPU0 14,565 MiB / GPU1 14,565 MiB.
   - Post-health PASS, cleanup exit 0.
 
-#### 2.2.4 Gemma4 26B-A4B STOCK [CLOSED — FAIL_STARTUP]
+#### 2.2.4 Gemma4 26B-A4B STOCK [CLOSED — FAIL_TIMEOUT (Bounded Recovery Closed)]
 
 ##### 1. Historical NVFP4 Runs (Preserved Failure Evidence)
 - exact artifact: `nvidia/Gemma-4-26B-A4B-NVFP4@a19cfe00be84568a6867111c9a68c9c44fdcffe6`.
@@ -308,24 +308,35 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
   - 원인: `transformers` 5.16.1의 `HeterogeneousConfigMixin`에서 per-layer attribute인 `head_dim`을 global config에서 접근 시 `AmbiguousGlobalPerLayerAttributeError` 발생 (`vllm/transformers_utils/model_arch_config_convertor.py:545` `getattr(self.hf_text_config, "head_dim", 0)`).
 - experiment ID 002: `EXP-V100-GEMMA4-26B-1CAT-F16-TARGET-C1-128K-20260924-002` — `FAIL_STARTUP` (Historical NVFP4 Terminal Failure).
   - 조치: 런타임 호환 훅(`scripts/runtime_hooks/sitecustomize.py`)을 통해 `HeterogeneousConfigMixin.allow_global_per_layer_attribute_access = True` 적용하여 config/converter 단계 통과.
-  - 원인: 모델 로딩 중 1Cat-vLLM 1.5.0의 SM70 TurboMind NVFP4 MoE 커널(`validate_nvfp4_sm70_moe_contract`)에서 Gemma4 26B-A4B의 MoE 아키텍처(shape `hidden=2816, intermediate=704, experts=128, top_k=8` 및 `activation=gelu_pytorch_tanh`)를 지원하지 않아 `NotImplementedError` 발생 (`SM70 TurboMind NVFP4 MoE shape is not validated: hidden=2816, intermediate=704, experts=128, top_k=8. Validated contracts: [(2048, 512, 256, 8), (2560, 640, 512, 10), (4096, 2048, 288, 8)].`). SM70 NVFP4 MoE 커널은 SiLU 기반 Qwen/GLM 형태만 지원하도록 컴파일되어 있어 Gemma4 Gelu MoE는 런타임 레벨에서 지원 불가.
+  - 원인: 모델 로딩 중 1Cat-vLLM 1.5.0의 SM70 TurboMind NVFP4 MoE 커널(`validate_nvfp4_sm70_moe_contract`)에서 Gemma4 26B-A4B의 MoE 아키텍처(shape `hidden=2816, intermediate=704, experts=128, top_k=8` 및 `activation=gelu_pytorch_tanh`)를 지원하지 않아 `NotImplementedError` 발생.
 
-##### 2. AWQ INT4 Revalidation Run (User Authorized, 2026-09-25)
+##### 2. AWQ INT4 Revalidation & Bounded Recovery (User Authorized, 2026-09-25)
 - exact artifact: `cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4@18a3c7285c33ee39d3e5e16ee6fb2c18f4955ef9`.
 - target local path: `/srv/models/gemma-4-26b-a4b-it-qat-awq-int4` (단일 `model.safetensors` 약 17GB).
 - weight: AWQ INT4 (`quant_method: compressed-tensors`, `format: pack-quantized`, `weights: int4, group_size=32, symmetric=true`).
 - quantization flag: `--quantization compressed-tensors`.
-- environment: `VLLM_SM70_QUANT_BACKEND=marlin` (SM70 TurboMind MoE 경로를 우회하고 SM70 Marlin MoE 경로 강제).
+- environment: `VLLM_SM70_QUANT_BACKEND=marlin`.
 - KV: `FP16` (`float16`).
 - speculative: target-only.
 - attention backend: `TRITON_ATTN`.
 - topology: TP2 shared.
-- experiment ID: `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-001` — `FAIL_STARTUP`.
-  - 서빙 환경 및 백엔드 검증: SM70 Marlin MoE 및 MarlinLinear 경로가 정상 활성화됨 확인 (`Using MarlinLinearKernel for CompressedTensorsWNA16`, `Using MarlinLinearKernel for mixed-precision linear`, `Using CompressedTensorsWNA16MoEMethod`). SM70 TurboMind MoE 미지원 이슈는 완전히 우회됨.
-  - 실패 원인: 가중치 로딩 단계(`load_weights`, 0% shard)에서 `AssertionError: Attempted to load weight (torch.Size([512])) into parameter (torch.Size([256]))` 발생 (`vllm/model_executor/model_loader/weight_utils.py:1456` via `gemma4.py:1500`).
-  - 세부 기술 분석: Gemma4는 이종(heterogeneous) 어텐션을 채택하여 5개 슬라이딩 레이어(`head_dim=256`)마다 1개의 풀 어텐션 레이어(`head_dim=512`, layers 5, 11, 17, 23, 29)를 가짐. 그러나 `transformers` 5.16.1 환경에서 `Gemma4TextConfig`는 `global_head_dim` 속성을 글로벌 레벨에 보존하지 않고 `per_layer_config`로 파싱함. 1Cat-vLLM 1.5.0의 `gemma4.py`는 `head_dim = getattr(config, "global_head_dim", config.head_dim)`로 읽기 때문에 글로벌 기본값 `256`으로 폴백되어 5개 풀 어텐션 레이어가 모두 `head_dim=256`으로 잘못 인스턴스화됨. 이로 인해 512 크기의 `k_norm.weight`/`q_norm.weight` 텐서를 로드할 때 파라미터 크기 불일치로 단절됨.
-- WBS 2.2.4 종합 판정: `CLOSED — FAIL_STARTUP`.
-  - NVFP4(TurboMind MoE shape rejection) 및 AWQ INT4(Gemma4 heterogeneous full-attention head_dim initialization defect) 양쪽 모두 1Cat-vLLM 1.5.0 런타임 호환성 게이트를 통과하지 못함.
+- backend 실제 검증 결과:
+  - Dense/mixed-precision linear: `Using MarlinLinearKernel for CompressedTensorsWNA16` (Marlin 선형 커널 정상 선택).
+  - Gemma4 MoE: `Using CompressedTensorsWNA16MoEMethod` (일반 MoE 메서드 선택됨; Marlin MoE가 선택되었다는 과거 기록은 과대해석으로 정정됨).
+- 실행 경과:
+  1. `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-001` — `FAIL_STARTUP`:
+     - 가중치 로딩 단계(0% shard)에서 `AssertionError: Attempted to load weight (torch.Size([512])) into parameter (torch.Size([256]))` 발생. `transformers` 5.16.1 환경에서 `global_head_dim`이 글로벌 속성에서 제외되어 풀 어텐션 레이어가 256으로 초기화됨.
+  2. Attempt 1 (`EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-002`) — `FAIL_CRASH`:
+     - 수정: `scripts/runtime_hooks/sitecustomize.py`에 이종 어텐션 호환 훅을 구현하여 레이어 5, 11, 17, 23, 29를 `head_dim=512, kv=2`로 올바르게 초기화.
+     - 결과: 가중치 100% 로딩(9.85 GiB VRAM) 및 서버 정상 기동 성공. 그러나 128K 측정 요청의 attention prefill 도중 `RuntimeError: Triton Error [CUDA]: out of memory` 크래시 발생 (Peak VRAM 15,243 MiB).
+  3. Attempt 2 (`EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-003`) — `FAIL_CRASH`:
+     - 수정: `--language-model-only` 적용하여 비전 타워(27개 레이어) 및 인코더 캐시를 비활성화.
+     - 결과: 모델 메모리는 감소했으나 `gpu_memory_utilization=0.90`으로 인해 KV 캐시가 4.78 GiB(294,344 토큰)로 팽창되어 디바이스 여유 메모리는 여전히 1.13 GiB에 불과. Triton attention prefill 커널이 스레드당 10,896 바이트 스필을 일으켜 드라이버 로컬 스택 메모리(1.66 GiB) 할당 실패로 `cuLaunchKernel` OOM 크래시 (Peak VRAM 15,253 MiB).
+  4. Attempt 3 (Final, `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-004`) — `FAIL_TIMEOUT`:
+     - 수정: `gpu_memory_utilization`을 `0.80`으로 미세 조정하여 여유 VRAM 헤드룸을 3.28 GiB로 확보(KV 캐시는 195,000 토큰으로 128K 충분히 보장)하고, `VLLM_SM70_TRITON_ATTN_PREFILL_TILE_SIZE=16` 및 `VLLM_SM70_TRITON_ATTN_SAFE_DEFAULTS=1` 적용.
+     - 결과: 서버 정상 기동 및 VRAM 13,663 MiB에서 완벽히 안정 유지. OOM 및 커널 크래시 완전히 해결. 그러나 SM70 아키텍처에서 512 헤드 차원의 128K 31개 청크 프리필 연산이 1,800초를 초과하여 HTTP 클라이언트 타임아웃 도달 (`terminal_s: 1800.44s`). 사후 헬스체크는 200 OK로 서버 상태 건전.
+- WBS 2.2.4 종합 판정: `CLOSED — FAIL_TIMEOUT (Bounded Recovery Closed)`.
+  - 최대 3회의 허용된 재시도(-002, -003, -004)를 모두 소진하였으며, 4번째 추가 재시도 없이 레인을 공식 종결함.
   - Gemma4 1Cat-vLLM은 C2 수용성 테스트 및 WBS 5 최적화 대상에서 완전 제외됨.
 
 ### 2.3 v100-skinny SKINNY
@@ -401,8 +412,8 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - WBS 2.2.3에서 V100 runtime compatibility 및 C1 128K를 PASS했다.
 - 검증된 exact TP2/target-only/E5M2 configuration을 유지하여 C2 resident 및 active-overlap을 측정한다.
 
-#### 3.2.4 Gemma4 26B-A4B STOCK [NOT ELIGIBLE — WBS 2.2.4 FAIL_STARTUP]
-- pinned 1Cat-vLLM 1.5.0 SM70 NVFP4 MoE path에서 WBS 2.2.4가 terminal FAIL_STARTUP으로 종료됐다.
+#### 3.2.4 Gemma4 26B-A4B STOCK [NOT ELIGIBLE — WBS 2.2.4 FAIL_TIMEOUT]
+- pinned 1Cat-vLLM 1.5.0 SM70 NVFP4 및 AWQ INT4 revalidation (최대 3회 bounded recovery 포함)에서 WBS 2.2.4가 terminal FAIL_TIMEOUT으로 종료됐다.
 - 현재 STOCK lane으로 C2를 실행하지 않는다.
 
 ### 3.3 v100-skinny SKINNY

@@ -215,9 +215,9 @@ These historical failures are artifact-specific and preserved as immutable evide
 
 ### Revalidation Contract: AWQ INT4 (compressed-tensors)
 
-User-authorized revalidation replaces the NVFP4 artifact with the AWQ INT4 compressed-tensors artifact, avoiding the unsupported NVFP4 SM70 TurboMind MoE gate by selecting SM70 Marlin MoE (`VLLM_SM70_QUANT_BACKEND=marlin`).
+User-authorized revalidation replaced the unsupported NVFP4 artifact with the AWQ INT4 compressed-tensors artifact, selecting Marlin for dense/mixed-precision linear (`Using MarlinLinearKernel for CompressedTensorsWNA16`) and generic MoE (`Using CompressedTensorsWNA16MoEMethod`). Note: past references to "SM70 Marlin MoE" were an overstatement and have been corrected.
 
-Status: **CLOSED — FAIL_STARTUP**.
+Status: **CLOSED — FAIL_TIMEOUT (Bounded Recovery Closed)**.
 
 Pinned contract:
 
@@ -231,8 +231,6 @@ Pinned contract:
 - attention backend: `TRITON_ATTN`
 - environment: `VLLM_SM70_QUANT_BACKEND=marlin`
 - topology: TP2 shared
-- experiment ID:
-  `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-001`
 
 Receipts:
 - `config.json`: `8b82e08dc8a4f3a0e7002f88b94d6d3b30d8f136295a30fc5c3144da7bc6d93d`
@@ -240,23 +238,24 @@ Receipts:
 - `chat_template.jinja`: `94899c0f917d93f6fe81c95744d1e8ddab2d21d39228d2e4aec1fb2a25bff413`
 - `model.safetensors`: `c0b6bbe9bacded55f45cd600c703ca299ebfb79efb2ec25023bc6bb563deb201`
 
-Command:
+Execution Sequence & Bounded Recovery:
 
-```bash
-ssh p520-llm 'cd /home/loopwhile/v100-llm-test-wbs22-20260924 && \
-  V100_1CAT_PYTHON=/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python \
-  VLLM_SM70_QUANT_BACKEND=marlin \
-  python3 scripts/run_c1_onecat.py \
-    --experiment-id EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-001 \
-    --model gemma4-26b-a4b'
-```
+1. `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-001` — `FAIL_STARTUP`:
+   - Server startup failed during shard loading (`0%` progress) with `AssertionError: Attempted to load weight (torch.Size([512])) into parameter (torch.Size([256]))`.
+   - Root cause: `transformers 5.16.1` moved `global_head_dim` into `per_layer_config`, causing `gemma4.py` to default full-attention layers (5, 11, 17, 23, 29) to `head_dim=256` instead of `512`.
+2. Attempt 1 (`EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-002`) — `FAIL_CRASH`:
+   - Modification: Implemented `scripts/runtime_hooks/sitecustomize.py` hook preserving `global_head_dim` and dynamically wrapping `Gemma4DecoderLayer.__init__` for layer-specific dimension resolution.
+   - Outcome: All 30 layers resolved correctly (full: 512/2, sliding: 256/8); weights loaded 100% (9.85 GiB VRAM); server healthy startup achieved. Measured 128K request sent, but prefill crashed with `RuntimeError: Triton Error [CUDA]: out of memory` in `kernel_unified_attention`. Peak VRAM: 15,243 MiB.
+3. Attempt 2 (`EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-003`) — `FAIL_CRASH`:
+   - Modification: Enabled `--language-model-only` to disable multimodal vision tower and encoder cache.
+   - Outcome: Weight memory dropped, but `gpu_memory_utilization=0.90` caused vLLM to allocate 4.78 GiB KV cache (294,344 tokens), leaving device free memory still at only 1,131 MiB. Triton attention prefill spilled 10,896 B/thread to local memory, requiring 1.66 GiB driver local stack, exceeding free VRAM and causing `cuLaunchKernel` OOM. Peak VRAM: 15,253 MiB.
+4. Attempt 3 (Final, `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-004`) — `FAIL_TIMEOUT`:
+   - Modification: Lowered `gpu_memory_utilization` to `0.80` (expanding free VRAM headroom to 3.28 GiB while preserving 195,000 KV tokens, well above 128K) and set `VLLM_SM70_TRITON_ATTN_PREFILL_TILE_SIZE=16`, `VLLM_SM70_TRITON_ATTN_SAFE_DEFAULTS=1`.
+   - Outcome: Clean server startup and completely stable VRAM at 13,663 MiB with 2.7 GiB headroom. OOM and kernel crashes eliminated. However, 128K chunked prefill (31 chunks) with 512-dim attention on SM70 took > 1,800s, reaching client HTTP timeout (`terminal_s: 1800.44s`). Post-test server health check confirmed server remained 100% healthy.
 
-Outcome:
-- Server startup failed during shard loading (`0%` progress).
-- SM70 Marlin MoE path verified active: `Using MarlinLinearKernel for CompressedTensorsWNA16`, `Using CompressedTensorsWNA16MoEMethod`.
-- Root cause: `AssertionError: Attempted to load weight (torch.Size([512])) into parameter (torch.Size([256]))` when loading layer 5 `k_norm.weight`. Under `transformers 5.16.1`, `global_head_dim` is stripped into `per_layer_config`, causing `gemma4.py` to default full-attention layers to `head_dim=256` instead of `512`.
-- Measured 128K request: not reached.
-- Closeout verdict: `FAIL_STARTUP`. Stopped per policy.
+Closeout verdict: `CLOSED — FAIL_TIMEOUT (Bounded Recovery Closed)`.
+- All 3 user-authorized bounded retries exhausted. No further retries allowed.
+- Gemma4 1Cat-vLLM remains ineligible for C2 / WBS 5. Stopped per contract.
 
 ## Per-item closeout
 

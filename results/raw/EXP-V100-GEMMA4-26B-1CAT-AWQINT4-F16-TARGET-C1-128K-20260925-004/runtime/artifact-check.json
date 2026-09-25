@@ -1,0 +1,12 @@
+{
+  "path": "/srv/models/gemma-4-26b-a4b-it-qat-awq-int4",
+  "repository": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+  "revision": "18a3c7285c33ee39d3e5e16ee6fb2c18f4955ef9",
+  "weight_quant": "AWQ INT4 (compressed-tensors)",
+  "metadata_sha256": {
+    "config.json": "8b82e08dc8a4f3a0e7002f88b94d6d3b30d8f136295a30fc5c3144da7bc6d93d",
+    "tokenizer_config.json": "a1bab8c81ed15fa6ce912ec993c66cb49392e0487fb1ea5f5f11ea3618683627",
+    "chat_template.jinja": "94899c0f917d93f6fe81c95744d1e8ddab2d21d39228d2e4aec1fb2a25bff413"
+  },
+  "note": "Large model tensors are identified by pinned repository/revision; selected local metadata files are hashed as a host receipt."
+}

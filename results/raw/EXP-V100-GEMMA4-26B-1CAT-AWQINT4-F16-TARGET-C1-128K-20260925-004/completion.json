@@ -1,0 +1,9 @@
+{
+  "experiment_id": "EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-004",
+  "verdict": "FAIL_TIMEOUT",
+  "completed_at_utc": "2026-09-25T09:54:11.683269+00:00",
+  "post_health": {
+    "healthy": true,
+    "at_utc": "2026-09-25T09:54:11.649072+00:00"
+  }
+}

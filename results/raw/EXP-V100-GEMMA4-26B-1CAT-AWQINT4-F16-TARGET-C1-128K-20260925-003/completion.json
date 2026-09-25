@@ -1,0 +1,10 @@
+{
+  "experiment_id": "EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-003",
+  "verdict": "FAIL_CRASH",
+  "completed_at_utc": "2026-09-25T09:16:32.689231+00:00",
+  "post_health": {
+    "healthy": false,
+    "error": "HTTP Error 503: Service Unavailable",
+    "at_utc": "2026-09-25T09:16:32.652316+00:00"
+  }
+}
