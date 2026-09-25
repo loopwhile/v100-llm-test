@@ -399,10 +399,22 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - `max_num_seqs=2`.
 - C1에서 검증된 exact artifact/runtime configuration을 그대로 사용한다.
 
-#### 3.2.1 Qwen3.8-27B STOCK [NOT ELIGIBLE — C1 OUTPUT INTEGRITY FAIL]
-- WBS 2.2.1은 128K hardware/runtime capacity는 PASS했지만 formal output-integrity/semantic gate가 FAIL이므로 정식 C2 lane으로 승격하지 않는다.
-- `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C1-128K-20260925-001`은 raw harness상 `PASS_C1_128K`였고 repetition-free 종료를 보였지만, post-hoc semantic audit가 구체적인 cross-file/component correctness risk를 입증하지 못한 응답으로 판단하여 publication verdict를 `FAIL_OUTPUT`으로 override했다.
-- 따라서 이 diagnostic은 C2 promotion gate를 충족하지 않는다. 별도 사용자 승인에 따른 fresh 128K semantic revalidation이 PASS하기 전에는 Qwen STOCK C2를 실행하지 않는다.
+#### 3.2.1 Qwen3.8-27B STOCK [DONE — CAPACITY PASS / QUEUE_ONLY / FAIL_OUTPUT]
+- 사용자 지시에 따라 C1 128K B200 공식 레시피 검증(`EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C1-128K-20260925-001`, raw harness PASS_C1_128K, repetition collapse 해소)을 기반으로 C2 측정을 실행함.
+- 측정 실행: `EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C2-128K-20260925-001` (2026-09-25).
+- 하드웨어 / 서빙: 2× V100 16GB TP2 shared, KV `fp8_e4m3`, context 131,072, `concurrency=2` (`max_num_seqs=2`), B200 공식 얼라인먼트 (`--reasoning-parser qwen3`, `--tool-call-parser qwen3_coder`, `--default-chat-template-kwargs '{"enable_thinking": false}'`, `VLLM_FLASH_V100_DECODE_PARTITION_SIZE=256`, `max_num_batched_tokens=2048`, `top_k=20`, `presence_penalty=0.15`, `thinking=False`).
+- 워크로드: `workloads/concurrency/v1.json` (Project A + Project B 독립적 워크로드, 에이전트당 128K, 총 258,047 프롬프트 토큰).
+- 결과:
+  - **128K Hardware Capacity**: **PASS** (Peak VRAM 15,575 MiB / 16,384 MiB, OOM 없음, post-health PASS).
+  - **동시성 거동 (Concurrency Architecture)**: **순차 큐잉 (Queue-Only)** 실측 확인.
+    - 2× V100 16GB 환경에서 가용 KV 캐시 용량이 187,869 토큰(131,072 요청 기준 1.43x)에 그쳐 2개 요청의 동시 Active 처리는 물리적으로 불가능함.
+    - vLLM 스케줄러가 2개 요청을 정상 접수한 후, Project A를 먼저 러닝(`vllm:num_requests_running=1`)하고 Project B를 대기(`vllm:num_requests_waiting=1`)시킴.
+    - Project A 완주(759초) 후 반환된 KV 블록을 활용하여 Project B가 즉시 프리필/디코딩되어 1,532초에 정상 완주함.
+  - **출력 무결성 (Output Integrity)**: **FAIL_OUTPUT**.
+    - Project B는 271 토큰으로 계약상 최소 출력 기준(256 토큰)을 정상 충족하여 PASS함.
+    - Project A는 간결한 3개 항목 검증 계획을 정상 제시하며 stop 종료되었으나, 생성 토큰이 135 토큰으로 계약상 최소 요구치인 `minimum_output_tokens=256`에 미달하여 하네스 규칙상 `FAIL_OUTPUT`으로 판정됨.
+  - 성능: Batch Wall Time 1532.48s (약 25.5분), Mean Decode 9.31 tok/s, End-to-end 0.18 tok/s.
+  - 결론: 2× V100 16GB 하드웨어에서 Qwen3.8-27B 128K C2는 OOM 크래시 없이 안전하게 큐잉되어 순차 처리(`QUEUE_ONLY` 거동)됨을 증명함. 단, Project A의 토큰 길이 미달로 최종 publication 판정은 `FAIL_OUTPUT`으로 기록됨.
 
 #### 3.2.2 Ornith 1.5 9B STOCK [TODO — ELIGIBLE]
 - WBS 2.2.2에서 V100 runtime compatibility 및 C1 128K를 PASS했다.

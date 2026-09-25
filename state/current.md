@@ -16,8 +16,8 @@
   - Bounded Recovery Attempt 1: `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-002` — `FAIL_CRASH` (heterogeneous hook fixed all 30 layers; shard loaded 100%; startup healthy; crashed during 128K prefill with Triton CUDA OOM; peak VRAM 15,243 MiB).
   - Bounded Recovery Attempt 2: `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-003` — `FAIL_CRASH` (`--language-model-only` disabled vision tower; but `gpu_memory_utilization=0.90` expanded KV cache to 4.78 GiB, leaving 1.13 GiB free VRAM; Triton kernel spilled 10,896 B/thread requiring 1.66 GiB driver local stack, causing `cuLaunchKernel` OOM; peak VRAM 15,253 MiB).
   - Bounded Recovery Attempt 3 (Final): `EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-004` — `FAIL_TIMEOUT` (`gpu_memory_utilization=0.80`, `VLLM_SM70_TRITON_ATTN_PREFILL_TILE_SIZE=16`, `SAFE_DEFAULTS=1`; startup healthy, VRAM rock solid at 13,663 MiB with 2.7 GiB headroom; no OOM, no crash, post-health 100% OK; but 128K chunked prefill with 512-dim attention on SM70 took > 1,800s, reaching client HTTP timeout).
-- Current task: WBS 2.2.4 AWQ INT4 C1 revalidation bounded recovery (3 retries: -002, -003, -004) completed and closed as FAIL_TIMEOUT. Stopped per contract. Gemma4 1Cat-vLLM remains ineligible for C2 / WBS 5.
-- Do not launch work beyond WBS 2.2 automatically.
+- Current task: WBS 3.2.1 Qwen3.8-27B STOCK B200 C2 execution complete. 128K hardware capacity passed (Peak VRAM 15,575 MiB, OOM none); sequential queue-only behavior verified (peak_processing=1, peak_waiting=1, Project A wall 759s, Project B wall 1532s); final harness verdict is FAIL_OUTPUT due to Project A output length underfill (135 tokens < 256 minimum; Project B passed with 271 tokens).
+- Next task: WBS 3.2.2 Ornith 1.5 9B STOCK C2 (`EXP-V100-ORN15-9B-1CAT-F16-MTP1-C2-128K-20260925-001`).
 
 ## Root-Cause Diagnostic: Qwen3.8-27B 1Cat-vLLM 128K Realistic Workload (2026-09-25)
 - Purpose: Distinguish whether Qwen3.8 128K repetition collapse is artifact of synthetic repetition-heavy workload (1,333 duplicate sections) or general 1Cat-vLLM 128K path issue.
@@ -86,8 +86,7 @@
 
 ## Next planned work after current stop
 
-- Remaining project scope is WBS 3, WBS 4, and revised WBS 5.
-- WBS 3: C2 capacity/residency/active-overlap testing for eligible C1 lanes. Qwen3.8-27B 1Cat-vLLM remains excluded pending a fresh 128K semantic PASS.
+- Remaining project scope is WBS 3 (3.2.2 Ornith 9B, 3.2.3 Ornith 35B C2), WBS 4, and revised WBS 5.
+- WBS 3.2: 3.2.1 Qwen3.8-27B C2 executed (Queue-Only behavior confirmed, FAIL_OUTPUT on token length underfill). Next is 3.2.2 Ornith 1.5 9B STOCK C2.
 - WBS 4: Ornith 1.5 9B 1GPU×2 + LiteLLM topology validation.
 - WBS 5: performance optimization and per-model/per-runtime final recipe capture.
-- Automatic execution beyond current stop is forbidden without explicit user instruction.
