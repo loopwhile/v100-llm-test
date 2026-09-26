@@ -116,6 +116,11 @@ def run_locked(args):
     runtime = raw / "runtime"
     runtime.mkdir()
 
+    if args.lane == "STOCK" and "V100_1CAT_PYTHON" not in os.environ:
+        default_py = Path("/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python")
+        if default_py.is_file():
+            os.environ["V100_1CAT_PYTHON"] = str(default_py)
+
     plan = launcher.build_plan(
         ROOT,
         args.model,
