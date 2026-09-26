@@ -151,7 +151,7 @@
   - GPU VRAM Isolation: CPU-only Docker with no GPU devices passed, `GGML_CUDA=OFF`, `--n-gpu-layers 0`; GPU VRAM allocation = 0.0 MiB, Compute Apps = 0. GPU0/GPU1 serving may exist independently.
   - Memory Evidence & Limits: Host Total 62.56 GiB, Available 31.59 GiB at snapshot. SwapTotal 4,194,300 kB, SwapFree 528 kB (~4GB swap in use). Startup gate proved dual server startup, health, and 0B VRAM isolation; it did not measure `pswpin`/`pswpout`/`pgmajfault` deltas, so absence of swap thrash is unproven at gate time. Due to `mmap`, initial MemAvailable does not guarantee physical RAM headroom once working sets fault in; memory pressure and stability will be measured during 32K request execution.
   - Post-gate cleanup: Both containers cleanly removed after verification per contract.
-- Status: WBS 6.1~6.5 [DONE]. WBS 6.6 (32K serial inference with 128K context capacity) is [READY] with Checkpoints A~G (`baseline_before_startup`, `startup_healthy`, `gemma_pre`, `gemma_post`, `ornith_pre`, `ornith_post`, `final_post_health`), `memory-baseline-before-startup.json` persistence, failure-resilient delta telemetry, and raw evidence immutability guards implemented; awaiting user execution command. WBS 6.7 [TODO].
+- Status: WBS 6.1~6.5 [DONE]. WBS 6.6 (32K serial inference with 128K context capacity) is [READY] with Checkpoints A~G (`baseline_before_startup`, `startup_healthy`, `gemma_pre`, `gemma_post`, `ornith_pre`, `ornith_post`, `final_post_health`), `memory-baseline-before-startup.json` persistence, failure-resilient delta telemetry, crash-resilient post-health check exception handling, raw evidence immutability guards, and optional OpenBLAS build/preflight support (`--openblas-preflight`) implemented; awaiting user execution command. WBS 6.7 [TODO].
 
 ## Next planned work
 
@@ -159,8 +159,8 @@
 - WBS 3: DONE
 - WBS 4: DONE
 - WBS 6.1~6.5: DONE (Startup Gate PASS)
-- WBS 6.6: READY (32K serial measured requests wired with Checkpoints A~G and immutability guards, gated on `--run-32k-measured`)
+- WBS 6.6: READY (32K serial measured requests wired with Checkpoints A~G, crash-resilient health checks, and immutability guards, gated on `--run-32k-measured`)
 - WBS 6.7: TODO (verdict `PASS_CPU_128K_SERVER_32K_REQUEST_DUAL_RESIDENT`)
-- Next = Execute WBS 6.6 (32K serial runs with `--run-32k-measured`) or proceed to WBS 5 (optimization & final recipe capture).
+- Next = Optionally run OpenBLAS short preflight (`--openblas-preflight`), execute WBS 6.6 (32K serial runs with `--run-32k-measured`), or proceed to WBS 5 (optimization & final recipe capture).
 
 

@@ -935,6 +935,7 @@ CPU llama.cpp runtime:
 - CPU-only Docker container에는 GPU device를 전달하지 않는다. runtime에서도 `--n-gpu-layers 0`을 명시해 CPU inference lane과 V100 serving lane을 분리한다.
 - CPU build 자체는 W-2135에 최대한 최적화하되, runtime CPU/RAM 사용량은 GPU0/GPU1 serving과의 공존을 위해 6.2의 conservative resource envelope로 제한한다.
 - Preflight A/B 확인 결과: pinned preflight baseline (760 prompt / 128 completion)에서 `b10428` (`885c5bbe`)과 `b10775` (`67a17c17`) 비교에서 prompt eval tok/s(35.07 vs 35.18), decode tok/s(10.05 vs 10.02)가 동등 수준으로 확인되어 최신 릴리스인 `p520-cpu-llama:b10775` (`sha256:8ee3818eee9df3690a64177b976692cffd509972cb31c0907f7136b567a4729b`)를 확정했다. (단, 이는 고정된 baseline 1회 검증 결과이며 CPU regression이 전혀 없다고 과도하게 일반화하지 않는다.)
+- Dockerfile 빌드 유연성 및 OpenBLAS 지원: `docker/cpu/Dockerfile`은 기본적으로 native AVX2 (`USE_OPENBLAS=0`)를 사용하되, 필요 시 `--build-arg USE_OPENBLAS=1`을 통해 OpenBLAS 빌드(`p520-cpu-llama:b10775-openblas`)를 생성할 수 있도록 매개변수화되었다. 독립적인 preflight A/B 검증(`--openblas-preflight`)을 지원하여 기존 불변 증거를 훼손하지 않고 격리된 디렉터리(`results/raw/WBS6-PREFLIGHT-OPENBLAS/`)에서 짧은 프롬프트 성능 비교를 수행할 수 있다.
 
 공통 llama.cpp 조건:
 - CPU-only: `--n-gpu-layers 0`. 이 두 CPU server 자체는 GPU VRAM allocation/offload를 해서는 안 된다.
@@ -1050,7 +1051,7 @@ llama.cpp의 draft-model-free `ngram-mod` 경로를 활성화한다.
   - Host: `/proc/meminfo` (MemTotal, MemAvailable, SwapTotal, SwapFree, SwapUsed) 및 `/proc/vmstat` (`pswpin`, `pswpout`, `pgmajfault`).
   - Container PID: `/proc/<pid>/smaps_rollup` (`Rss`, `Pss`, `Pss_Anon`, `Pss_File`, `Swap`).
   - 주기적 로깅: request 수행 중 1초마다 `memory-telemetry.csv` 및 `gpu-telemetry.csv`에 기록.
-  - Failure-Resilient Telemetry: 추론 중 예외/크래시가 발생하더라도 `finally` 블록에서 Post-checkpoint 및 `memory-deltas.json`을 반드시 기록 보존.
+  - Failure-Resilient Telemetry 및 Crash 방어: 추론 중 예외/크래시가 발생하더라도 `finally` 블록에서 Post-checkpoint 및 `memory-deltas.json`을 반드시 기록 보존하며, 서버 비정상 종료 시 `/health` 접속 불가 예외가 원본 추론 에러를 덮어쓰지 않도록 resilient try-except로 방어하고 `dual_resident_post_health.json`에 `healthy: false` 및 원인을 안전하게 기록한다.
   - Raw Evidence Immutability: Preflight(`preflight_ab_result.json`), Startup Gate(`startup_gate.json`), 실험 raw 디렉터리(`results/raw/<EXP_ID>`)가 이미 존재할 경우 덮어쓰기를 엄격히 거부하고 `RuntimeError`를 발생시켜 기존 증거의 불변성을 보장.
 - 안전 제어:
   - 러너(`scripts/run_wbs6_cpu.py`)는 장시간 추론의 무단 실행을 방지하기 위해 `--run-32k-measured` 플래그가 명시적으로 지정되지 않으면 실행을 시작하지 않고 안전 종료한다.

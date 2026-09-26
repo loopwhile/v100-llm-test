@@ -351,7 +351,7 @@ class MemoryTelemetryCollector:
 
 
 
-def build_cpu_images(root: Path) -> Dict[str, str]:
+def build_cpu_images(root: Path, build_openblas: bool = False) -> Dict[str, str]:
     digests = {}
     dockerfile = root / "docker/cpu/Dockerfile"
     if not dockerfile.exists():
@@ -365,6 +365,27 @@ def build_cpu_images(root: Path) -> Dict[str, str]:
             "-t", image_tag,
             "-f", str(dockerfile),
             "--build-arg", f"LLAMA_COMMIT={commit_sha}",
+            "--build-arg", "USE_OPENBLAS=0",
+            str(root),
+        ]
+        proc = subprocess.run(cmd, stdout=sys.stdout, stderr=sys.stderr)
+        if proc.returncode != 0:
+            raise RuntimeError(f"Failed to build {image_tag}")
+        digest = get_image_digest(image_tag)
+        digests[tag_name] = digest
+        print(f"[+] Built {image_tag} -> {digest}")
+
+    if build_openblas:
+        tag_name = "b10775-openblas"
+        image_tag = f"p520-cpu-llama:{tag_name}"
+        commit_sha = LLAMA_COMMITS["b10775"]
+        print(f"[*] Building CPU Docker image with OpenBLAS: {image_tag} (commit {commit_sha[:8]})...")
+        cmd = [
+            "docker", "build",
+            "-t", image_tag,
+            "-f", str(dockerfile),
+            "--build-arg", f"LLAMA_COMMIT={commit_sha}",
+            "--build-arg", "USE_OPENBLAS=1",
             str(root),
         ]
         proc = subprocess.run(cmd, stdout=sys.stdout, stderr=sys.stderr)
@@ -438,9 +459,12 @@ def run_preflight_ab(root: Path, digests: Dict[str, str]) -> str:
         healthy = False
         start_wait = time.time()
         while time.time() - start_wait < 180:
-            if adapter.health().get("healthy"):
-                healthy = True
-                break
+            try:
+                if adapter.health().get("healthy"):
+                    healthy = True
+                    break
+            except Exception:
+                pass
             time.sleep(2)
 
         if not healthy:
@@ -509,6 +533,143 @@ def run_preflight_ab(root: Path, digests: Dict[str, str]) -> str:
         print("[-] Material CPU regression observed for b10775 relative to b10428 -> Selecting b10428 for WBS 6.")
 
     return f"p520-cpu-llama:{selected}"
+
+
+def run_openblas_preflight(root: Path) -> Dict[str, Any]:
+    print("\n" + "=" * 60)
+    print(" [Preflight A/B] b10775 Native AVX2 vs b10775+OpenBLAS comparison")
+    print("=" * 60)
+
+    preflight_dir = root / "results/raw/WBS6-PREFLIGHT-OPENBLAS"
+    preflight_dir.mkdir(parents=True, exist_ok=True)
+    preflight_file = preflight_dir / "openblas_preflight.json"
+    if preflight_file.exists():
+        raise RuntimeError(
+            f"Immutable OpenBLAS preflight raw evidence already exists at {preflight_file}. "
+            "Refusing to overwrite existing evidence."
+        )
+
+    results = {}
+    test_port = 8089
+    prompt_text = "Summarize the architectural differences between dense Transformers and Mixture-of-Experts (MoE) in 5 bullet points. " * 30
+
+    test_variants = [
+        ("native", "p520-cpu-llama:b10775", {}),
+        ("openblas", "p520-cpu-llama:b10775-openblas", {"OPENBLAS_NUM_THREADS": "4", "OMP_NUM_THREADS": "4"}),
+    ]
+
+    for label, image_tag, env_vars in test_variants:
+        container_name = f"preflight-cpu-{label}"
+        subprocess.run(["docker", "rm", "-f", container_name], capture_output=True)
+
+        env_args = []
+        for k, v in env_vars.items():
+            env_args.extend(["-e", f"{k}={v}"])
+
+        cmd = [
+            "docker", "run", "-d", "--rm",
+            "--name", container_name,
+            "--cpuset-cpus", "1,2,3,4",
+            "-p", f"{test_port}:{test_port}",
+            "-v", "/srv/models:/srv/models:ro",
+        ] + env_args + [
+            image_tag,
+            "--host", "0.0.0.0",
+            "--port", str(test_port),
+            "-m", ORNITH_MODEL_PATH,
+            "--n-gpu-layers", "0",
+            "--ctx-size", "8192",
+            "--parallel", "1",
+            "-ctk", "q8_0",
+            "-ctv", "q8_0",
+            "-fa", "auto",
+            "-t", "4",
+            "-tb", "4",
+            "-b", "1024",
+            "-ub", "256",
+            "--cpu-strict", "1",
+            "--poll", "50",
+            "--load-mode", "mmap",
+            "--cache-ram", "0",
+            "--no-cache-prompt",
+            "--no-context-shift",
+            "--threads-http", "1",
+            "--no-webui",
+        ]
+
+        print(f"[*] Starting container {container_name} on port {test_port} ({label})...")
+        subprocess.run(cmd, check=True)
+
+        adapter = h.HTTPAdapter(f"http://127.0.0.1:{test_port}", "llama.cpp", timeout_s=180)
+        healthy = False
+        start_wait = time.time()
+        while time.time() - start_wait < 180:
+            try:
+                if adapter.health().get("healthy"):
+                    healthy = True
+                    break
+            except Exception:
+                pass
+            time.sleep(2)
+
+        if not healthy:
+            subprocess.run(["docker", "rm", "-f", container_name], capture_output=True)
+            raise RuntimeError(f"Container {container_name} failed to become healthy within 180s")
+
+        print(f"[+] Container {container_name} is healthy. Sending preflight request...")
+        req_body = {
+            "model": "Ornith-1.5-35B-Q4_K_M.gguf",
+            "messages": [{"role": "user", "content": prompt_text}],
+            "max_tokens": 128,
+            "temperature": 0.0,
+        }
+
+        t0 = time.time()
+        res = adapter.call("/v1/chat/completions", body=req_body)
+        duration_s = time.time() - t0
+
+        timings = res.get("timings", {})
+        usage = res.get("usage", {})
+        prompt_tokens = usage.get("prompt_tokens", timings.get("prompt_n", 0))
+        completion_tokens = usage.get("completion_tokens", timings.get("predicted_n", 0))
+
+        prompt_tps = timings.get("prompt_per_second")
+        if not prompt_tps and prompt_tokens and timings.get("prompt_ms"):
+            prompt_tps = prompt_tokens / (timings["prompt_ms"] / 1000.0)
+
+        decode_tps = timings.get("predicted_per_second")
+        if not decode_tps and completion_tokens and timings.get("predicted_ms"):
+            decode_tps = completion_tokens / (timings["predicted_ms"] / 1000.0)
+
+        ttft_s = (timings.get("prompt_ms", 0) / 1000.0) if timings.get("prompt_ms") else duration_s
+
+        res_data = {
+            "label": label,
+            "image": image_tag,
+            "digest": get_image_digest(image_tag),
+            "env": env_vars,
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "duration_s": duration_s,
+            "ttft_s": ttft_s,
+            "prompt_tps": prompt_tps,
+            "decode_tps": decode_tps,
+            "timings": timings,
+        }
+        results[label] = res_data
+        print(f"[{label}] prompt_tokens={prompt_tokens}, decode_tokens={completion_tokens}, TTFT={ttft_s:.2f}s, prompt_tps={prompt_tps}, decode_tps={decode_tps}")
+
+        subprocess.run(["docker", "rm", "-f", container_name], capture_output=True)
+        time.sleep(2)
+
+    h.save(preflight_file, results)
+    print(f"\n[+] Recorded OpenBLAS preflight comparison evidence to {preflight_file}")
+
+    native_ptps = results.get("native", {}).get("prompt_tps") or 1.0
+    openblas_ptps = results.get("openblas", {}).get("prompt_tps") or 1.0
+
+    print(f"\n[Comparison] Native AVX2 prompt TPS: {native_ptps:.2f} | OpenBLAS prompt TPS: {openblas_ptps:.2f}")
+    return results
 
 
 def start_dual_resident_servers(selected_image: str) -> Tuple[Optional[int], Optional[int]]:
@@ -590,9 +751,15 @@ def wait_for_dual_resident_health() -> None:
 
     while time.time() - start_wait < 300:
         if not gemma_healthy:
-            gemma_healthy = gemma_adapter.health().get("healthy", False)
+            try:
+                gemma_healthy = gemma_adapter.health().get("healthy", False)
+            except Exception:
+                gemma_healthy = False
         if not ornith_healthy:
-            ornith_healthy = ornith_adapter.health().get("healthy", False)
+            try:
+                ornith_healthy = ornith_adapter.health().get("healthy", False)
+            except Exception:
+                ornith_healthy = False
 
         if gemma_healthy and ornith_healthy:
             print("[+] Both CPU servers are HEALTHY and DUAL-RESIDENT!")
@@ -710,9 +877,13 @@ def run_measured_experiment_32k(
 
     adapter = h.HTTPAdapter(endpoint, "llama.cpp", timeout_s=7200)
     peer_adapter = h.HTTPAdapter(peer_endpoint, "llama.cpp", timeout_s=180)
+    try:
+        peer_health_pre = peer_adapter.health()
+    except Exception as exc:
+        peer_health_pre = {"healthy": False, "error": repr(exc)}
 
-    if not peer_adapter.health().get("healthy"):
-        raise RuntimeError(f"Peer {peer_name} is unhealthy before measurement!")
+    if not peer_health_pre.get("healthy"):
+        raise RuntimeError(f"Peer {peer_name} is unhealthy before measurement! status={peer_health_pre}")
 
     planned = {
         "schema_version": 1,
@@ -835,14 +1006,31 @@ def run_measured_experiment_32k(
                 pass
         h.save(raw / "gpu-peak.json", gpu_peak)
 
-    my_health = adapter.health()
-    peer_health = peer_adapter.health()
+    try:
+        my_health = adapter.health()
+    except Exception as exc:
+        my_health = {
+            "healthy": False,
+            "error": repr(exc),
+        }
+
+    try:
+        peer_health = peer_adapter.health()
+    except Exception as exc:
+        peer_health = {
+            "healthy": False,
+            "error": repr(exc),
+        }
+
     post_health_data = {
         "active_model_health": my_health,
         "peer_model_health": peer_health,
         "both_healthy": bool(my_health.get("healthy") and peer_health.get("healthy")),
     }
-    h.save(raw / "dual_resident_post_health.json", post_health_data)
+    try:
+        h.save(raw / "dual_resident_post_health.json", post_health_data)
+    except Exception as save_err:
+        print(f"[!] Warning: Failed to save dual_resident_post_health.json: {save_err}")
 
     if not post_health_data["both_healthy"]:
         print(f"[!] Warning: One or both servers unhealthy post-inference: {post_health_data}")
@@ -863,14 +1051,20 @@ def run(args: argparse.Namespace) -> None:
     if socket.gethostname().split(".")[0] != "p520-llm":
         raise RuntimeError("WBS 6 runner requires p520-llm host")
 
-    if not (args.run_32k_measured or args.gate_only or args.preflight_only):
+    if not (
+        getattr(args, "run_32k_measured", False)
+        or getattr(args, "gate_only", False)
+        or getattr(args, "preflight_only", False)
+        or getattr(args, "openblas_preflight", False)
+    ):
         print("=" * 60)
         print(" [-] Safety Stop: No explicit execution action specified.")
         print("=" * 60)
         print("  Available actions:")
-        print("    --preflight-only    : Run only preflight A/B comparison")
-        print("    --gate-only         : Run WBS 6.5 dual-resident startup gate only")
-        print("    --run-32k-measured  : Explicit opt-in required to execute serial 32K measured inference")
+        print("    --preflight-only       : Run only preflight A/B comparison (b10428 vs b10775)")
+        print("    --openblas-preflight   : Run only preflight A/B comparison (Native AVX2 vs OpenBLAS)")
+        print("    --gate-only            : Run WBS 6.5 dual-resident startup gate only")
+        print("    --run-32k-measured     : Explicit opt-in required to execute serial 32K measured inference")
         print()
         print("  Runner exits without starting long-running measured inference.")
         return
@@ -888,12 +1082,18 @@ def run_locked(args: argparse.Namespace) -> None:
     print(" [WBS 6] CPU+RAM Dual-Resident 128K Server + 32K Measured Runner")
     print("=" * 60)
 
-    selected_image = args.selected_image or DEFAULT_IMAGE
+    selected_image = getattr(args, "selected_image", "") or DEFAULT_IMAGE
 
-    if args.preflight_only:
+    if getattr(args, "preflight_only", False):
         digests = build_cpu_images(ROOT)
         selected_image = run_preflight_ab(ROOT, digests)
         print(f"\n[+] Preflight completed. Selected image: {selected_image}")
+        return
+
+    if getattr(args, "openblas_preflight", False):
+        build_cpu_images(ROOT, build_openblas=True)
+        results = run_openblas_preflight(ROOT)
+        print("\n[+] OpenBLAS preflight completed.")
         return
 
     # Checkpoint A: baseline_before_startup
@@ -946,8 +1146,17 @@ def run_locked(args: argparse.Namespace) -> None:
         # Intermediate health check between requests
         gemma_adapter = h.HTTPAdapter(f"http://127.0.0.1:{GEMMA_PORT}", "llama.cpp", timeout_s=60)
         ornith_adapter = h.HTTPAdapter(f"http://127.0.0.1:{ORNITH_PORT}", "llama.cpp", timeout_s=60)
-        if not gemma_adapter.health().get("healthy") or not ornith_adapter.health().get("healthy"):
-            raise RuntimeError("Server health check failed before Ornith request!")
+        try:
+            gemma_h = gemma_adapter.health()
+        except Exception as e:
+            gemma_h = {"healthy": False, "error": repr(e)}
+        try:
+            ornith_h = ornith_adapter.health()
+        except Exception as e:
+            ornith_h = {"healthy": False, "error": repr(e)}
+
+        if not gemma_h.get("healthy") or not ornith_h.get("healthy"):
+            raise RuntimeError(f"Server health check failed before Ornith request! gemma={gemma_h}, ornith={ornith_h}")
 
         # Checkpoints E & F in Ornith run
         ornith_verdict, ornith_mem = run_measured_experiment_32k(
@@ -993,6 +1202,7 @@ def run_locked(args: argparse.Namespace) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="WBS 6 CPU+RAM Dual-Resident Runner (128K Server + 32K Request)")
     parser.add_argument("--preflight-only", action="store_true", help="Run only the preflight A/B comparison")
+    parser.add_argument("--openblas-preflight", action="store_true", help="Run short preflight comparison between native AVX2 and OpenBLAS")
     parser.add_argument("--gate-only", action="store_true", help="Run up to WBS 6.5 dual-resident startup gate only")
     parser.add_argument("--run-32k-measured", action="store_true", help="Explicit opt-in required to execute serial 32K measured inference")
     parser.add_argument("--selected-image", type=str, default="", help="Skip preflight and use specified image tag")

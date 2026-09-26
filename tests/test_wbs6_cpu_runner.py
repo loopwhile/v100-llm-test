@@ -176,6 +176,72 @@ class WBS6RunnerTests(unittest.TestCase):
             self.assertTrue((raw / "memory-deltas.json").exists())
             self.assertTrue((raw / "dual_resident_post_health.json").exists())
 
+    def test_post_health_exception_does_not_mask_batch_error_and_records_evidence(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_root = Path(tmpdir)
+            exp_id = "EXP-TEST-CPU-HEALTH-FAIL"
+
+            snap_a = {"system_memory_kib": {"SwapUsed": 100, "MemAvailable": 1000}, "system_vmstat": {"pswpin": 0, "pswpout": 0, "pgmajfault": 0}}
+            snap_b = {"system_memory_kib": {"SwapUsed": 100, "MemAvailable": 1000}, "system_vmstat": {"pswpin": 0, "pswpout": 0, "pgmajfault": 0}}
+
+            with patch("bench_harness.HTTPAdapter") as mock_adapter_cls, \
+                 patch("build_128k_workload.load_manifest", return_value={"schema_version": 1}), \
+                 patch("build_128k_workload.build", return_value={"requests": []}), \
+                 patch("bench_harness.run_batch", side_effect=RuntimeError("Original batch OOM or process crash")), \
+                 patch("run_wbs6_cpu.capture_memory_checkpoint", return_value={"system_memory_kib": {"SwapUsed": 150, "MemAvailable": 900}, "system_vmstat": {"pswpin": 1, "pswpout": 1, "pgmajfault": 10}}):
+
+                mock_adapter = MagicMock()
+                # 1st call (pre-measurement peer health): healthy
+                # 2nd call (post-measurement active model health): connection reset / crash
+                # 3rd call (post-measurement peer health): healthy
+                mock_adapter.health.side_effect = [
+                    {"healthy": True},
+                    ConnectionResetError("Server connection reset / crashed"),
+                    {"healthy": True},
+                ]
+                mock_adapter_cls.return_value = mock_adapter
+
+                with self.assertRaises(RuntimeError) as ctx:
+                    runner.run_measured_experiment_32k(
+                        root=tmp_root,
+                        exp_id=exp_id,
+                        model_name="mock.gguf",
+                        model_key="mock",
+                        model_path="/mock.gguf",
+                        port=8082,
+                        selected_image="mock:tag",
+                        peer_name="peer.gguf",
+                        peer_port=8083,
+                        gemma_pid=None,
+                        ornith_pid=None,
+                        snap_a=snap_a,
+                        snap_b=snap_b,
+                        pre_snap_label="checkpoint_c_pre",
+                        post_snap_label="checkpoint_d_post",
+                    )
+                # Ensure the original batch error is raised, NOT the ConnectionResetError
+                self.assertIn("Original batch OOM or process crash", str(ctx.exception))
+
+            raw = tmp_root / "results/raw" / exp_id
+            health_json = raw / "dual_resident_post_health.json"
+            self.assertTrue(health_json.exists())
+            import json
+            data = json.loads(health_json.read_text())
+            self.assertFalse(data["both_healthy"])
+            self.assertFalse(data["active_model_health"]["healthy"])
+            self.assertIn("ConnectionResetError", data["active_model_health"]["error"])
+
+    def test_openblas_preflight_immutability_guard(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_root = Path(tmpdir)
+            preflight_dir = tmp_root / "results/raw/WBS6-PREFLIGHT-OPENBLAS"
+            preflight_dir.mkdir(parents=True)
+            (preflight_dir / "openblas_preflight.json").write_text("{}")
+
+            with self.assertRaises(RuntimeError) as ctx:
+                runner.run_openblas_preflight(tmp_root)
+            self.assertIn("Immutable OpenBLAS preflight raw evidence already exists", str(ctx.exception))
+
 
 if __name__ == "__main__":
     unittest.main()
