@@ -31,6 +31,21 @@
     },
     "mtp_draft_n_max": 1
   },
+  "llama_cpp_cpu": {
+    "status": "verified_local_artifact",
+    "repository": "ornith-ai/Ornith-1.5-35B-A3B-GGUF",
+    "revision": "12393612fd4f730ff5aadc23e9b8f9648aa49ceb",
+    "path": "/srv/models/ornith-1.5-35b-a3b-gguf/Ornith-1.5-35B-Q4_K_M.gguf",
+    "filename": "Ornith-1.5-35B-Q4_K_M.gguf",
+    "sha256": "42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f",
+    "weight_quant": "Q4_K_M",
+    "kv_candidates": [
+      "Q8_0"
+    ],
+    "required_spec_lanes": [
+      "ngram-mod"
+    ]
+  },
   "onecat_vllm": {
     "status": "static_runtime_contract_ready_host_startup_pending",
     "planning_ready": true,

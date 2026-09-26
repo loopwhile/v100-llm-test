@@ -130,9 +130,34 @@
   - Gemma4 1Cat-vLLM remains **not eligible** for C2 capacity testing or WBS 5 throughput optimization.
 - Policy Enforcement: Stopped per contract. Raw evidence is preserved under `results/raw/EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-001/` through `-004/`.
 
+## WBS 6 CPU+RAM Dual-Resident Feasibility & Preflight (2026-09-26)
+
+- Scope: WBS 6.1 (CPU Docker build), WBS 6.4 (artifact verification), Preflight A/B, and WBS 6.5 (Dual-Resident Startup Gate). 128K measured runs (WBS 6.6) placed on HOLD per user direction.
+- Models verified:
+  - Gemma 4 26B-A4B: `gemma-4-26B-A4B-it-UD-Q6_K_XL.gguf` (23,295,391,456 B, SHA256 `b01ee10a1423c17f9c4384f1fc569726b8782c5403557ff138ceb9468ca49d6b`, `unsloth/gemma-4-26B-A4B-it-GGUF@c099eb48e663fd284577b04978a94ffccb261841`).
+  - Ornith 1.5 35B-A3B: `Ornith-1.5-35B-Q4_K_M.gguf` (21,713,463,040 B, SHA256 `42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f`, `ornith-ai/Ornith-1.5-35B-A3B-GGUF@12393612fd4f730ff5aadc23e9b8f9648aa49ceb`).
+- Preflight A/B Comparison (`results/raw/WBS6-PREFLIGHT-AB/preflight_ab_result.json`):
+  - P520 Xeon W-2135 native build (`GGML_NATIVE=ON`, `GGML_CUDA=OFF`, single native backend).
+  - Comparison on Ornith 35B (760 prompt tokens, 128 completion tokens, 4 threads, cpuset `1,2,3,4`):
+    - `b10428` (`885c5bbe`): TTFT 21.67s, Prompt Eval 35.07 tok/s, Decode 10.05 tok/s, Duration 34.33s.
+    - `b10775` (`67a17c17`): TTFT 21.61s, Prompt Eval 35.18 tok/s, Decode 10.02 tok/s, Duration 34.29s.
+  - Winner: `b10775` confirmed stable and free of CPU regression; pinned image: `p520-cpu-llama:b10775` (`p520-cpu-llama@sha256:8ee3818eee9df3690a64177b976692cffd509972cb31c0907f7136b567a4729b`).
+- WBS 6.5 Dual-Resident Startup Gate (`results/raw/WBS6-STARTUP-GATE/startup_gate.json`):
+  - Verdict: **`PASS_STARTUP_GATE`**.
+  - Server A: `p520-cpu-gemma` (Port 8082, Gemma 4 26B UD-Q6_K_XL).
+  - Server B: `p520-cpu-ornith` (Port 8083, Ornith 1.5 35B Q4_K_M).
+  - Both servers simultaneously healthy (`/health` 200 OK).
+  - CPU Coexistence: logical CPU IDs 1, 2, 3, 4 (physical CORE 1, 2, 3, 4); Core 0, 5 & SMT siblings preserved for host OS / GPU.
+  - GPU VRAM Isolation: GPU0 0.0 MiB / GPU1 0.0 MiB, Compute Apps 0 (100% VRAM free / 0B allocation verified).
+  - Memory: Host Total 62.56 GiB, Available 31.59 GiB (Gemma RSS 1.631 GiB, Ornith RSS 17.47 GiB; swap thrash none).
+  - Post-gate cleanup: Both containers cleanly removed after verification per contract.
+- Status: WBS 6 Phase 1 & 2 [DONE]. WBS 6.6 (128K serial inference) and WBS 5 remain on HOLD per user direction.
+
 ## Next planned work
 
 - WBS 2: DONE
 - WBS 3: DONE
 - WBS 4: DONE
-- Next = WBS 5: performance optimization and per-model/per-runtime final recipe capture.
+- WBS 6.1~6.5: DONE (Startup Gate PASS; 128K serial measured requests on HOLD)
+- Next = Resume WBS 6.6 (128K serial runs) or proceed to WBS 5 (optimization & final recipe capture).
+

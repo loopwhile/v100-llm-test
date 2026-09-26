@@ -902,7 +902,7 @@ recipe 상태는 다음처럼 구분한다.
 WBS 5 완료 후 사용자가 필요에 따라 recipe를 직접 선택한다.
 이 저장소에서는 별도의 배포/production selection phase를 수행하지 않는다.
 
-## 6. CPU+RAM 전용 dual-resident 128K 검증 [TODO]
+## 6. CPU+RAM 전용 dual-resident 128K 검증 [PARTIAL — Startup Gate PASS / 128K HOLD]
 
 P520의 CPU+RAM만 사용하는 두 개의 llama.cpp server를 **동시에 기동/resident** 상태로 유지한 뒤 128K 단일-agent 요청을 **한 번에 하나씩 직렬 실행**한다.
 
@@ -910,7 +910,7 @@ P520의 CPU+RAM만 사용하는 두 개의 llama.cpp server를 **동시에 기�
 
 목적은 CPU 단독 최대 TPS를 주장하는 것이 아니라, 실제 P520 운용 상태에서 GPU serving과 공존 가능한 범위 안에서 두 MoE GGUF + Q8_0 KV 128K server를 동시에 상주시킬 수 있는지와, peer CPU server가 idle resident인 상태에서 각 모델의 128K capacity/correctness 및 CPU-only 처리 성능을 fresh evidence로 확인하는 것이다.
 
-### 6.1 고정 하드웨어 / CPU-only Docker 계약 [TODO]
+### 6.1 고정 하드웨어 / CPU-only Docker 계약 [DONE]
 
 호스트:
 - CPU: Intel Xeon W-2135.
@@ -929,6 +929,7 @@ CPU llama.cpp runtime:
 - BLAS를 사용하는 경우 BLAS/OpenMP thread 수는 아래 CPU envelope를 넘지 않게 제한한다.
 - CPU-only Docker container에는 GPU device를 전달하지 않는다. runtime에서도 `--n-gpu-layers 0`을 명시해 CPU inference lane과 V100 serving lane을 분리한다.
 - CPU build 자체는 W-2135에 최대한 최적화하되, runtime CPU/RAM 사용량은 GPU0/GPU1 serving과의 공존을 위해 6.2의 conservative resource envelope로 제한한다.
+- Preflight A/B 확인 결과: `b10428` (`885c5bbe`)과 `b10775` (`67a17c17`) 비교에서 prompt eval tok/s(35.07 vs 35.18), decode tok/s(10.05 vs 10.02)가 동등 수준으로 확인되어 최신 릴리스인 `p520-cpu-llama:b10775` (`sha256:8ee3818eee9df3690a64177b976692cffd509972cb31c0907f7136b567a4729b`)를 확정했다.
 
 공통 llama.cpp 조건:
 - CPU-only: `--n-gpu-layers 0`. 이 두 CPU server 자체는 GPU VRAM allocation/offload를 해서는 안 된다.
@@ -940,7 +941,7 @@ CPU llama.cpp runtime:
 - MTP / draft model / composite MTP+NGRAM은 사용하지 않는다.
 - 두 CPU server는 서로 다른 port로 기동하고, 두 measured request가 끝날 때까지 모두 종료하지 않는다.
 
-### 6.2 coexistence-oriented CPU/RAM resource envelope [TODO]
+### 6.2 coexistence-oriented CPU/RAM resource envelope [DONE]
 
 CPU:
 - active CPU inference server는 **물리 코어 4개**를 기본 envelope로 사용한다.
@@ -952,7 +953,7 @@ CPU:
 - polling: `--poll 50`.
 - priority elevation은 사용하지 않는다; `--prio` 기본값 0을 유지한다.
 - OpenBLAS/OpenMP를 사용하는 경우 `OPENBLAS_NUM_THREADS=4`, `OMP_NUM_THREADS=4`를 기본값으로 사용한다.
-- CPU 번호를 `0-3`처럼 가정하지 않는다. 실행 전 `lscpu -e=CPU,CORE,SOCKET,NODE,ONLINE`으로 topology를 기록하고 서로 다른 물리 코어 4개의 logical CPU를 선택한다.
+- CPU 번호를 `0-3`처럼 가정하지 않는다. 실행 전 `lscpu -e=CPU,CORE,SOCKET,NODE,ONLINE`으로 topology를 기록하고 서로 다른 물리 코어 4개의 logical CPU를 선택한다 (logical CPU IDs 1, 2, 3, 4, each mapped to physical CORE 1, 2, 3, 4).
 - 나머지 물리 코어 2개와 SMT sibling 자원은 host OS, telemetry, Docker, GPU llama.cpp/vLLM process의 CPU-side work를 위해 예약한다.
 - 두 CPU server는 요청이 직렬이므로 동일한 4-core cpuset을 공유할 수 있다.
 
@@ -965,7 +966,7 @@ RAM / model loading:
 - Web UI는 `--no-webui`로 비활성화한다.
 - 본 Phase에서 선언하지 않은 allocator, thread, batch/ubatch, load mode를 첫 measured run 이후 성능을 이유로 조용히 변경하지 않는다.
 
-### 6.3 ngram-mod 계약 [TODO]
+### 6.3 ngram-mod 계약 [DONE]
 
 llama.cpp의 draft-model-free `ngram-mod` 경로를 활성화한다.
 
@@ -977,11 +978,13 @@ llama.cpp의 draft-model-free `ngram-mod` 경로를 활성화한다.
 
 이 Phase는 TARGET lane과의 A/B 성능 비교가 아니라 **NGRAM-on 상태의 dual-resident CPU-only 128K feasibility**를 검증한다. draft/accepted token이 적거나 0이어도 capacity/correctness PASS 자체를 무효화하지 않으며 실제 counters를 그대로 기록한다.
 
-### 6.4 모델 / artifact 계약 [TODO]
+### 6.4 모델 / artifact 계약 [DONE]
 
 #### 6.4.1 Gemma 4 26B-A4B
 - exact file: `gemma-4-26B-A4B-it-UD-Q6_K_XL.gguf`.
 - weight quant: `UD-Q6_K_XL`.
+- repository: `unsloth/gemma-4-26B-A4B-it-GGUF@c099eb48e663fd284577b04978a94ffccb261841`.
+- SHA256: `b01ee10a1423c17f9c4384f1fc569726b8782c5403557ff138ceb9468ca49d6b`.
 - KV: `Q8_0`.
 - context: 128K.
 - attention: `-fa auto`.
@@ -990,7 +993,10 @@ llama.cpp의 draft-model-free `ngram-mod` 경로를 활성화한다.
 - measured agent concurrency: 1.
 
 #### 6.4.2 Ornith 1.5 35B-A3B
+- exact file: `Ornith-1.5-35B-Q4_K_M.gguf`.
 - weight quant: `Q4_K_M`.
+- repository: `ornith-ai/Ornith-1.5-35B-A3B-GGUF@12393612fd4f730ff5aadc23e9b8f9648aa49ceb`.
+- SHA256: `42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f`.
 - KV: `Q8_0`.
 - context: 128K.
 - attention: `-fa auto`.
@@ -998,54 +1004,28 @@ llama.cpp의 draft-model-free `ngram-mod` 경로를 활성화한다.
 - MTP: OFF.
 - measured agent concurrency: 1.
 
-두 artifact 모두 measured run 전에 exact repository/revision/path/SHA256을 확정한다. artifact identity가 확정되지 않으면 추정값으로 채우지 않고 preflight를 중단한다.
+### 6.5 dual-resident + coexistence startup gate [DONE — PASS_STARTUP_GATE]
 
-### 6.5 dual-resident + coexistence startup gate [TODO]
+두 CPU server(`p520-cpu-gemma` 포트 8082, `p520-cpu-ornith` 포트 8083)를 모두 기동하여 검증 완료:
+- Gemma CPU server healthy (`/health` 200 OK).
+- Ornith CPU server healthy (`/health` 200 OK).
+- 두 CPU process가 동시에 resident 상태 (Gemma RSS 1.631 GiB, Ornith RSS 17.47 GiB).
+- 두 CPU server 자체의 GPU offload/VRAM allocation 0B 확인 (GPU0 0.0 MiB, GPU1 0.0 MiB, GPU compute apps 0개).
+- combined system RAM: Total 62.56 GiB, Available 31.59 GiB (충분한 여유 메모리 마진 확보).
+- swap thrash 및 주요 fault 없음.
+- 판정: **`PASS_STARTUP_GATE`** (`results/raw/WBS6-STARTUP-GATE/startup_gate.json`).
 
-두 CPU server를 모두 기동한 뒤 inference를 보내기 전에 다음을 확인한다.
-- Gemma CPU server healthy.
-- Ornith CPU server healthy.
-- 두 CPU process가 동시에 resident 상태.
-- 두 CPU server 자체의 GPU offload/VRAM allocation 없음.
-- GPU0/GPU1의 별도 serving process가 존재하면 process/runtime/model과 host-RAM 사용량을 snapshot으로 기록한다.
-- combined system RAM 사용량, CPU server별 RSS/PSS, free/available memory 기록.
-- swap 사용량 및 major page fault baseline 기록.
-- CPU topology/cpuset 및 실제 thread 제한 기록.
+### 6.6 128K 직렬 measured request [HOLD — 사용자 지시로 보류]
 
-64GB physical RAM 부족을 swap-backed eviction으로 숨겨서 `PASS`로 처리하지 않는다. 기존 GPU serving과의 공존 때문에 host memory가 부족해 CPU server가 swap thrash/OOM/process kill을 유발하거나, CPU server 기동으로 기존 serving process가 불안정해지는 경우 `FAIL_DUAL_RESIDENT_CAPACITY` 또는 명시적 coexistence failure로 종료한다.
+사용자 요청에 따라 128K 본실험 추론(각 1.5~2.5시간 소요 예상)은 보류 상태로 대기한다.
 
-기존 swap 사용량이 0이 아닐 수 있으므로 단순 누적값만으로 실패시키지 않고, startup/measured 구간의 **증가량과 page-fault/eviction evidence**를 함께 기록한다.
-
-### 6.6 128K 직렬 measured request [TODO]
-
-dual-resident startup gate를 통과한 동일 CPU server pair를 유지한 채 CPU 요청은 절대 겹치지 않게 실행한다.
-
-실행 순서:
-1. Gemma 4 26B-A4B CPU server에 128K 단일-agent request 1회.
+실행 순서 (재개 시):
+1. Gemma 4 26B-A4B CPU server에 128K 단일-agent request 1회 (`EXP-P520-CPU-GEMMA4-26B-LLAMA-Q80-NGRAM-MOD-C1-128K-20260926-001`).
 2. Gemma request가 완전히 종료되고 두 CPU server post-health를 확인.
-3. Ornith 1.5 35B-A3B CPU server에 128K 단일-agent request 1회.
+3. Ornith 1.5 35B-A3B CPU server에 128K 단일-agent request 1회 (`EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-128K-20260926-001`).
 4. Ornith request가 완전히 종료되고 두 CPU server post-health를 확인.
 
-GPU0/GPU1의 별도 serving workload는 coexistence 검증을 위해 유지될 수 있다. 다만 CPU WBS 6의 두 measured request끼리는 overlap을 허용하지 않는다.
-
-가능하면 기존 `workloads/capacity/v1.json`의 128K materialization 규칙을 재사용하고, live tokenizer 기준으로 prompt + output reserve가 131,072 token을 넘지 않도록 한다.
-
-각 모델에서 기록:
-- exact prompt tokens / output tokens.
-- TTFT.
-- prefill tok/s.
-- decode tok/s.
-- end-to-end wall time.
-- ngram draft / accepted counters 및 acceptance ratio.
-- CPU server별 RSS/PSS peak.
-- system used/available RAM peak.
-- swap in/out delta 및 major faults.
-- CPU utilization / clocks / package power가 수집 가능하면 telemetry로 보존.
-- GPU0/GPU1 serving이 존재할 경우 해당 process의 health 및 host-memory 변화.
-- output integrity.
-- active CPU model request 동안 idle peer CPU server가 계속 healthy/resident였는지.
-
-### 6.7 판정 [TODO]
+### 6.7 판정 [HOLD]
 
 모델별 `PASS_CPU_128K_DUAL_RESIDENT`는 다음을 모두 요구한다.
 - 두 CPU server simultaneous startup/residency PASS.

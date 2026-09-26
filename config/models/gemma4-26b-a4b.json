@@ -36,6 +36,21 @@
     "mtp_draft_device": "CUDA0,CUDA1",
     "mtp_draft_device_note": "On this pinned b10775 + 2x V100 layer-split topology, CUDA0-only drafter startup aborts while CUDA0,CUDA1 startup passes at 128K. This overrides Unsloth's generic multi-GPU CUDA0 example for this validated hardware/runtime."
   },
+  "llama_cpp_cpu": {
+    "status": "verified_local_artifact",
+    "repository": "unsloth/gemma-4-26B-A4B-it-GGUF",
+    "revision": "c099eb48e663fd284577b04978a94ffccb261841",
+    "path": "/srv/models/gemma-4-26b-a4b-it-qat-gguf/gemma-4-26B-A4B-it-UD-Q6_K_XL.gguf",
+    "filename": "gemma-4-26B-A4B-it-UD-Q6_K_XL.gguf",
+    "sha256": "b01ee10a1423c17f9c4384f1fc569726b8782c5403557ff138ceb9468ca49d6b",
+    "weight_quant": "UD-Q6_K_XL",
+    "kv_candidates": [
+      "Q8_0"
+    ],
+    "required_spec_lanes": [
+      "ngram-mod"
+    ]
+  },
   "onecat_vllm": {
     "status": "verified_local_artifact",
     "planning_ready": true,
