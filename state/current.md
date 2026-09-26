@@ -151,7 +151,7 @@
   - GPU VRAM Isolation: CPU-only Docker with no GPU devices passed, `GGML_CUDA=OFF`, `--n-gpu-layers 0`; GPU VRAM allocation = 0.0 MiB, Compute Apps = 0. GPU0/GPU1 serving may exist independently.
   - Memory Evidence & Limits: Host Total 62.56 GiB, Available 31.59 GiB at snapshot. SwapTotal 4,194,300 kB, SwapFree 528 kB (~4GB swap in use). Startup gate proved dual server startup, health, and 0B VRAM isolation; it did not measure `pswpin`/`pswpout`/`pgmajfault` deltas, so absence of swap thrash is unproven at gate time. Due to `mmap`, initial MemAvailable does not guarantee physical RAM headroom once working sets fault in; memory pressure and stability will be measured during 32K request execution.
   - Post-gate cleanup: Both containers cleanly removed after verification per contract.
-- Status: WBS 6.1~6.5 [DONE], WBS 6.6 [DONE], WBS 6.7 [DONE].
+- Status: WBS 6.1~6.7 [DONE]. WBS 6.8 CPU prefill `-b/-ub` 최소 튜닝 [READY — NOT EXECUTED].
   - Gemma 4 26B-A4B 32K Serial Request: **`PASS`** (`EXP-P520-CPU-GEMMA4-26B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001`; TTFT 4,927.28s, Prefill 6.44 tok/s, Decode 2.72 tok/s, Wall 5,189.72s, Peak VRAM 0 MiB, SwapUsed delta +14.5 MiB, pswpin +1,704, pswpout +4,466, pgmajfault +8,844, 지속적 swap thrashing 미관찰, Post-health PASS; smaps_rollup 수집 실패로 개별 프로세스 RSS/PSS는 0으로 기록됨).
   - Ornith 1.5 35B-A3B 32K Serial Request: **`PASS`** (`EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001`; TTFT 4,160.26s, Prefill 7.63 tok/s, Decode 3.15 tok/s, Wall 4,443.18s, Peak VRAM 0 MiB, SwapUsed delta +12.4 MiB, pswpin +113, pswpout +2,101, pgmajfault +1,433, 지속적 swap thrashing 미관찰, Post-health PASS; smaps_rollup 수집 실패로 개별 프로세스 RSS/PSS는 0으로 기록됨).
   - Verdict: Both models awarded **`PASS_CPU_128K_SERVER_32K_REQUEST_DUAL_RESIDENT`**. 64GB RAM / 4-core CPU envelope에서 두 128K 서버 동시 상주 및 32K 실사용 리서치 워크로드 처리 성공(경미한 swap 증분 외 지속적 thrashing 없음 확인), V100 GPU 서빙 자원 100% 보존 확인.
@@ -162,8 +162,9 @@
 - WBS 2: DONE
 - WBS 3: DONE
 - WBS 4: DONE
-- WBS 6: DONE (Dual-resident startup gate & 32K serial measured requests PASS)
-- Next = WBS 5 (optimization & final recipe capture).
+- WBS 6.1~6.7: DONE (Dual-resident startup gate & 32K serial measured requests PASS)
+- WBS 6.8: READY — `-t/-tb=4`, cpuset `1,2,3,4` 고정; Ornith 2K `b/ub` 4조건 screening 후 Ornith 32K 1회 + Gemma 32K 1회. 기본 신규 실행 6회, 필요 시 Ornith 32K 차순위 후보 1회만 추가 가능.
+- Next = WBS 6.8 batch/ubatch tuning. 기존 WBS 6.6 32K baseline은 재실행하지 않는다.
 
 
 
