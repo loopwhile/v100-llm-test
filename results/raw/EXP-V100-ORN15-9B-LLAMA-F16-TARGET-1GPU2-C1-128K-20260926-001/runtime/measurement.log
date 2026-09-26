@@ -1,0 +1,8 @@
+usage: run_1gpu_litellm.py [-h] [--experiment-id EXPERIMENT_ID]
+                           [--retry-of RETRY_OF]
+                           [--retry-evidence RETRY_EVIDENCE]
+                           [--model {ornith-1.5-9b}]
+                           --lane {TARGET,NGRAM,MTP,MTP_NGRAM,STOCK}
+                           --concurrency {1,2} [--port PORT]
+                           [--gateway-port GATEWAY_PORT] [--worker WORKER]
+run_1gpu_litellm.py: error: the following arguments are required: --lane, --concurrency

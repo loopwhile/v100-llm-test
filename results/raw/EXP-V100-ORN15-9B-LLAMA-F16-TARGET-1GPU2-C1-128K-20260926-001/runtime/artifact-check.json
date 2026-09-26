@@ -1,0 +1,5 @@
+{
+  "path": "/srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf",
+  "sha256": "79a9925bb7771dea3530d57b185e97b9713a73a7c06bdb9804f7d019aa42f480",
+  "expected": "79a9925bb7771dea3530d57b185e97b9713a73a7c06bdb9804f7d019aa42f480"
+}

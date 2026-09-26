@@ -1,0 +1,7 @@
+{
+  "verdict": "INCONCLUSIVE",
+  "c1_128k": true,
+  "error": "measurement worker failed; see measurement.log",
+  "peak_vram_gpu0_mib": 10769.0,
+  "peak_vram_gpu1_mib": 10769.0
+}

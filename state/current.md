@@ -56,8 +56,9 @@
     - NGRAM (`EXP-V100-GEMMA4-26B-LLAMA-F16-NGRAM-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 457.15s, Aggregate decode 4.86 tok/s, Batch Wall 689.16s; Project A 1066 tok PASS, Project B 1055 tok PASS; Peak VRAM 10,039 MiB GPU0 / 10,607 MiB GPU1; draft 527/186 35.3% A, 528/141 26.7% B).
     - MTP (`EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 458.73s, Aggregate decode 4.66 tok/s, Batch Wall 697.62s; Project A 1066 tok PASS, Project B 1016 tok PASS; Peak VRAM 10,345 MiB GPU0 / 10,981 MiB GPU1; draft 1160/777 67.0% A, 1112/738 66.4% B, overall 66.7%).
     - MTP_NGRAM (`EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-NGRAM-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 462.43s, Aggregate decode 4.59 tok/s, Batch Wall 703.74s; Project A 1058 tok PASS, Project B 1016 tok PASS; Peak VRAM 10,345 MiB GPU0 / 11,051 MiB GPU1; draft 1564/800 51.2% A, 1557/748 48.0% B, overall 49.6%).
-- Current status: WBS 3.1 Shared TP2 llama.cpp 전체 완료 ([DONE]). 모든 대상 모델(Qwen3.8-27B, Ornith 1.5 9B, Ornith 1.5 35B-A3B, Gemma4 26B-A4B)의 128K C2 Active Concurrency 검증 통과.
-- Next task: WBS 4 (Ornith 1.5 9B 1GPU×2 + LiteLLM topology validation) 또는 사용자 검토.
+- Current status: WBS 4 (Ornith 1.5 9B 1GPU×2 + LiteLLM topology) 착수 및 4.1.1 TARGET C1 완료.
+  - 4.1.1 TARGET C1: **`PASS_C1_128K`** (`EXP-V100-ORN15-9B-LLAMA-F16-TARGET-1GPU2-C1-128K-20260926-002`; TTFT 190.01s, Decode 43.34 tok/s, Batch Wall 202.08s, Peak VRAM GPU0 10,891 MiB / GPU1 10,769 MiB). LiteLLM 단일 게이트웨이 엔드포인트(`http://127.0.0.1:18079`)를 통한 엔드투엔드 128K 서빙 및 출력 무결성 확인 완료.
+- Next task: WBS 4.1.2 TARGET C2 (`EXP-V100-ORN15-9B-LLAMA-F16-TARGET-1GPU2-C2-128K-20260926-001`) 진행 또는 사용자 확인.
 
 ## Root-Cause Diagnostic: Qwen3.8-27B 1Cat-vLLM 128K Realistic Workload (2026-09-25)
 - Purpose: Distinguish whether Qwen3.8 128K repetition collapse is artifact of synthetic repetition-heavy workload (1,333 duplicate sections) or general 1Cat-vLLM 128K path issue.

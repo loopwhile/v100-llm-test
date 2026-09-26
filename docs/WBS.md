@@ -564,7 +564,7 @@ WBS 3 authoritative workload는 `workloads/concurrency/v2.json`이다.
 
 runtime concurrency classification은 output PASS 여부와 결합하지 않는다. 한 응답이 FAIL_OUTPUT이어도 sampled evidence가 `peak_waiting>=1`, `peak_processing<=1`이면 scheduler topology는 `QUEUE_ONLY`로 보존한다.
 
-## 4. Ornith 1.5 9B — 1GPU×2 + LiteLLM topology [TODO]
+## 4. Ornith 1.5 9B — 1GPU×2 + LiteLLM topology [IN_PROGRESS]
 
 이 topology는 TP2 shared와 동등한 **정식 테스트 후보**로 취급하며, **LiteLLM까지 포함한 전체 서빙 경로**를 테스트한다.
 프로젝트는 이 topology를 실제 배포 대상으로 선택하지 않으며, 검증 결과와 최종 recipe만 보존한다.
@@ -602,6 +602,47 @@ Shared TP2와 다음 항목을 비교한다.
 - failure isolation.
 - 운영 단순성.
 - raw config/report/CSV에 LiteLLM version/commit/image/routing identity가 보존되는지.
+
+### 4.1 llama.cpp
+
+- artifact: `Q6_K` (`/srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf`).
+- KV: `FP16`.
+- Server 0: GPU0 (`127.0.0.1:18080`), Server 1: GPU1 (`127.0.0.1:18081`), Gateway: LiteLLM v1.101.0 (`127.0.0.1:18079`).
+- 실행 runner: `scripts/run_1gpu_litellm.py`.
+
+#### 4.1.1 TARGET [C1: DONE / C2: TODO]
+- C1 attempt 001: `EXP-V100-ORN15-9B-LLAMA-F16-TARGET-1GPU2-C1-128K-20260926-001` — `INCONCLUSIVE` (harness CLI args bug on worker invocation; preflight/servers PASS, measured request not reached).
+- C1 attempt 002: `EXP-V100-ORN15-9B-LLAMA-F16-TARGET-1GPU2-C1-128K-20260926-002` — **`PASS_C1_128K`**
+  - TTFT: 190,008.28 ms (~190.01s), Prefill ~679.0 tok/s, Decode 43.34 tok/s, Aggregate Decode 43.34 tok/s, End-to-end 2.58 tok/s, Batch Wall 202.08s.
+  - Prompt: 129,023 tokens, Output: 522 tokens (`finish_reason=stop`, mechanical & semantic PASS).
+  - Peak VRAM: GPU0 10,891 MiB / GPU1 10,769 MiB (각 16GB 한도 내 안정적 수용).
+  - Gateway routing: LiteLLM least-busy router를 통해 backend-0 (`http://127.0.0.1:18080/v1`)으로 정상 프록시 및 디코드 완료.
+  - Post-health: LiteLLM `/health/liveliness` 및 Backend 0, 1 `/health` 모두 200 OK 정상 종료.
+- C2: `EXP-V100-ORN15-9B-LLAMA-F16-TARGET-1GPU2-C2-128K-20260926-001` — `TODO`
+
+#### 4.1.2 NGRAM [TODO]
+- C1: `EXP-V100-ORN15-9B-LLAMA-F16-NGRAM-1GPU2-C1-128K-20260926-001` — `TODO`
+- C2: `EXP-V100-ORN15-9B-LLAMA-F16-NGRAM-1GPU2-C2-128K-20260926-001` — `TODO`
+
+#### 4.1.3 MTP [TODO]
+- C1: `EXP-V100-ORN15-9B-LLAMA-F16-MTP-1GPU2-C1-128K-20260926-001` — `TODO`
+- C2: `EXP-V100-ORN15-9B-LLAMA-F16-MTP-1GPU2-C2-128K-20260926-001` — `TODO`
+
+#### 4.1.4 MTP_NGRAM [TODO]
+- C1: `EXP-V100-ORN15-9B-LLAMA-F16-MTP-NGRAM-1GPU2-C1-128K-20260926-001` — `TODO`
+- C2: `EXP-V100-ORN15-9B-LLAMA-F16-MTP-NGRAM-1GPU2-C2-128K-20260926-001` — `TODO`
+
+### 4.2 1Cat-vLLM STOCK
+
+- artifact: `ornith-ai/Ornith-1.5-9B-NVFP4`.
+- KV: `FP16`.
+- speculative: MTP1.
+- Server 0: GPU0 TP1 (`127.0.0.1:18080`), Server 1: GPU1 TP1 (`127.0.0.1:18081`), Gateway: LiteLLM v1.101.0 (`127.0.0.1:18079`).
+- 실행 runner: `scripts/run_1gpu_litellm.py`.
+
+#### 4.2.1 STOCK MTP1 [TODO]
+- C1: `EXP-V100-ORN15-9B-1CAT-F16-MTP1-1GPU2-C1-128K-20260926-001` — `TODO`
+- C2: `EXP-V100-ORN15-9B-1CAT-F16-MTP1-1GPU2-C2-128K-20260926-001` — `TODO`
 
 ## 5. 성능 최적화 및 모델별 최종 레시피 확정 [TODO]
 

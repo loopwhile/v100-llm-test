@@ -1,0 +1,46 @@
+[
+  {
+    "request_id": "project-a",
+    "project_id": "A",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "7eb8fba6a85337dadebcd49bce83334812e159fae96d669e3e24abeb74612535",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.0012249269993844791,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "## Correctness Risk\n\nThe most concrete risk in this snapshot is a **version/snapshot consistency bug** in `PageIndex.snapshot()`.\n\nThe test `test_snapshot_is_stable` asserts:\n\n```python\nindex.put(\"alpha\", 10)\nversion, snapshot = index.snapshot()\nindex.put(\"beta\", 20)\nassert version == 1\nassert snapshot == {\"alpha\": 10}\n```\n\nBut the implementation returns `self.version` **by value** and `dict(self.pages)` **by value**, so after the second `put` both assertions actually hold. The current code is correct, but it is *accidentally* correct: it relies on the caller not mutating the returned structures. A minimal refactor that returns a mutable reference (e.g. `return self.version, self.pages`) would silently break the \"stable\" contract the test name promises. Because the test only checks the current state, it would not catch a future regression where `snapshot()` returns a live view.\n\n## Verification Plan\n\n1. **Fuzz the snapshot contract.** Build a randomized driver that interleaves `put`, `get`, and `snapshot` calls, then after each `snapshot` assert that the returned tuple is immutable with respect to later `put` calls:\n   ```python\n   v, snap = index.snapshot()\n   index.put(\"k\", 99)\n   assert v == index.version  # version is a stable int, fine\n   assert snap == {\"k\": 99}   # must NOT reflect the new put\n   ```\n   Run thousands of iterations to expose any live-view regression.\n\n2. **Add an explicit immutability guard.** Change `snapshot()` to return a defensive copy and add a unit test that raises if the returned dict is mutated:\n   ```python\n   def snapshot(self):\n       return self.version, dict(self.pages)\n   ```\n   Then assert `snapshot()[1]` is a fresh dict each call.\n\n3. **Cross-check `Transaction.commit`.** Verify that committing a staged key increments `version` exactly once and that the key appears in a subsequent `snapshot()`. This closes the loop between the two modules.\n\n4. **Regression gate.** Keep `test_snapshot_is_stable` as the canonical stability check and wire the fuzz driver into CI so a future refactor cannot reintroduce a live-view bug.\n\nThis plan is minimal (one new test + one defensive copy) yet directly targets the property the test name guarantees."
+          }
+        }
+      ],
+      "usage": {
+        "completion_tokens": 522,
+        "prompt_tokens": 129023,
+        "total_tokens": 129545,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      }
+    },
+    "actual_output_tokens": 522,
+    "post_template_prompt_tokens": 129023,
+    "ttft_ms": 190008.2804219992,
+    "first_abs": 7668.7643235,
+    "end_abs": 7680.809842426,
+    "wall_s": 202.0537993479993,
+    "prefill_tps": null,
+    "decode_tps": 43.33561743639529,
+    "gateway_deployment_id": "d69c30fd0a19b0ec430dfc8a8bb85b31ab37de6b8d92138297406e86b203bf7f",
+    "gateway_api_base": "http://127.0.0.1:18080/v1",
+    "gateway_call_id": "ade08571-4452-4bb9-be00-21217b599c48",
+    "gateway_version": "1.101.0",
+    "terminal_s": 202.0801359399993
+  }
+]

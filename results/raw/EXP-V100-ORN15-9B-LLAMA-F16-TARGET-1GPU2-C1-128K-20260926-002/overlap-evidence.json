@@ -1,0 +1,31 @@
+{
+  "source": "LiteLLM single gateway endpoint + backend runtime probes + deployment response headers",
+  "resident": null,
+  "active_overlap": null,
+  "queue_only": null,
+  "gateway_distinct_deployment_ids": null,
+  "gateway_distinct_api_bases": null,
+  "gateway_deployment_ids": [
+    "d69c30fd0a19b0ec430dfc8a8bb85b31ab37de6b8d92138297406e86b203bf7f"
+  ],
+  "gateway_api_bases": [
+    "http://127.0.0.1:18080/v1"
+  ],
+  "backend_active_in_common_decode_window": false,
+  "children": [
+    {
+      "peak_processing": null,
+      "peak_waiting": null,
+      "peak_resident_slots": null,
+      "sample_count": 0,
+      "samples": []
+    },
+    {
+      "peak_processing": null,
+      "peak_waiting": null,
+      "peak_resident_slots": null,
+      "sample_count": 0,
+      "samples": []
+    }
+  ]
+}

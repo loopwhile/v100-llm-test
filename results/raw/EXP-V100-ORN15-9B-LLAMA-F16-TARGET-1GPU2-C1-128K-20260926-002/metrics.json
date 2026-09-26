@@ -1,0 +1,65 @@
+{
+  "context_tokens": 131072,
+  "concurrency": 1,
+  "intended_requests": 1,
+  "completed_requests": 1,
+  "output_passed_requests": 1,
+  "batch_wall_s": 202.07891101299992,
+  "submission_skew_s": 0.0,
+  "ttft_ms": 190008.2804219992,
+  "prefill_tps": null,
+  "mean_request_decode_tps": 43.33561743639529,
+  "aggregate_decode_tps": 43.33561743639529,
+  "end_to_end_output_tps": 2.5831493122328792,
+  "server_overlap": {
+    "source": "LiteLLM single gateway endpoint + backend runtime probes + deployment response headers",
+    "resident": null,
+    "active_overlap": null,
+    "queue_only": null,
+    "gateway_distinct_deployment_ids": null,
+    "gateway_distinct_api_bases": null,
+    "gateway_deployment_ids": [
+      "d69c30fd0a19b0ec430dfc8a8bb85b31ab37de6b8d92138297406e86b203bf7f"
+    ],
+    "gateway_api_bases": [
+      "http://127.0.0.1:18080/v1"
+    ],
+    "backend_active_in_common_decode_window": false,
+    "children": [
+      {
+        "peak_processing": null,
+        "peak_waiting": null,
+        "peak_resident_slots": null,
+        "sample_count": 0,
+        "samples": []
+      },
+      {
+        "peak_processing": null,
+        "peak_waiting": null,
+        "peak_resident_slots": null,
+        "sample_count": 0,
+        "samples": []
+      }
+    ]
+  },
+  "c1_128k": true,
+  "c2_resident": null,
+  "c2_active": null,
+  "queue_only": null,
+  "peak_vram_gpu0_mib": 10891.0,
+  "peak_vram_gpu1_mib": 10769.0,
+  "gpu_peak_probe": {
+    "source": "nvidia-smi sampled during measured request window",
+    "interval_s": 0.5,
+    "samples": 368,
+    "peak_memory_mib": {
+      "0": 10891.0,
+      "1": 10769.0
+    },
+    "error": null,
+    "limitation": "sampled peaks may miss between-sample transients"
+  },
+  "verdict": "PASS_C1_128K",
+  "concurrency_verdict": null,
+  "mechanical_output_verdict": "PASS"
+}
