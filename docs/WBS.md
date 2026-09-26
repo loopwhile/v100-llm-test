@@ -879,6 +879,112 @@ recipe 상태는 다음처럼 구분한다.
 WBS 5 완료 후 사용자가 필요에 따라 recipe를 직접 선택한다.
 이 저장소에서는 별도의 배포/production selection phase를 수행하지 않는다.
 
+## 6. CPU+RAM 전용 dual-resident 128K 검증 [TODO]
+
+V100을 추론 경로에서 완전히 제외하고, P520의 CPU+RAM만으로 두 개의 llama.cpp server를 **동시에 기동/resident** 상태로 유지한 뒤 128K 단일-agent 요청을 **한 번에 하나씩 직렬 실행**한다.
+
+목적은 GPU 서빙의 대체 성능을 주장하는 것이 아니라, 현재 호스트의 64GB RAM 안에서 두 MoE GGUF + Q8_0 KV 128K server를 동시에 상주시킬 수 있는지와, peer server가 idle resident인 상태에서 각 모델의 실제 128K capacity/correctness 및 CPU-only 처리 성능을 fresh evidence로 확인하는 것이다.
+
+### 6.1 고정 하드웨어 / 공통 런타임 계약 [TODO]
+
+호스트:
+- CPU: Intel Xeon W-2135.
+- RAM: DDR4-2400 16GB ×4, 4-channel, 총 64GB.
+- GPU: Tesla V100은 본 Phase에서 사용하지 않는다.
+
+공통 llama.cpp 조건:
+- CPU-only: `--n-gpu-layers 0`. measured run 동안 GPU VRAM allocation/offload가 없어야 한다.
+- context: `--ctx-size 131072`.
+- concurrency: server별 `--parallel 1`; measured request는 전체 시스템에서 동시에 1개만 허용한다.
+- KV: K/V 모두 `Q8_0`.
+- attention: `-fa auto`.
+- speculative: `ngram-simple`만 사용한다.
+- MTP / draft model / composite MTP+NGRAM은 사용하지 않는다.
+- 두 server는 서로 다른 port로 기동하고, 두 measured request가 끝날 때까지 모두 종료하지 않는다.
+- CPU thread/batch/ubatch, mmap/mlock 등 본 항목에서 명시하지 않은 runtime parameter는 실행 전 exact command에 고정하고 report에 남긴다. 첫 measured run 이후 성능을 이유로 조용히 변경하지 않는다.
+
+ngram 계약:
+- llama.cpp의 `ngram-simple` 경로를 활성화한다.
+- 이 Phase는 TARGET lane과의 A/B 성능 비교가 아니라 **NGRAM-on 상태의 dual-resident CPU-only 128K feasibility**를 검증한다.
+- draft/accepted token이 적거나 0이어도 capacity/correctness PASS 자체를 무효화하지 않는다. 실제 counters는 그대로 기록한다.
+
+### 6.2 모델 / artifact 계약 [TODO]
+
+#### 6.2.1 Gemma 4 26B-A4B
+- weight quant: `UD-Q6_K`.
+- KV: `Q8_0`.
+- context: 128K.
+- attention: `-fa auto`.
+- speculative: `ngram-simple`.
+- MTP: OFF.
+- measured agent concurrency: 1.
+
+#### 6.2.2 Ornith 1.5 35B-A3B
+- weight quant: `Q4_K_M`.
+- KV: `Q8_0`.
+- context: 128K.
+- attention: `-fa auto`.
+- speculative: `ngram-simple`.
+- MTP: OFF.
+- measured agent concurrency: 1.
+
+두 artifact 모두 measured run 전에 exact repository/revision/path/SHA256을 확정한다. artifact identity가 확정되지 않으면 추정값으로 채우지 않고 preflight를 중단한다.
+
+### 6.3 dual-resident startup gate [TODO]
+
+두 server를 모두 기동한 뒤 inference를 보내기 전에 다음을 확인한다.
+- Gemma server healthy.
+- Ornith server healthy.
+- 두 process가 동시에 resident 상태.
+- GPU offload/VRAM allocation 없음.
+- combined system RAM 사용량, process별 RSS/PSS, free/available memory 기록.
+- swap 사용량 및 major page fault 상태 기록.
+
+64GB physical RAM을 초과한 상태를 swap으로 숨겨서 `PASS`로 처리하지 않는다. 두 모델이 동시에 상주할 수 없거나 한 server 기동이 다른 server의 OOM/process kill을 유발하면 `FAIL_DUAL_RESIDENT_CAPACITY`로 종료한다.
+
+### 6.4 128K 직렬 measured request [TODO]
+
+dual-resident startup gate를 통과한 동일 server pair를 유지한 채 요청은 절대 겹치지 않게 실행한다.
+
+실행 순서:
+1. Gemma 4 26B-A4B server에 128K 단일-agent request 1회.
+2. Gemma request가 완전히 종료되고 post-health를 확인.
+3. Ornith 1.5 35B-A3B server에 128K 단일-agent request 1회.
+4. Ornith request가 완전히 종료되고 두 server post-health를 확인.
+
+가능하면 기존 `workloads/capacity/v1.json`의 128K materialization 규칙을 재사용하고, live tokenizer 기준으로 prompt + output reserve가 131,072 token을 넘지 않도록 한다.
+
+각 모델에서 기록:
+- exact prompt tokens / output tokens.
+- TTFT.
+- prefill tok/s.
+- decode tok/s.
+- end-to-end wall time.
+- ngram draft / accepted counters 및 acceptance ratio.
+- process별 RSS/PSS peak.
+- system used/available RAM peak.
+- swap in/out 및 major faults.
+- CPU utilization / clocks / package power가 수집 가능하면 telemetry로 보존.
+- output integrity.
+- active model request 동안 idle peer server가 계속 healthy/resident였는지.
+
+### 6.5 판정 [TODO]
+
+모델별 `PASS_CPU_128K_DUAL_RESIDENT`는 다음을 모두 요구한다.
+- 두 server simultaneous startup/residency PASS.
+- 해당 모델의 128K request 정상 완료.
+- OOM, process kill, truncation, context overflow, output corruption 없음.
+- request 종료 후 두 server 모두 healthy.
+- measured request 구간에 다른 모델 request가 겹치지 않음.
+- GPU offload 없음.
+- 물리 RAM capacity를 swap-backed eviction으로 대체하지 않음.
+
+한 모델 요청이 실패해도 다른 모델의 결과를 추정하지 않는다. 실패한 exact configuration은 그대로 기록하고 context/quant/KV/MTP/topology를 자동 변경해서 재시도하지 않는다.
+
+최종 report에는 최소한 다음 두 row를 별도로 남긴다.
+- Gemma 4 26B-A4B `UD-Q6_K` / KV `Q8_0` / CPU-only / NGRAM / 128K / peer Ornith resident.
+- Ornith 1.5 35B-A3B `Q4_K_M` / KV `Q8_0` / CPU-only / NGRAM / 128K / peer Gemma resident.
+
 ## 실행 규칙
 - 별도 승인이 없는 한 선언된 configuration당 measured execution은 1회만 수행한다.
 - 실패 후 context, quantization, KV, speculative method, topology를 조용히 변경해서는 안 된다.
