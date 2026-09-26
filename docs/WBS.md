@@ -916,13 +916,19 @@ P520의 CPU+RAM만 사용하는 두 개의 llama.cpp server를 **동시에 기�
 - CPU: Intel Xeon W-2135.
 - RAM: DDR4-2400 16GB ×4, 4-channel, 총 64GB.
 - GPU0/GPU1: 본 Phase의 CPU inference에는 사용하지 않는다. 별도 llama.cpp/vLLM GPU server의 동시 기동·서빙은 허용한다.
+- 기존 V100 GPU serving runtime/container는 변경하지 않고 그대로 유지한다.
 - 호스트의 기존 CPU power limit, governor, clock, BIOS, THP, sysctl 등 전력/시스템 정책은 변경하지 않는다.
 
 CPU llama.cpp runtime:
-- 기존 V100용 runtime과 분리된 **CPU-only Docker image**를 사용해도 된다.
-- CPU host에서 native 최적화 빌드를 사용하고, exact llama.cpp commit/build flags/compiler/image digest를 report에 고정한다.
-- GPU backend/CUDA는 CPU image에 필수 사항이 아니다.
-- BLAS를 사용하는 경우 implementation과 version을 기록하고, BLAS/OpenMP thread 수는 아래 CPU envelope를 넘지 않게 제한한다.
+- WBS 6은 기존 V100용 runtime/container와 분리된 **별도의 CPU-only Docker image를 반드시 사용한다**.
+- CPU image는 **P520 Xeon W-2135 호스트에서 직접 빌드**한다. 다른 CPU 호스트나 범용 CI에서 만든 native image를 가져와 사용하지 않는다.
+- llama.cpp CPU backend는 `GGML_NATIVE=ON`으로 W-2135의 실제 ISA에 맞춰 native compile한다.
+- CPU image에는 CUDA backend를 포함하지 않는다: `GGML_CUDA=OFF`.
+- native 단일 CPU backend를 사용하며, portable multi-ISA 배포를 위한 `GGML_BACKEND_DL=ON` / `GGML_CPU_ALL_VARIANTS=ON` 조합을 이 Phase의 CPU image에 사용하지 않는다.
+- exact llama.cpp commit, compiler/version, CMake build flags, BLAS implementation/version, Docker image tag/digest를 measured run 전에 고정하고 report에 기록한다.
+- BLAS를 사용하는 경우 BLAS/OpenMP thread 수는 아래 CPU envelope를 넘지 않게 제한한다.
+- CPU-only Docker container에는 GPU device를 전달하지 않는다. runtime에서도 `--n-gpu-layers 0`을 명시해 CPU inference lane과 V100 serving lane을 분리한다.
+- CPU build 자체는 W-2135에 최대한 최적화하되, runtime CPU/RAM 사용량은 GPU0/GPU1 serving과의 공존을 위해 6.2의 conservative resource envelope로 제한한다.
 
 공통 llama.cpp 조건:
 - CPU-only: `--n-gpu-layers 0`. 이 두 CPU server 자체는 GPU VRAM allocation/offload를 해서는 안 된다.
