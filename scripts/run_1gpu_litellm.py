@@ -499,9 +499,8 @@ def main():
     parser.add_argument(
         "--lane",
         choices=["TARGET", "NGRAM", "MTP", "MTP_NGRAM", "STOCK"],
-        required=True,
     )
-    parser.add_argument("--concurrency", type=int, choices=[1, 2], required=True)
+    parser.add_argument("--concurrency", type=int, choices=[1, 2])
     parser.add_argument("--port", type=int, default=18080)
     parser.add_argument("--gateway-port", type=int, default=18079)
     parser.add_argument("--worker", type=Path)
@@ -512,8 +511,8 @@ def main():
     else:
         if args.retry_of and not args.retry_evidence:
             parser.error("--retry-of requires --retry-evidence")
-        if not args.experiment_id:
-            parser.error("--experiment-id is required")
+        if not args.experiment_id or not args.lane or args.concurrency is None:
+            parser.error("--experiment-id, --lane, and --concurrency are required")
         if not re.fullmatch(r"EXP-V100-[A-Z0-9][A-Z0-9-]*", args.experiment_id):
             parser.error("invalid experiment ID")
         raise SystemExit(run(args))
