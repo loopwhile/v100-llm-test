@@ -674,9 +674,12 @@ Shared TP2와 다음 항목을 비교한다.
 - Server 0: GPU0 TP1 (`127.0.0.1:18080`), Server 1: GPU1 TP1 (`127.0.0.1:18081`), Gateway: LiteLLM v1.101.0 (`127.0.0.1:18079`).
 - 실행 runner: `scripts/run_1gpu_litellm.py`.
 
-#### 4.2.1 STOCK MTP1 [TODO]
+#### 4.2.1 STOCK MTP1 [CLOSED — FAIL_STARTUP / 1GPU 128K CAPACITY LIMIT]
 - C1: `EXP-V100-ORN15-9B-1CAT-F16-MTP1-1GPU2-C1-128K-20260926-001` — `SKIPPED` (사용자 승인: 4.1.1 TARGET C1에서 단일 요청 LiteLLM 경로 검증 완료 후 C2로 직행)
-- C2: `EXP-V100-ORN15-9B-1CAT-F16-MTP1-1GPU2-C2-128K-20260926-001` — `TODO`
+- C2: `EXP-V100-ORN15-9B-1CAT-F16-MTP1-1GPU2-C2-128K-20260926-001` — **`FAIL_STARTUP`**
+  - 실패 원인: 1Cat-vLLM 1.5.0에서 단일 V100 16GB TP1으로 Ornith 1.5 9B MTP1 서빙 시, 128K(131,072) 컨텍스트 1개를 수용하기 위한 최소 KV 캐시 메모리(4.68 GiB)가 가용 KV 캐시 메모리(2.61 GiB)를 초과하여 기동 실패 (`ValueError: To serve at least one request with the model's max seq len (131072), (4.68 GiB KV cache is needed, which is larger than the available KV cache memory (2.61 GiB). Based on the available memory, the estimated maximum model length is 71280.`).
+  - TP2 Shared(WBS 3.2.2)에서는 2개 GPU로 KV 캐시가 분할되어 128K C2 수용이 가능했으나, 1GPU 독립 토폴로지(TP1)에서는 단일 V100 16GB 한도로 인해 128K 컨텍스트 서빙이 물리적으로 불가능함이 확정됨 (최대 수용 한도 ~71.2K).
+  - 프로젝트 불변 규칙에 따라 설정을 임의 변경하는 자동 재시도는 수행하지 않고 closed 처리함.
 
 ## 5. 성능 최적화 및 모델별 최종 레시피 확정 [TODO]
 
