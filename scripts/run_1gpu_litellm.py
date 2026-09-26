@@ -374,6 +374,17 @@ def run_locked(args):
             backend_endpoints=plan["backend_endpoints"],
         )
 
+        checkpoint(raw, "running", step="dual_backend_routing_preflight")
+        preflight_res = adapter.routing_preflight(config["model"], timeout_s=60)
+        h.save(runtime / "routing-preflight.json", preflight_res)
+        checkpoint(
+            raw,
+            "running",
+            step="routing_preflight_passed",
+            preflight_bases=preflight_res.get("bases"),
+            preflight_ids=preflight_res.get("deployment_ids"),
+        )
+
         with (runtime / "measurement.log").open("x") as log:
             child = subprocess.run(
                 [sys.executable, __file__, "--worker", str(raw)],

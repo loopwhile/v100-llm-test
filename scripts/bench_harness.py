@@ -237,6 +237,55 @@ class LiteLLMGatewayAdapter:
   resident=True if active is True else None
   queue_only=True if len(completed)==2 and active is False else (False if active is True else None)
   return {"source":"LiteLLM single gateway endpoint + backend runtime probes + deployment response headers","resident":resident,"active_overlap":active,"queue_only":queue_only,"gateway_distinct_deployment_ids":distinct_ids,"gateway_distinct_api_bases":distinct_bases,"gateway_deployment_ids":ids,"gateway_api_bases":bases,"backend_active_in_common_decode_window":backend_active,"children":children}
+ def routing_preflight(self,model_name,timeout_s=60):
+  payload={"model":model_name,"messages":[{"role":"user","content":"routing preflight ping"}],"max_tokens":16,"stream":True}
+  barrier=RoutingSettledAdmissionBarrier(self.backends,timeout_s=timeout_s)
+  def call_worker():
+   barrier.wait(timeout=30)
+   return self.stream_complete(payload)
+  with ThreadPoolExecutor(max_workers=2) as pool:
+   f0=pool.submit(call_worker)
+   f1=pool.submit(call_worker)
+   barrier.verify_dual_active(timeout=timeout_s)
+   res0,t0=f0.result(timeout=timeout_s)
+   res1,t1=f1.result(timeout=timeout_s)
+  b0=t0.get("response_headers",{}).get("x-litellm-model-api-base")
+  b1=t1.get("response_headers",{}).get("x-litellm-model-api-base")
+  id0=t0.get("response_headers",{}).get("x-litellm-model-id")
+  id1=t1.get("response_headers",{}).get("x-litellm-model-id")
+  distinct_bases=bool(b0 and b1 and b0!=b1)
+  distinct_ids=bool(id0 and id1 and id0!=id1)
+  if not (distinct_bases or distinct_ids):
+   raise RuntimeError(f"Dual-backend routing preflight failed: distinct bases/ids required (got bases: {b0}, {b1})")
+  return {"pass":True,"distinct_bases":distinct_bases,"distinct_ids":distinct_ids,"bases":[b0,b1],"deployment_ids":[id0,id1],"at_utc":utc()}
+
+class RoutingSettledAdmissionBarrier:
+ def __init__(self,backends,timeout_s=60):
+  self.backends=backends;self.timeout_s=timeout_s;self._lock=threading.Lock();self._idx=0
+  self._first_active=threading.Event();self.both_active=threading.Event()
+ def wait(self,timeout=30):
+  with self._lock:
+   idx=self._idx;self._idx+=1
+  if idx==0:return
+  deadline=time.monotonic()+(timeout or self.timeout_s)
+  while time.monotonic()<deadline:
+   for b in self.backends:
+    sample=b._probe_once() if hasattr(b,"_probe_once") else {"processing":1}
+    if (sample.get("processing") or 0)>=1:
+     self._first_active.set();break
+   if self._first_active.is_set():break
+   time.sleep(.05)
+  if not self._first_active.is_set():
+   raise TimeoutError("Routing-settled admission timed out: first request was not observed processing on any backend")
+ def verify_dual_active(self,timeout=60):
+  deadline=time.monotonic()+timeout
+  while time.monotonic()<deadline:
+   p0=((self.backends[0]._probe_once().get("processing") or 0)>=1) if hasattr(self.backends[0],"_probe_once") else True
+   p1=((self.backends[1]._probe_once().get("processing") or 0)>=1) if hasattr(self.backends[1],"_probe_once") else True
+   if p0 and p1:
+    self.both_active.set();return True
+   time.sleep(.1)
+  raise RuntimeError("Dual-backend routing admission verification failed: both backends did not reach processing >= 1 concurrently")
 
 def make_adapter(endpoints,runtime,timeout_s=1800,gateway_endpoint=None):
  adapters=[HTTPAdapter(x,runtime,timeout_s) for x in endpoints]
@@ -354,13 +403,19 @@ def run_batch(output,config,workload,adapter):
  if any(errors):
   for r,e in zip(records,errors):r.update(status="not_submitted",verdict="FAIL_STARTUP" if not before.get("healthy") else "FAIL_CAPACITY",error=e)
  else:
-  barrier=threading.Barrier(config["concurrency"]);origin=time.monotonic()
+  if config.get("topology")=="1gpu-x2-independent" and config.get("concurrency")==2 and isinstance(adapter,LiteLLMGatewayAdapter):
+   barrier=RoutingSettledAdmissionBarrier(adapter.backends,timeout_s=60)
+  else:
+   barrier=threading.Barrier(config["concurrency"])
+  origin=time.monotonic()
   try:
    if config["concurrency"]==2 and hasattr(adapter,"start_overlap_probe"):adapter.start_overlap_probe(2)
    gpu.start()
    with ThreadPoolExecutor(max_workers=config["concurrency"]) as pool:
     # Workers own their copies; only this collector mutates/persists the ordered snapshot.
     pending={pool.submit(worker,ra,barrier,origin,dict(r),p,c,rc):i for i,(ra,r,p,c,rc) in enumerate(zip(request_adapters,records,payloads,selected,receipts))}
+    if isinstance(barrier,RoutingSettledAdmissionBarrier):
+     barrier.verify_dual_active(timeout=60)
     for finished in as_completed(pending):
      records[pending[finished]]=finished.result()
      save(output/"requests.json",records)

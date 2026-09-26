@@ -109,6 +109,26 @@ class Ornith1GPUx2RunnerTests(unittest.TestCase):
             self.assertEqual(progress["phase"], "results_saved")
             self.assertEqual(progress["verdict"], "PASS_C1_128K")
 
+    def test_preflight_saved_to_runtime(self):
+        with tempfile.TemporaryDirectory() as td:
+            raw = Path(td)
+            runtime = raw / "runtime"
+            runtime.mkdir()
+            mock_adapter = Mock()
+            mock_adapter.routing_preflight.return_value = {
+                "pass": True,
+                "distinct_bases": True,
+                "distinct_ids": True,
+                "bases": ["http://127.0.0.1:18080/v1", "http://127.0.0.1:18081/v1"],
+                "deployment_ids": ["backend-0", "backend-1"],
+            }
+            res = mock_adapter.routing_preflight("ornith-1.5-9b", timeout_s=60)
+            runner.h.save(runtime / "routing-preflight.json", res)
+            self.assertTrue((runtime / "routing-preflight.json").exists())
+            saved = runner.json.loads((runtime / "routing-preflight.json").read_text())
+            self.assertTrue(saved["pass"])
+            self.assertEqual(len(saved["bases"]), 2)
+
 
 if __name__ == "__main__":
     unittest.main()

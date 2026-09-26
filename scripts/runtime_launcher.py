@@ -36,8 +36,8 @@ def spec(lanes,lane):
 def litellm_gateway(lock,m,backend_endpoints,port):
  rt=lock["runtimes"]["LiteLLM"];model=m["model_id"]
  deployments=[]
- for endpoint in backend_endpoints:
-  deployments.append({"model_name":model,"litellm_params":{"model":"openai/"+model,"api_base":endpoint+"/v1","api_key":"local-no-key","max_parallel_requests":1,"timeout":1800,"stream_timeout":1800,"max_retries":0}})
+ for i,endpoint in enumerate(backend_endpoints):
+  deployments.append({"model_name":model,"model_info":{"id":f"backend-{i}"},"litellm_params":{"model":"openai/"+model,"api_base":endpoint+"/v1","api_key":"local-no-key","max_parallel_requests":1,"timeout":1800,"stream_timeout":1800,"max_retries":0}})
  cfg={"model_list":deployments,"router_settings":{"routing_strategy":"least-busy","num_retries":0}}
  cmd=["docker","run","--rm","--pull=never","--name","v100-test-litellm","--label","project=v100-llm-test","--network","host","-v","{LITELLM_CONFIG}:/app/config.yaml:ro",rt["image"],"--config","/app/config.yaml","--host","127.0.0.1","--port",str(port)]
  return {"runtime":"LiteLLM","runtime_revision":f"{rt['version']} / {rt['commit']}","image":rt["image"],"endpoint":f"http://127.0.0.1:{port}","routing_strategy":"least-busy","backend_max_parallel_requests":1,"config":cfg,"command":cmd}

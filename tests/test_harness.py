@@ -134,4 +134,55 @@ class HarnessTests(unittest.TestCase):
   records=json.loads((out/"requests.json").read_text()); records[0]["ttft_ms"]=500.0; records[0]["decode_tps"]=25.0; (out/"requests.json").write_text(json.dumps(records))
   path=report.publish(self.root,out,overwrite=True); self.assertTrue((self.root/path).exists()); content=(self.root/path).read_text()
   self.assertIn("TTFT: 500.0",content); self.assertIn("Mean request decode tok/s: 25.0",content); self.assertIn("Peak VRAM:",content); self.assertNotIn("Gateway runtime:",content); self.assertNotIn("C2 resident:",content)
+ def test_routing_settled_admission_barrier_ordering(self):
+  b0=Mock();b1=Mock()
+  b0_processing=[0,1,1]
+  b1_processing=[0,0,1]
+  b0._probe_once=lambda: {"processing": b0_processing.pop(0) if b0_processing else 1}
+  b1._probe_once=lambda: {"processing": b1_processing.pop(0) if b1_processing else 1}
+  barrier=h.RoutingSettledAdmissionBarrier([b0,b1],timeout_s=5)
+  events=[]
+  def w(idx):
+   barrier.wait(timeout=5)
+   events.append(f"w{idx}")
+  t0=threading.Thread(target=w,args=(0,))
+  t1=threading.Thread(target=w,args=(1,))
+  t0.start();t1.start()
+  t0.join(2);t1.join(2)
+  self.assertEqual(events,["w0","w1"])
+  self.assertTrue(barrier.verify_dual_active(timeout=5))
+ def test_routing_settled_admission_barrier_timeout(self):
+  b0=Mock();b1=Mock()
+  b0._probe_once=lambda: {"processing": 0}
+  b1._probe_once=lambda: {"processing": 0}
+  barrier=h.RoutingSettledAdmissionBarrier([b0,b1],timeout_s=0.1)
+  events=[]
+  def w(idx):
+   try:barrier.wait(timeout=0.1);events.append("ok")
+   except TimeoutError:events.append("timeout")
+  t0=threading.Thread(target=w,args=(0,))
+  t1=threading.Thread(target=w,args=(1,))
+  t0.start();t1.start()
+  t0.join(1);t1.join(1)
+  self.assertEqual(events,["ok","timeout"])
+ def test_routing_preflight_success_and_failure(self):
+  class MockGw:
+   def __init__(self,distinct=True):
+    self.call_count=0;self.distinct=distinct
+   def stream_complete(self,payload):
+    idx=self.call_count;self.call_count+=1
+    dep_id=f"backend-{idx}" if self.distinct else "backend-0"
+    base=f"http://127.0.0.1:1808{idx}/v1" if self.distinct else "http://127.0.0.1:18080/v1"
+    headers={"x-litellm-model-id":dep_id,"x-litellm-model-api-base":base}
+    return {"choices":[{"message":{"content":"ok"}}]},{"response_headers":headers}
+  b0=Mock();b1=Mock()
+  b0._probe_once=lambda: {"processing": 1}
+  b1._probe_once=lambda: {"processing": 1}
+  adapter_ok=h.LiteLLMGatewayAdapter(MockGw(distinct=True),[b0,b1])
+  res=adapter_ok.routing_preflight("test-model",timeout_s=5)
+  self.assertTrue(res["pass"])
+  self.assertTrue(res["distinct_bases"])
+  adapter_fail=h.LiteLLMGatewayAdapter(MockGw(distinct=False),[b0,b1])
+  with self.assertRaisesRegex(RuntimeError,"Dual-backend routing preflight failed"):
+   adapter_fail.routing_preflight("test-model",timeout_s=5)
 if __name__=="__main__": unittest.main()
