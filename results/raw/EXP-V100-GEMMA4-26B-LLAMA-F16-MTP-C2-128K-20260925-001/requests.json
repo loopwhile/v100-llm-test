@@ -1,0 +1,110 @@
+[
+  {
+    "request_id": "project-a",
+    "project_id": "A",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "5830d5b512cb7f7be3adf84cf59663bb8edc76935100138b8c3f978f253d9c95",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.013639118999890343,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "# Engineering Report: Project A Transactional Storage Defect\n\n## 1. Root Cause\nThe defect is located in the `Transaction.commit` method within `Project A / storage/transaction.py`. The faulty operation is the placement of the `self.pending.clear()` call inside the `for` loop that iterates over the staged writes. \n\nBy calling `.clear()` on the `self.pending` list during the first iteration of the loop, the transaction prematurely empties its buffer. Consequently, if a transaction has staged multiple writes, only the first write is successfully committed to the `PageIndex`, while all subsequent staged writes are lost because the loop is iterating over an empty list (or the iterator is invalidated/exhausted).\n\n## 2. Failure Trace\nConsider a scenario where a user intends to update two different keys in a single atomic transaction:\n\n1.  **Initialization**: An `PageIndex` instance is created. A `Transaction` instance is initialized with that index.\n2.  **Staging Write 1**: The user calls `tx.stage(\"key_1\", 100)`. The `self.pending` list now contains `[(\"key_1\", 100)]`.\n3.  **Staging Write 2**: The user calls `tx.stage(\"key_2\", 200)`. The `self.pending` list now contains `[(\"key_1\", 100), (\"key_2\", 200)]`.\n4.  **Commit Execution**:\n    *   The `commit()` method begins iterating over `self.pending`.\n    *   **Iteration 1**: The loop retrieves `(\"key_1\", 100)`. It calls `self.index.put(\"key_1\", 100)`. The index is updated.\n    *   **The Defect**: Immediately after the first `put`, the code executes `self.pending.clear()`. The list is now empty: `[]`.\n    *   **Iteration 2**: The loop attempts to proceed to the next item. However, since the list was cleared, the loop terminates immediately.\n5.  **Final State**: The `PageIndex` contains `{\"key_1\": 100}`, but `\"key_2\": 200` is missing. The atomicity of the transaction is broken, and data loss has occurred.\n\n## 3. Reproduction\nThe following pytest-style test demonstrates the failure. A passing test would expect both keys to exist in the index.\n\n```python\nimport pytest\n\n# Assuming the classes are in the namespace\nclass PageIndex:\n    def __init__(self):\n        self.pages = {}\n        self.version = 0\n    def put(self, key, page_id):\n        self.pages[key] = page_id\n        self.version += 1\n\nclass Transaction:\n    def __init__(self, index):\n        self.index = index\n        self.pending = []\n    def stage(self, key, page_id):\n        self.pending.append((key, page_id))\n    def commit(self):\n        for key, page_id in self.pending:\n            self.index.put(key, page_id)\n            self.pending.clear()  # THE DEFECT\n\ndef test_transaction_multi_write_atomicity_failure():\n    index = PageIndex()\n    tx = Transaction(index)\n    \n    # Stage two distinct writes\n    tx.stage(\"alpha\", 10)\n    tx.stage(\"beta\", 20)\n    \n    # Execute commit\n    tx.commit()\n    \n    # This assertion will FAIL in the current implementation\n    # because 'beta' is cleared before it can be processed.\n    assert \"alpha\" in index.pages, \"First write should be persisted\"\n    assert \"beta\" in index.pages, \"Second write should be persisted\"\n    assert index.pages == {\"alpha\": 10, \"beta\": 20}\n    assert len(tx.pending) == 0\n```\n\n## 4. Minimal Fix\nTo resolve the defect, the `self.pending.clear()` operation must be moved outside the scope of the `for` loop so that it only executes after all staged items have been processed.\n\n```python\n# Project A / storage/transaction.py\n\nclass Transaction:\n    def __init__(self, index):\n        self.index = index\n        self.pending = []\n\n    def stage(self, key, page_id):\n        self.pending.append((key, page_id))\n\n    def commit(self):\n        for key, page_id in self.pending:\n            self.index.put(key, page_id)\n        # Move clear() outside the loop to ensure all items are processed\n        self.pending.clear()\n```"
+          }
+        }
+      ],
+      "usage": {
+        "completion_tokens": 1066,
+        "prompt_tokens": 129022,
+        "total_tokens": 130088,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 129022,
+        "prompt_ms": 250690.594,
+        "prompt_per_token_ms": 1.9430065725225156,
+        "prompt_per_second": 514.6662981699266,
+        "predicted_n": 1066,
+        "predicted_ms": 421082.083,
+        "predicted_per_token_ms": 395.3822375586854,
+        "predicted_per_second": 2.5291980898650586,
+        "draft_n": 1160,
+        "draft_n_accepted": 777
+      }
+    },
+    "actual_output_tokens": 1066,
+    "post_template_prompt_tokens": 129022,
+    "ttft_ms": 250930.08671200005,
+    "first_abs": 3951.750858818,
+    "end_abs": 4372.838364491,
+    "wall_s": 672.0175923850002,
+    "prefill_tps": 514.6662981699266,
+    "decode_tps": 2.5291980898650586,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 672.072093327
+  },
+  {
+    "request_id": "project-b",
+    "project_id": "B",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "42c0ea24ad25d2ee4ca2157f6d8287ef66be57a482c5fc595d9bf35416479d3f",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.003162916999826848,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "# Engineering Report: Project B Concurrency Defect\n\n## 1. Root Cause\nThe defect is a **race condition** located in the `JobQueue.pop` method within `scheduler/queue.py`. \n\nThe function performs a check for the existence of items in the heap (`if not self._heap:`) and then executes an `await asyncio.sleep(0)`. Because `asyncio.sleep(0)` is an explicit yield point in a cooperative multitasking environment, the execution of the `pop` coroutine is suspended. During this suspension, the event loop can switch context to another pending task—in this case, a second `Worker` attempting to call `pop`. \n\nIf the queue contains exactly one job, both workers will pass the `if not self._heap` check before either reaches the `heapq.heappop` line. The first worker to resume will successfully pop the job, but the second worker will resume and attempt to call `heappop` on an empty heap, resulting in an `IndexError`.\n\n## 2. Failure Trace\nConsider a scenario with one job in the queue and two workers (`W1`, `W2`) attempting to pop:\n\n1.  **Initial State**: `JobQueue._heap = [(5, 1, <job_obj>)]`\n2.  **W1 calls `pop()`**: Checks `if not self._heap`. The heap is not empty.\n3.  **W1 executes `await asyncio.sleep(0)`**: W1 is suspended; control returns to the event loop.\n4.  **W2 calls `pop()`**: Checks `if not self._heap`. The heap still contains the job.\n5.  **W2 executes `await asyncio.sleep(0)`**: W2 is suspended; control returns to the event loop.\n6.  **Event Loop resumes W1**: W1 executes `heapq.heappop(self._heap)`. The heap is now empty. W1 returns `<job_obj>`.\n7.  **Event Loop resumes W2**: W2 executes `heapq.heappop(self._heap)`.\n8.  **CRASH**: `IndexError: index out of range` (or `IndexError: pop from empty list`) is raised in W2.\n\n## 3. Reproduction\nThe following test uses `pytest-asyncio` to demonstrate the race condition.\n\n```python\nimport asyncio\nimport pytest\nimport heapq\n\n# The defective implementation\nclass JobQueue:\n    def __init__(self):\n        self._heap = []\n        self._sequence = 0\n\n    def push(self0, priority, job):\n        self0._sequence += 1\n        heapq.heappush(self0._heap, (priority, self0._sequence, job))\n\n    async def pop(self):\n        if not self._heap:\n            return None\n        await asyncio.sleep(0)  # The yield point causing the race\n        return heapq.heappop(self._heap)[2]\n\nclass Worker:\n    def __init__(self, queue):\n        self.queue = queue\n    async def run_once(self):\n        job = await self.queue.pop()\n        return await job() if job else None\n\n@pytest.mark.asyncio\nasync def test_reproduce_pop_race_condition():\n    queue = JobQueue()\n    async def job(): return \"success\"\n    \n    queue.push(1, job)\n    \n    w1 = Worker(queue)\n    w2 = Worker(queue)\n    \n    # We expect one to succeed and one to return None, \n    # but the current implementation raises IndexError\n    results = await asyncio.gather(w1.run_once(), w2.run_once(), return_exceptions=True)\n    \n    # Check if any worker raised an IndexError\n    errors = [r for r in results if isinstance(r, IndexError)]\n    assert len(errors) > 0, \"Failed to reproduce IndexError; race condition did not trigger.\"\n```\n\n## 4. Minimal Fix\nThe fix requires ensuring that the check for emptiness and the removal of the item are performed atomically relative to the event loop. We must remove the `await` point between the check and the mutation.\n\n```python\n# Project B / scheduler/queue.py (FIXED)\n\n    async def pop(self):\n        if not self._heap:\n            return None\n        # Removed await asyncio.sleep(0) to ensure atomicity \n        # of the check and the pop operation.\n        return heapq.heappop(self._heap)[2]\n```"
+          }
+        }
+      ],
+      "usage": {
+        "completion_tokens": 1016,
+        "prompt_tokens": 129024,
+        "total_tokens": 130040,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 129024,
+        "prompt_ms": 666313.976,
+        "prompt_per_token_ms": 5.164263826884921,
+        "prompt_per_second": 193.63844170664672,
+        "predicted_n": 1016,
+        "predicted_ms": 31050.69,
+        "predicted_per_token_ms": 30.591812807881773,
+        "predicted_per_second": 32.688484539312974,
+        "draft_n": 1112,
+        "draft_n_accepted": 738
+      }
+    },
+    "actual_output_tokens": 1016,
+    "post_template_prompt_tokens": 129024,
+    "ttft_ms": 666525.4550280005,
+    "first_abs": 4367.33599809,
+    "end_abs": 4398.392180125,
+    "wall_s": 697.581637063,
+    "prefill_tps": 193.63844170664672,
+    "decode_tps": 32.688484539312974,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 697.6227433179997
+  }
+]

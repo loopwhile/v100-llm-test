@@ -54,8 +54,9 @@
   - 3.1.4 Gemma4 26B-A4B [IN PROGRESS]:
     - TARGET (`EXP-V100-GEMMA4-26B-LLAMA-F16-TARGET-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 447.02s, Aggregate decode 4.77 tok/s, Batch Wall 667.36s; Project A 924 tok PASS, Project B 1068 tok PASS; Peak VRAM 10,039 MiB GPU0 / 10,537 MiB GPU1).
     - NGRAM (`EXP-V100-GEMMA4-26B-LLAMA-F16-NGRAM-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 457.15s, Aggregate decode 4.86 tok/s, Batch Wall 689.16s; Project A 1066 tok PASS, Project B 1055 tok PASS; Peak VRAM 10,039 MiB GPU0 / 10,607 MiB GPU1; draft 527/186 35.3% A, 528/141 26.7% B).
-- Current status: WBS 3.1.4.2 Gemma4 NGRAM 완료 (`PASS_C2_ACTIVE`), 3.1.4.3 MTP 예정.
-- Next task: WBS 3.1.4.3 Gemma4 MTP 실행 (`EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C2-128K-20260925-001`).
+    - MTP (`EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 458.73s, Aggregate decode 4.66 tok/s, Batch Wall 697.62s; Project A 1066 tok PASS, Project B 1016 tok PASS; Peak VRAM 10,345 MiB GPU0 / 10,981 MiB GPU1; draft 1160/777 67.0% A, 1112/738 66.4% B, overall 66.7%).
+- Current status: WBS 3.1.4.3 Gemma4 MTP 완료 (`PASS_C2_ACTIVE`), 3.1.4.4 MTP_NGRAM 예정.
+- Next task: WBS 3.1.4.4 Gemma4 MTP_NGRAM 실행 (`EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-NGRAM-C2-128K-20260925-001`) 및 WBS 3.1 종결.
 
 ## Root-Cause Diagnostic: Qwen3.8-27B 1Cat-vLLM 128K Realistic Workload (2026-09-25)
 - Purpose: Distinguish whether Qwen3.8 128K repetition collapse is artifact of synthetic repetition-heavy workload (1,333 duplicate sections) or general 1Cat-vLLM 128K path issue.

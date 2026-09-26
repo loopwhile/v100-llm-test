@@ -500,7 +500,14 @@ WBS 3 authoritative workload는 `workloads/concurrency/v2.json`이다.
   - Output analysis:
     - Project A: 1,066 tokens 생성, `Transaction.commit` 루프 내 `pending.clear()` 결함 분석 및 수정안 제시 (PASS).
     - Project B: 1,055 tokens 생성, `JobQueue.pop` 비원자적 race condition 결함 분석 및 수정안 제시 (PASS).
-- MTP: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C2-128K-20260925-001` [TODO]
+- MTP: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (`peak_processing: 2.0`, `peak_waiting: 0.0`). 2× V100 16GB TP2 환경에서 smart drafter(`mtp-gemma-4-26B-A4B-it.gguf`, `CUDA0,CUDA1`) 활성 상태로 2개 독립 128K 세션 동시 상주 및 병렬 디코드 완벽 통과.
+  - TTFT (Batch Mean): 458.73s, Prefill 354.15 tok/s, Mean Decode 17.61 tok/s, Aggregate Decode 4.66 tok/s, End-to-End Output 2.98 tok/s, Batch Wall 697.62s (~11.63분).
+  - MTP Speculative 통계: Project A (draft 1,160, accepted 777, **66.98%**), Project B (draft 1,112, accepted 738, **66.37%**; 전체 수락률 **66.68%**).
+  - Peak VRAM: GPU0 10,345 MiB / GPU1 10,981 MiB (Dual draft 로딩에도 16GB 한도 내 여유 확보).
+  - Output analysis:
+    - Project A: 1,066 tokens 생성, `Transaction.commit` 루프 내 `pending.clear()` 결함 분석 및 수정안 제시 (PASS).
+    - Project B: 1,016 tokens 생성, `JobQueue.pop` 비원자적 race condition 결함 분석 및 수정안 제시 (PASS).
 - MTP_NGRAM: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-NGRAM-C2-128K-20260925-001` [TODO]
 
 ### 3.2 Shared TP2 1Cat-vLLM STOCK [TODO — v2 revalidation]
