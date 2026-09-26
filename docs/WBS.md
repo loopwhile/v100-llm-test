@@ -484,7 +484,7 @@ WBS 3 authoritative workload는 `workloads/concurrency/v2.json`이다.
 #### 3.1.4 Gemma4 26B-A4B [DONE]
 - artifact: `UD-Q4_K_XL`.
 - KV: `FP16`.
-- 실행 lane: `TARGET`, `NGRAM`, corrected `MTP`, corrected `MTP_NGRAM`; MTP는 validated `CUDA0,CUDA1` draft contract 유지.
+- 실행 lane: `TARGET`, `NGRAM`, corrected `MTP`, corrected `MTP_NGRAM`; MTP는 validated `CUDA0,CUDA1` draft contract 유지. (참고: 실험 ID의 `20260925` 날짜 표기는 WBS 3 v2 사전 계획 ID 기준이며, 실제 호스트 측정 실행 및 완료 일시는 2026-09-26 UTC임)
 - TARGET: `EXP-V100-GEMMA4-26B-LLAMA-F16-TARGET-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
   - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (`peak_processing: 2.0`, `peak_waiting: 0.0`). 2× V100 16GB TP2 환경에서 FP16 KV 캐시로 2개 독립 128K 세션 동시 상주 및 병렬 디코드 완벽 통과.
   - TTFT (Batch Mean): 447.02s, Prefill 359.05 tok/s, Mean Decode 21.66 tok/s, Aggregate Decode 4.77 tok/s, End-to-End Output 2.98 tok/s, Batch Wall 667.36s (~11.12분).
@@ -507,6 +507,7 @@ WBS 3 authoritative workload는 `workloads/concurrency/v2.json`이다.
   - Peak VRAM: GPU0 10,345 MiB / GPU1 10,981 MiB (Dual draft 로딩에도 16GB 한도 내 여유 확보).
   - Output analysis:
     - Project A: 1,066 tokens 생성, `Transaction.commit` 루프 내 `pending.clear()` 결함 분석 및 수정안 제시 (PASS).
+    - Project B: 1,016 tokens 생성, `JobQueue.pop` 비원자적 `await asyncio.sleep(0)` race condition 결함 분석 및 수정안 제시 (PASS).
 - MTP_NGRAM: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-NGRAM-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
   - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (`peak_processing: 2.0`, `peak_waiting: 0.0`). 2× V100 16GB TP2 환경에서 composite drafter(`mtp-gemma-4-26B-A4B-it.gguf` + `ngram-simple`) 활성 상태로 2개 독립 128K 세션 동시 상주 및 병렬 디코드 완벽 통과.
   - TTFT (Batch Mean): 462.43s, Prefill 352.54 tok/s, Mean Decode 17.96 tok/s, Aggregate Decode 4.59 tok/s, End-to-End Output 2.95 tok/s, Batch Wall 703.74s (~11.73분).
