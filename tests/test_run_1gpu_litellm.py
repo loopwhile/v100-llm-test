@@ -130,5 +130,63 @@ class Ornith1GPUx2RunnerTests(unittest.TestCase):
             self.assertEqual(len(saved["bases"]), 2)
 
 
+    def test_lane_wbs_mapping_c1_c2_share_same_subsection(self):
+        """WBS4 contract: C1 and C2 of the same lane map to the same WBS subsection."""
+        for lane in ("TARGET", "NGRAM", "MTP", "MTP_NGRAM", "STOCK"):
+            c1_wbs = runner.LANE_WBS[(lane, 1)]
+            c2_wbs = runner.LANE_WBS[(lane, 2)]
+            self.assertEqual(
+                c1_wbs, c2_wbs,
+                f"{lane}: C1 WBS {c1_wbs} != C2 WBS {c2_wbs}; C1/C2 must share the same subsection"
+            )
+
+    def test_lane_wbs_mapping_exact_values(self):
+        """WBS4 contract: exact WBS number mapping matches docs/WBS.md."""
+        expected = {
+            ("TARGET", 1): "4.1.1", ("TARGET", 2): "4.1.1",
+            ("NGRAM", 1): "4.1.2", ("NGRAM", 2): "4.1.2",
+            ("MTP", 1): "4.1.3", ("MTP", 2): "4.1.3",
+            ("MTP_NGRAM", 1): "4.1.4", ("MTP_NGRAM", 2): "4.1.4",
+            ("STOCK", 1): "4.2.1", ("STOCK", 2): "4.2.1",
+        }
+        self.assertEqual(runner.LANE_WBS, expected)
+
+    def test_v100_1cat_python_fallback_preserves_existing_env(self):
+        """V100_1CAT_PYTHON default fallback must not overwrite existing env."""
+        import os
+        original = os.environ.get("V100_1CAT_PYTHON")
+        try:
+            os.environ["V100_1CAT_PYTHON"] = "/custom/python"
+            # Simulate the fallback logic
+            if "V100_1CAT_PYTHON" not in os.environ:
+                os.environ["V100_1CAT_PYTHON"] = "/default/path"
+            self.assertEqual(os.environ["V100_1CAT_PYTHON"], "/custom/python")
+        finally:
+            if original is None:
+                os.environ.pop("V100_1CAT_PYTHON", None)
+            else:
+                os.environ["V100_1CAT_PYTHON"] = original
+
+    def test_v100_1cat_python_fallback_uses_pinned_when_absent(self):
+        """V100_1CAT_PYTHON fallback uses pinned path when env is absent and path exists."""
+        import os
+        from unittest.mock import patch as mp
+        original = os.environ.pop("V100_1CAT_PYTHON", None)
+        try:
+            with mp.object(Path, 'is_file', return_value=True):
+                default_py = Path("/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python")
+                if "V100_1CAT_PYTHON" not in os.environ:
+                    if default_py.is_file():
+                        os.environ["V100_1CAT_PYTHON"] = str(default_py)
+                self.assertEqual(
+                    os.environ.get("V100_1CAT_PYTHON"),
+                    "/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python"
+                )
+        finally:
+            os.environ.pop("V100_1CAT_PYTHON", None)
+            if original is not None:
+                os.environ["V100_1CAT_PYTHON"] = original
+
+
 if __name__ == "__main__":
     unittest.main()

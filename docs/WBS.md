@@ -564,7 +564,7 @@ WBS 3 authoritative workload는 `workloads/concurrency/v2.json`이다.
 
 runtime concurrency classification은 output PASS 여부와 결합하지 않는다. 한 응답이 FAIL_OUTPUT이어도 sampled evidence가 `peak_waiting>=1`, `peak_processing<=1`이면 scheduler topology는 `QUEUE_ONLY`로 보존한다.
 
-## 4. Ornith 1.5 9B — 1GPU×2 + LiteLLM topology [IN_PROGRESS]
+## 4. Ornith 1.5 9B — 1GPU×2 + LiteLLM topology [DONE]
 
 이 topology는 TP2 shared와 동등한 **정식 테스트 후보**로 취급하며, **LiteLLM까지 포함한 전체 서빙 경로**를 테스트한다.
 프로젝트는 이 topology를 실제 배포 대상으로 선택하지 않으며, 검증 결과와 최종 recipe만 보존한다.
@@ -578,7 +578,19 @@ runtime concurrency classification은 output PASS 여부와 결합하지 않는�
 - backend 직접 호출은 tokenizer/health/diagnostic evidence 수집에만 허용한다.
 - backend tokenizer receipt에 사용한 `chat_template_kwargs`를 LiteLLM 경로에서도 `extra_body`로 동일하게 전달해 실제 measured prompt와 token receipt가 어긋나지 않게 한다.
 
-C1도 실제 운영 구조를 그대로 반영해 Server A/B와 LiteLLM을 모두 실행한 상태에서 단일 request를 gateway로 보낸다. C2는 독립적인 두 request를 같은 gateway endpoint로 동시에 release한다.
+C1도 실제 운영 구조를 그대로 반영해 Server A/B와 LiteLLM을 모두 실행한 상태에서 단일 request를 gateway로 보낸다.
+
+C2 measured admission은 `RoutingSettledAdmissionBarrier`를 사용한다:
+- 두 measured request 모두 동일 LiteLLM gateway endpoint만 사용하며, backend 직접 선택은 금지한다.
+- 첫 번째 request를 gateway에 release한 뒤, runtime probe로 backend 중 하나가 processing >= 1이 된 것을 확인한다.
+- 이후 두 번째 request를 동일 gateway에 release한다.
+- 두 backend가 각각 processing >= 1이 되는 것을 확인해야 measured C2 admission 성공이다.
+- response header의 distinct `x-litellm-model-id` / `x-litellm-model-api-base`와 backend runtime probe를 routing evidence로 보존한다.
+- overlapping decode lifetime을 PASS_C2_ACTIVE 조건으로 유지한다.
+
+> **Caveat**: 최초 simultaneous admission diagnostic에서는 pinned LiteLLM 1.101.0의 least-busy 초기 tie timing으로 인해 두 request가 동일 deployment에 binding될 수 있음을 관찰했다. 따라서 authoritative WBS4 measurement에서는 routing-settled admission을 채택했다. 이 diagnostic을 별도의 measured benchmark 결과로 사용하지 않는다.
+
+WBS4 수치는 topology/capacity evidence이며, 정식 performance ranking은 WBS5 performance workload에서 다시 측정한다.
 
 llama.cpp lane이 1GPU에 적재 가능한 경우 다음을 모두 평가한다.
 - TARGET.
@@ -602,6 +614,8 @@ Shared TP2와 다음 항목을 비교한다.
 - failure isolation.
 - 운영 단순성.
 - raw config/report/CSV에 LiteLLM version/commit/image/routing identity가 보존되는지.
+
+> **Routing Preflight**: 각 C2 측정 직전에 `routing_preflight ping` (max_tokens=16, 2개 request)가 실행된다. 이것은 full-size benchmark warmup이 아니라 두 backend의 LiteLLM routing 가용성을 확인하는 짧은 inference이다. raw config의 "no warmup" 표현은 full-size benchmark warmup이 없었음을 의미하며, routing-preflight 자체는 실행되었다.
 
 ### 4.1 llama.cpp
 
@@ -678,7 +692,16 @@ Shared TP2와 다음 항목을 비교한다.
 - C1: `EXP-V100-ORN15-9B-1CAT-F16-MTP1-1GPU2-C1-128K-20260926-001` — `SKIPPED` (사용자 승인: 4.1.1 TARGET C1에서 단일 요청 LiteLLM 경로 검증 완료 후 C2로 직행)
 - C2: `EXP-V100-ORN15-9B-1CAT-F16-MTP1-1GPU2-C2-128K-20260926-001` — **`FAIL_STARTUP`**
   - 실패 원인: 1Cat-vLLM 1.5.0에서 단일 V100 16GB TP1으로 Ornith 1.5 9B MTP1 서빙 시, 128K(131,072) 컨텍스트 1개를 수용하기 위한 최소 KV 캐시 메모리(4.68 GiB)가 가용 KV 캐시 메모리(2.61 GiB)를 초과하여 기동 실패 (`ValueError: To serve at least one request with the model's max seq len (131072), (4.68 GiB KV cache is needed, which is larger than the available KV cache memory (2.61 GiB). Based on the available memory, the estimated maximum model length is 71280.`).
-  - TP2 Shared(WBS 3.2.2)에서는 2개 GPU로 KV 캐시가 분할되어 128K C2 수용이 가능했으나, 1GPU 독립 토폴로지(TP1)에서는 단일 V100 16GB 한도로 인해 128K 컨텍스트 서빙이 물리적으로 불가능함이 확정됨 (최대 수용 한도 ~71.2K).
+  - 이 exact pinned profile에서의 capacity 부족이 확인됨:
+    - Runtime: 1Cat-vLLM 1.5.0
+    - Model: Ornith 1.5 9B NVFP4
+    - Speculative: STOCK MTP1
+    - KV: FP16
+    - Tensor Parallelism: TP1
+    - GPU: V100 16GB 1장
+    - max_model_len: 131,072
+    - Required KV: 4.68 GiB, Available KV: 2.61 GiB, Estimated max model length: ~71,280
+  - 다른 KV quantization (e.g. FP8), 다른 speculative configuration, 다른 runtime에서의 결과까지 물리적으로 불가능하다고 일반화하지 않는다.
   - 프로젝트 불변 규칙에 따라 설정을 임의 변경하는 자동 재시도는 수행하지 않고 closed 처리함.
 
 ## 5. 성능 최적화 및 모델별 최종 레시피 확정 [TODO]

@@ -1,0 +1,59 @@
+{
+  "phase": "results_saved",
+  "updated_at_utc": "2026-09-26T09:48:32.912859+00:00",
+  "experiment_id": "EXP-V100-ORN15-9B-LLAMA-F16-TARGET-1GPU2-C2-128K-20260926-001",
+  "model": "ornith-1.5-9b",
+  "lane": "TARGET",
+  "concurrency": 2,
+  "topology": "1gpu-x2-independent",
+  "host": "p520-llm",
+  "remote_path": "/home/loopwhile/v100-llm-test-wbs22-20260924/results/raw/EXP-V100-ORN15-9B-LLAMA-F16-TARGET-1GPU2-C2-128K-20260926-001",
+  "started_at_utc": "2026-09-26T09:43:05.333627+00:00",
+  "boot_id": "3415fcb6-2783-4ab1-9a61-33fff626094d",
+  "pid": 49885,
+  "process_start_ticks": "936431",
+  "measurement_timeout_s": 3600,
+  "startup_timeout_s": 300,
+  "scope": "WBS 4.1.2: one C2 128K batch for Ornith 9B 1GPUx2",
+  "cleanup_policy": "only owned cidfiles/pids with matching experiment label",
+  "planned_config_sha256": "5fa7f71fa5a832f9897bbe00d3a62517ddd61c7719454d5db42c729df62ecd07",
+  "source_sha256": {
+    "scripts/bench_harness.py": "81fafc0ccde861c9fae8e94589ffe3c17aae62ec0e5f11fcf7d86d4f264e9f4c",
+    "scripts/build_128k_workload.py": "d27174ae27f108bf7f14a1ecf3887497d3763bdc91a9b9c7f00bf1eeb27d27c4",
+    "scripts/build_realistic_diagnostic_workload.py": "e80b06fff32bb733f2c693e1086244e70c07c6f20cf2f6a7402a13a4c71eaf46",
+    "scripts/gpu_telemetry.py": "c3813564d18a1e6f98ed04b1b66a21ce0133617913cc9bc9cad7c512242e088f",
+    "scripts/measurement_policy.py": "19f9f74bb44fcbc14cc49a15cd6e13e03b00ba9e4d1f63a2d2f0d62694e35244",
+    "scripts/prepare_candidate_pool.py": "e79c1b9b0eda81fc1b40480cfccf5660419af1db218ebb365851c85d43903e18",
+    "scripts/report_experiment.py": "794e6653739d5756d6f7bd603d3bd31bea9f974e50dd34979d0d79b62cd27ee6",
+    "scripts/run_1gpu_litellm.py": "ea77cc44429c909cec977f566ca1d1ba12f8469782612565f71dfa3861fd1a14",
+    "scripts/run_b200recipe_onecat.py": "8db2c2444878031270779c7f2aa32d273e921f7a1eec9600aa5f7ad035552057",
+    "scripts/run_c1_llama.py": "631e115ed6a781f31bb97a803a1582a77e9c369ed919bb82d19a08388812d3b7",
+    "scripts/run_c1_onecat.py": "60030b7f6ecedc903a0bb6447086b62964e0d3cf1ec316685f3261c918b6cf1b",
+    "scripts/run_c1_qwen.py": "5a3ebd27f360a06b69e0630727a1d262707e5b713c68b500ae8c5ef2cd3c5c04",
+    "scripts/run_c2_llama.py": "a16aac3b62033de704db8593771464433ad5e84aa954b52bb62ae9cd615213af",
+    "scripts/run_c2_onecat.py": "a025a51e29d02a2dbb8f2c778457fc045d8d43d2a66c8cfc2574e07245696dcb",
+    "scripts/run_diag_onecat.py": "f38310afb5576bb240637a861dd14c95979738186a99817a63d5ce0a8a4efd09",
+    "scripts/run_recovery_onecat.py": "dc931637a2d3da663f219a06de165275601bc0c464eb093ea81240dceb9b19e7",
+    "scripts/runtime_launcher.py": "630714d53f0a37775e202772bc98c4e52682927c172b7afa78d624a4b6d0cf8a",
+    "scripts/skinny_gate.py": "a372c564281b6afdbd8425df783daf2a4c1c116a53c0466beff9a7a6b30eddf6",
+    "scripts/validate_repo.py": "9dc24930f93bb6c5f3a292c3eb0241d3dc72f98d0f0848a18857e89701f91c94"
+  },
+  "step": "finished",
+  "gateway_endpoint": "http://127.0.0.1:18079",
+  "backend_endpoints": [
+    "http://127.0.0.1:18080",
+    "http://127.0.0.1:18081"
+  ],
+  "preflight_bases": [
+    "http://127.0.0.1:18080/v1",
+    "http://127.0.0.1:18081/v1"
+  ],
+  "preflight_ids": [
+    "backend-0",
+    "backend-1"
+  ],
+  "workload_sha256": "eb35673b0977dfbbe235315d961ca796b36cd9a2ec23e9cfe0555b31382fa8bb",
+  "verdict": "PASS_C2_ACTIVE",
+  "error": null,
+  "exit_code": 0
+}

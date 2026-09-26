@@ -86,9 +86,18 @@ def atomic_text(path, text):
     os.replace(tmp, path)
 
 
-def _csv_text(fields, rows):
+def _detect_newline(path):
+    path = Path(path)
+    if path.exists():
+        with path.open("rb") as f:
+            if b"\r\n" in f.read(4096):
+                return "\r\n"
+    return "\n"
+
+
+def _csv_text(fields, rows, lineterminator="\n"):
     buf = io.StringIO(newline="")
-    writer = csv.DictWriter(buf, fieldnames=fields, extrasaction="ignore", lineterminator="\n")
+    writer = csv.DictWriter(buf, fieldnames=fields, extrasaction="ignore", lineterminator=lineterminator)
     writer.writeheader()
     writer.writerows(rows)
     return buf.getvalue()
@@ -290,6 +299,19 @@ def _report(config, metrics, completion, raw_dir, verdicts=None):
         ])
         if overlap.get("source"):
             lines.append(f"- Overlap source: {overlap.get('source','')}")
+        skew = metrics.get("submission_skew_s") if metrics.get("submission_skew_s") is not None else overlap.get("submission_skew_s")
+        if skew is not None:
+            lines.append(f"- Submission skew: {skew:.3f}s (routing-settled admission stagger)")
+
+    if config.get("topology") == "1gpu-x2-independent":
+        preflight_exists = (raw_dir / "runtime/routing-preflight.json").exists() or config.get("routing_preflight_before_measurement")
+        if preflight_exists:
+            lines.extend([
+                "- Routing preflight before measurement: true (2 short requests, max_tokens=16)",
+                "- Warmup: no full-size benchmark warmup (one measured 128K batch)",
+            ])
+        else:
+            lines.append("- Warmup: no full-size benchmark warmup (one measured 128K batch)")
 
     lines.extend([
         "",
@@ -306,9 +328,41 @@ def _report(config, metrics, completion, raw_dir, verdicts=None):
         "## 증거 경로",
         "",
         f"- Raw artifact: {raw_dir.as_posix()}",
-        "- config.json, workload.json, payloads.json, tokenization.json",
-        "- requests.json, overlap-evidence.json, metrics.json",
-        "- health-before.json, health-after.json, server snapshots",
+    ])
+
+    # Dynamically list only files that actually exist in raw_dir
+    evidence_candidates = [
+        "config.json", "identity.json", "workload.json", "payloads.json",
+        "tokenization.json", "requests.json", "overlap-evidence.json",
+        "metrics.json", "completion.json", "gpu-peak.json",
+        "health-before.json", "health-after.json",
+        "server-before.json", "server-after.json",
+        "acceptance-review.json",
+    ]
+    runtime_candidates = [
+        "runtime/routing-preflight.json", "runtime/litellm-config.yaml",
+        "runtime/plan.json", "runtime/planned-config.json",
+        "runtime/server-0.log", "runtime/server-1.log",
+        "runtime/gateway.log", "runtime/measurement.log",
+        "runtime/cleanup.json", "runtime/exit.json",
+        "runtime/progress.json", "runtime/preflight.json",
+    ]
+    present_evidence = [f for f in evidence_candidates if (raw_dir / f).exists()]
+    present_runtime = [f for f in runtime_candidates if (raw_dir / f).exists()]
+    if present_evidence:
+        lines.append(f"- Evidence files: {', '.join(present_evidence)}")
+    if present_runtime:
+        lines.append(f"- Runtime files: {', '.join(present_runtime)}")
+
+    # Show failure reason for FAIL verdicts
+    if verdict and "FAIL" in str(verdict):
+        fail_metrics = _read(raw_dir / "metrics.json") if (raw_dir / "metrics.json").exists() else {}
+        fail_completion = _read(raw_dir / "completion.json") if (raw_dir / "completion.json").exists() else {}
+        failure_error = fail_completion.get("error") or fail_metrics.get("error")
+        if failure_error:
+            lines.append(f"- Failure reason: {failure_error}")
+
+    lines.extend([
         "",
     ])
 
@@ -328,6 +382,8 @@ def _report(config, metrics, completion, raw_dir, verdicts=None):
         if audit.get("diagnostic_summary"):
             lines.append(f"- **실패 원인 및 진단 요약**: {audit['diagnostic_summary']}")
 
+        if config.get("topology") == "1gpu-x2-independent":
+            lines.append("- WBS4 수치는 topology/capacity evidence이며, 정식 performance ranking은 WBS5 performance workload에서 다시 측정한다.")
         lines.extend([
             f"- 상세 감사 기록: `{audit_path.as_posix()}`",
             "- 이 보고서는 해당 실험의 raw evidence에 한정한다. 다른 runtime/model/context/concurrency로 결과를 일반화하지 않는다.",
@@ -338,10 +394,36 @@ def _report(config, metrics, completion, raw_dir, verdicts=None):
             "## 결론",
             "",
             "이 보고서는 해당 실험의 raw evidence에 한정한다. 다른 runtime/model/context/concurrency로 결과를 일반화하지 않는다.",
-            "",
         ])
+        if config.get("topology") == "1gpu-x2-independent":
+            lines.append("- WBS4 수치는 topology/capacity evidence이며, 정식 performance ranking은 WBS5 performance workload에서 다시 측정한다.")
+        lines.append("")
 
     return "\n".join(lines)
+
+
+def _normalize_note(note_text, config, verdict, raw_dir):
+    if not note_text:
+        return note_text
+    if config.get("topology") == "1gpu-x2-independent" and config.get("concurrency") == 2:
+        note_text = re.sub(r"\bWBS 4\.1\.2\b", "WBS 4.1.1", note_text)
+        note_text = re.sub(r"\bWBS 4\.1\.4\b", "WBS 4.1.2", note_text)
+        note_text = re.sub(r"\bWBS 4\.1\.6\b", "WBS 4.1.3", note_text)
+        note_text = re.sub(r"\bWBS 4\.1\.8\b", "WBS 4.1.4", note_text)
+        note_text = re.sub(r"\bWBS 4\.2\.2\b", "WBS 4.2.1", note_text)
+        if "one measured execution; no warmup." in note_text:
+            preflight_file = raw_dir / "runtime/routing-preflight.json"
+            if preflight_file.exists() or config.get("routing_preflight_before_measurement"):
+                note_text = note_text.replace(
+                    "one measured execution; no warmup.",
+                    "one measured 128K batch; no full-size benchmark warmup; two short routing-preflight inference requests (max_tokens=16) executed before measured C2 batch."
+                )
+            else:
+                note_text = note_text.replace(
+                    "one measured execution; no warmup.",
+                    "one measured 128K batch; no full-size benchmark warmup."
+                )
+    return note_text
 
 
 def _update_or_append(rows, new_row, key="experiment_id"):
@@ -399,6 +481,7 @@ def publish(root, raw_dir, overwrite=False):
     audit = _read(audit_path) if audit_path.exists() else None
     verdict = verdicts["final_verdict"]
     note_text = (audit.get("key_note") or audit.get("note") if audit else None) or config.get("notes", "")
+    note_text = _normalize_note(note_text, config, verdict, raw_dir)
 
     summary_row = {
         "experiment_id": experiment_id,
@@ -465,8 +548,8 @@ def publish(root, raw_dir, overwrite=False):
 
     writes = {
         report_rel.as_posix(): _report(config, metrics, completion, raw_dir, verdicts=verdicts),
-        "results/summary.csv": _csv_text(SUMMARY_FIELDS, summary_rows),
-        "reports/comparison.csv": _csv_text(COMPARISON_FIELDS, comparison_rows),
+        "results/summary.csv": _csv_text(SUMMARY_FIELDS, summary_rows, lineterminator=_detect_newline(summary_path)),
+        "reports/comparison.csv": _csv_text(COMPARISON_FIELDS, comparison_rows, lineterminator=_detect_newline(comparison_path)),
     }
     journal = root / "results/.publication.json"
     atomic_text(journal, json.dumps({"writes": writes}, ensure_ascii=False, indent=2))

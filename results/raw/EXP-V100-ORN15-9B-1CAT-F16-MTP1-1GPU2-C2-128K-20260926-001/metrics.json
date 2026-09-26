@@ -1,0 +1,7 @@
+{
+  "verdict": "FAIL_STARTUP",
+  "c1_128k": false,
+  "error": "backend server 0 exited prematurely with code 1",
+  "peak_vram_gpu0_mib": 16091.0,
+  "peak_vram_gpu1_mib": 16091.0
+}

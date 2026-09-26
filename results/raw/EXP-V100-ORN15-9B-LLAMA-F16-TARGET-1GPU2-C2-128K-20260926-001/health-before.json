@@ -1,0 +1,19 @@
+{
+  "healthy": true,
+  "gateway": {
+    "healthy": true,
+    "at_utc": "2026-09-26T09:44:50.193355+00:00",
+    "route": "/health/liveliness"
+  },
+  "backends": [
+    {
+      "healthy": true,
+      "at_utc": "2026-09-26T09:44:50.195203+00:00"
+    },
+    {
+      "healthy": true,
+      "at_utc": "2026-09-26T09:44:50.196650+00:00"
+    }
+  ],
+  "at_utc": "2026-09-26T09:44:50.196683+00:00"
+}

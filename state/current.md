@@ -63,7 +63,7 @@
   - 4.1.3 MTP C2: **`PASS_C2_ACTIVE`** (`EXP-V100-ORN15-9B-LLAMA-F16-MTP-1GPU2-C2-128K-20260926-001`; TTFT 208.55s, Prefill 618.85 tok/s, Mean Decode 51.01 tok/s (+17.2%), Aggregate Decode 75.34 tok/s, Batch Wall 235.74s, MTP 수락률 53.27%, Peak VRAM GPU0 11,903 MiB / GPU1 11,903 MiB).
   - 4.1.4 MTP_NGRAM C2: **`PASS_C2_ACTIVE`** (`EXP-V100-ORN15-9B-LLAMA-F16-MTP-NGRAM-1GPU2-C2-128K-20260926-001`; TTFT 208.74s, Prefill 618.26 tok/s, Mean Decode 49.96 tok/s, Aggregate Decode 79.35 tok/s, Batch Wall 234.89s, Speculative 수락률 45.30%, Peak VRAM GPU0 11,905 MiB / GPU1 11,905 MiB).
   - 4.2.1 STOCK MTP1 C2 (1Cat-vLLM): **`FAIL_STARTUP`** (`EXP-V100-ORN15-9B-1CAT-F16-MTP1-1GPU2-C2-128K-20260926-001`; 1GPU TP1 128K FP16 KV 캐시 필요량 4.68 GiB가 가용 VRAM 2.61 GiB를 초과하여 기동 불가, 최대 시퀀스 한도 ~71.2K로 1GPU 128K 수용 불가 입증 및 CLOSED).
-- Conclusion: WBS 4 전체 완료. llama.cpp는 1GPUx2 + LiteLLM topology에서 128K C1/C2 전 레인 완전 통과. 1Cat-vLLM은 TP1 VRAM 한계로 1GPUx2 불가(Shared TP2만 적합). 다음 단계는 WBS 5(최종 서빙 레시피 확정).
+- Conclusion: WBS 4 전체 완료 [DONE]. llama.cpp는 1GPUx2 + LiteLLM topology에서 128K C1/C2 전 레인 완전 통과. 1Cat-vLLM은 현재 exact pinned profile (1Cat-vLLM 1.5.0, Ornith 1.5 9B NVFP4, STOCK MTP1, FP16 KV, TP1, V100 16GB)에서 128K startup 불가 확인 (CLOSED — FAIL_STARTUP). 다음 단계는 WBS 5(최종 서빙 레시피 확정).
 
 ## Root-Cause Diagnostic: Qwen3.8-27B 1Cat-vLLM 128K Realistic Workload (2026-09-25)
 - Purpose: Distinguish whether Qwen3.8 128K repetition collapse is artifact of synthetic repetition-heavy workload (1,333 duplicate sections) or general 1Cat-vLLM 128K path issue.
@@ -130,9 +130,9 @@
   - Gemma4 1Cat-vLLM remains **not eligible** for C2 capacity testing or WBS 5 throughput optimization.
 - Policy Enforcement: Stopped per contract. Raw evidence is preserved under `results/raw/EXP-V100-GEMMA4-26B-1CAT-AWQINT4-F16-TARGET-C1-128K-20260925-001/` through `-004/`.
 
-## Next planned work after current stop
+## Next planned work
 
-- Remaining project scope is authoritative WBS 3 v2 revalidation across all runnable llama.cpp/1Cat lanes, then WBS 4 and WBS 5.
-- Existing WBS 3 v1 Qwen/Ornith9 results are historical diagnostics; final WBS 3 acceptance is reset to v2.
-- WBS 4: Ornith 1.5 9B 1GPU×2 + LiteLLM topology validation.
-- WBS 5: performance optimization and per-model/per-runtime final recipe capture.
+- WBS 2: DONE
+- WBS 3: DONE
+- WBS 4: DONE
+- Next = WBS 5: performance optimization and per-model/per-runtime final recipe capture.

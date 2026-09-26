@@ -1,0 +1,90 @@
+[
+  {
+    "request_id": "project-a",
+    "project_id": "A",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "e99ad2dc463957278d4cfd2ec9f973891da28ca8bf9bda09d9aad2ae5283d7cf",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.0031257230002665892,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "# Project A — Engineering Report: Transactional Storage Commit Defect\n\n## 1. Root Cause\n\nThe seeded defect lives in **`Project A / storage/transaction.py`**, specifically in the `Transaction.commit()` method. The faulty operation is the **unconditional `self.pending.clear()` statement** that executes on the first iteration of the commit loop.\n\n```python\ndef commit(self):\n    for key, page_id in self.pending:\n        self.index.put(key, page_id)\n        self.pending.clear()   # <-- BUG: clears on first iteration\n```\n\nBecause `self.pending` is a list, iterating over it while mutating it from within the loop body is unsafe. The `clear()` call empties the list immediately, so the `for` loop terminates after the very first staged write. Every subsequent staged write is silently dropped, even though it was part of the same transaction. This violates the atomicity guarantee that a transaction's `commit()` must persist **all** staged writes.\n\nNote: `PageIndex.version` is incremented on every `put`, so the version counter will be higher than the number of distinct keys written — a secondary symptom of the dropped writes.\n\n## 2. Failure Trace\n\nConsider a transaction that stages two writes: `(\"alpha\", 10)` then `(\"beta\", 20)`.\n\n**Step 1 — Index creation.**\n```python\nindex = PageIndex()   # index.pages = {}, index.version = 0\n```\n\n**Step 2 — First stage.**\n```python\ntx.stage(\"alpha\", 10)   # tx.pending = [(\"alpha\", 10)]\n```\n\n**Step 3 — Second stage.**\n```python\ntx.stage(\"beta\", 20)    # tx.pending = [(\"alpha\", 10), (\"beta\", 20)]\n```\n\n**Step 4 — Commit begins.** The loop starts iterating over `tx.pending`, which currently holds both tuples.\n\n**Step 5 — First iteration.**\n```python\nkey, page_id = \"alpha\", 10\nself.index.put(\"alpha\", 10)   # index.pages = {\"alpha\": 10}, index.version = 1\nself.pending.clear()          # tx.pending = []  <-- list now empty\n```\n\n**Step 6 — Loop check.** The `for` loop re-evaluates `self.pending`, which is now empty. Iteration ends. The second tuple `(\"beta\", 20)` is never processed.\n\n**Step 7 — Final state.**\n```python\nindex.pages == {\"alpha\": 10}   # \"beta\" is missing\ntx.pending == []\n```\n\nThe assertion `index.pages == {\"alpha\": 10, \"beta\": 20}` from `test_commit_persists_all_staged_writes` fails. The transaction committed only one of its two staged writes.\n\n## 3. Reproduction\n\nThe following pytest-style test reproduces the defect. It can be run against the current (buggy) code and will fail; it also serves as a regression test after the fix.\n\n```python\n# tests/test_commit_regression.py\ndef test_commit_persists_all_staged_writes_regression():\n    index = PageIndex()\n    tx = Transaction(index)\n    tx.stage(\"alpha\", 10)\n    tx.stage(\"beta\", 20)\n    tx.stage(\"gamma\", 30)\n    tx.commit()\n\n    # All three staged writes must be persisted.\n    assert index.pages == {\"alpha\": 10, \"beta\": 20, \"gamma\": 30}\n    # The transaction must be fully drained.\n    assert tx.pending == []\n    # The version counter must equal the number of distinct keys written.\n    assert index.version == 3\n```\n\nRunning this against the current code fails at the first assertion: `index.pages` is `{\"alpha\": 10}` instead of the expected full mapping, and `index.version` is `1` instead of `3`.\n\n## 4. Minimal Fix\n\nThe smallest change that resolves the defect while preserving the intended contract is to **remove the premature `self.pending.clear()`** and let the loop naturally exhaust the list. This ensures every staged write is applied before the transaction is considered committed.\n\n```python\n# Project A / storage/transaction.py\nclass Transaction:\n    def __init__(self, index):\n        self.index = index\n        self.pending = []\n\n    def stage(self, key, page_id):\n        self.pending.append((key, page_id))\n\n    def commit(self):\n        for key, page_id in self.pending:\n            self.index.put(key, page_id)\n        self.pending.clear()\n```\n\nThe single-line change is the **removal of `self.pending.clear()` from inside the loop body**. The `clear()` call is retained once, after the loop completes, to reset the transaction's pending state — matching the original contract that `tx.pending == []` after `commit()`.\n\n**Why this preserves the contract:**\n- The `PageIndex` test (`test_commit_persists_all_staged_writes`) still passes: both `alpha` and `beta` are persisted, and `tx.pending` is emptied.\n- The version counter now correctly equals the number of keys written (2 for the original test, 3 for the regression test).\n- No other behavior changes: `stage()` and `__init__` are untouched, and the index's `put` semantics are unchanged.\n\nThis fix is minimal, targeted, and restores the atomicity guarantee that a transactional commit must persist all staged writes."
+          }
+        }
+      ],
+      "usage": {
+        "completion_tokens": 1201,
+        "prompt_tokens": 129023,
+        "total_tokens": 130224,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      }
+    },
+    "actual_output_tokens": 1201,
+    "post_template_prompt_tokens": 129023,
+    "ttft_ms": 189381.69044200005,
+    "first_abs": 9659.308910284,
+    "end_abs": 9687.291077667,
+    "wall_s": 217.3638578249993,
+    "prefill_tps": null,
+    "decode_tps": 42.92019211955952,
+    "gateway_deployment_id": "backend-0",
+    "gateway_api_base": "http://127.0.0.1:18080/v1",
+    "gateway_call_id": "0c42fc73-a72f-4b2f-a026-01094c304e68",
+    "gateway_version": "1.101.0",
+    "terminal_s": 217.41731386500032
+  },
+  {
+    "request_id": "project-b",
+    "project_id": "B",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "3ae80c5367249fd7f109022adfa1c526d8edcda82d9730ff996d6fe48bc0c897",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.3728602310002316,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "# Project B — Engineering Report\n\n## 1. Root Cause\n\nThe seeded defect lives in **`scheduler/worker.py`, `Worker.run_once`**:\n\n```python\nasync def run_once(self):\n    job = await self.queue.pop()\n    if job is None:\n        return None\n    return await job()\n```\n\nThe bug is a **non-atomic read-modify-write on the shared `JobQueue._sequence` counter**. `JobQueue.push` increments `_sequence` and then calls `heapq.heappush`. But `pop` does not read the sequence; the sequence is only assigned at push time. The real race is in the **`pop`/`push` interaction across concurrent `run_once` tasks**:\n\n- `pop()` calls `await asyncio.sleep(0)` **before** `heapq.heappop`.\n- That `await` is a **cooperative yield point**. Between the emptiness check and the `heappop`, another task can interleave.\n\nThe interleaving that corrupts execution:\n\n1. Worker A: `if not self._heap` → **True** (heap empty).\n2. Worker A: `await asyncio.sleep(0)` → **yields the event loop**.\n3. Worker B: `if not self._heap` → **True** (heap still empty).\n4. Worker B: `await asyncio.sleep(0)` → yields.\n5. Control returns to A, then B, both call `heapq.heappop` on an **empty heap** → `HeapError`.\n\nEven in the benign case where a job is pushed between steps 1 and 4, the **`await asyncio.sleep(0)` inside `pop` is a needless yield that widens the window** between the emptiness check and the actual removal. The check-and-pop is not atomic, so two workers can both observe \"empty\" and both attempt to pop. This is the single seeded concurrency defect: **a non-atomic check-then-pop on a shared heap, made worse by an unnecessary `await` at the top of `pop`**.\n\n## 2. Failure Trace\n\nTwo workers, one job (`priority=5`), pushed before launch:\n\n```\nJobQueue._heap = [(5, 1, job)]\n```\n\nInterleaving (single-threaded event loop, switches at `await`):\n\n| Step | Task | Action | Heap |\n|------|------|--------|------|\n| 1 | A | `await pop()` → check `not _heap` → **False** | `[(5,1,job)]` |\n| 2 | A | `await asyncio.sleep(0)` → **YIELD** | `[(5,1,job)]` |\n| 3 | B | `await pop()` → check `not _heap` → **False** | `[(5,1,job)]` |\n| 4 | B | `await asyncio.sleep(0)` → **YIELD** | `[(5,1,job)]` |\n| 5 | A | `heapq.heappop` → returns `job`, heap now `[]` | `[]` |\n| 6 | B | `heapq.heappop` → **`HeapError: pop from empty heap`** | `[]` |\n\nResult captured by `asyncio.gather(..., return_exceptions=True)`:\n\n```python\nresults = [None, \"done\", HeapError(\"pop from empty heap\")]\n```\n\nThe test asserts:\n- `not any(isinstance(item, Exception) for item in results)` → **FAILS** (the `HeapError` is an exception).\n- `results.count(None) == 1` → **FAILS** (two `None`s: B's empty pop + A's empty pop).\n- `seen == [\"job\"]` → **FAILS** (job executed twice: once by A, once by B).\n\nThis is the classic **double-consumption / lost-work** failure: the job is processed by both workers, and a spurious `HeapError` is raised.\n\n## 3. Reproduction\n\n```python\n# tests/test_scheduler_concurrency.py\nimport asyncio\nimport pytest\nfrom scheduler.queue import JobQueue\nfrom scheduler.worker import Worker\n\n\nasync def test_two_workers_one_job_no_double_consumption():\n    queue = JobQueue()\n    seen = []\n\n    async def job():\n        seen.append(\"job\")\n        return \"done\"\n\n    queue.push(5, job)\n\n    left = Worker(queue)\n    right = Worker(queue)\n\n    # Hammer the queue with many concurrent workers to widen the race window.\n    workers = [Worker(queue) for _ in range(8)]\n    results = await asyncio.gather(\n        *[w.run_once() for w in workers], return_exceptions=True\n    )\n\n    # No exceptions should ever surface from the shared queue.\n    assert not any(isinstance(item, Exception) for item in results)\n\n    # Exactly one worker should have consumed the single job.\n    assert results.count(None) == 7\n    assert results.count(\"done\") == 1\n    assert seen == [\"job\"]\n\n\nasync def test_pop_never_raises_on_empty():\n    queue = JobQueue()\n    workers = [Worker(queue) for _ in range(16)]\n    results = await asyncio.gather(\n        *[w.run_once() for w in workers], return_exceptions=True\n    )\n    assert not any(isinstance(item, Exception) for item in results)\n    assert all(item is None for item in results)\n```\n\nRun with:\n\n```bash\npytest tests/test_scheduler_concurrency.py -v\n```\n\nThis fails against the seeded code (raises `HeapError`, double-executes the job) and passes after the fix.\n\n## 4. Minimal Fix\n\nThe smallest correct change is to make `pop` **atomic**: perform the emptiness check and the removal together, and **remove the unnecessary `await asyncio.sleep(0)`** that artificially widens the race window.\n\n```python\n# scheduler/queue.py\nimport asyncio\nimport heapq\n\nclass JobQueue:\n    def __init__(self):\n        self._heap = []\n        self._sequence = 0\n\n    def push(self, priority, job):\n        self._sequence += 1\n        heapq.heappush(self._heap, (priority, self._sequence, job))\n\n    async def pop(self):\n        # Atomic check-and-remove: no yield between the check and the pop.\n        if not self._heap:\n            return None\n        return heapq.heappop(self._heap)[2]\n```\n\n**Why this is minimal and sufficient:**\n\n- **Removes the yield point.** The `await asyncio.sleep(0)` was the only place `pop` yielded control, so the check and the `heappop` now execute as a single uninterrupted step. In a single-threaded cooperative loop, no other task can interleave between them.\n- **Preserves FIFO-within-priority ordering.** The `(priority, self._sequence, job)` tuple still guarantees stable ordering by priority, then insertion order.\n- **No lock needed.** Because the event loop is single-threaded and there is no `await` inside the critical section, the check-and-pop is effectively atomic without a mutex.\n\nThis eliminates the double-consumption and the spurious `HeapError`, so the reproduction test passes deterministically."
+          }
+        }
+      ],
+      "usage": {
+        "completion_tokens": 1591,
+        "prompt_tokens": 129023,
+        "total_tokens": 130614,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      }
+    },
+    "actual_output_tokens": 1591,
+    "post_template_prompt_tokens": 129023,
+    "ttft_ms": 183514.14065099927,
+    "first_abs": 9653.809570217,
+    "end_abs": 9689.88121054,
+    "wall_s": 219.58578097399914,
+    "prefill_tps": null,
+    "decode_tps": 44.106671771883676,
+    "gateway_deployment_id": "backend-1",
+    "gateway_api_base": "http://127.0.0.1:18081/v1",
+    "gateway_call_id": "2469ff23-34b2-4d65-ac27-cf887dcfe2f0",
+    "gateway_version": "1.101.0",
+    "terminal_s": 220.01594521600055
+  }
+]

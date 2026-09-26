@@ -1,0 +1,80 @@
+INFO:     Started server process [1]
+INFO:     Waiting for application startup.
+
+   ██╗     ██╗████████╗███████╗██╗     ██╗     ███╗   ███╗
+   ██║     ██║╚══██╔══╝██╔════╝██║     ██║     ████╗ ████║
+   ██║     ██║   ██║   █████╗  ██║     ██║     ██╔████╔██║
+   ██║     ██║   ██║   ██╔══╝  ██║     ██║     ██║╚██╔╝██║
+   ███████╗██║   ██║   ███████╗███████╗███████╗██║ ╚═╝ ██║
+   ╚══════╝╚═╝   ╚═╝   ╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:18079 (Press CTRL+C to quit)
+
+[1;37m#------------------------------------------------------------#[0m
+[1;37m#                                                            #[0m
+[1;37m#       'This feature doesn't meet my needs because...'       #[0m
+[1;37m#        https://github.com/BerriAI/litellm/issues/new        #[0m
+[1;37m#                                                            #[0m
+[1;37m#------------------------------------------------------------#[0m
+
+ Thank you for using LiteLLM! - Krrish & Ishaan
+
+
+
+[1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new[0m
+
+
+[32mLiteLLM: Proxy initialized with Config, Set models:[0m
+[32m    Ornith-1.5-9B[0m
+[32m    Ornith-1.5-9B[0m
+INFO:     127.0.0.1:55268 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55278 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55288 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55296 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45886 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45902 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45906 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45914 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45924 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33404 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33414 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33426 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33436 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33448 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37738 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37746 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37752 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37764 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37772 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58472 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58480 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58482 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58486 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58492 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54376 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54392 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54398 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54402 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54418 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39340 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39350 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39358 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39372 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39380 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49072 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49078 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49090 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49100 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49106 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38944 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38956 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38962 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38976 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38978 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53894 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53906 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53916 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53928 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53936 - "GET /health/liveliness HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39810 - "GET /health/liveliness HTTP/1.1" 200 OK

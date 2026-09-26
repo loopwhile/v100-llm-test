@@ -1,0 +1,2259 @@
+{
+  "source": "LiteLLM single gateway endpoint + backend runtime probes + deployment response headers",
+  "resident": true,
+  "active_overlap": true,
+  "queue_only": false,
+  "gateway_distinct_deployment_ids": true,
+  "gateway_distinct_api_bases": true,
+  "gateway_deployment_ids": [
+    "backend-0",
+    "backend-1"
+  ],
+  "gateway_api_bases": [
+    "http://127.0.0.1:18080/v1",
+    "http://127.0.0.1:18081/v1"
+  ],
+  "backend_active_in_common_decode_window": true,
+  "children": [
+    {
+      "peak_processing": 1.0,
+      "peak_waiting": 0.0,
+      "peak_resident_slots": 1,
+      "sample_count": 139,
+      "samples": [
+        {
+          "monotonic_s": 10592.831755729,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10592.936776166,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10593.040786861,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10593.144398689,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10593.24805885,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10593.352471299,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10593.456521623,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10593.560525835,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10593.664391641,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10593.769155435,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10593.873973009,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10593.977656088,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10594.081981295,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10594.185817804,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10594.289939432,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10594.394097815,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10594.497638224,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10594.60117776,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10594.705312134,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10594.809212072,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10594.913115731,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10595.0176561,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10595.12201446,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10595.225992095,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10595.329646937,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10595.433279512,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10595.536549293,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10595.639564992,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10595.742773962,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10595.846810547,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10595.950825458,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10596.054468731,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10596.158614824,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10596.262960521,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10596.366396448,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10596.469186111,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10596.572396916,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10596.675419881,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10596.778887167,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10596.881950203,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10596.984884687,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10597.08814819,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10597.191440073,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10597.294942116,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10597.398683298,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10597.501660607,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10597.604664847,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10597.707667782,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10597.811293437,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10597.915356955,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10598.018266192,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10598.122069366,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10598.225340316,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10598.328607114,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10598.431611735,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10598.534854247,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10598.638555482,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10598.743818441,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10598.849827089,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10598.953799646,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10599.05764804,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10599.163567588,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10599.267452489,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10599.370672846,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10599.473819414,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10599.57723168,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10599.68035182,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10599.785164563,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10599.889836393,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10599.993437311,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10600.097365628,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10600.201531222,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10600.305420562,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10600.409507299,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10600.513043394,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10600.616863993,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10600.720937044,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10600.824928984,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10600.928604104,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10601.031940942,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10601.135908044,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10601.239396487,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10601.343721291,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10601.448087863,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10601.552660541,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10601.65769923,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10601.762665151,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10601.86814363,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10601.972842534,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10602.078068811,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10602.182501253,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10602.287873267,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10602.393428235,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10602.498749913,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10602.603706175,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10602.709496015,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10602.815079605,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10602.92072097,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10603.025486137,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10603.130620497,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10603.236127465,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10603.339989187,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10603.445628504,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10603.551345703,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10603.656444119,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10603.76261933,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10603.868051178,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10603.973058737,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10604.077741201,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10604.182340257,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10604.288172891,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10604.393022488,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10604.497828049,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10604.602585843,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10604.706802882,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10604.811157492,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10604.915230876,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10605.019476799,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10605.124844504,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10605.229389443,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10605.334101882,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10605.438021779,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10605.542792141,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10605.647444086,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10605.751706638,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10605.856193797,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10605.959699016,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10606.063043342,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10606.167011364,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10606.270692094,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10606.375117696,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10606.47944803,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10606.584446018,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10606.689330206,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10606.79546555,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10606.901189721,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10607.006752597,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10607.111544521,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10607.215209632,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        }
+      ]
+    },
+    {
+      "peak_processing": 1.0,
+      "peak_waiting": 0.0,
+      "peak_resident_slots": 1,
+      "sample_count": 139,
+      "samples": [
+        {
+          "monotonic_s": 10592.821566705,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10592.925944956,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10593.030333287,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10593.134678657,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10593.237944727,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10593.341605332,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10593.445524593,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10593.550266139,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10593.654434441,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10593.758431202,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10593.862667149,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10593.967407592,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10594.071599085,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10594.175853713,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10594.280057327,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10594.384139663,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10594.488592584,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10594.592413857,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10594.69650665,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10594.801047422,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10594.906263453,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10595.010111091,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10595.113921177,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10595.218232753,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10595.322454537,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10595.426702059,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10595.53124758,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10595.635052708,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10595.739357479,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10595.846050861,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10595.951398406,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10596.055772076,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10596.160039068,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10596.264674542,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10596.369128708,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10596.472527657,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10596.575678718,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10596.678945499,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10596.782186649,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10596.889061975,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10596.993825038,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10597.097444733,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10597.201175791,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10597.305459597,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10597.408847303,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10597.512434515,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10597.616061709,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10597.719637349,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10597.823484387,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10597.928607091,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10598.032879841,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10598.136222233,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10598.239045871,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10598.342587313,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10598.445684933,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10598.548847799,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10598.651815857,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10598.754992399,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10598.857926232,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10598.961040262,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10599.067042415,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10599.170425714,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10599.2730431,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10599.376203576,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10599.479028889,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10599.581796111,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10599.684576655,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10599.787813337,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10599.891519038,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10599.995084868,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10600.099052382,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10600.206479557,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10600.310951109,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10600.414580179,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10600.518348681,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10600.622252853,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10600.725493164,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10600.828840307,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10600.932955148,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10601.036533519,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10601.140488368,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10601.243816353,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10601.347202277,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10601.450981401,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10601.555122616,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10601.659463172,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10601.764330144,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10601.870278633,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10601.974673126,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10602.079334248,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10602.18321239,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10602.288263272,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10602.393058199,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10602.498358911,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10602.60413027,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10602.709918723,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10602.815537776,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10602.920435866,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10603.026028291,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10603.130284578,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10603.235774874,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10603.340394288,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10603.445249717,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10603.550924621,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10603.656898601,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10603.761885834,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10603.866707181,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10603.971887923,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10604.077282241,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10604.182716346,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10604.287786807,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10604.393653492,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10604.498371038,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10604.605473122,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10604.710249527,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10604.813770033,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10604.91767111,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10605.021557208,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10605.126193589,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10605.230372409,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10605.335128529,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10605.439347623,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10605.545037906,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10605.648779697,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10605.753541139,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10605.857151304,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10605.961349386,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10606.064537737,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10606.168436098,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10606.272139758,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10606.375487568,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10606.479784471,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10606.584087324,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10606.68972831,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10606.795106214,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10606.901538997,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10607.006408186,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10607.111210444,
+          "processing": 1.0,
+          "waiting": 0.0,
+          "resident_slots": 1,
+          "kv_usage": null,
+          "error": null
+        },
+        {
+          "monotonic_s": 10607.215880419,
+          "processing": 0,
+          "waiting": 0.0,
+          "resident_slots": 0,
+          "kv_usage": null,
+          "error": null
+        }
+      ]
+    }
+  ]
+}

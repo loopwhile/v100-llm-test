@@ -32,15 +32,15 @@ C2_SEMANTIC_ORACLE = ROOT / "workloads/concurrency/v2-ground-truth.json"
 
 LANE_WBS = {
     ("TARGET", 1): "4.1.1",
-    ("TARGET", 2): "4.1.2",
-    ("NGRAM", 1): "4.1.3",
-    ("NGRAM", 2): "4.1.4",
-    ("MTP", 1): "4.1.5",
-    ("MTP", 2): "4.1.6",
-    ("MTP_NGRAM", 1): "4.1.7",
-    ("MTP_NGRAM", 2): "4.1.8",
+    ("TARGET", 2): "4.1.1",
+    ("NGRAM", 1): "4.1.2",
+    ("NGRAM", 2): "4.1.2",
+    ("MTP", 1): "4.1.3",
+    ("MTP", 2): "4.1.3",
+    ("MTP_NGRAM", 1): "4.1.4",
+    ("MTP_NGRAM", 2): "4.1.4",
     ("STOCK", 1): "4.2.1",
-    ("STOCK", 2): "4.2.2",
+    ("STOCK", 2): "4.2.1",
 }
 
 
@@ -192,8 +192,15 @@ def run_locked(args):
             thinking=False,
             notes=(
                 f"WBS {wbs}; Ornith 1.5 9B 1GPUx2 + LiteLLM; concurrency C{args.concurrency}; "
-                "one measured execution; no warmup."
+                "one measured 128K batch; no full-size benchmark warmup; "
+                "two short routing-preflight inference requests (max_tokens=16) executed before measured C2 batch."
+                if args.concurrency == 2
+                else f"WBS {wbs}; Ornith 1.5 9B 1GPUx2 + LiteLLM; concurrency C{args.concurrency}; "
+                "one measured 128K batch; no full-size benchmark warmup."
             ),
+            routing_preflight_before_measurement=args.concurrency == 2,
+            routing_preflight_request_count=2 if args.concurrency == 2 else 0,
+            routing_preflight_max_tokens=16 if args.concurrency == 2 else 0,
         )
     )
     if args.retry_of:
