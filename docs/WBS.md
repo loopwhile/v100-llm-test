@@ -881,76 +881,123 @@ WBS 5 완료 후 사용자가 필요에 따라 recipe를 직접 선택한다.
 
 ## 6. CPU+RAM 전용 dual-resident 128K 검증 [TODO]
 
-V100을 추론 경로에서 완전히 제외하고, P520의 CPU+RAM만으로 두 개의 llama.cpp server를 **동시에 기동/resident** 상태로 유지한 뒤 128K 단일-agent 요청을 **한 번에 하나씩 직렬 실행**한다.
+P520의 CPU+RAM만 사용하는 두 개의 llama.cpp server를 **동시에 기동/resident** 상태로 유지한 뒤 128K 단일-agent 요청을 **한 번에 하나씩 직렬 실행**한다.
 
-목적은 GPU 서빙의 대체 성능을 주장하는 것이 아니라, 현재 호스트의 64GB RAM 안에서 두 MoE GGUF + Q8_0 KV 128K server를 동시에 상주시킬 수 있는지와, peer server가 idle resident인 상태에서 각 모델의 실제 128K capacity/correctness 및 CPU-only 처리 성능을 fresh evidence로 확인하는 것이다.
+이 Phase의 CPU inference process는 GPU offload를 사용하지 않는다. 다만 GPU0/GPU1에서는 별도의 llama.cpp 또는 vLLM server가 동시에 기동·서빙될 수 있으므로, CPU/RAM 자원을 독점하지 않는 **coexistence-oriented conservative resource envelope**를 기본 계약으로 사용한다.
 
-### 6.1 고정 하드웨어 / 공통 런타임 계약 [TODO]
+목적은 CPU 단독 최대 TPS를 주장하는 것이 아니라, 실제 P520 운용 상태에서 GPU serving과 공존 가능한 범위 안에서 두 MoE GGUF + Q8_0 KV 128K server를 동시에 상주시킬 수 있는지와, peer CPU server가 idle resident인 상태에서 각 모델의 128K capacity/correctness 및 CPU-only 처리 성능을 fresh evidence로 확인하는 것이다.
+
+### 6.1 고정 하드웨어 / CPU-only Docker 계약 [TODO]
 
 호스트:
 - CPU: Intel Xeon W-2135.
 - RAM: DDR4-2400 16GB ×4, 4-channel, 총 64GB.
-- GPU: Tesla V100은 본 Phase에서 사용하지 않는다.
+- GPU0/GPU1: 본 Phase의 CPU inference에는 사용하지 않는다. 별도 llama.cpp/vLLM GPU server의 동시 기동·서빙은 허용한다.
+- 호스트의 기존 CPU power limit, governor, clock, BIOS, THP, sysctl 등 전력/시스템 정책은 변경하지 않는다.
+
+CPU llama.cpp runtime:
+- 기존 V100용 runtime과 분리된 **CPU-only Docker image**를 사용해도 된다.
+- CPU host에서 native 최적화 빌드를 사용하고, exact llama.cpp commit/build flags/compiler/image digest를 report에 고정한다.
+- GPU backend/CUDA는 CPU image에 필수 사항이 아니다.
+- BLAS를 사용하는 경우 implementation과 version을 기록하고, BLAS/OpenMP thread 수는 아래 CPU envelope를 넘지 않게 제한한다.
 
 공통 llama.cpp 조건:
-- CPU-only: `--n-gpu-layers 0`. measured run 동안 GPU VRAM allocation/offload가 없어야 한다.
+- CPU-only: `--n-gpu-layers 0`. 이 두 CPU server 자체는 GPU VRAM allocation/offload를 해서는 안 된다.
 - context: `--ctx-size 131072`.
-- concurrency: server별 `--parallel 1`; measured request는 전체 시스템에서 동시에 1개만 허용한다.
+- concurrency: server별 `--parallel 1`; measured request는 두 CPU server 전체에서 동시에 1개만 허용한다.
 - KV: K/V 모두 `Q8_0`.
 - attention: `-fa auto`.
-- speculative: `ngram-simple`만 사용한다.
+- speculative: `ngram-mod`.
 - MTP / draft model / composite MTP+NGRAM은 사용하지 않는다.
-- 두 server는 서로 다른 port로 기동하고, 두 measured request가 끝날 때까지 모두 종료하지 않는다.
-- CPU thread/batch/ubatch, mmap/mlock 등 본 항목에서 명시하지 않은 runtime parameter는 실행 전 exact command에 고정하고 report에 남긴다. 첫 measured run 이후 성능을 이유로 조용히 변경하지 않는다.
+- 두 CPU server는 서로 다른 port로 기동하고, 두 measured request가 끝날 때까지 모두 종료하지 않는다.
 
-ngram 계약:
-- llama.cpp의 `ngram-simple` 경로를 활성화한다.
-- 이 Phase는 TARGET lane과의 A/B 성능 비교가 아니라 **NGRAM-on 상태의 dual-resident CPU-only 128K feasibility**를 검증한다.
-- draft/accepted token이 적거나 0이어도 capacity/correctness PASS 자체를 무효화하지 않는다. 실제 counters는 그대로 기록한다.
+### 6.2 coexistence-oriented CPU/RAM resource envelope [TODO]
 
-### 6.2 모델 / artifact 계약 [TODO]
+CPU:
+- active CPU inference server는 **물리 코어 4개**를 기본 envelope로 사용한다.
+- generation threads: `-t 4`.
+- prompt/batch threads: `-tb 4`.
+- logical batch: `-b 1024`.
+- physical micro-batch: `-ub 256`.
+- strict placement: `--cpu-strict 1`.
+- polling: `--poll 50`.
+- priority elevation은 사용하지 않는다; `--prio` 기본값 0을 유지한다.
+- OpenBLAS/OpenMP를 사용하는 경우 `OPENBLAS_NUM_THREADS=4`, `OMP_NUM_THREADS=4`를 기본값으로 사용한다.
+- CPU 번호를 `0-3`처럼 가정하지 않는다. 실행 전 `lscpu -e=CPU,CORE,SOCKET,NODE,ONLINE`으로 topology를 기록하고 서로 다른 물리 코어 4개의 logical CPU를 선택한다.
+- 나머지 물리 코어 2개와 SMT sibling 자원은 host OS, telemetry, Docker, GPU llama.cpp/vLLM process의 CPU-side work를 위해 예약한다.
+- 두 CPU server는 요청이 직렬이므로 동일한 4-core cpuset을 공유할 수 있다.
 
-#### 6.2.1 Gemma 4 26B-A4B
+RAM / model loading:
+- model loading은 `--load-mode mmap`을 기본값으로 사용한다.
+- `mlock`, `mmap+mlock`, unlimited memlock은 사용하지 않는다. 두 GGUF weight를 RAM에 강제로 고정해 GPU serving/OS의 host-memory headroom을 잠식하지 않는다.
+- prompt cache 재사용은 capacity 측정을 혼동하지 않도록 `--cache-ram 0`, `--no-cache-prompt`를 사용한다.
+- `--no-context-shift`를 사용한다.
+- HTTP worker는 `--threads-http 1`을 기본값으로 사용한다.
+- Web UI는 `--no-webui`로 비활성화한다.
+- 본 Phase에서 선언하지 않은 allocator, thread, batch/ubatch, load mode를 첫 measured run 이후 성능을 이유로 조용히 변경하지 않는다.
+
+### 6.3 ngram-mod 계약 [TODO]
+
+llama.cpp의 draft-model-free `ngram-mod` 경로를 활성화한다.
+
+고정값:
+- `--spec-type ngram-mod`.
+- `--spec-ngram-mod-n-match 24`.
+- `--spec-ngram-mod-n-min 48`.
+- `--spec-ngram-mod-n-max 64`.
+
+이 Phase는 TARGET lane과의 A/B 성능 비교가 아니라 **NGRAM-on 상태의 dual-resident CPU-only 128K feasibility**를 검증한다. draft/accepted token이 적거나 0이어도 capacity/correctness PASS 자체를 무효화하지 않으며 실제 counters를 그대로 기록한다.
+
+### 6.4 모델 / artifact 계약 [TODO]
+
+#### 6.4.1 Gemma 4 26B-A4B
+- exact file: `gemma-4-26B-A4B-it-UD-Q6_K_XL.gguf`.
 - weight quant: `UD-Q6_K_XL`.
 - KV: `Q8_0`.
 - context: 128K.
 - attention: `-fa auto`.
-- speculative: `ngram-simple`.
+- speculative: `ngram-mod` 24/48/64.
 - MTP: OFF.
 - measured agent concurrency: 1.
 
-#### 6.2.2 Ornith 1.5 35B-A3B
+#### 6.4.2 Ornith 1.5 35B-A3B
 - weight quant: `Q4_K_M`.
 - KV: `Q8_0`.
 - context: 128K.
 - attention: `-fa auto`.
-- speculative: `ngram-simple`.
+- speculative: `ngram-mod` 24/48/64.
 - MTP: OFF.
 - measured agent concurrency: 1.
 
 두 artifact 모두 measured run 전에 exact repository/revision/path/SHA256을 확정한다. artifact identity가 확정되지 않으면 추정값으로 채우지 않고 preflight를 중단한다.
 
-### 6.3 dual-resident startup gate [TODO]
+### 6.5 dual-resident + coexistence startup gate [TODO]
 
-두 server를 모두 기동한 뒤 inference를 보내기 전에 다음을 확인한다.
-- Gemma server healthy.
-- Ornith server healthy.
-- 두 process가 동시에 resident 상태.
-- GPU offload/VRAM allocation 없음.
-- combined system RAM 사용량, process별 RSS/PSS, free/available memory 기록.
-- swap 사용량 및 major page fault 상태 기록.
+두 CPU server를 모두 기동한 뒤 inference를 보내기 전에 다음을 확인한다.
+- Gemma CPU server healthy.
+- Ornith CPU server healthy.
+- 두 CPU process가 동시에 resident 상태.
+- 두 CPU server 자체의 GPU offload/VRAM allocation 없음.
+- GPU0/GPU1의 별도 serving process가 존재하면 process/runtime/model과 host-RAM 사용량을 snapshot으로 기록한다.
+- combined system RAM 사용량, CPU server별 RSS/PSS, free/available memory 기록.
+- swap 사용량 및 major page fault baseline 기록.
+- CPU topology/cpuset 및 실제 thread 제한 기록.
 
-64GB physical RAM을 초과한 상태를 swap으로 숨겨서 `PASS`로 처리하지 않는다. 두 모델이 동시에 상주할 수 없거나 한 server 기동이 다른 server의 OOM/process kill을 유발하면 `FAIL_DUAL_RESIDENT_CAPACITY`로 종료한다.
+64GB physical RAM 부족을 swap-backed eviction으로 숨겨서 `PASS`로 처리하지 않는다. 기존 GPU serving과의 공존 때문에 host memory가 부족해 CPU server가 swap thrash/OOM/process kill을 유발하거나, CPU server 기동으로 기존 serving process가 불안정해지는 경우 `FAIL_DUAL_RESIDENT_CAPACITY` 또는 명시적 coexistence failure로 종료한다.
 
-### 6.4 128K 직렬 measured request [TODO]
+기존 swap 사용량이 0이 아닐 수 있으므로 단순 누적값만으로 실패시키지 않고, startup/measured 구간의 **증가량과 page-fault/eviction evidence**를 함께 기록한다.
 
-dual-resident startup gate를 통과한 동일 server pair를 유지한 채 요청은 절대 겹치지 않게 실행한다.
+### 6.6 128K 직렬 measured request [TODO]
+
+dual-resident startup gate를 통과한 동일 CPU server pair를 유지한 채 CPU 요청은 절대 겹치지 않게 실행한다.
 
 실행 순서:
-1. Gemma 4 26B-A4B server에 128K 단일-agent request 1회.
-2. Gemma request가 완전히 종료되고 post-health를 확인.
-3. Ornith 1.5 35B-A3B server에 128K 단일-agent request 1회.
-4. Ornith request가 완전히 종료되고 두 server post-health를 확인.
+1. Gemma 4 26B-A4B CPU server에 128K 단일-agent request 1회.
+2. Gemma request가 완전히 종료되고 두 CPU server post-health를 확인.
+3. Ornith 1.5 35B-A3B CPU server에 128K 단일-agent request 1회.
+4. Ornith request가 완전히 종료되고 두 CPU server post-health를 확인.
+
+GPU0/GPU1의 별도 serving workload는 coexistence 검증을 위해 유지될 수 있다. 다만 CPU WBS 6의 두 measured request끼리는 overlap을 허용하지 않는다.
 
 가능하면 기존 `workloads/capacity/v1.json`의 128K materialization 규칙을 재사용하고, live tokenizer 기준으로 prompt + output reserve가 131,072 token을 넘지 않도록 한다.
 
@@ -961,29 +1008,31 @@ dual-resident startup gate를 통과한 동일 server pair를 유지한 채 요�
 - decode tok/s.
 - end-to-end wall time.
 - ngram draft / accepted counters 및 acceptance ratio.
-- process별 RSS/PSS peak.
+- CPU server별 RSS/PSS peak.
 - system used/available RAM peak.
-- swap in/out 및 major faults.
+- swap in/out delta 및 major faults.
 - CPU utilization / clocks / package power가 수집 가능하면 telemetry로 보존.
+- GPU0/GPU1 serving이 존재할 경우 해당 process의 health 및 host-memory 변화.
 - output integrity.
-- active model request 동안 idle peer server가 계속 healthy/resident였는지.
+- active CPU model request 동안 idle peer CPU server가 계속 healthy/resident였는지.
 
-### 6.5 판정 [TODO]
+### 6.7 판정 [TODO]
 
 모델별 `PASS_CPU_128K_DUAL_RESIDENT`는 다음을 모두 요구한다.
-- 두 server simultaneous startup/residency PASS.
+- 두 CPU server simultaneous startup/residency PASS.
 - 해당 모델의 128K request 정상 완료.
 - OOM, process kill, truncation, context overflow, output corruption 없음.
-- request 종료 후 두 server 모두 healthy.
-- measured request 구간에 다른 모델 request가 겹치지 않음.
-- GPU offload 없음.
+- request 종료 후 두 CPU server 모두 healthy.
+- CPU measured request 구간에 다른 CPU model request가 겹치지 않음.
+- CPU server 자체의 GPU offload 없음.
 - 물리 RAM capacity를 swap-backed eviction으로 대체하지 않음.
+- GPU0/GPU1의 별도 serving process가 존재하는 경우 CPU test 때문에 해당 process가 OOM/kill/health failure에 빠지지 않음.
 
-한 모델 요청이 실패해도 다른 모델의 결과를 추정하지 않는다. 실패한 exact configuration은 그대로 기록하고 context/quant/KV/MTP/topology를 자동 변경해서 재시도하지 않는다.
+한 모델 요청이 실패해도 다른 모델의 결과를 추정하지 않는다. 실패한 exact configuration은 그대로 기록하고 context/quant/KV/MTP/topology/resource envelope를 자동 변경해서 재시도하지 않는다.
 
 최종 report에는 최소한 다음 두 row를 별도로 남긴다.
-- Gemma 4 26B-A4B `UD-Q6_K_XL` / KV `Q8_0` / CPU-only / NGRAM / 128K / peer Ornith resident.
-- Ornith 1.5 35B-A3B `Q4_K_M` / KV `Q8_0` / CPU-only / NGRAM / 128K / peer Gemma resident.
+- Gemma 4 26B-A4B `UD-Q6_K_XL` / KV `Q8_0` / CPU-only / 4-core conservative envelope / NGRAM-MOD 24/48/64 / 128K / peer Ornith resident.
+- Ornith 1.5 35B-A3B `Q4_K_M` / KV `Q8_0` / CPU-only / 4-core conservative envelope / NGRAM-MOD 24/48/64 / 128K / peer Gemma resident.
 
 ## 실행 규칙
 - 별도 승인이 없는 한 선언된 configuration당 measured execution은 1회만 수행한다.
