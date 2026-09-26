@@ -1,0 +1,54 @@
+[
+  {
+    "request_id": "research-synthesis-a",
+    "project_id": "SYNTH_A",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "75f3de663d9196805b399c70da3f1dd048629c9fca71b7337f0893b6b4527147",
+    "requested_output_tokens": 1024,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.001031334002618678,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "# Executive Synthesis: SYNTH_A Technical Research Consolidation\n\n## Overview\n\nThe supplied corpus, though highly repetitive across 281 sections, consolidates three distinct but interrelated architectural domains in modern LLM serving infrastructure. This synthesis identifies the core tensions, compares deployment paradigms, and delivers a structured recommendation.\n\n---\n\n## 1. Primary Cross-Domain Architectural Tensions\n\n### Tension A: Memory Bandwidth vs. Compute Arithmetic Intensity\nThe foundational conflict spans Sections 000001 and 000002. In **dual-resident CPU-only inference**, memory bandwidth across DDR4 multi-channel channels becomes the principal throughput bottleneck. This directly opposes the arithmetic intensity required for efficient tensor evaluation. The system must balance:\n- **Page management & TLB invalidation rates** — OS-level memory translation overhead\n- **Proactive memory-mapped page fault servicing** — pre-fetching to mask latency\n- Both directly dictate **TTFT (Time-To-First-Token)** and **prefill latency**\n\n### Tension B: Speculative Acceptance vs. Verification Overhead\nN-gram modification (ngram-mod) speculative decoding introduces a calibration problem. The candidate match thresholds establish an empirical trade-off:\n| Parameter | Value | Role |\n|-----------|-------|------|\n| `n_match` | 24 | Minimum matches to trigger acceptance |\n| `n_min` | 48 | Lower bound of sliding window |\n| `n_max` | 64 | Upper bound of sliding window |\n\nVerification overhead **must remain subordinate to decode arithmetic intensity** — if n-gram matching against high-entropy technical corpora consumes more cycles than the speculative gain, the paradigm fails.\n\n### Tension C: Context Length vs. Citation Determinism\nLong-document distillation (Sections 000003) demands **32K context processing without context-shift degradation**, while simultaneously requiring **deterministic citation accuracy**. This is an inherent tension: longer contexts increase attention computation and risk citation drift across referenced sections.\n\n---\n\n## 2. Deployment Paradigm Comparison\n\n| Paradigm | Strength | Bottleneck | Ideal Context |\n|----------|----------|------------|---------------|\n| **Accelerator-resident (GPU)** | High arithmetic intensity | Host↔device memory boundary enforcement | GPU-available clusters |\n| **Dual-resident CPU-only** | No accelerator dependency | DDR4 memory bandwidth | Edge / cost-constrained inference |\n| **Speculative (ngram-mod)** | Reduced token count | Verification overhead | High-entropy, repetitive technical text |\n| **Agentic distillation** | Parallel background lanes | Context-shift management | Multi-document enterprise research |\n\n---\n\n## 3. Structured Executive Recommendation\n\n### Recommendation 1: Tiered Serving Architecture\nAdopt a **hybrid memory-residency policy** that enforces strict boundaries between host physical memory and accelerator device memory. Route high-bandwidth, low-arithmetic-intensity workloads to CPU-only paths only when memory bandwidth is saturated; otherwise, prefer accelerator residency.\n\n### Recommendation 2: Calibrate Speculative Thresholds Per-Corpus\nThe fixed thresholds (`n_match=24, n_min=48, n_max=64`) should be **dynamically tuned** based on corpus entropy. High-entropy technical documents require larger sliding windows to maintain acceptance ratios above the verification-overhead break-even point.\n\n### Recommendation 3: Preemptive Page-Fault Servicing\nFor CPU-only deployments, implement **proactive memory-mapped page fault servicing** to convert unpredictable fault latency into deterministic prefetch behavior, directly improving TTFT and prefill consistency.\n\n### Recommendation 4: Context Integrity Guardrails\nFor 32K+ context tasks, deploy **section-level anchoring** to preserve deterministic citation accuracy, isolating referenced sections from context-shift degradation during long-document processing.\n\n---\n\n## Conclusion\n\nThe dominant architectural tension is **memory bandwidth constraining compute efficiency**, with speculative decoding and long-context distillation serving as mitigation strategies that introduce their own calibration requirements. The optimal deployment is a **tiered, entropy-aware serving engine** that dynamically routes workloads, calibrates speculative thresholds per corpus, and enforces memory-residency boundaries to preserve deterministic inference characteristics."
+          }
+        }
+      ],
+      "usage": {
+        "completion_tokens": 892,
+        "prompt_tokens": 31743,
+        "total_tokens": 32635,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 31743,
+        "prompt_ms": 4160116.636,
+        "prompt_per_token_ms": 131.05618990013545,
+        "prompt_per_second": 7.630314911199523,
+        "predicted_n": 892,
+        "predicted_ms": 282899.535,
+        "predicted_per_token_ms": 317.5078956228956,
+        "predicted_per_second": 3.149527976424564
+      }
+    },
+    "actual_output_tokens": 892,
+    "post_template_prompt_tokens": 31743,
+    "ttft_ms": 4160259.5057430007,
+    "first_abs": 36991.905602162,
+    "end_abs": 37274.806470441,
+    "wall_s": 4443.160374022002,
+    "prefill_tps": 7.630314911199523,
+    "decode_tps": 3.149527976424564,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 4443.179157097002
+  }
+]

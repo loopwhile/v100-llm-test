@@ -1,0 +1,13 @@
+{
+  "items": [
+    {
+      "request_id": "research-synthesis-a",
+      "receipt": {
+        "source": "llama tokenizer",
+        "prompt_tokens": 31742,
+        "formatted_prompt_sha256": "4f7934061768cdb3ddfcfca03152c8dd7fb03a173dc1ab13755710f551788bbd"
+      },
+      "error": null
+    }
+  ]
+}

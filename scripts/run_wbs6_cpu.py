@@ -867,7 +867,6 @@ def run_measured_experiment_32k(
 
     # Persist Checkpoints A and B (Startup Phase) in experiment evidence
     h.save(runtime / "checkpoint_a_baseline_before_startup.json", snap_a)
-    h.save(raw / "memory-baseline-before-startup.json", snap_a)
     h.save(runtime / "checkpoint_b_startup_healthy.json", snap_b)
     startup_deltas = compute_memory_deltas(snap_a, snap_b)
     h.save(runtime / "memory-startup-deltas.json", startup_deltas)
@@ -885,15 +884,22 @@ def run_measured_experiment_32k(
     if not peer_health_pre.get("healthy"):
         raise RuntimeError(f"Peer {peer_name} is unhealthy before measurement! status={peer_health_pre}")
 
+    container_name = "p520-cpu-gemma" if "GEMMA" in exp_id else "p520-cpu-ornith"
     planned = {
         "schema_version": 1,
         "experiment_id": exp_id,
         "model": model_name,
         "model_key": model_key,
+        "model_identity": {"path": model_path},
+        "launch_command": (
+            f"docker run -d --name {container_name} -p {port}:{port} "
+            f"--cpuset-cpus 1,2,3,4 -m 30g {selected_image} --host 0.0.0.0 --port {port} -m {model_path}"
+        ),
         "runtime": "llama.cpp",
         "runtime_flavor": "cpu-only",
         "runtime_image": selected_image,
         "runtime_image_digest": get_image_digest(selected_image),
+        "runtime_revision": f"{selected_image} ({get_image_digest(selected_image)[:19]})",
         "backend_variant": "CPU-ONLY-W2135-NATIVE",
         "topology": "cpu-standalone-4core",
         "topology_detail": "logical CPU IDs 1, 2, 3, 4, each mapped to distinct physical cores (CORE 1, 2, 3, 4)",
@@ -905,6 +911,10 @@ def run_measured_experiment_32k(
         "kv_cache": "Q8_0",
         "speculative": "ngram-mod",
         "ngram": "ngram-mod-24-48-64",
+        "prefix_cache_lane": "cold-independent",
+        "chat_template": "none",
+        "tool_parser": "none",
+        "thinking": False,
         "endpoint": endpoint,
         "peer_resident_model": peer_name,
         "peer_resident_endpoint": peer_endpoint,
@@ -983,6 +993,7 @@ def run_measured_experiment_32k(
             h.save(runtime / f"{post_snap_label}.json", post_snap)
 
             memory_deltas = mem_collector.compute_summary_deltas(pre_snap, post_snap)
+            h.save(raw / "memory-baseline-before-startup.json", snap_a)
             h.save(raw / "memory-deltas.json", memory_deltas)
             print(f"[+] Recorded memory deltas: Swap delta={memory_deltas['swap_used_delta_kib']} kB, pswpin delta={memory_deltas['pswpin_delta']}, pswpout delta={memory_deltas['pswpout_delta']}, pgmajfault delta={memory_deltas['pgmajfault_delta']}")
         except Exception as snap_err:

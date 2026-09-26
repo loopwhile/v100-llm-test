@@ -1,0 +1,36 @@
+{
+  "checkpoint": "checkpoint_b_startup_healthy",
+  "timestamp_utc": "2026-09-26T14:47:33.732890+00:00",
+  "system_memory_kib": {
+    "MemTotal": 64060288,
+    "MemAvailable": 43931736,
+    "SwapTotal": 4194300,
+    "SwapFree": 4158184,
+    "SwapUsed": 36116
+  },
+  "system_vmstat": {
+    "pswpin": 111845,
+    "pswpout": 1783061,
+    "pgmajfault": 111035
+  },
+  "gemma_process": {
+    "pid": 125291,
+    "smaps_rollup_kib": {
+      "Rss": 0,
+      "Pss": 0,
+      "Pss_Anon": 0,
+      "Pss_File": 0,
+      "Swap": 0
+    }
+  },
+  "ornith_process": {
+    "pid": 125409,
+    "smaps_rollup_kib": {
+      "Rss": 0,
+      "Pss": 0,
+      "Pss_Anon": 0,
+      "Pss_File": 0,
+      "Swap": 0
+    }
+  }
+}

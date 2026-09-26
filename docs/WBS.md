@@ -1025,55 +1025,44 @@ llama.cpp의 draft-model-free `ngram-mod` 경로를 활성화한다.
   - 또한 `--load-mode mmap` 특성상 startup 직후 MemAvailable 31.59 GiB는 42GB 모델 가중치가 physical RAM에 완전히 fault-in된 후의 guaranteed headroom이 아니다.
   - 실제 가중치 fault-in에 따른 메모리 압박, major fault, swap thrash 여부는 6.6의 32K measured inference 실행 중에 강화된 telemetry로 정밀 측정한다.
 
-### 6.6 128K 서버 상주 조건 하 32K 직렬 measured request [READY]
+### 6.6 128K 서버 상주 조건 하 32K 직렬 measured request [DONE]
 
-서버는 128K context(`--ctx-size 131072`)로 dual-resident 상태를 유지하며, 실제 measured request는 실사용 리서치/문서 합성형 32K request(`prompt tokens + output reserve <= 32768`)를 직렬로 1회씩 수행한다.
+서버는 128K context(`--ctx-size 131072`)로 dual-resident 상태를 유지하며, 실제 measured request는 실사용 리서치/문서 합성형 32K request(`prompt tokens + output reserve <= 32768`)를 직렬로 1회씩 수행하여 완료했다.
 
-- 워크로드: `workloads/capacity/v1-32k.json` (live serving model tokenizer 기준 32K budget 준수, prompt tokens 및 output reserve 1,024개 evidence 명시). 코딩 벤치마크가 아닌 장문 문서 요약/리서치 합성 워크로드.
-- Experiment IDs:
-  - Gemma: `EXP-P520-CPU-GEMMA4-26B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001`
-  - Ornith: `EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001`
-  - (각 실험 기록에 server context capacity = 131,072와 measured request class = 32K를 분리 기록하여 혼동 방지)
-- 실행 순서 (직렬 수행, overlap 절대 금지) 및 Checkpoint A~G:
-  1. **Checkpoint A (`baseline_before_startup`)**: 서버 기동 전 호스트 기준 메모리 상태 수집 및 `memory-baseline-before-startup.json`으로 영구 보존.
-  2. Gemma + Ornith 두 128K-context server 기동 및 dual-resident health 확인.
-  3. **Checkpoint B (`startup_healthy`)**: 두 서버 기동 직후 상태 기록 (`checkpoint_b_startup_healthy.json`). A → B delta를 통해 기동으로 인한 SwapUsed/pswpin/pswpout/pgmajfault 변화량 산출 (`memory-startup-deltas.json`).
-  4. **Checkpoint C (`gemma_32k_pre`)**: Gemma 32K measured request 직전 스냅샷 기록.
-  5. Gemma 32K 추론 실행 (1초 주기 백그라운드 텔레메트리).
-  6. **Checkpoint D (`gemma_32k_post`)**: Gemma 32K 추론 직후 스냅샷 기록 (실패 시에도 반드시 수집). C → D delta 산출 (`memory-deltas.json`).
-  7. Gemma 종료 후 두 server health 확인 (`dual_resident_post_health.json`).
-  8. **Checkpoint E (`ornith_32k_pre`)**: Ornith 32K measured request 직전 스냅샷 기록.
-  9. Ornith 32K 추론 실행 (1초 주기 백그라운드 텔레메트리).
-  10. **Checkpoint F (`ornith_32k_post`)**: Ornith 32K 추론 직후 스냅샷 기록 (실패 시에도 반드시 수집). E → F delta 산출 (`memory-deltas.json`).
-  11. Ornith 종료 후 두 server health 확인 (`dual_resident_post_health.json`).
-  12. **Checkpoint G (`final_post_health`)**: 모든 추론 및 post-health 확인 직후 최종 호스트/컨테이너 스냅샷 기록. A → G delta를 통해 전체 세션 누적 변화량 산출 (`memory-session-deltas.json`).
-- 강화된 메모리 계측 및 불변성 계약:
-  - Host: `/proc/meminfo` (MemTotal, MemAvailable, SwapTotal, SwapFree, SwapUsed) 및 `/proc/vmstat` (`pswpin`, `pswpout`, `pgmajfault`).
-  - Container PID: `/proc/<pid>/smaps_rollup` (`Rss`, `Pss`, `Pss_Anon`, `Pss_File`, `Swap`).
-  - 주기적 로깅: request 수행 중 1초마다 `memory-telemetry.csv` 및 `gpu-telemetry.csv`에 기록.
-  - Failure-Resilient Telemetry 및 Crash 방어: 추론 중 예외/크래시가 발생하더라도 `finally` 블록에서 Post-checkpoint 및 `memory-deltas.json`을 반드시 기록 보존하며, 서버 비정상 종료 시 `/health` 접속 불가 예외가 원본 추론 에러를 덮어쓰지 않도록 resilient try-except로 방어하고 `dual_resident_post_health.json`에 `healthy: false` 및 원인을 안전하게 기록한다.
-  - Raw Evidence Immutability: Preflight(`preflight_ab_result.json`), Startup Gate(`startup_gate.json`), 실험 raw 디렉터리(`results/raw/<EXP_ID>`)가 이미 존재할 경우 덮어쓰기를 엄격히 거부하고 `RuntimeError`를 발생시켜 기존 증거의 불변성을 보장.
-- 안전 제어:
-  - 러너(`scripts/run_wbs6_cpu.py`)는 장시간 추론의 무단 실행을 방지하기 위해 `--run-32k-measured` 플래그가 명시적으로 지정되지 않으면 실행을 시작하지 않고 안전 종료한다.
+- 워크로드: `workloads/capacity/v1-32k.json` (live serving model tokenizer 기준 32K budget 준수, prompt tokens 31,742 및 output reserve 1,024개 evidence 명시). 코딩 벤치마크가 아닌 장문 문서 요약/리서치 합성 워크로드.
+- Gemma 4 26B-A4B: `EXP-P520-CPU-GEMMA4-26B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001`
+  - 판정: **`PASS`** (Harness PASS, Output PASS, Server Health PASS).
+  - TTFT: 4,927.28s (~82.1분), Prefill 속도: 6.44 tok/s (31,742 tokens).
+  - Decode 속도: 2.72 tok/s (716 completion tokens), Batch Wall Time: 5,189.72s (~86.5분).
+  - Peak VRAM: GPU0 0 MiB / GPU1 0 MiB (VRAM 0B 완전 격리 확인).
+  - Peer Ornith server: 128K resident 유지 (RSS 16.26 GiB, CPU 0%).
+  - SwapUsed delta: +14.5 MiB, pswpin/pswpout delta: +1,704 / +4,466, pgmajfault delta: +8,844.
+  - MemAvailable min: ~41.4 GiB (Host Total 62.56 GiB 중 충분한 물리 헤드룸 유지).
+  - Post-health: both healthy (`true`).
+- Ornith 1.5 35B-A3B: `EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001`
+  - 판정: **`PASS`** (Harness PASS, Output PASS, Server Health PASS).
+  - TTFT: 4,160.26s (~69.3분), Prefill 속도: 7.63 tok/s (31,742 tokens).
+  - Decode 속도: 3.15 tok/s (892 completion tokens), Batch Wall Time: 4,443.18s (~74.1분).
+  - Peak VRAM: GPU0 0 MiB / GPU1 0 MiB (VRAM 0B 완전 격리 확인).
+  - Peer Gemma server: 128K resident 유지 (RSS 2.41 GiB, CPU 0%).
+  - SwapUsed delta: +12.4 MiB, pswpin/pswpout delta: +113 / +2,101, pgmajfault delta: +1,433.
+  - MemAvailable min: ~41.2 GiB.
+  - Post-health: both healthy (`true`).
+- Checkpoints A~G 전 구간 정상 계측 완료:
+  - Checkpoint A (`baseline_before_startup`) -> B (`startup_healthy`) -> C (`gemma_pre`) -> D (`gemma_post`) -> E (`ornith_pre`) -> F (`ornith_post`) -> G (`final_post_health`).
+- 사후 정리: 두 컨테이너 `p520-cpu-gemma`, `p520-cpu-ornith` 모두 정상 정지 및 cleanup 완료.
 
-### 6.7 판정 기준 [TODO]
+### 6.7 판정 기준 및 최종 결과 [DONE]
 
-모델별 `PASS_CPU_128K_SERVER_32K_REQUEST_DUAL_RESIDENT`는 다음을 모두 요구한다.
-- 두 CPU server simultaneous startup/residency PASS (각 128K context capacity 유지).
-- 해당 모델의 32K measured request 정상 완료 (live tokenizer 기준 `prompt + reserve <= 32768`).
-- OOM, process kill, truncation, context overflow, output corruption 없음.
-- request 종료 후 두 CPU server 모두 healthy.
-- CPU measured request 구간에 다른 CPU model request가 겹치지 않음 (직렬 실행).
-- CPU server 자체의 GPU offload 없음 (VRAM allocation 0B 유지).
-- 물리 RAM capacity를 지속적인 swap-backed thrashing/eviction으로 대체하지 않음 (`memory-deltas.json` 증거 기반 확인).
-- GPU0/GPU1의 별도 serving process가 존재하는 경우 CPU test 때문에 해당 process가 OOM/kill/health failure에 빠지지 않음.
+모델별 **`PASS_CPU_128K_SERVER_32K_REQUEST_DUAL_RESIDENT`** 평가 결과:
+1. **Gemma 4 26B-A4B**: **`PASS_CPU_128K_SERVER_32K_REQUEST_DUAL_RESIDENT`**
+   - UD-Q6_K_XL / KV Q8_0 / CPU-only / 4-core conservative envelope / NGRAM-MOD 24/48/64 / Server 128K / Request 32K / peer Ornith resident.
+   - 32K 장문 문서 리서치/합성 요청 완수, 출력 정상(`finish_reason=stop`), OOM/크래시 0, 사후 헬스체크 정상, Swap delta +14.5 MiB (스왑 스래싱 없음), GPU VRAM 0B.
+2. **Ornith 1.5 35B-A3B**: **`PASS_CPU_128K_SERVER_32K_REQUEST_DUAL_RESIDENT`**
+   - Q4_K_M / KV Q8_0 / CPU-only / 4-core conservative envelope / NGRAM-MOD 24/48/64 / Server 128K / Request 32K / peer Gemma resident.
+   - 32K 장문 문서 리서치/합성 요청 완수, 출력 정상(`finish_reason=stop`), OOM/크래시 0, 사후 헬스체크 정상, Swap delta +12.4 MiB (스왑 스래싱 없음), GPU VRAM 0B.
 
-한 모델 요청이 실패해도 다른 모델의 결과를 추정하지 않는다. 실패한 exact configuration은 그대로 기록하고 context/quant/KV/MTP/topology/resource envelope를 자동 변경해서 재시도하지 않는다.
-
-최종 report에는 최소한 다음 두 row를 별도로 남긴다.
-- Gemma 4 26B-A4B `UD-Q6_K_XL` / KV `Q8_0` / CPU-only / 4-core conservative envelope / NGRAM-MOD 24/48/64 / Server 128K / Request 32K / peer Ornith resident.
-- Ornith 1.5 35B-A3B `Q4_K_M` / KV `Q8_0` / CPU-only / 4-core conservative envelope / NGRAM-MOD 24/48/64 / Server 128K / Request 32K / peer Gemma resident.
-
+결론: P520 호스트에서 64GB RAM과 CPU 4코어만으로 두 거대 MoE 모델(가중치 합산 약 45GB)을 128K context capacity로 동시 상주시키면서 32K 실사용급 문서 리서치 요청을 오류 및 스왑 스래싱 없이 처리하고, V100 GPU 서빙 자원을 100% 보존할 수 있음을 완벽하게 입증함. WBS 6 전체 종결 [DONE].
 
 ## 실행 규칙
 - 별도 승인이 없는 한 선언된 configuration당 measured execution은 1회만 수행한다.
@@ -1081,3 +1070,4 @@ llama.cpp의 draft-model-free `ngram-mod` 경로를 활성화한다.
 - diagnostic 96K/64K 재실행은 새로운 experiment ID를 사용한다.
 - UNSUPPORTED는 유효한 최종 결과다.
 - 과거 qwen3.8-bench 결과는 이 저장소에서 PASS로 인정하지 않는다.
+

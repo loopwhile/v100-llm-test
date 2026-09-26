@@ -1,0 +1,36 @@
+{
+  "checkpoint": "checkpoint_e_ornith_32k_pre",
+  "timestamp_utc": "2026-09-26T16:14:08.310219+00:00",
+  "system_memory_kib": {
+    "MemTotal": 64060288,
+    "MemAvailable": 43551900,
+    "SwapTotal": 4194300,
+    "SwapFree": 4143300,
+    "SwapUsed": 51000
+  },
+  "system_vmstat": {
+    "pswpin": 113586,
+    "pswpout": 1787527,
+    "pgmajfault": 120227
+  },
+  "gemma_process": {
+    "pid": 125291,
+    "smaps_rollup_kib": {
+      "Rss": 0,
+      "Pss": 0,
+      "Pss_Anon": 0,
+      "Pss_File": 0,
+      "Swap": 0
+    }
+  },
+  "ornith_process": {
+    "pid": 125409,
+    "smaps_rollup_kib": {
+      "Rss": 0,
+      "Pss": 0,
+      "Pss_Anon": 0,
+      "Pss_File": 0,
+      "Swap": 0
+    }
+  }
+}

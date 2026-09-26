@@ -1,0 +1,25 @@
+{
+  "swap_used_start_kib": 28996,
+  "swap_used_end_kib": 63744,
+  "swap_used_delta_kib": 34748,
+  "pswpin_start": 111838,
+  "pswpin_end": 113699,
+  "pswpin_delta": 1861,
+  "pswpout_start": 1781721,
+  "pswpout_end": 1789628,
+  "pswpout_delta": 7907,
+  "pgmajfault_start": 110070,
+  "pgmajfault_end": 121660,
+  "pgmajfault_delta": 11590,
+  "mem_available_minimum_kib": 43362804,
+  "gemma_process_peaks_kib": {
+    "rss": 0,
+    "pss": 0,
+    "swap": 0
+  },
+  "ornith_process_peaks_kib": {
+    "rss": 0,
+    "pss": 0,
+    "swap": 0
+  }
+}

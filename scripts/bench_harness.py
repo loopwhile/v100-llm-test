@@ -327,7 +327,7 @@ def classify(e):
  return "INCONCLUSIVE"
 
 def validate(c):
- if not re.fullmatch(r"EXP-V100-[A-Z0-9][A-Z0-9-]*",c["experiment_id"]):raise ValueError("bad experiment_id")
+ if not re.fullmatch(r"EXP-(?:V100|P520)-[A-Z0-9][A-Z0-9-]*",c["experiment_id"]):raise ValueError("bad experiment_id")
  if c.get("concurrency") not in (1,2):raise ValueError("concurrency must be C1/C2")
  if type(c.get("context_tokens")) is not int or c["context_tokens"]<1:raise ValueError("bad context_tokens")
  for k in ("model","runtime","runtime_revision","model_identity","launch_command","weight_quant","kv_cache","speculative","ngram","topology","prefix_cache_lane","chat_template","tool_parser","thinking"):
