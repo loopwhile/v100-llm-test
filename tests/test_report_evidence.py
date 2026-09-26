@@ -99,6 +99,49 @@ class TestEvidenceListing(unittest.TestCase):
             self.assertIn("Failure reason", md)
             self.assertIn("backend server 0 exited prematurely", md)
 
+    def test_1gpu_startup_failed_does_not_claim_measured_batch(self):
+        """A 1gpu-x2-independent FAIL_STARTUP experiment must not claim one measured 128K batch."""
+        with tempfile.TemporaryDirectory() as td:
+            raw, config, metrics, completion = _make_raw(
+                td,
+                ["runtime/plan.json", "runtime/server-0.log"],
+                config={
+                    "experiment_id": "EXP-V100-TEST-002",
+                    "model": "test-model",
+                    "runtime": "1Cat-vLLM",
+                    "runtime_revision": "test",
+                    "weight_quant": "NVFP4",
+                    "kv_cache": "FP16",
+                    "speculative": "MTP",
+                    "ngram": "N/A",
+                    "topology": "1gpu-x2-independent",
+                    "context_tokens": 131072,
+                    "concurrency": 2,
+                    "prefix_cache_lane": "cold-independent",
+                    "notes": "test",
+                },
+                metrics={"verdict": "FAIL_STARTUP", "error": "backend server 0 exited prematurely"},
+                completion={
+                    "experiment_id": "EXP-V100-TEST-002",
+                    "verdict": "FAIL_STARTUP",
+                    "completed_at_utc": "2026-09-26T00:00:00+00:00",
+                    "error": "backend server 0 exited prematurely",
+                },
+            )
+            md = report._report(config, metrics, completion, raw)
+            self.assertIn("no measured 128K batch reached; startup failed before routing preflight and measurement", md)
+            self.assertNotIn("one measured 128K batch", md)
+
+    def test_normalize_note_startup_failure(self):
+        """_normalize_note replaces 'one measured 128K batch' with startup failed phrase on FAIL_STARTUP."""
+        config = {"topology": "1gpu-x2-independent", "concurrency": 2}
+        raw_dir = Path("/tmp")
+        note = "WBS 4.2.2; Ornith 1.5 9B 1GPUx2 + LiteLLM; concurrency C2; one measured 128K batch; no full-size benchmark warmup."
+        normalized = report._normalize_note(note, config, "FAIL_STARTUP", raw_dir)
+        self.assertIn("WBS 4.2.1", normalized)
+        self.assertIn("no measured 128K batch reached; startup failed before routing preflight and measurement.", normalized)
+        self.assertNotIn("one measured 128K batch", normalized)
+
 
 class TestRuntimeLauncherContract(unittest.TestCase):
     """Verify gateway and backend configuration contract."""

@@ -305,7 +305,10 @@ def _report(config, metrics, completion, raw_dir, verdicts=None):
 
     if config.get("topology") == "1gpu-x2-independent":
         preflight_exists = (raw_dir / "runtime/routing-preflight.json").exists() or config.get("routing_preflight_before_measurement")
-        if preflight_exists:
+        is_startup_fail = verdict and "FAIL_STARTUP" in str(verdict)
+        if is_startup_fail:
+            lines.append("- Measurement status: no measured 128K batch reached; startup failed before routing preflight and measurement")
+        elif preflight_exists:
             lines.extend([
                 "- Routing preflight before measurement: true (2 short requests, max_tokens=16)",
                 "- Warmup: no full-size benchmark warmup (one measured 128K batch)",
@@ -411,7 +414,17 @@ def _normalize_note(note_text, config, verdict, raw_dir):
         note_text = re.sub(r"\bWBS 4\.1\.6\b", "WBS 4.1.3", note_text)
         note_text = re.sub(r"\bWBS 4\.1\.8\b", "WBS 4.1.4", note_text)
         note_text = re.sub(r"\bWBS 4\.2\.2\b", "WBS 4.2.1", note_text)
-        if "one measured execution; no warmup." in note_text:
+        if verdict and "FAIL_STARTUP" in str(verdict):
+            for old_phrase in (
+                "one measured execution; no warmup.",
+                "one measured 128K batch; no full-size benchmark warmup.",
+            ):
+                if old_phrase in note_text:
+                    note_text = note_text.replace(
+                        old_phrase,
+                        "no measured 128K batch reached; startup failed before routing preflight and measurement."
+                    )
+        elif "one measured execution; no warmup." in note_text:
             preflight_file = raw_dir / "runtime/routing-preflight.json"
             if preflight_file.exists() or config.get("routing_preflight_before_measurement"):
                 note_text = note_text.replace(
