@@ -653,9 +653,18 @@ Shared TP2와 다음 항목을 비교한다.
   - Common decode window: `10592.77s ~ 10607.28s` (~14.5s) 구간 동시 병렬 디코드 완벽 증명.
   - Output analysis: Project A (1,198 tokens), Project B (1,093 tokens) 모두 seeded defect 분석/수정안 제시 완벽 통과 (PASS).
 
-#### 4.1.4 MTP_NGRAM [TODO]
+#### 4.1.4 MTP_NGRAM [DONE]
 - C1: `EXP-V100-ORN15-9B-LLAMA-F16-MTP-NGRAM-1GPU2-C1-128K-20260926-001` — `SKIPPED` (사용자 승인: 4.1.1 TARGET C1에서 단일 요청 LiteLLM 경로 검증 완료 후 C2로 직행)
-- C2: `EXP-V100-ORN15-9B-LLAMA-F16-MTP-NGRAM-1GPU2-C2-128K-20260926-001` — `TODO`
+- C2: `EXP-V100-ORN15-9B-LLAMA-F16-MTP-NGRAM-1GPU2-C2-128K-20260926-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false`.
+  - Gateway routing: LiteLLM single gateway (`http://127.0.0.1:18079`) 경로로 단일 진입. Dual-backend preflight 통과 후 `RoutingSettledAdmissionBarrier`를 통해 backend-0 (`:18080`) 및 backend-1 (`:18081`)로 분산 안착 확인.
+  - TTFT (Batch Mean): 208,742.99 ms (~208.74s; Req A 212.12s, Req B 205.36s).
+  - Prefill: **618.26 tok/s** (Req A: 608.25, Req B: 628.27).
+  - Decode: Mean Request 49.96 tok/s, Aggregate Decode **79.35 tok/s** (C2 최고 throughput 달성), End-to-End 9.84 tok/s, Batch Wall 234.89s.
+  - Speculative 통계: Backend 0 (Req A) 50.92% (750/1,473 accepted, mean len = 2.80), Backend 1 (Req B) 40.43% (689/1,704 accepted, mean len = 2.56), 전체 통합 **45.30%** (1,439/3,177 accepted).
+  - Peak VRAM: GPU0 11,905 MiB / GPU1 11,905 MiB (16GB 한도 내 대칭 적재).
+  - Common decode window: `11062.15s ~ 11079.31s` (~17.2s) 구간 동시 병렬 디코드 완벽 증명.
+  - Output analysis: Project A (1,171 tokens), Project B (1,140 tokens) 모두 seeded defect 분석/수정안 제시 완벽 통과 (PASS).
 
 ### 4.2 1Cat-vLLM STOCK
 
