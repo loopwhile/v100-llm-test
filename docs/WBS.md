@@ -610,7 +610,7 @@ Shared TP2와 다음 항목을 비교한다.
 - Server 0: GPU0 (`127.0.0.1:18080`), Server 1: GPU1 (`127.0.0.1:18081`), Gateway: LiteLLM v1.101.0 (`127.0.0.1:18079`).
 - 실행 runner: `scripts/run_1gpu_litellm.py`.
 
-#### 4.1.1 TARGET [C1: DONE / C2: TODO]
+#### 4.1.1 TARGET [DONE]
 - C1 attempt 001: `EXP-V100-ORN15-9B-LLAMA-F16-TARGET-1GPU2-C1-128K-20260926-001` — `INCONCLUSIVE` (harness CLI args bug on worker invocation; preflight/servers PASS, measured request not reached).
 - C1 attempt 002: `EXP-V100-ORN15-9B-LLAMA-F16-TARGET-1GPU2-C1-128K-20260926-002` — **`PASS_C1_128K`**
   - TTFT: 190,008.28 ms (~190.01s), Prefill ~679.0 tok/s, Decode 43.34 tok/s, Aggregate Decode 43.34 tok/s, End-to-end 2.58 tok/s, Batch Wall 202.08s.
@@ -618,7 +618,14 @@ Shared TP2와 다음 항목을 비교한다.
   - Peak VRAM: GPU0 10,891 MiB / GPU1 10,769 MiB (각 16GB 한도 내 안정적 수용).
   - Gateway routing: LiteLLM least-busy router를 통해 backend-0 (`http://127.0.0.1:18080/v1`)으로 정상 프록시 및 디코드 완료.
   - Post-health: LiteLLM `/health/liveliness` 및 Backend 0, 1 `/health` 모두 200 OK 정상 종료.
-- C2: `EXP-V100-ORN15-9B-LLAMA-F16-TARGET-1GPU2-C2-128K-20260926-001` — `TODO`
+- C2: `EXP-V100-ORN15-9B-LLAMA-F16-TARGET-1GPU2-C2-128K-20260926-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false`.
+  - Gateway routing: LiteLLM single gateway (`http://127.0.0.1:18079`) 경로로 단일 진입. Dual-backend preflight 통과 후 `RoutingSettledAdmissionBarrier`를 통해 backend-0 (`:18080`) 및 backend-1 (`:18081`)로 분산 안착 확인.
+  - TTFT (Batch Mean): 186,447.92 ms (~186.45s; Req A 189.38s, Req B 183.51s).
+  - Decode: Mean Request 43.51 tok/s, Aggregate Decode **77.40 tok/s**, End-to-End 12.69 tok/s, Batch Wall 220.01s.
+  - Peak VRAM: GPU0 10,893 MiB / GPU1 10,893 MiB (완전 대칭 적재, 16GB 한도 내 각 ~5.5 GiB 여유).
+  - Common decode window: `9659.31s ~ 9687.29s` (~28s) 구간 동시 병렬 디코드 완벽 증명.
+  - Output analysis: Project A (1,201 tokens), Project B (1,591 tokens) 모두 seeded defect 분석/수정안 제시 완벽 통과 (PASS).
 
 #### 4.1.2 NGRAM [TODO]
 - C1: `EXP-V100-ORN15-9B-LLAMA-F16-NGRAM-1GPU2-C1-128K-20260926-001` — `SKIPPED` (사용자 승인: 4.1.1 TARGET C1에서 단일 요청 LiteLLM 경로 검증 완료 후 C2로 직행)
