@@ -1,0 +1,22 @@
+{
+  "items": [
+    {
+      "request_id": "project-a",
+      "receipt": {
+        "source": "llama tokenizer",
+        "prompt_tokens": 129022,
+        "formatted_prompt_sha256": "0a09214f2e4622c4fe057c204fcfcd2e122ebe685fb1991e122ae07b27955702"
+      },
+      "error": null
+    },
+    {
+      "request_id": "project-b",
+      "receipt": {
+        "source": "llama tokenizer",
+        "prompt_tokens": 129024,
+        "formatted_prompt_sha256": "55334d24d38a7416ffc7082b98325d84320ac4e559369ea6b2fbcb29d98921d4"
+      },
+      "error": null
+    }
+  ]
+}

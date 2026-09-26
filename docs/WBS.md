@@ -492,7 +492,14 @@ WBS 3 authoritative workload는 `workloads/concurrency/v2.json`이다.
   - Output analysis:
     - Project A: 924 tokens 생성, `Transaction.commit` 루프 내 `pending.clear()` 조기 비움 결함 완벽 분석 및 재현/수정안 제시 (PASS).
     - Project B: 1,068 tokens 생성, `JobQueue.pop` 비원자적 `await asyncio.sleep(0)` race condition 결함 완벽 분석 및 재현/수정안 제시 (PASS).
-- NGRAM: `EXP-V100-GEMMA4-26B-LLAMA-F16-NGRAM-C2-128K-20260925-001` [TODO]
+- NGRAM: `EXP-V100-GEMMA4-26B-LLAMA-F16-NGRAM-C2-128K-20260925-001` — **`PASS_C2_ACTIVE`**
+  - Concurrency evidence: `c2_resident: true`, `c2_active: true`, `queue_only: false` (`peak_processing: 2.0`, `peak_waiting: 0.0`). 2× V100 16GB TP2 환경에서 NGRAM 활성 상태로 2개 독립 128K 세션 동시 상주 및 병렬 디코드 완벽 통과.
+  - TTFT (Batch Mean): 457.15s, Prefill 353.01 tok/s, Mean Decode 20.33 tok/s, Aggregate Decode 4.86 tok/s, End-to-End Output 3.08 tok/s, Batch Wall 689.16s (~11.49분).
+  - NGRAM Speculative 통계: Project A (draft 527, accepted 186, 35.3%), Project B (draft 528, accepted 141, 26.7%; 전체 수락률 31.0%).
+  - Peak VRAM: GPU0 10,039 MiB / GPU1 10,607 MiB (16GB 한도 내 안정적 수용).
+  - Output analysis:
+    - Project A: 1,066 tokens 생성, `Transaction.commit` 루프 내 `pending.clear()` 결함 분석 및 수정안 제시 (PASS).
+    - Project B: 1,055 tokens 생성, `JobQueue.pop` 비원자적 race condition 결함 분석 및 수정안 제시 (PASS).
 - MTP: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-C2-128K-20260925-001` [TODO]
 - MTP_NGRAM: `EXP-V100-GEMMA4-26B-LLAMA-F16-MTP-NGRAM-C2-128K-20260925-001` [TODO]
 
