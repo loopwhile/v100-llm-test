@@ -911,7 +911,7 @@ ngram 계약:
 ### 6.2 모델 / artifact 계약 [TODO]
 
 #### 6.2.1 Gemma 4 26B-A4B
-- weight quant: `UD-Q6_K`.
+- weight quant: `UD-Q6_K_XL`.
 - KV: `Q8_0`.
 - context: 128K.
 - attention: `-fa auto`.
@@ -982,7 +982,7 @@ dual-resident startup gate를 통과한 동일 server pair를 유지한 채 요�
 한 모델 요청이 실패해도 다른 모델의 결과를 추정하지 않는다. 실패한 exact configuration은 그대로 기록하고 context/quant/KV/MTP/topology를 자동 변경해서 재시도하지 않는다.
 
 최종 report에는 최소한 다음 두 row를 별도로 남긴다.
-- Gemma 4 26B-A4B `UD-Q6_K` / KV `Q8_0` / CPU-only / NGRAM / 128K / peer Ornith resident.
+- Gemma 4 26B-A4B `UD-Q6_K_XL` / KV `Q8_0` / CPU-only / NGRAM / 128K / peer Ornith resident.
 - Ornith 1.5 35B-A3B `Q4_K_M` / KV `Q8_0` / CPU-only / NGRAM / 128K / peer Gemma resident.
 
 ## 실행 규칙
