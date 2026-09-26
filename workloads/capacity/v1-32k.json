@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "workload_id": "P520-CPU-CAPACITY-32K-v1",
+  "mode": "capacity_research_synthesis",
+  "context_tokens": 32768,
+  "output_tokens": 1024,
+  "min_context_utilization": 0.98,
+  "source": "multi-source technical research synthesis and document consolidation for CPU long-context serving",
+  "sampling": {
+    "temperature": 0,
+    "top_p": 1,
+    "seed": 520
+  },
+  "requests": [
+    {
+      "id": "research-synthesis-a",
+      "project_id": "SYNTH_A",
+      "title": "Technical Research Synthesis & Long-Form Document Consolidation",
+      "final_instruction": "Analyze and synthesize the supplied technical research documents, multi-source technology surveys, and architectural trade-off reports. Identify the primary cross-domain architectural tensions, compare deployment paradigms, and synthesize a structured executive recommendation. Produce a comprehensive response of at least 256 tokens so decode performance is measurable.",
+      "seed_blocks": [
+        "# Section: Distributed Memory Hierarchies in Mixed Compute Environments\nHigh-throughput serving of large language models on heterogeneous infrastructure requires strict boundaries between host physical memory and accelerator device memory. In dual-resident CPU-only inference scenarios, memory bandwidth across DDR4 multi-channel channels becomes the principal throughput bottleneck. Operating system page management, translation lookaside buffer (TLB) invalidation rates, and proactive memory mapped page fault servicing directly dictate TTFT and prefill latency.\n",
+        "# Section: Speculative Decoding and N-Gram Verification Overhead\nDraft-model-free speculative decoding via n-gram modification (ngram-mod) mitigates memory bandwidth constraints by generating candidate token sequences from the local context buffer. When matching sliding n-gram windows against high-entropy technical corpora, verification overhead must remain subordinate to decode arithmetic intensity. Candidate match thresholds (n_match=24, n_min=48, n_max=64) establish an empirical trade-off between speculative acceptance ratio and tensor evaluation latency.\n",
+        "# Section: Multi-Source Agent Synthesis and Long-Document Distillation\nModern agentic workflows delegate information retrieval and multi-document distillation tasks to background execution lanes. Rather than short conversational exchanges, enterprise research tasks submit extensive document dossiers encompassing RFC drafts, API specifications, benchmark logs, and post-mortem analyses. Serving engines must sustain 32K context processing without context-shift degradation, ensuring deterministic citation accuracy across all referenced sections.\n"
+      ]
+    }
+  ],
+  "min_output_tokens": 256
+}

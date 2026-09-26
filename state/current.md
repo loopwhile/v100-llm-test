@@ -132,7 +132,7 @@
 
 ## WBS 6 CPU+RAM Dual-Resident Feasibility & Preflight (2026-09-26)
 
-- Scope: WBS 6.1 (CPU Docker build), WBS 6.4 (artifact verification), Preflight A/B, and WBS 6.5 (Dual-Resident Startup Gate). 128K measured runs (WBS 6.6) placed on HOLD per user direction.
+- Scope: WBS 6.1 (CPU Docker build), WBS 6.4 (artifact verification), Preflight A/B, and WBS 6.5 (Dual-Resident Startup Gate). 32K measured runs (WBS 6.6) prepared and gated (`[READY]`), requiring explicit `--run-32k-measured` opt-in.
 - Models verified:
   - Gemma 4 26B-A4B: `gemma-4-26B-A4B-it-UD-Q6_K_XL.gguf` (23,295,391,456 B, SHA256 `b01ee10a1423c17f9c4384f1fc569726b8782c5403557ff138ceb9468ca49d6b`, `unsloth/gemma-4-26B-A4B-it-GGUF@c099eb48e663fd284577b04978a94ffccb261841`).
   - Ornith 1.5 35B-A3B: `Ornith-1.5-35B-Q4_K_M.gguf` (21,713,463,040 B, SHA256 `42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f`, `ornith-ai/Ornith-1.5-35B-A3B-GGUF@12393612fd4f730ff5aadc23e9b8f9648aa49ceb`).
@@ -141,23 +141,26 @@
   - Comparison on Ornith 35B (760 prompt tokens, 128 completion tokens, 4 threads, cpuset `1,2,3,4`):
     - `b10428` (`885c5bbe`): TTFT 21.67s, Prompt Eval 35.07 tok/s, Decode 10.05 tok/s, Duration 34.33s.
     - `b10775` (`67a17c17`): TTFT 21.61s, Prompt Eval 35.18 tok/s, Decode 10.02 tok/s, Duration 34.29s.
-  - Winner: `b10775` confirmed stable and free of CPU regression; pinned image: `p520-cpu-llama:b10775` (`p520-cpu-llama@sha256:8ee3818eee9df3690a64177b976692cffd509972cb31c0907f7136b567a4729b`).
+  - Winner: No material CPU regression observed for `b10775` relative to `b10428` in the pinned preflight workload (prompt 35.18 vs 35.07 tok/s, decode 10.02 vs 10.05 tok/s). Pinned image: `p520-cpu-llama:b10775` (`p520-cpu-llama@sha256:8ee3818eee9df3690a64177b976692cffd509972cb31c0907f7136b567a4729b`).
 - WBS 6.5 Dual-Resident Startup Gate (`results/raw/WBS6-STARTUP-GATE/startup_gate.json`):
   - Verdict: **`PASS_STARTUP_GATE`**.
-  - Server A: `p520-cpu-gemma` (Port 8082, Gemma 4 26B UD-Q6_K_XL).
-  - Server B: `p520-cpu-ornith` (Port 8083, Ornith 1.5 35B Q4_K_M).
+  - Server A: `p520-cpu-gemma` (Port 8082, Gemma 4 26B UD-Q6_K_XL, server ctx-size 131,072).
+  - Server B: `p520-cpu-ornith` (Port 8083, Ornith 1.5 35B Q4_K_M, server ctx-size 131,072).
   - Both servers simultaneously healthy (`/health` 200 OK).
-  - CPU Coexistence: logical CPU IDs 1, 2, 3, 4 (physical CORE 1, 2, 3, 4); Core 0, 5 & SMT siblings preserved for host OS / GPU.
-  - GPU VRAM Isolation: GPU0 0.0 MiB / GPU1 0.0 MiB, Compute Apps 0 (100% VRAM free / 0B allocation verified).
-  - Memory: Host Total 62.56 GiB, Available 31.59 GiB (Gemma RSS 1.631 GiB, Ornith RSS 17.47 GiB; swap thrash none).
+  - CPU Coexistence: logical CPU IDs 1, 2, 3, 4 (mapped to physical CORE 1, 2, 3, 4); Core 0, 5 & SMT siblings preserved for host OS / GPU serving.
+  - GPU VRAM Isolation: CPU-only Docker with no GPU devices passed, `GGML_CUDA=OFF`, `--n-gpu-layers 0`; GPU VRAM allocation = 0.0 MiB, Compute Apps = 0. GPU0/GPU1 serving may exist independently.
+  - Memory Evidence & Limits: Host Total 62.56 GiB, Available 31.59 GiB at snapshot. SwapTotal 4,194,300 kB, SwapFree 528 kB (~4GB swap in use). Startup gate proved dual server startup, health, and 0B VRAM isolation; it did not measure `pswpin`/`pswpout`/`pgmajfault` deltas, so absence of swap thrash is unproven at gate time. Due to `mmap`, initial MemAvailable does not guarantee physical RAM headroom once working sets fault in; memory pressure and stability will be measured during 32K request execution.
   - Post-gate cleanup: Both containers cleanly removed after verification per contract.
-- Status: WBS 6 Phase 1 & 2 [DONE]. WBS 6.6 (128K serial inference) and WBS 5 remain on HOLD per user direction.
+- Status: WBS 6.1~6.5 [DONE]. WBS 6.6 (32K serial inference with 128K context capacity) is [READY] with telemetry harness implemented; awaiting user execution command. WBS 6.7 [TODO].
 
 ## Next planned work
 
 - WBS 2: DONE
 - WBS 3: DONE
 - WBS 4: DONE
-- WBS 6.1~6.5: DONE (Startup Gate PASS; 128K serial measured requests on HOLD)
-- Next = Resume WBS 6.6 (128K serial runs) or proceed to WBS 5 (optimization & final recipe capture).
+- WBS 6.1~6.5: DONE (Startup Gate PASS)
+- WBS 6.6: READY (32K serial measured requests wired, gated on `--run-32k-measured`)
+- WBS 6.7: TODO (verdict `PASS_CPU_128K_SERVER_32K_REQUEST_DUAL_RESIDENT`)
+- Next = Execute WBS 6.6 (32K serial runs with `--run-32k-measured`) or proceed to WBS 5 (optimization & final recipe capture).
+
 

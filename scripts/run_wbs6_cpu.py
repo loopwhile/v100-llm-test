@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""CPU+RAM 전용 dual-resident 128K 검증 러너 (WBS 6).
+"""CPU+RAM 전용 dual-resident 128K 서버 + 32K measured request 러너 (WBS 6).
 
 Contract:
 - WBS 6.1: P520 Xeon W-2135 호스트에서 직접 빌드한 native CPU-only Docker image
+  (선정된 공식 build: b10775 / commit 67a17c17caa95742186f8b1ecadd1b5abd6d5ebb)
 - Coexistence envelope:
   - logical CPU IDs 1, 2, 3, 4 (each mapped to distinct physical cores CORE 1, 2, 3, 4)
   - -t 4 -tb 4 -b 1024 -ub 256 --cpu-strict 1 --poll 50
@@ -13,19 +14,20 @@ Contract:
   - GGML_CUDA=OFF
   - --n-gpu-layers 0
   - 두 CPU container의 VRAM allocation = 0B
-- 순서:
-  1. Docker 후보 빌드 (b10428 vs b10775)
-  2. 짧은 비측정 preflight A/B (2K~4K prompt, Ornith 35B) -> 이미지 확정
-  3. Gemma + Ornith dual-resident 동시 기동 및 WBS 6.5 startup gate 검증
-  4. 직렬 128K 측정 1: Gemma 4 26B-A4B
-  5. 두 서버 health 확인
-  6. 직렬 128K 측정 2: Ornith 1.5 35B-A3B
-  7. 두 서버 health 확인 및 정상 cleanup
+  - 기존 GPU0/GPU1 서빙 프로세스와 공존 가능
+- 서버 vs 측정 요청 계약:
+  - 두 서버 모두 --ctx-size 131072 (128K context capacity)로 동시 resident 유지
+  - 실제 measured inference는 32K class (prompt + output reserve <= 32768)로 직렬 실행
+  - 워크로드는 코딩이 아닌 장문 기술 문서 요약 / 리서치 합성용 워크로드
+- Safety:
+  - 기본 실행으로 긴 measured inference가 자동 시작되지 않음
+  - --run-32k-measured 플래그를 통한 명시적 opt-in 필수
 """
 
 from __future__ import annotations
 
 import argparse
+import csv
 import fcntl
 import json
 import os
@@ -41,7 +43,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import bench_harness as h
 import build_128k_workload as w
@@ -49,15 +51,17 @@ import gpu_telemetry as telemetry
 from measurement_policy import future_config
 
 ROOT = Path(__file__).resolve().parents[1]
-C1_WORKLOAD_MANIFEST = ROOT / "workloads/capacity/v1.json"
+C1_32K_WORKLOAD_MANIFEST = ROOT / "workloads/capacity/v1-32k.json"
 
 LLAMA_COMMITS = {
     "b10428": "885c5bbe8e04dc78db25beb911a2715312ad7b54",
     "b10775": "67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
 }
 
-GEMMA_EXP_ID = "EXP-P520-CPU-GEMMA4-26B-LLAMA-Q80-NGRAM-MOD-C1-128K-20260926-001"
-ORNITH_EXP_ID = "EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-128K-20260926-001"
+DEFAULT_IMAGE = "p520-cpu-llama:b10775"
+
+GEMMA_EXP_ID = "EXP-P520-CPU-GEMMA4-26B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001"
+ORNITH_EXP_ID = "EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001"
 
 GEMMA_MODEL_PATH = "/srv/models/gemma-4-26b-a4b-it-qat-gguf/gemma-4-26B-A4B-it-UD-Q6_K_XL.gguf"
 ORNITH_MODEL_PATH = "/srv/models/ornith-1.5-35b-a3b-gguf/Ornith-1.5-35B-Q4_K_M.gguf"
@@ -89,6 +93,210 @@ def get_image_digest(tag: str) -> str:
     except Exception:
         out = command(["docker", "image", "inspect", tag, "--format", "{{.Id}}"], timeout=10)
         return out.strip()
+
+
+def get_container_pid(container_name: str) -> Optional[int]:
+    try:
+        out = command(["docker", "inspect", "-f", "{{.State.Pid}}", container_name], timeout=5)
+        pid = int(out.strip())
+        return pid if pid > 0 else None
+    except Exception:
+        return None
+
+
+def read_smaps_rollup(pid: int) -> Dict[str, int]:
+    """Read Rss, Pss, Pss_Anon, Pss_File, Swap in kB from /proc/<pid>/smaps_rollup."""
+    metrics = {"Rss": 0, "Pss": 0, "Pss_Anon": 0, "Pss_File": 0, "Swap": 0}
+    path = Path(f"/proc/{pid}/smaps_rollup")
+    if not path.exists():
+        return metrics
+    try:
+        for line in path.read_text().splitlines():
+            parts = line.split(":")
+            if len(parts) == 2:
+                k = parts[0].strip()
+                if k in metrics:
+                    val = parts[1].strip().split()[0]
+                    metrics[k] = int(val)
+    except Exception:
+        pass
+    return metrics
+
+
+def read_vmstat() -> Dict[str, int]:
+    """Read pswpin, pswpout, pgmajfault from /proc/vmstat."""
+    metrics = {"pswpin": 0, "pswpout": 0, "pgmajfault": 0}
+    path = Path("/proc/vmstat")
+    if not path.exists():
+        return metrics
+    try:
+        for line in path.read_text().splitlines():
+            parts = line.split()
+            if len(parts) == 2 and parts[0] in metrics:
+                metrics[parts[0]] = int(parts[1])
+    except Exception:
+        pass
+    return metrics
+
+
+def read_system_memory() -> Dict[str, int]:
+    """Read MemTotal, MemAvailable, SwapTotal, SwapFree, SwapUsed in kB from /proc/meminfo."""
+    metrics = {"MemTotal": 0, "MemAvailable": 0, "SwapTotal": 0, "SwapFree": 0, "SwapUsed": 0}
+    path = Path("/proc/meminfo")
+    if not path.exists():
+        return metrics
+    try:
+        for line in path.read_text().splitlines():
+            parts = line.split(":")
+            if len(parts) == 2:
+                k = parts[0].strip()
+                if k in metrics:
+                    val = parts[1].strip().split()[0]
+                    metrics[k] = int(val)
+        metrics["SwapUsed"] = max(0, metrics["SwapTotal"] - metrics["SwapFree"])
+    except Exception:
+        pass
+    return metrics
+
+
+def capture_memory_checkpoint(
+    label: str,
+    gemma_pid: Optional[int] = None,
+    ornith_pid: Optional[int] = None,
+) -> Dict[str, Any]:
+    """Capture full system and per-process memory state at a given checkpoint."""
+    sys_mem = read_system_memory()
+    vmstat = read_vmstat()
+    gemma_smaps = read_smaps_rollup(gemma_pid) if gemma_pid else {}
+    ornith_smaps = read_smaps_rollup(ornith_pid) if ornith_pid else {}
+
+    return {
+        "checkpoint": label,
+        "timestamp_utc": h.utc(),
+        "system_memory_kib": sys_mem,
+        "system_vmstat": vmstat,
+        "gemma_process": {
+            "pid": gemma_pid,
+            "smaps_rollup_kib": gemma_smaps,
+        },
+        "ornith_process": {
+            "pid": ornith_pid,
+            "smaps_rollup_kib": ornith_smaps,
+        },
+    }
+
+
+class MemoryTelemetryCollector:
+    """Periodic memory, swap, and major fault telemetry thread."""
+
+    def __init__(
+        self,
+        output_csv: Path,
+        gemma_pid: Optional[int] = None,
+        ornith_pid: Optional[int] = None,
+        interval_s: float = 1.0,
+    ) -> None:
+        self.output_csv = output_csv
+        self.gemma_pid = gemma_pid
+        self.ornith_pid = ornith_pid
+        self.interval_s = interval_s
+        self._stop = threading.Event()
+        self._thread: Optional[threading.Thread] = None
+
+        self.min_mem_available_kib: int = 1 << 62
+        self.max_swap_used_kib: int = 0
+        self.gemma_rss_peak_kib: int = 0
+        self.gemma_pss_peak_kib: int = 0
+        self.gemma_swap_peak_kib: int = 0
+        self.ornith_rss_peak_kib: int = 0
+        self.ornith_pss_peak_kib: int = 0
+        self.ornith_swap_peak_kib: int = 0
+
+    def start(self) -> None:
+        self.output_csv.parent.mkdir(parents=True, exist_ok=True)
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._thread.start()
+
+    def stop(self) -> None:
+        self._stop.set()
+        if self._thread:
+            self._thread.join(timeout=5)
+
+    def _run(self) -> None:
+        with self.output_csv.open("w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow([
+                "timestamp_utc", "mem_total_kib", "mem_available_kib", "swap_total_kib", "swap_used_kib",
+                "pswpin", "pswpout", "pgmajfault",
+                "gemma_rss_kib", "gemma_pss_kib", "gemma_swap_kib",
+                "ornith_rss_kib", "ornith_pss_kib", "ornith_swap_kib",
+            ])
+            while not self._stop.is_set():
+                ts = h.utc()
+                sys_mem = read_system_memory()
+                vmstat = read_vmstat()
+
+                avail = sys_mem.get("MemAvailable", 0)
+                swap_used = sys_mem.get("SwapUsed", 0)
+                if avail > 0:
+                    self.min_mem_available_kib = min(self.min_mem_available_kib, avail)
+                self.max_swap_used_kib = max(self.max_swap_used_kib, swap_used)
+
+                g_smaps = read_smaps_rollup(self.gemma_pid) if self.gemma_pid else {}
+                o_smaps = read_smaps_rollup(self.ornith_pid) if self.ornith_pid else {}
+
+                self.gemma_rss_peak_kib = max(self.gemma_rss_peak_kib, g_smaps.get("Rss", 0))
+                self.gemma_pss_peak_kib = max(self.gemma_pss_peak_kib, g_smaps.get("Pss", 0))
+                self.gemma_swap_peak_kib = max(self.gemma_swap_peak_kib, g_smaps.get("Swap", 0))
+
+                self.ornith_rss_peak_kib = max(self.ornith_rss_peak_kib, o_smaps.get("Rss", 0))
+                self.ornith_pss_peak_kib = max(self.ornith_pss_peak_kib, o_smaps.get("Pss", 0))
+                self.ornith_swap_peak_kib = max(self.ornith_swap_peak_kib, o_smaps.get("Swap", 0))
+
+                writer.writerow([
+                    ts, sys_mem.get("MemTotal", 0), avail, sys_mem.get("SwapTotal", 0), swap_used,
+                    vmstat.get("pswpin", 0), vmstat.get("pswpout", 0), vmstat.get("pgmajfault", 0),
+                    g_smaps.get("Rss", 0), g_smaps.get("Pss", 0), g_smaps.get("Swap", 0),
+                    o_smaps.get("Rss", 0), o_smaps.get("Pss", 0), o_smaps.get("Swap", 0),
+                ])
+                f.flush()
+                self._stop.wait(self.interval_s)
+
+    def compute_summary_deltas(
+        self,
+        start_snap: Dict[str, Any],
+        end_snap: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        start_sys = start_snap.get("system_memory_kib", {})
+        end_sys = end_snap.get("system_memory_kib", {})
+        start_vm = start_snap.get("system_vmstat", {})
+        end_vm = end_snap.get("system_vmstat", {})
+
+        return {
+            "swap_used_start_kib": start_sys.get("SwapUsed", 0),
+            "swap_used_end_kib": end_sys.get("SwapUsed", 0),
+            "swap_used_delta_kib": end_sys.get("SwapUsed", 0) - start_sys.get("SwapUsed", 0),
+            "pswpin_start": start_vm.get("pswpin", 0),
+            "pswpin_end": end_vm.get("pswpin", 0),
+            "pswpin_delta": end_vm.get("pswpin", 0) - start_vm.get("pswpin", 0),
+            "pswpout_start": start_vm.get("pswpout", 0),
+            "pswpout_end": end_vm.get("pswpout", 0),
+            "pswpout_delta": end_vm.get("pswpout", 0) - start_vm.get("pswpout", 0),
+            "pgmajfault_start": start_vm.get("pgmajfault", 0),
+            "pgmajfault_end": end_vm.get("pgmajfault", 0),
+            "pgmajfault_delta": end_vm.get("pgmajfault", 0) - start_vm.get("pgmajfault", 0),
+            "mem_available_minimum_kib": self.min_mem_available_kib if self.min_mem_available_kib < (1 << 60) else end_sys.get("MemAvailable", 0),
+            "gemma_process_peaks_kib": {
+                "rss": self.gemma_rss_peak_kib,
+                "pss": self.gemma_pss_peak_kib,
+                "swap": self.gemma_swap_peak_kib,
+            },
+            "ornith_process_peaks_kib": {
+                "rss": self.ornith_rss_peak_kib,
+                "pss": self.ornith_pss_peak_kib,
+                "swap": self.ornith_swap_peak_kib,
+            },
+        }
 
 
 def build_cpu_images(root: Path) -> Dict[str, str]:
@@ -133,7 +341,6 @@ def run_preflight_ab(root: Path, digests: Dict[str, str]) -> str:
         image_tag = f"p520-cpu-llama:{tag_name}"
         container_name = f"preflight-cpu-{tag_name}"
 
-        # Clean any old container
         subprocess.run(["docker", "rm", "-f", container_name], capture_output=True)
 
         cmd = [
@@ -169,11 +376,10 @@ def run_preflight_ab(root: Path, digests: Dict[str, str]) -> str:
         print(f"[*] Starting container {container_name} on port {test_port}...")
         subprocess.run(cmd, check=True)
 
-        # Wait for health
-        adapter = h.HTTPAdapter(f"http://127.0.0.1:{test_port}", "llama.cpp", timeout_s=120)
+        adapter = h.HTTPAdapter(f"http://127.0.0.1:{test_port}", "llama.cpp", timeout_s=180)
         healthy = False
         start_wait = time.time()
-        while time.time() - start_wait < 120:
+        while time.time() - start_wait < 180:
             if adapter.health().get("healthy"):
                 healthy = True
                 break
@@ -181,7 +387,7 @@ def run_preflight_ab(root: Path, digests: Dict[str, str]) -> str:
 
         if not healthy:
             subprocess.run(["docker", "rm", "-f", container_name], capture_output=True)
-            raise RuntimeError(f"Container {container_name} failed to become healthy within 120s")
+            raise RuntimeError(f"Container {container_name} failed to become healthy within 180s")
 
         print(f"[+] Container {container_name} is healthy. Sending preflight request...")
         req_body = {
@@ -225,7 +431,6 @@ def run_preflight_ab(root: Path, digests: Dict[str, str]) -> str:
         results[tag_name] = res_data
         print(f"[{tag_name}] prompt_tokens={prompt_tokens}, decode_tokens={completion_tokens}, TTFT={ttft_s:.2f}s, prompt_tps={prompt_tps}, decode_tps={decode_tps}")
 
-        # Cleanup container
         subprocess.run(["docker", "rm", "-f", container_name], capture_output=True)
         time.sleep(2)
 
@@ -233,8 +438,6 @@ def run_preflight_ab(root: Path, digests: Dict[str, str]) -> str:
     h.save(preflight_file, results)
     print(f"[+] Saved preflight results to {preflight_file}")
 
-    # Determine winner
-    # If b10775 prompt_tps is within 15% of b10428 and TTFT is reasonable, choose b10775
     b10428_ptps = results["b10428"].get("prompt_tps") or 1.0
     b10775_ptps = results["b10775"].get("prompt_tps") or 1.0
 
@@ -242,44 +445,20 @@ def run_preflight_ab(root: Path, digests: Dict[str, str]) -> str:
 
     if b10775_ptps >= b10428_ptps * 0.85:
         selected = "b10775"
-        print(f"[+] b10775 performance is verified normal -> Selecting b10775 for WBS 6.")
+        print("[+] No material CPU regression observed for b10775 relative to b10428 in pinned preflight -> Selecting b10775 for WBS 6.")
     else:
         selected = "b10428"
-        print(f"[-] b10775 exhibits CPU performance regression -> Selecting b10428 for WBS 6.")
+        print("[-] Material CPU regression observed for b10775 relative to b10428 -> Selecting b10428 for WBS 6.")
 
     return f"p520-cpu-llama:{selected}"
 
 
-def collect_system_memory_snapshot() -> Dict[str, Any]:
-    mem_info = {}
-    try:
-        with open("/proc/meminfo") as f:
-            for line in f:
-                parts = line.strip().split(":")
-                if len(parts) == 2:
-                    k = parts[0].strip()
-                    v = parts[1].strip()
-                    mem_info[k] = v
-    except Exception as e:
-        mem_info["error"] = str(e)
-
-    free_out = command(["free", "-m"], timeout=5, check=False)
-    vmstat_out = command(["vmstat", "-s"], timeout=5, check=False)
-
-    return {
-        "timestamp_utc": h.utc(),
-        "proc_meminfo": mem_info,
-        "free_m": free_out,
-        "vmstat_s": vmstat_out,
-    }
-
-
-def start_dual_resident_servers(selected_image: str) -> None:
+def start_dual_resident_servers(selected_image: str) -> Tuple[Optional[int], Optional[int]]:
+    """Start Gemma and Ornith CPU servers simultaneously with 128K context capacity."""
     print("\n" + "=" * 60)
-    print(" [Dual-Resident Startup] Launching Gemma & Ornith CPU servers")
+    print(" [Dual-Resident Startup] Launching Gemma & Ornith 128K-Context Servers")
     print("=" * 60)
 
-    # Clean existing
     subprocess.run(["docker", "rm", "-f", "p520-cpu-gemma", "p520-cpu-ornith"], capture_output=True)
 
     common_args = [
@@ -310,7 +489,6 @@ def start_dual_resident_servers(selected_image: str) -> None:
         "--spec-ngram-mod-n-max", "64",
     ]
 
-    # Gemma server
     gemma_cmd = [
         "docker", "run", "-d",
         "--name", "p520-cpu-gemma",
@@ -321,10 +499,9 @@ def start_dual_resident_servers(selected_image: str) -> None:
         "-m", GEMMA_MODEL_PATH,
     ]
 
-    print("[*] Launching p520-cpu-gemma on port 8082...")
+    print("[*] Launching p520-cpu-gemma (128K context capacity) on port 8082...")
     subprocess.run(gemma_cmd, check=True)
 
-    # Ornith server
     ornith_cmd = [
         "docker", "run", "-d",
         "--name", "p520-cpu-ornith",
@@ -335,8 +512,13 @@ def start_dual_resident_servers(selected_image: str) -> None:
         "-m", ORNITH_MODEL_PATH,
     ]
 
-    print("[*] Launching p520-cpu-ornith on port 8083...")
+    print("[*] Launching p520-cpu-ornith (128K context capacity) on port 8083...")
     subprocess.run(ornith_cmd, check=True)
+
+    gemma_pid = get_container_pid("p520-cpu-gemma")
+    ornith_pid = get_container_pid("p520-cpu-ornith")
+    print(f"[+] Container PIDs: Gemma host PID={gemma_pid}, Ornith host PID={ornith_pid}")
+    return gemma_pid, ornith_pid
 
 
 def wait_for_dual_resident_health() -> None:
@@ -363,32 +545,43 @@ def wait_for_dual_resident_health() -> None:
     raise RuntimeError(f"Dual-resident health timeout: gemma={gemma_healthy}, ornith={ornith_healthy}")
 
 
-def record_startup_gate(gate_dir: Path, selected_image: str) -> Dict[str, Any]:
+def record_startup_gate(
+    gate_dir: Path,
+    selected_image: str,
+    gemma_pid: Optional[int] = None,
+    ornith_pid: Optional[int] = None,
+) -> Dict[str, Any]:
     gate_dir.mkdir(parents=True, exist_ok=True)
 
-    # GPU telemetry check (ensure CPU servers allocated 0B VRAM)
     try:
         gpu_snapshot = telemetry.read_gpus(timeout_s=5.0)
     except Exception as e:
         gpu_snapshot = {"error": str(e)}
     gpu_processes = command(["nvidia-smi", "--query-compute-apps=pid,process_name,used_memory", "--format=csv"], timeout=10, check=False)
 
-    # Docker memory / CPU stats
     docker_stats = command(["docker", "stats", "--no-stream", "--format", "json", "p520-cpu-gemma", "p520-cpu-ornith"], timeout=10, check=False)
 
-    system_mem = collect_system_memory_snapshot()
+    baseline_snap = capture_memory_checkpoint("startup_healthy", gemma_pid, ornith_pid)
 
     gate_data = {
         "timestamp_utc": h.utc(),
         "selected_image": selected_image,
         "image_digest": get_image_digest(selected_image),
         "topology": "logical CPU IDs 1, 2, 3, 4, each mapped to distinct physical cores (CORE 1, 2, 3, 4)",
+        "server_context_capacity": 131072,
         "gemma_port": GEMMA_PORT,
         "ornith_port": ORNITH_PORT,
+        "gemma_host_pid": gemma_pid,
+        "ornith_host_pid": ornith_pid,
         "gpu_telemetry_snapshot": gpu_snapshot,
         "gpu_compute_apps": gpu_processes,
         "docker_stats": docker_stats,
-        "system_memory": system_mem,
+        "memory_checkpoint": baseline_snap,
+        "notes": (
+            "PASS_STARTUP_GATE verifies dual server 128K context startup, health, and CPU/GPU isolation. "
+            "Due to mmap loading, startup snapshot MemAvailable does not guarantee physical RAM headroom once working sets are fault-in. "
+            "Actual memory pressure and stability are measured during 32K request execution."
+        ),
         "gate_verdict": "PASS_STARTUP_GATE",
     }
 
@@ -397,7 +590,7 @@ def record_startup_gate(gate_dir: Path, selected_image: str) -> Dict[str, Any]:
     return gate_data
 
 
-def run_measured_experiment(
+def run_measured_experiment_32k(
     root: Path,
     exp_id: str,
     model_name: str,
@@ -407,10 +600,15 @@ def run_measured_experiment(
     selected_image: str,
     peer_name: str,
     peer_port: int,
-) -> str:
+    gemma_pid: Optional[int],
+    ornith_pid: Optional[int],
+    pre_snap_label: str,
+    post_snap_label: str,
+) -> Tuple[str, Dict[str, Any]]:
+    """Execute exactly one serial 32K measured request with hardened memory delta telemetry."""
     print("\n" + "=" * 60)
-    print(f" [Measured 128K Run] {exp_id}")
-    print(f" Model: {model_name} on port {port} (Peer {peer_name} on port {peer_port} resident)")
+    print(f" [Measured 32K Run] {exp_id}")
+    print(f" Model: {model_name} on port {port} (Server ctx=128K, Request class=32K, Peer {peer_name} resident)")
     print("=" * 60)
 
     raw = root / "results/raw" / exp_id
@@ -421,10 +619,9 @@ def run_measured_experiment(
     endpoint = f"http://127.0.0.1:{port}"
     peer_endpoint = f"http://127.0.0.1:{peer_port}"
 
-    adapter = h.HTTPAdapter(endpoint, "llama.cpp", timeout_s=14400)
+    adapter = h.HTTPAdapter(endpoint, "llama.cpp", timeout_s=7200)
     peer_adapter = h.HTTPAdapter(peer_endpoint, "llama.cpp", timeout_s=180)
 
-    # Verify peer is healthy before starting
     if not peer_adapter.health().get("healthy"):
         raise RuntimeError(f"Peer {peer_name} is unhealthy before measurement!")
 
@@ -441,7 +638,9 @@ def run_measured_experiment(
         "topology": "cpu-standalone-4core",
         "topology_detail": "logical CPU IDs 1, 2, 3, 4, each mapped to distinct physical cores (CORE 1, 2, 3, 4)",
         "concurrency": 1,
-        "context_tokens": 131072,
+        "server_ctx_size": 131072,
+        "measured_request_class": "32K",
+        "context_tokens": 32768,
         "weight_quant": "UD-Q6_K_XL" if "GEMMA" in exp_id else "Q4_K_M",
         "kv_cache": "Q8_0",
         "speculative": "ngram-mod",
@@ -449,35 +648,52 @@ def run_measured_experiment(
         "endpoint": endpoint,
         "peer_resident_model": peer_name,
         "peer_resident_endpoint": peer_endpoint,
-        "notes": f"WBS 6 CPU+RAM dual-resident 128K serial execution; peer {peer_name} idle resident",
+        "workload_manifest": str(C1_32K_WORKLOAD_MANIFEST),
+        "notes": f"WBS 6 CPU+RAM dual-resident 128K server context with 32K serial measured request; peer {peer_name} idle resident",
     }
 
     config = future_config(planned)
     h.save(runtime / "planned-config.json", config)
     checkpoint(raw, "prepared", step="config_written")
 
-    # Start telemetry thread
-    stop_telemetry = threading.Event()
-    telemetry_thread = threading.Thread(
+    stop_gpu_telemetry = threading.Event()
+    gpu_telemetry_thread = threading.Thread(
         target=telemetry.telemetry_loop,
-        args=(runtime / "gpu-telemetry.csv", 1.0, stop_telemetry),
+        args=(runtime / "gpu-telemetry.csv", 1.0, stop_gpu_telemetry),
         daemon=True,
     )
-    telemetry_thread.start()
+    gpu_telemetry_thread.start()
+
+    mem_collector = MemoryTelemetryCollector(
+        output_csv=runtime / "memory-telemetry.csv",
+        gemma_pid=gemma_pid,
+        ornith_pid=ornith_pid,
+        interval_s=1.0,
+    )
+    mem_collector.start()
+
+    pre_snap = capture_memory_checkpoint(pre_snap_label, gemma_pid, ornith_pid)
+    h.save(runtime / f"{pre_snap_label}.json", pre_snap)
 
     try:
-        checkpoint(raw, "running", step="materializing_live_tokenizer_workload")
-        manifest = w.load_manifest(C1_WORKLOAD_MANIFEST)
+        checkpoint(raw, "running", step="materializing_32k_workload")
+        manifest = w.load_manifest(C1_32K_WORKLOAD_MANIFEST)
         workload = w.build(manifest, adapter, model_name)
 
         checkpoint(raw, "running", step="measured_request", workload_sha256=h.sha(h.canon(workload)))
-        print(f"[*] Dispatching 128K measured request (timeout=14400s)...")
+        print("[*] Dispatching 32K measured request (timeout=7200s)...")
         verdict = h.run_batch(raw, config, workload, adapter)
 
         checkpoint(raw, "results_saved", step="measurement_complete", verdict=verdict)
         print(f"[+] Measurement complete with verdict: {verdict}")
 
-        # Post-health check for BOTH servers
+        post_snap = capture_memory_checkpoint(post_snap_label, gemma_pid, ornith_pid)
+        h.save(runtime / f"{post_snap_label}.json", post_snap)
+
+        memory_deltas = mem_collector.compute_summary_deltas(pre_snap, post_snap)
+        h.save(raw / "memory-deltas.json", memory_deltas)
+        print(f"[+] Recorded memory deltas: Swap delta={memory_deltas['swap_used_delta_kib']} kB, pswpin delta={memory_deltas['pswpin_delta']}, pswpout delta={memory_deltas['pswpout_delta']}, pgmajfault delta={memory_deltas['pgmajfault_delta']}")
+
         my_health = adapter.health()
         peer_health = peer_adapter.health()
         post_health_data = {
@@ -490,11 +706,12 @@ def run_measured_experiment(
         if not post_health_data["both_healthy"]:
             print(f"[!] Warning: One or both servers unhealthy post-inference: {post_health_data}")
 
-        return verdict
+        return verdict, memory_deltas
 
     finally:
-        stop_telemetry.set()
-        telemetry_thread.join(timeout=10)
+        mem_collector.stop()
+        stop_gpu_telemetry.set()
+        gpu_telemetry_thread.join(timeout=10)
         telemetry.summarize_session(runtime / "gpu-telemetry.csv", raw / "gpu-peak.json")
 
 
@@ -508,6 +725,18 @@ def run(args: argparse.Namespace) -> None:
     if socket.gethostname().split(".")[0] != "p520-llm":
         raise RuntimeError("WBS 6 runner requires p520-llm host")
 
+    if not (args.run_32k_measured or args.gate_only or args.preflight_only):
+        print("=" * 60)
+        print(" [-] Safety Stop: No explicit execution action specified.")
+        print("=" * 60)
+        print("  Available actions:")
+        print("    --preflight-only    : Run only preflight A/B comparison")
+        print("    --gate-only         : Run WBS 6.5 dual-resident startup gate only")
+        print("    --run-32k-measured  : Explicit opt-in required to execute serial 32K measured inference")
+        print()
+        print("  Runner exits without starting long-running measured inference.")
+        return
+
     lock_path = ROOT / "results/experiment.lock"
     lock_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -518,38 +747,41 @@ def run(args: argparse.Namespace) -> None:
 
 def run_locked(args: argparse.Namespace) -> None:
     print("=" * 60)
-    print(" [WBS 6] CPU+RAM Dual-Resident 128K Orchestration")
+    print(" [WBS 6] CPU+RAM Dual-Resident 128K Server + 32K Measured Runner")
     print("=" * 60)
 
-    selected_image = args.selected_image
-
-    if not selected_image:
-        # Step 1: Build Docker images
-        digests = build_cpu_images(ROOT)
-
-        # Step 2: Preflight A/B
-        selected_image = run_preflight_ab(ROOT, digests)
+    selected_image = args.selected_image or DEFAULT_IMAGE
 
     if args.preflight_only:
+        digests = build_cpu_images(ROOT)
+        selected_image = run_preflight_ab(ROOT, digests)
         print(f"\n[+] Preflight completed. Selected image: {selected_image}")
         return
 
-    # Step 3: Dual-Resident Startup
-    start_dual_resident_servers(selected_image)
+    pre_baseline_snap = capture_memory_checkpoint("baseline_before_startup")
+    print(f"[*] Baseline host memory before startup: MemAvailable={pre_baseline_snap['system_memory_kib'].get('MemAvailable')} kB, SwapUsed={pre_baseline_snap['system_memory_kib'].get('SwapUsed')} kB")
+
+    gemma_pid, ornith_pid = start_dual_resident_servers(selected_image)
 
     try:
         wait_for_dual_resident_health()
 
-        # Step 4: Record Startup Gate
         gate_dir = ROOT / "results/raw/WBS6-STARTUP-GATE"
-        record_startup_gate(gate_dir, selected_image)
+        record_startup_gate(gate_dir, selected_image, gemma_pid, ornith_pid)
 
         if args.gate_only:
             print("\n[+] Dual-resident startup gate passed and recorded. Stopping per --gate-only.")
             return
 
-        # Step 5: Serial Measured Request 1 — Gemma 4 26B-A4B
-        gemma_verdict = run_measured_experiment(
+        if not args.run_32k_measured:
+            print("\n[+] Startup gate complete. Measured 32K runs require --run-32k-measured. Exiting safely.")
+            return
+
+        print("\n" + "=" * 60)
+        print(" [WBS 6] Proceeding to 32K Serial Measured Runs (--run-32k-measured confirmed)")
+        print("=" * 60)
+
+        gemma_verdict, gemma_mem = run_measured_experiment_32k(
             root=ROOT,
             exp_id=GEMMA_EXP_ID,
             model_name="gemma-4-26B-A4B-it-UD-Q6_K_XL.gguf",
@@ -559,17 +791,19 @@ def run_locked(args: argparse.Namespace) -> None:
             selected_image=selected_image,
             peer_name="Ornith-1.5-35B-Q4_K_M.gguf",
             peer_port=ORNITH_PORT,
+            gemma_pid=gemma_pid,
+            ornith_pid=ornith_pid,
+            pre_snap_label="gemma_32k_pre",
+            post_snap_label="gemma_32k_post",
         )
-        print(f"[+] Gemma 128K completed: {gemma_verdict}")
+        print(f"[+] Gemma 32K completed: {gemma_verdict}")
 
-        # Step 6: Verify health between requests
         gemma_adapter = h.HTTPAdapter(f"http://127.0.0.1:{GEMMA_PORT}", "llama.cpp", timeout_s=60)
         ornith_adapter = h.HTTPAdapter(f"http://127.0.0.1:{ORNITH_PORT}", "llama.cpp", timeout_s=60)
         if not gemma_adapter.health().get("healthy") or not ornith_adapter.health().get("healthy"):
             raise RuntimeError("Server health check failed before Ornith request!")
 
-        # Step 7: Serial Measured Request 2 — Ornith 1.5 35B-A3B
-        ornith_verdict = run_measured_experiment(
+        ornith_verdict, ornith_mem = run_measured_experiment_32k(
             root=ROOT,
             exp_id=ORNITH_EXP_ID,
             model_name="Ornith-1.5-35B-Q4_K_M.gguf",
@@ -579,11 +813,15 @@ def run_locked(args: argparse.Namespace) -> None:
             selected_image=selected_image,
             peer_name="gemma-4-26B-A4B-it-UD-Q6_K_XL.gguf",
             peer_port=GEMMA_PORT,
+            gemma_pid=gemma_pid,
+            ornith_pid=ornith_pid,
+            pre_snap_label="ornith_32k_pre",
+            post_snap_label="ornith_32k_post",
         )
-        print(f"[+] Ornith 128K completed: {ornith_verdict}")
+        print(f"[+] Ornith 32K completed: {ornith_verdict}")
 
         print("\n" + "=" * 60)
-        print(" [WBS 6 All Items Finished]")
+        print(" [WBS 6 All 32K Measured Items Finished]")
         print(f" Gemma Verdict: {gemma_verdict}")
         print(f" Ornith Verdict: {ornith_verdict}")
         print("=" * 60)
@@ -593,9 +831,10 @@ def run_locked(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="WBS 6 CPU+RAM Dual-Resident Runner")
+    parser = argparse.ArgumentParser(description="WBS 6 CPU+RAM Dual-Resident Runner (128K Server + 32K Request)")
     parser.add_argument("--preflight-only", action="store_true", help="Run only the preflight A/B comparison")
     parser.add_argument("--gate-only", action="store_true", help="Run up to WBS 6.5 dual-resident startup gate only")
+    parser.add_argument("--run-32k-measured", action="store_true", help="Explicit opt-in required to execute serial 32K measured inference")
     parser.add_argument("--selected-image", type=str, default="", help="Skip preflight and use specified image tag")
     args = parser.parse_args()
     run(args)

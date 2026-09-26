@@ -39,6 +39,14 @@ class WorkloadBuilderTests(unittest.TestCase):
         self.assertLessEqual(item["total_budget_used"], 131072)
         self.assertGreaterEqual(item["utilization"], 0.99)
 
+    def test_capacity_materializes_near_32k(self):
+        manifest = builder.load_manifest(ROOT / "workloads/capacity/v1-32k.json")
+        result = builder.build(manifest, FakeAdapter(), "mock-model")
+        self.assertEqual(len(result["requests"]), 1)
+        item = result["build_evidence"][0]
+        self.assertLessEqual(item["total_budget_used"], 32768)
+        self.assertGreaterEqual(item["utilization"], 0.99)
+
     def test_c2_materializes_independent_near_128k_prompts(self):
         manifest = builder.load_manifest(ROOT / "workloads/concurrency/v1.json")
         result = builder.build(manifest, FakeAdapter(), "mock-model")

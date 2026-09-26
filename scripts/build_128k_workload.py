@@ -18,8 +18,8 @@ def load_manifest(path: Path) -> dict:
     manifest = json.loads(path.read_text())
     if manifest.get("schema_version") != 1:
         raise ValueError("unsupported workload schema")
-    if manifest.get("context_tokens") != 131072:
-        raise ValueError("primary manifests must target 131072 tokens")
+    if manifest.get("context_tokens") not in (131072, 32768):
+        raise ValueError("manifests must target 131072 or 32768 tokens")
     if type(manifest.get("output_tokens")) is not int or manifest["output_tokens"] < 1:
         raise ValueError("invalid output_tokens")
     minimum_output = manifest.get("min_output_tokens", 1)
