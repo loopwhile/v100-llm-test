@@ -1033,18 +1033,25 @@ llama.cpp의 draft-model-free `ngram-mod` 경로를 활성화한다.
   - Gemma: `EXP-P520-CPU-GEMMA4-26B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001`
   - Ornith: `EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001`
   - (각 실험 기록에 server context capacity = 131,072와 measured request class = 32K를 분리 기록하여 혼동 방지)
-- 실행 순서 (직렬 수행, overlap 절대 금지):
-  1. Gemma + Ornith 두 128K-context server 기동 및 dual-resident health 확인.
-  2. Baseline host/process 메모리 스냅샷 (A) 기록.
-  3. Gemma 4 26B-A4B에 32K measured request 1회 실행 (Pre-inference 스냅샷 B, 1초 주기 텔레메트리, Post-inference 스냅샷 C, `memory-deltas.json` 산출).
-  4. Gemma 종료 후 두 server health 확인.
-  5. Ornith 1.5 35B-A3B에 32K measured request 1회 실행 (Pre-inference 스냅샷 D, 1초 주기 텔레메트리, Post-inference 스냅샷 E, `memory-deltas.json` 산출).
-  6. Ornith 종료 후 두 server health 확인 및 최종 baseline 스냅샷 F 기록.
-- 강화된 메모리 계측 계약:
+- 실행 순서 (직렬 수행, overlap 절대 금지) 및 Checkpoint A~G:
+  1. **Checkpoint A (`baseline_before_startup`)**: 서버 기동 전 호스트 기준 메모리 상태 수집 및 `memory-baseline-before-startup.json`으로 영구 보존.
+  2. Gemma + Ornith 두 128K-context server 기동 및 dual-resident health 확인.
+  3. **Checkpoint B (`startup_healthy`)**: 두 서버 기동 직후 상태 기록 (`checkpoint_b_startup_healthy.json`). A → B delta를 통해 기동으로 인한 SwapUsed/pswpin/pswpout/pgmajfault 변화량 산출 (`memory-startup-deltas.json`).
+  4. **Checkpoint C (`gemma_32k_pre`)**: Gemma 32K measured request 직전 스냅샷 기록.
+  5. Gemma 32K 추론 실행 (1초 주기 백그라운드 텔레메트리).
+  6. **Checkpoint D (`gemma_32k_post`)**: Gemma 32K 추론 직후 스냅샷 기록 (실패 시에도 반드시 수집). C → D delta 산출 (`memory-deltas.json`).
+  7. Gemma 종료 후 두 server health 확인 (`dual_resident_post_health.json`).
+  8. **Checkpoint E (`ornith_32k_pre`)**: Ornith 32K measured request 직전 스냅샷 기록.
+  9. Ornith 32K 추론 실행 (1초 주기 백그라운드 텔레메트리).
+  10. **Checkpoint F (`ornith_32k_post`)**: Ornith 32K 추론 직후 스냅샷 기록 (실패 시에도 반드시 수집). E → F delta 산출 (`memory-deltas.json`).
+  11. Ornith 종료 후 두 server health 확인 (`dual_resident_post_health.json`).
+  12. **Checkpoint G (`final_post_health`)**: 모든 추론 및 post-health 확인 직후 최종 호스트/컨테이너 스냅샷 기록. A → G delta를 통해 전체 세션 누적 변화량 산출 (`memory-session-deltas.json`).
+- 강화된 메모리 계측 및 불변성 계약:
   - Host: `/proc/meminfo` (MemTotal, MemAvailable, SwapTotal, SwapFree, SwapUsed) 및 `/proc/vmstat` (`pswpin`, `pswpout`, `pgmajfault`).
   - Container PID: `/proc/<pid>/smaps_rollup` (`Rss`, `Pss`, `Pss_Anon`, `Pss_File`, `Swap`).
-  - 주기적 로깅: request 수행 중 1초마다 `memory-telemetry.csv`에 기록.
-  - Delta 요약: Pre vs Post 간 SwapUsed delta, pswpin delta, pswpout delta, pgmajfault delta, MemAvailable 최저점, 프로세스별 peak Rss/Pss/Swap을 `memory-deltas.json`에 저장.
+  - 주기적 로깅: request 수행 중 1초마다 `memory-telemetry.csv` 및 `gpu-telemetry.csv`에 기록.
+  - Failure-Resilient Telemetry: 추론 중 예외/크래시가 발생하더라도 `finally` 블록에서 Post-checkpoint 및 `memory-deltas.json`을 반드시 기록 보존.
+  - Raw Evidence Immutability: Preflight(`preflight_ab_result.json`), Startup Gate(`startup_gate.json`), 실험 raw 디렉터리(`results/raw/<EXP_ID>`)가 이미 존재할 경우 덮어쓰기를 엄격히 거부하고 `RuntimeError`를 발생시켜 기존 증거의 불변성을 보장.
 - 안전 제어:
   - 러너(`scripts/run_wbs6_cpu.py`)는 장시간 추론의 무단 실행을 방지하기 위해 `--run-32k-measured` 플래그가 명시적으로 지정되지 않으면 실행을 시작하지 않고 안전 종료한다.
 

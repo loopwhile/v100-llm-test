@@ -1,7 +1,9 @@
-"""Tests for WBS 6 CPU runner configuration, memory telemetry, and safety controls."""
+"""Tests for WBS 6 CPU runner configuration, memory telemetry, safety controls, and immutability."""
 import argparse
 from pathlib import Path
+import shutil
 import sys
+import tempfile
 import unittest
 from unittest.mock import patch, MagicMock
 
@@ -56,6 +58,123 @@ class WBS6RunnerTests(unittest.TestCase):
         self.assertEqual(deltas["mem_available_minimum_kib"], 25000000)
         self.assertEqual(deltas["gemma_process_peaks_kib"]["rss"], 2000000)
         self.assertEqual(deltas["ornith_process_peaks_kib"]["rss"], 18000000)
+
+    def test_compute_memory_deltas_standalone(self):
+        start_snap = {
+            "system_memory_kib": {"SwapUsed": 3000000, "MemAvailable": 35000000},
+            "system_vmstat": {"pswpin": 50, "pswpout": 70, "pgmajfault": 10000},
+            "gemma_process": {"smaps_rollup_kib": {"Rss": 1000, "Pss": 800, "Swap": 0}},
+            "ornith_process": {"smaps_rollup_kib": {"Rss": 2000, "Pss": 1800, "Swap": 0}},
+        }
+        end_snap = {
+            "system_memory_kib": {"SwapUsed": 3010000, "MemAvailable": 34000000},
+            "system_vmstat": {"pswpin": 65, "pswpout": 90, "pgmajfault": 11500},
+            "gemma_process": {"smaps_rollup_kib": {"Rss": 1200, "Pss": 900, "Swap": 10}},
+            "ornith_process": {"smaps_rollup_kib": {"Rss": 2500, "Pss": 2000, "Swap": 20}},
+        }
+
+        deltas = runner.compute_memory_deltas(start_snap, end_snap)
+        self.assertEqual(deltas["swap_used_delta_kib"], 10000)
+        self.assertEqual(deltas["pswpin_delta"], 15)
+        self.assertEqual(deltas["pswpout_delta"], 20)
+        self.assertEqual(deltas["pgmajfault_delta"], 1500)
+        self.assertEqual(deltas["mem_available_minimum_kib"], 34000000)
+        self.assertEqual(deltas["gemma_process_peaks_kib"]["rss"], 1200)
+        self.assertEqual(deltas["ornith_process_peaks_kib"]["rss"], 2500)
+
+    def test_preflight_immutability_guard(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_root = Path(tmpdir)
+            preflight_dir = tmp_root / "results/raw/WBS6-PREFLIGHT-AB"
+            preflight_dir.mkdir(parents=True)
+            (preflight_dir / "preflight_ab_result.json").write_text("{}")
+
+            with self.assertRaises(RuntimeError) as ctx:
+                runner.run_preflight_ab(tmp_root, {})
+            self.assertIn("Immutable preflight raw evidence already exists", str(ctx.exception))
+
+    def test_startup_gate_immutability_guard(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_gate_dir = Path(tmpdir) / "WBS6-STARTUP-GATE"
+            tmp_gate_dir.mkdir(parents=True)
+            (tmp_gate_dir / "startup_gate.json").write_text("{}")
+
+            with self.assertRaises(RuntimeError) as ctx:
+                runner.record_startup_gate(tmp_gate_dir, "test-image")
+            self.assertIn("Immutable startup gate raw evidence already exists", str(ctx.exception))
+
+    def test_measured_experiment_immutability_guard(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_root = Path(tmpdir)
+            exp_id = "EXP-TEST-CPU-001"
+            (tmp_root / "results/raw" / exp_id).mkdir(parents=True)
+
+            with self.assertRaises(RuntimeError) as ctx:
+                runner.run_measured_experiment_32k(
+                    root=tmp_root,
+                    exp_id=exp_id,
+                    model_name="mock.gguf",
+                    model_key="mock",
+                    model_path="/mock.gguf",
+                    port=8082,
+                    selected_image="mock:tag",
+                    peer_name="peer.gguf",
+                    peer_port=8083,
+                    gemma_pid=None,
+                    ornith_pid=None,
+                    snap_a={},
+                    snap_b={},
+                    pre_snap_label="pre",
+                    post_snap_label="post",
+                )
+            self.assertIn("Immutable raw experiment evidence directory already exists", str(ctx.exception))
+
+    def test_failure_preserves_post_snap_and_deltas(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_root = Path(tmpdir)
+            exp_id = "EXP-TEST-CPU-FAIL"
+
+            snap_a = {"system_memory_kib": {"SwapUsed": 100, "MemAvailable": 1000}, "system_vmstat": {"pswpin": 0, "pswpout": 0, "pgmajfault": 0}}
+            snap_b = {"system_memory_kib": {"SwapUsed": 100, "MemAvailable": 1000}, "system_vmstat": {"pswpin": 0, "pswpout": 0, "pgmajfault": 0}}
+
+            with patch("bench_harness.HTTPAdapter") as mock_adapter_cls, \
+                 patch("build_128k_workload.load_manifest", return_value={"schema_version": 1}), \
+                 patch("build_128k_workload.build", return_value={"requests": []}), \
+                 patch("bench_harness.run_batch", side_effect=RuntimeError("Simulated inference batch crash")), \
+                 patch("run_wbs6_cpu.capture_memory_checkpoint", return_value={"system_memory_kib": {"SwapUsed": 150, "MemAvailable": 900}, "system_vmstat": {"pswpin": 1, "pswpout": 1, "pgmajfault": 10}}):
+
+                mock_adapter_instance = MagicMock()
+                mock_adapter_instance.health.return_value = {"healthy": True}
+                mock_adapter_cls.return_value = mock_adapter_instance
+
+                with self.assertRaises(RuntimeError) as ctx:
+                    runner.run_measured_experiment_32k(
+                        root=tmp_root,
+                        exp_id=exp_id,
+                        model_name="mock.gguf",
+                        model_key="mock",
+                        model_path="/mock.gguf",
+                        port=8082,
+                        selected_image="mock:tag",
+                        peer_name="peer.gguf",
+                        peer_port=8083,
+                        gemma_pid=None,
+                        ornith_pid=None,
+                        snap_a=snap_a,
+                        snap_b=snap_b,
+                        pre_snap_label="checkpoint_c_pre",
+                        post_snap_label="checkpoint_d_post",
+                    )
+                self.assertIn("Simulated inference batch crash", str(ctx.exception))
+
+            raw = tmp_root / "results/raw" / exp_id
+            self.assertTrue((raw / "memory-baseline-before-startup.json").exists())
+            self.assertTrue((raw / "runtime/checkpoint_a_baseline_before_startup.json").exists())
+            self.assertTrue((raw / "runtime/checkpoint_b_startup_healthy.json").exists())
+            self.assertTrue((raw / "runtime/checkpoint_c_pre.json").exists())
+            self.assertTrue((raw / "runtime/checkpoint_d_post.json").exists())
+            self.assertTrue((raw / "memory-deltas.json").exists())
+            self.assertTrue((raw / "dual_resident_post_health.json").exists())
 
 
 if __name__ == "__main__":

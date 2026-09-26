@@ -89,10 +89,17 @@ def checkpoint(raw: Path, phase: str, **extra: Any) -> None:
 def get_image_digest(tag: str) -> str:
     try:
         out = command(["docker", "image", "inspect", tag, "--format", "{{index .RepoDigests 0}}"], timeout=10)
-        return out.strip()
+        if out.strip():
+            return out.strip()
     except Exception:
+        pass
+    try:
         out = command(["docker", "image", "inspect", tag, "--format", "{{.Id}}"], timeout=10)
-        return out.strip()
+        if out.strip():
+            return out.strip()
+    except Exception:
+        pass
+    return tag
 
 
 def get_container_pid(container_name: str) -> Optional[int]:
@@ -186,6 +193,62 @@ def capture_memory_checkpoint(
     }
 
 
+def compute_memory_deltas(
+    start_snap: Dict[str, Any],
+    end_snap: Dict[str, Any],
+    min_mem_available_kib: Optional[int] = None,
+    peaks: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Compute exact deltas between two memory checkpoints."""
+    start_sys = start_snap.get("system_memory_kib", {})
+    end_sys = end_snap.get("system_memory_kib", {})
+    start_vm = start_snap.get("system_vmstat", {})
+    end_vm = end_snap.get("system_vmstat", {})
+
+    mem_avail_min = min_mem_available_kib
+    if mem_avail_min is None or mem_avail_min >= (1 << 60):
+        start_avail = start_sys.get("MemAvailable", 0)
+        end_avail = end_sys.get("MemAvailable", 0)
+        mem_avail_min = min(start_avail, end_avail) if (start_avail and end_avail) else (start_avail or end_avail or 0)
+
+    res = {
+        "swap_used_start_kib": start_sys.get("SwapUsed", 0),
+        "swap_used_end_kib": end_sys.get("SwapUsed", 0),
+        "swap_used_delta_kib": end_sys.get("SwapUsed", 0) - start_sys.get("SwapUsed", 0),
+        "pswpin_start": start_vm.get("pswpin", 0),
+        "pswpin_end": end_vm.get("pswpin", 0),
+        "pswpin_delta": end_vm.get("pswpin", 0) - start_vm.get("pswpin", 0),
+        "pswpout_start": start_vm.get("pswpout", 0),
+        "pswpout_end": end_vm.get("pswpout", 0),
+        "pswpout_delta": end_vm.get("pswpout", 0) - start_vm.get("pswpout", 0),
+        "pgmajfault_start": start_vm.get("pgmajfault", 0),
+        "pgmajfault_end": end_vm.get("pgmajfault", 0),
+        "pgmajfault_delta": end_vm.get("pgmajfault", 0) - start_vm.get("pgmajfault", 0),
+        "mem_available_minimum_kib": mem_avail_min,
+    }
+
+    if peaks:
+        res.update(peaks)
+    else:
+        res["gemma_process_peaks_kib"] = {
+            "rss": max(start_snap.get("gemma_process", {}).get("smaps_rollup_kib", {}).get("Rss", 0),
+                       end_snap.get("gemma_process", {}).get("smaps_rollup_kib", {}).get("Rss", 0)),
+            "pss": max(start_snap.get("gemma_process", {}).get("smaps_rollup_kib", {}).get("Pss", 0),
+                       end_snap.get("gemma_process", {}).get("smaps_rollup_kib", {}).get("Pss", 0)),
+            "swap": max(start_snap.get("gemma_process", {}).get("smaps_rollup_kib", {}).get("Swap", 0),
+                        end_snap.get("gemma_process", {}).get("smaps_rollup_kib", {}).get("Swap", 0)),
+        }
+        res["ornith_process_peaks_kib"] = {
+            "rss": max(start_snap.get("ornith_process", {}).get("smaps_rollup_kib", {}).get("Rss", 0),
+                       end_snap.get("ornith_process", {}).get("smaps_rollup_kib", {}).get("Rss", 0)),
+            "pss": max(start_snap.get("ornith_process", {}).get("smaps_rollup_kib", {}).get("Pss", 0),
+                       end_snap.get("ornith_process", {}).get("smaps_rollup_kib", {}).get("Pss", 0)),
+            "swap": max(start_snap.get("ornith_process", {}).get("smaps_rollup_kib", {}).get("Swap", 0),
+                        end_snap.get("ornith_process", {}).get("smaps_rollup_kib", {}).get("Swap", 0)),
+        }
+    return res
+
+
 class MemoryTelemetryCollector:
     """Periodic memory, swap, and major fault telemetry thread."""
 
@@ -267,25 +330,7 @@ class MemoryTelemetryCollector:
         start_snap: Dict[str, Any],
         end_snap: Dict[str, Any],
     ) -> Dict[str, Any]:
-        start_sys = start_snap.get("system_memory_kib", {})
-        end_sys = end_snap.get("system_memory_kib", {})
-        start_vm = start_snap.get("system_vmstat", {})
-        end_vm = end_snap.get("system_vmstat", {})
-
-        return {
-            "swap_used_start_kib": start_sys.get("SwapUsed", 0),
-            "swap_used_end_kib": end_sys.get("SwapUsed", 0),
-            "swap_used_delta_kib": end_sys.get("SwapUsed", 0) - start_sys.get("SwapUsed", 0),
-            "pswpin_start": start_vm.get("pswpin", 0),
-            "pswpin_end": end_vm.get("pswpin", 0),
-            "pswpin_delta": end_vm.get("pswpin", 0) - start_vm.get("pswpin", 0),
-            "pswpout_start": start_vm.get("pswpout", 0),
-            "pswpout_end": end_vm.get("pswpout", 0),
-            "pswpout_delta": end_vm.get("pswpout", 0) - start_vm.get("pswpout", 0),
-            "pgmajfault_start": start_vm.get("pgmajfault", 0),
-            "pgmajfault_end": end_vm.get("pgmajfault", 0),
-            "pgmajfault_delta": end_vm.get("pgmajfault", 0) - start_vm.get("pgmajfault", 0),
-            "mem_available_minimum_kib": self.min_mem_available_kib if self.min_mem_available_kib < (1 << 60) else end_sys.get("MemAvailable", 0),
+        peaks = {
             "gemma_process_peaks_kib": {
                 "rss": self.gemma_rss_peak_kib,
                 "pss": self.gemma_pss_peak_kib,
@@ -297,6 +342,13 @@ class MemoryTelemetryCollector:
                 "swap": self.ornith_swap_peak_kib,
             },
         }
+        return compute_memory_deltas(
+            start_snap,
+            end_snap,
+            min_mem_available_kib=self.min_mem_available_kib if self.min_mem_available_kib < (1 << 60) else None,
+            peaks=peaks,
+        )
+
 
 
 def build_cpu_images(root: Path) -> Dict[str, str]:
@@ -332,6 +384,12 @@ def run_preflight_ab(root: Path, digests: Dict[str, str]) -> str:
 
     preflight_dir = root / "results/raw/WBS6-PREFLIGHT-AB"
     preflight_dir.mkdir(parents=True, exist_ok=True)
+    preflight_file = preflight_dir / "preflight_ab_result.json"
+    if preflight_file.exists():
+        raise RuntimeError(
+            f"Immutable preflight raw evidence already exists at {preflight_file}. "
+            "Refusing to overwrite existing evidence."
+        )
 
     results = {}
     test_port = 8089
@@ -550,8 +608,19 @@ def record_startup_gate(
     selected_image: str,
     gemma_pid: Optional[int] = None,
     ornith_pid: Optional[int] = None,
+    snap_a: Optional[Dict[str, Any]] = None,
+    snap_b: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     gate_dir.mkdir(parents=True, exist_ok=True)
+    target_gate_file = gate_dir / "startup_gate.json"
+    if target_gate_file.exists():
+        raise RuntimeError(
+            f"Immutable startup gate raw evidence already exists at {target_gate_file}. "
+            "Refusing to overwrite existing evidence."
+        )
+
+    if snap_a:
+        h.save(gate_dir / "memory-baseline-before-startup.json", snap_a)
 
     try:
         gpu_snapshot = telemetry.read_gpus(timeout_s=5.0)
@@ -561,7 +630,12 @@ def record_startup_gate(
 
     docker_stats = command(["docker", "stats", "--no-stream", "--format", "json", "p520-cpu-gemma", "p520-cpu-ornith"], timeout=10, check=False)
 
-    baseline_snap = capture_memory_checkpoint("startup_healthy", gemma_pid, ornith_pid)
+    if not snap_b:
+        snap_b = capture_memory_checkpoint("checkpoint_b_startup_healthy", gemma_pid, ornith_pid)
+
+    startup_deltas = compute_memory_deltas(snap_a, snap_b) if snap_a else {}
+    if startup_deltas:
+        h.save(gate_dir / "memory-startup-deltas.json", startup_deltas)
 
     gate_data = {
         "timestamp_utc": h.utc(),
@@ -576,7 +650,8 @@ def record_startup_gate(
         "gpu_telemetry_snapshot": gpu_snapshot,
         "gpu_compute_apps": gpu_processes,
         "docker_stats": docker_stats,
-        "memory_checkpoint": baseline_snap,
+        "memory_checkpoint": snap_b,
+        "memory_startup_deltas": startup_deltas,
         "notes": (
             "PASS_STARTUP_GATE verifies dual server 128K context startup, health, and CPU/GPU isolation. "
             "Due to mmap loading, startup snapshot MemAvailable does not guarantee physical RAM headroom once working sets are fault-in. "
@@ -585,8 +660,8 @@ def record_startup_gate(
         "gate_verdict": "PASS_STARTUP_GATE",
     }
 
-    h.save(gate_dir / "startup_gate.json", gate_data)
-    print(f"[+] Recorded WBS 6.5 startup gate evidence to {gate_dir / 'startup_gate.json'}")
+    h.save(target_gate_file, gate_data)
+    print(f"[+] Recorded WBS 6.5 startup gate evidence to {target_gate_file}")
     return gate_data
 
 
@@ -602,6 +677,8 @@ def run_measured_experiment_32k(
     peer_port: int,
     gemma_pid: Optional[int],
     ornith_pid: Optional[int],
+    snap_a: Dict[str, Any],
+    snap_b: Dict[str, Any],
     pre_snap_label: str,
     post_snap_label: str,
 ) -> Tuple[str, Dict[str, Any]]:
@@ -612,9 +689,21 @@ def run_measured_experiment_32k(
     print("=" * 60)
 
     raw = root / "results/raw" / exp_id
+    if raw.exists():
+        raise RuntimeError(
+            f"Immutable raw experiment evidence directory already exists at {raw}. "
+            "Refusing to overwrite existing experiment evidence."
+        )
     raw.mkdir(parents=True, exist_ok=False)
     runtime = raw / "runtime"
     runtime.mkdir()
+
+    # Persist Checkpoints A and B (Startup Phase) in experiment evidence
+    h.save(runtime / "checkpoint_a_baseline_before_startup.json", snap_a)
+    h.save(raw / "memory-baseline-before-startup.json", snap_a)
+    h.save(runtime / "checkpoint_b_startup_healthy.json", snap_b)
+    startup_deltas = compute_memory_deltas(snap_a, snap_b)
+    h.save(runtime / "memory-startup-deltas.json", startup_deltas)
 
     endpoint = f"http://127.0.0.1:{port}"
     peer_endpoint = f"http://127.0.0.1:{peer_port}"
@@ -657,11 +746,30 @@ def run_measured_experiment_32k(
     checkpoint(raw, "prepared", step="config_written")
 
     stop_gpu_telemetry = threading.Event()
-    gpu_telemetry_thread = threading.Thread(
-        target=telemetry.telemetry_loop,
-        args=(runtime / "gpu-telemetry.csv", 1.0, stop_gpu_telemetry),
-        daemon=True,
-    )
+
+    def _gpu_telemetry_loop() -> None:
+        csv_file = runtime / "gpu-telemetry.csv"
+        with csv_file.open("w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["timestamp_utc", "gpu0_used_mib", "gpu1_used_mib", "gpu0_util", "gpu1_util"])
+            while not stop_gpu_telemetry.is_set():
+                try:
+                    gpus = telemetry.read_gpus(timeout_s=2.0)
+                    g0 = gpus[0].get("metrics", {}) if len(gpus) > 0 else {}
+                    g1 = gpus[1].get("metrics", {}) if len(gpus) > 1 else {}
+                    writer.writerow([
+                        h.utc(),
+                        g0.get("memory_used_mib", 0.0),
+                        g1.get("memory_used_mib", 0.0),
+                        g0.get("utilization_pct", 0.0),
+                        g1.get("utilization_pct", 0.0),
+                    ])
+                    f.flush()
+                except Exception:
+                    pass
+                stop_gpu_telemetry.wait(1.0)
+
+    gpu_telemetry_thread = threading.Thread(target=_gpu_telemetry_loop, daemon=True)
     gpu_telemetry_thread.start()
 
     mem_collector = MemoryTelemetryCollector(
@@ -675,6 +783,11 @@ def run_measured_experiment_32k(
     pre_snap = capture_memory_checkpoint(pre_snap_label, gemma_pid, ornith_pid)
     h.save(runtime / f"{pre_snap_label}.json", pre_snap)
 
+    post_snap = None
+    memory_deltas = None
+    run_batch_err = None
+    verdict = None
+
     try:
         checkpoint(raw, "running", step="materializing_32k_workload")
         manifest = w.load_manifest(C1_32K_WORKLOAD_MANIFEST)
@@ -687,32 +800,57 @@ def run_measured_experiment_32k(
         checkpoint(raw, "results_saved", step="measurement_complete", verdict=verdict)
         print(f"[+] Measurement complete with verdict: {verdict}")
 
-        post_snap = capture_memory_checkpoint(post_snap_label, gemma_pid, ornith_pid)
-        h.save(runtime / f"{post_snap_label}.json", post_snap)
-
-        memory_deltas = mem_collector.compute_summary_deltas(pre_snap, post_snap)
-        h.save(raw / "memory-deltas.json", memory_deltas)
-        print(f"[+] Recorded memory deltas: Swap delta={memory_deltas['swap_used_delta_kib']} kB, pswpin delta={memory_deltas['pswpin_delta']}, pswpout delta={memory_deltas['pswpout_delta']}, pgmajfault delta={memory_deltas['pgmajfault_delta']}")
-
-        my_health = adapter.health()
-        peer_health = peer_adapter.health()
-        post_health_data = {
-            "active_model_health": my_health,
-            "peer_model_health": peer_health,
-            "both_healthy": bool(my_health.get("healthy") and peer_health.get("healthy")),
-        }
-        h.save(raw / "dual_resident_post_health.json", post_health_data)
-
-        if not post_health_data["both_healthy"]:
-            print(f"[!] Warning: One or both servers unhealthy post-inference: {post_health_data}")
-
-        return verdict, memory_deltas
+    except Exception as exc:
+        run_batch_err = exc
+        verdict = f"FAIL_ERROR_{type(exc).__name__}"
+        checkpoint(raw, "failed", error=str(exc), verdict=verdict)
+        print(f"[!] Error during measured inference batch: {exc}")
 
     finally:
+        try:
+            post_snap = capture_memory_checkpoint(post_snap_label, gemma_pid, ornith_pid)
+            h.save(runtime / f"{post_snap_label}.json", post_snap)
+
+            memory_deltas = mem_collector.compute_summary_deltas(pre_snap, post_snap)
+            h.save(raw / "memory-deltas.json", memory_deltas)
+            print(f"[+] Recorded memory deltas: Swap delta={memory_deltas['swap_used_delta_kib']} kB, pswpin delta={memory_deltas['pswpin_delta']}, pswpout delta={memory_deltas['pswpout_delta']}, pgmajfault delta={memory_deltas['pgmajfault_delta']}")
+        except Exception as snap_err:
+            print(f"[!] Error recording post memory snapshot/deltas: {snap_err}")
+
         mem_collector.stop()
         stop_gpu_telemetry.set()
         gpu_telemetry_thread.join(timeout=10)
-        telemetry.summarize_session(runtime / "gpu-telemetry.csv", raw / "gpu-peak.json")
+
+        # Summarize GPU VRAM peak
+        gpu_peak = {"gpu0_max_mib": 0.0, "gpu1_max_mib": 0.0}
+        csv_file = runtime / "gpu-telemetry.csv"
+        if csv_file.exists():
+            try:
+                with csv_file.open() as f:
+                    r = csv.DictReader(f)
+                    for row in r:
+                        gpu_peak["gpu0_max_mib"] = max(gpu_peak["gpu0_max_mib"], float(row.get("gpu0_used_mib", 0.0)))
+                        gpu_peak["gpu1_max_mib"] = max(gpu_peak["gpu1_max_mib"], float(row.get("gpu1_used_mib", 0.0)))
+            except Exception:
+                pass
+        h.save(raw / "gpu-peak.json", gpu_peak)
+
+    my_health = adapter.health()
+    peer_health = peer_adapter.health()
+    post_health_data = {
+        "active_model_health": my_health,
+        "peer_model_health": peer_health,
+        "both_healthy": bool(my_health.get("healthy") and peer_health.get("healthy")),
+    }
+    h.save(raw / "dual_resident_post_health.json", post_health_data)
+
+    if not post_health_data["both_healthy"]:
+        print(f"[!] Warning: One or both servers unhealthy post-inference: {post_health_data}")
+
+    if run_batch_err is not None:
+        raise run_batch_err
+
+    return verdict, memory_deltas
 
 
 def cleanup_containers() -> None:
@@ -758,18 +896,22 @@ def run_locked(args: argparse.Namespace) -> None:
         print(f"\n[+] Preflight completed. Selected image: {selected_image}")
         return
 
-    pre_baseline_snap = capture_memory_checkpoint("baseline_before_startup")
-    print(f"[*] Baseline host memory before startup: MemAvailable={pre_baseline_snap['system_memory_kib'].get('MemAvailable')} kB, SwapUsed={pre_baseline_snap['system_memory_kib'].get('SwapUsed')} kB")
+    # Checkpoint A: baseline_before_startup
+    snap_a = capture_memory_checkpoint("checkpoint_a_baseline_before_startup")
+    print(f"[*] [Checkpoint A] Baseline host memory before startup: MemAvailable={snap_a['system_memory_kib'].get('MemAvailable')} kB, SwapUsed={snap_a['system_memory_kib'].get('SwapUsed')} kB")
 
     gemma_pid, ornith_pid = start_dual_resident_servers(selected_image)
 
     try:
         wait_for_dual_resident_health()
 
-        gate_dir = ROOT / "results/raw/WBS6-STARTUP-GATE"
-        record_startup_gate(gate_dir, selected_image, gemma_pid, ornith_pid)
+        # Checkpoint B: startup_healthy
+        snap_b = capture_memory_checkpoint("checkpoint_b_startup_healthy", gemma_pid, ornith_pid)
+        print(f"[*] [Checkpoint B] Dual servers healthy: MemAvailable={snap_b['system_memory_kib'].get('MemAvailable')} kB, SwapUsed={snap_b['system_memory_kib'].get('SwapUsed')} kB")
 
         if args.gate_only:
+            gate_dir = ROOT / "results/raw/WBS6-STARTUP-GATE"
+            record_startup_gate(gate_dir, selected_image, gemma_pid, ornith_pid, snap_a=snap_a, snap_b=snap_b)
             print("\n[+] Dual-resident startup gate passed and recorded. Stopping per --gate-only.")
             return
 
@@ -781,6 +923,7 @@ def run_locked(args: argparse.Namespace) -> None:
         print(" [WBS 6] Proceeding to 32K Serial Measured Runs (--run-32k-measured confirmed)")
         print("=" * 60)
 
+        # Checkpoints C & D in Gemma run
         gemma_verdict, gemma_mem = run_measured_experiment_32k(
             root=ROOT,
             exp_id=GEMMA_EXP_ID,
@@ -793,16 +936,20 @@ def run_locked(args: argparse.Namespace) -> None:
             peer_port=ORNITH_PORT,
             gemma_pid=gemma_pid,
             ornith_pid=ornith_pid,
-            pre_snap_label="gemma_32k_pre",
-            post_snap_label="gemma_32k_post",
+            snap_a=snap_a,
+            snap_b=snap_b,
+            pre_snap_label="checkpoint_c_gemma_32k_pre",
+            post_snap_label="checkpoint_d_gemma_32k_post",
         )
         print(f"[+] Gemma 32K completed: {gemma_verdict}")
 
+        # Intermediate health check between requests
         gemma_adapter = h.HTTPAdapter(f"http://127.0.0.1:{GEMMA_PORT}", "llama.cpp", timeout_s=60)
         ornith_adapter = h.HTTPAdapter(f"http://127.0.0.1:{ORNITH_PORT}", "llama.cpp", timeout_s=60)
         if not gemma_adapter.health().get("healthy") or not ornith_adapter.health().get("healthy"):
             raise RuntimeError("Server health check failed before Ornith request!")
 
+        # Checkpoints E & F in Ornith run
         ornith_verdict, ornith_mem = run_measured_experiment_32k(
             root=ROOT,
             exp_id=ORNITH_EXP_ID,
@@ -815,10 +962,23 @@ def run_locked(args: argparse.Namespace) -> None:
             peer_port=GEMMA_PORT,
             gemma_pid=gemma_pid,
             ornith_pid=ornith_pid,
-            pre_snap_label="ornith_32k_pre",
-            post_snap_label="ornith_32k_post",
+            snap_a=snap_a,
+            snap_b=snap_b,
+            pre_snap_label="checkpoint_e_ornith_32k_pre",
+            post_snap_label="checkpoint_f_ornith_32k_post",
         )
         print(f"[+] Ornith 32K completed: {ornith_verdict}")
+
+        # Checkpoint G: final_post_health
+        snap_g = capture_memory_checkpoint("checkpoint_g_final_post_health", gemma_pid, ornith_pid)
+        print(f"[*] [Checkpoint G] Final post-health memory: MemAvailable={snap_g['system_memory_kib'].get('MemAvailable')} kB, SwapUsed={snap_g['system_memory_kib'].get('SwapUsed')} kB")
+
+        for exp_id in (GEMMA_EXP_ID, ORNITH_EXP_ID):
+            exp_runtime = ROOT / "results/raw" / exp_id / "runtime"
+            if exp_runtime.exists():
+                h.save(exp_runtime / "checkpoint_g_final_post_health.json", snap_g)
+                session_deltas = compute_memory_deltas(snap_a, snap_g)
+                h.save(exp_runtime / "memory-session-deltas.json", session_deltas)
 
         print("\n" + "=" * 60)
         print(" [WBS 6 All 32K Measured Items Finished]")
