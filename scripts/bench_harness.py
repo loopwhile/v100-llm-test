@@ -375,6 +375,7 @@ def worker(adapter,barrier,origin,rec,payload,case,receipt):
   first=t.get("first",t.get("first_token_s"));end=t.get("end",t.get("terminal_s"));rec["ttft_ms"]=t.get("ttft_ms");rec["first_abs"]=first;rec["end_abs"]=end;rec["wall_s"]=t.get("wall_s");tim=res.get("timings") or {};rec["prefill_tps"]=tim.get("prompt_per_second");rec["decode_tps"]=tim.get("predicted_per_second")
   hdr=t.get("response_headers") or {};rec["gateway_deployment_id"]=hdr.get("x-litellm-model-id");rec["gateway_api_base"]=hdr.get("x-litellm-model-api-base");rec["gateway_call_id"]=hdr.get("x-litellm-call-id");rec["gateway_version"]=hdr.get("x-litellm-version")
   if rec["decode_tps"] is None and first and end and end>first and tokens_ok:rec["decode_tps"]=rec["actual_output_tokens"]/(end-first)
+  if rec["prefill_tps"] is None and rec.get("ttft_ms") and rec["ttft_ms"]>0 and rec.get("post_template_prompt_tokens"):rec["prefill_tps"]=rec["post_template_prompt_tokens"]/(rec["ttft_ms"]/1000.0)
  except Exception as e:rec.update(verdict=classify(e),error=str(e),error_body=getattr(e,"evidence",None))
  rec["status"]="results_saved";rec["terminal_s"]=time.monotonic()-origin;return rec
 

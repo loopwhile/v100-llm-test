@@ -197,6 +197,18 @@ def _extract_metrics(raw_dir, config, metrics, completion, final_verdict=None):
         if config.get("concurrency") == 1 and config.get("context_tokens") == 131072:
             metrics["c1_128k"] = True
 
+    if metrics.get("prefill_tps") is None:
+        if reqs_with_pref:
+            metrics["prefill_tps"] = sum(r["prefill_tps"] for r in reqs_with_pref) / len(reqs_with_pref)
+        elif reqs_with_ttft:
+            prefills = [
+                r["post_template_prompt_tokens"] / (r["ttft_ms"] / 1000.0)
+                for r in reqs_with_ttft
+                if r.get("post_template_prompt_tokens") and r.get("ttft_ms") and r["ttft_ms"] > 0
+            ]
+            if prefills:
+                metrics["prefill_tps"] = sum(prefills) / len(prefills)
+
     return metrics
 
 
