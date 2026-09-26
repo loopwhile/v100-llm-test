@@ -1,0 +1,106 @@
+[
+  {
+    "request_id": "project-a",
+    "project_id": "A",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "5830d5b512cb7f7be3adf84cf59663bb8edc76935100138b8c3f978f253d9c95",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.013922385000114446,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "# Engineering Report: Project A Transactional Integrity Defect\n\n## 1. Root Cause\nThe defect is located in the `Transaction.commit` method within `Project A / storage/transaction.py`. The faulty operation is the placement of the `self.pending.clear()` call inside the `for` loop that iterates over the staged writes. \n\nBy calling `.clear()` on the `self.pending` list during the first iteration of the loop, the transaction prematurely empties its buffer. Consequently, if a transaction has staged multiple writes, only the first write is successfully committed to the `PageIndex`. All subsequent staged writes are lost because the loop attempts to iterate over an empty list after the first element is processed.\n\n## 2. Failure Trace\nConsider a transaction attempting to commit two staged writes:\n1.  **Initial State**: `PageIndex.pages = {}`, `Transaction.pending = []`.\n2.  **Staging Write 1**: `tx.stage(\"key1\", 101)` is called. `self.pending` becomes `[(\"key1\", 101)]`.\n3.  **Staging Write 2**: `tx.stage(\"key2\", 202)` is called. `self.pending` becomes `[(\"key1\", 101), (\"key2\", 202)]`.\n4.  **Commit Execution (Iteration 1)**:\n    *   The loop retrieves the first item: `(\"key1\", 101)`.\n    *   `index.put(\"key1\", 101)` is called. `index.pages` is now `{\"key1\": 101}`.\n    *   **The Defect**: `self.pending.clear()` is executed. `self.pending` is now `[]`.\n5.  **Commit Execution (Iteration 2)**:\n    *   The loop attempts to fetch the next item from `self.pending`.\n    *   Since the list was cleared in the previous step, the loop terminates immediately.\n6.  **Final State**: `index.pages = {\"key1\": 101}`. The write for `\"key2\"` is lost, violating the atomicity and completeness of the transaction.\n\n## 3. Reproduction\nThe following pytest-style test demonstrates the failure. A correct implementation must pass this test.\n\n```python\nimport pytest\n\n# Import the classes from the project\n# from storage.index import PageIndex\n# from storage.transaction import Transaction\n\ndef test_transaction_commit_atomicity_failure():\n    \"\"\"\n    Regression test to ensure all staged writes are committed.\n    The current implementation fails this because it clears the \n    pending list inside the loop.\n    \"\"\"\n    index = PageIndex()\n    tx = Transaction(index)\n    \n    # Stage multiple writes\n    tx.stage(\"alpha\", 10)\n    tx.stage(\"beta\", 20)\n    tx.stage(\"gamma\", 30)\n    \n    # Execute commit\n    tx.commit()\n    \n    # Assertions\n    # The current faulty code will only have {\"alpha\": 10} in index.pages\n    expected_pages = {\"alpha\": 10, \"beta\": 20, \"gamma\": 30}\n    assert index.pages == expected_pages, f\"Expected {expected_pages}, but got {index.pages}\"\n    assert tx.pending == [], \"Pending list should be cleared after commit\"\n```\n\n## 4. Minimal Fix\nThe `clear()` operation must be moved outside the scope of the `for` loop to ensure the entire buffer is processed before being emptied.\n\n```python\n# Project A / storage/transaction.py\n\nclass Transaction:\n    def __init__(self, index):\n        self.index = index\n        self.pending = []\n\n    def stage(self, key, page_id):\n        self.pending.append((key, page_id))\n\n    def commit(self):\n        for key, page_id in self.pending:\n            self.index.put(key, page_id)\n        # FIX: Move clear() outside the loop to prevent premature truncation\n        self.pending.clear()\n```"
+          }
+        }
+      ],
+      "usage": {
+        "completion_tokens": 924,
+        "prompt_tokens": 129022,
+        "total_tokens": 129946,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 129022,
+        "prompt_ms": 644454.26,
+        "prompt_per_token_ms": 4.994917610950071,
+        "prompt_per_second": 200.20350241768904,
+        "predicted_n": 924,
+        "predicted_ms": 22651.957,
+        "predicted_per_token_ms": 24.54166522210184,
+        "predicted_per_second": 40.747031260919314
+      }
+    },
+    "actual_output_tokens": 924,
+    "post_template_prompt_tokens": 129022,
+    "ttft_ms": 644656.0635009998,
+    "first_abs": 2354.701703207,
+    "end_abs": 2377.359083518,
+    "wall_s": 667.3134438119998,
+    "prefill_tps": 200.20350241768904,
+    "decode_tps": 40.747031260919314,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 667.3632899439999
+  },
+  {
+    "request_id": "project-b",
+    "project_id": "B",
+    "status": "results_saved",
+    "verdict": "PASS",
+    "raw_prompt_sha256": "42c0ea24ad25d2ee4ca2157f6d8287ef66be57a482c5fc595d9bf35416479d3f",
+    "requested_output_tokens": 2048,
+    "minimum_output_tokens": 256,
+    "submitted_s": 0.003892566000104125,
+    "response": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "message": {
+            "content": "### Engineering Report: Project B Concurrency Defect\n\n#### 1. Root Cause\nThe defect is a **race condition** located in the `JobQueue.pop` method within `scheduler/queue.py`. \n\nThe function performs a check for the existence of items in the heap (`if not self._heap:`) and then executes an `await asyncio.sleep(0)` before performing the `heapq.heappop` operation. Because `asyncio.sleep(0)` is an explicit yield point in a cooperative multitasking environment, it allows the event loop to switch context to another pending task. \n\nIf two `Worker` tasks call `pop()` concurrently when the queue contains exactly one job, both tasks will pass the `if not self._heap` check. Both tasks will then reach the `await` point. When the event loop resumes them, the first task will successfully pop the job, but the second task will attempt to call `heapq.heappop` on an empty list, resulting in an `IndexError`.\n\n#### 2. Failure Trace\nThe following interleaving demonstrates the failure with two workers (`W1`, `W2`) and one job (`J1`) in the queue:\n\n1.  **T1 (W1):** Calls `queue.pop()`.\n2.  **T2 (W1):** Evaluates `if not self._heap` $\\rightarrow$ `False` (Job `J1` is present).\n3.  **T3 (W1):** Reaches `await asyncio.sleep(0)`. Task `W1` is suspended.\n4.  **T4 (W2):** Calls `queue.pop()`.\n5.  **T5 (W2):** Evaluates `if not self._heap` $\\rightarrow$ `False` (Job `J1` is still present).\n6.  **T6 (W2):** Reaches `await asyncio.sleep(0)`. Task `W2` is suspended.\n7.  **T7 (W1):** Resumes. Executes `heapq.heappop(self._heap)`. Returns `J1`.\n8.  **T8 (W2):** Resumes. Executes `heapq.heappop(self._heap)`.\n9.  **T9 (W2):** **CRASH**: `IndexError: index out of range` (Heap is now empty).\n\n#### 3. Reproduction\nThe following test uses `pytest-asyncio` to reliably trigger the `IndexError` by ensuring both workers enter the critical section before either completes the pop.\n\n```python\nimport asyncio\nimport pytest\nimport heapq\n\n# The original buggy implementation\nclass JobQueue:\n    def __init__(self):\n        self._heap = []\n        self._sequence = 0\n\n    def push(self, priority, job):\n        self._sequence += 1\n        heapq.heappush(self._heap, (priority, self._sequence, job))\n\n    async def pop(self):\n        if not self._heap:\n            return None\n        await asyncio.sleep(0)  # The yield point causing the race\n        return heapq.heappop(self._heap)[2]\n\nclass Worker:\n    def __init__(self, queue):\n        self.queue = queue\n    async def run_once(self):\n        job = await self.queue.pop()\n        return await job() if job else None\n\n@pytest.mark.asyncio\nasync def test_reproduce_pop_race_condition():\n    queue = JobQueue()\n    async def job(): return \"done\"\n    queue.push(1, job)\n    \n    w1 = Worker(queue)\n    w2 = Worker(queue)\n    \n    # We expect an IndexError due to the race condition\n    with pytest.raises(IndexError):\n        await asyncio.gather(w1.run_once(), w2.run_once())\n```\n\n#### 4. Minimal Fix\nTo resolve this, the check for the queue's state and the removal of the item must be performed **atomically** relative to the event loop. We must remove the `await` point between the check and the mutation.\n\n```python\n# Project B / scheduler/queue.py (FIXED)\nclass JobQueue:\n    def __init__(self):\n        self._heap = []\n        self._sequence = 0\n\n    def push(self, priority, job):\n        self._sequence += 1\n        heapq.heappush(self._heap, (priority, self._sequence, job))\n\n    async def pop(self):\n        # Check and pop must be synchronous/atomic to prevent context switching\n        # between the check and the mutation.\n        if not self._heap:\n            return None\n        return heapq.heappop(self._heap)[2]\n```"
+          }
+        }
+      ],
+      "usage": {
+        "completion_tokens": 1068,
+        "prompt_tokens": 129024,
+        "total_tokens": 130092,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 129024,
+        "prompt_ms": 249130.581,
+        "prompt_per_token_ms": 1.9308855794270834,
+        "prompt_per_second": 517.8970782394634,
+        "predicted_n": 1068,
+        "predicted_ms": 415920.963,
+        "predicted_per_token_ms": 389.8040890346767,
+        "predicted_per_second": 2.565391251991307
+      }
+    },
+    "actual_output_tokens": 1068,
+    "post_template_prompt_tokens": 129024,
+    "ttft_ms": 249374.6274079999,
+    "first_abs": 1959.410472173,
+    "end_abs": 2375.32939554,
+    "wall_s": 665.2935507749999,
+    "prefill_tps": 517.8970782394634,
+    "decode_tps": 2.565391251991307,
+    "gateway_deployment_id": null,
+    "gateway_api_base": null,
+    "gateway_call_id": null,
+    "gateway_version": null,
+    "terminal_s": 665.3308287280001
+  }
+]
