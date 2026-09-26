@@ -37,7 +37,7 @@
   - 3.2.1 Qwen3.8-27B (`EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C2-128K-20260925-002`): QUEUE_ONLY / FAIL_OUTPUT (Project A passed, Project B failed length/repetition; queue_only confirmed).
   - 3.2.2 Ornith 1.5 9B (`EXP-V100-ORN15-9B-1CAT-F16-MTP1-C2-128K-20260925-003`): PASS_C2_ACTIVE (Peak processing 2.0, resident true, active_overlap true; TTFT 310.90s, Aggregate decode 15.60 tok/s; Project A 865 tok PASS, Project B 1460 tok PASS).
   - 3.2.3 Ornith 1.5 35B-A3B (`EXP-V100-ORN15-35B-1CAT-FP8E5M2-TARGET-C2-128K-20260925-001`): PASS_C2_ACTIVE (Peak processing 2.0, resident true, active_overlap true; TTFT 113.71s, Aggregate decode 9.57 tok/s; Project A 947 tok PASS, Project B 1181 tok PASS).
-- Current task: WBS 3.1 llama.cpp C2 v2 matrix execution in progress:
+- Previous task: WBS 3.1 llama.cpp C2 v2 matrix execution complete ([DONE]):
   - 3.1.1 Qwen3.8-27B [DONE]:
     - TARGET (`EXP-V100-Q38-LLAMA-Q80-TARGET-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 925.17s, Aggregate decode 1.83 tok/s, Batch Wall 1,446.44s; Project A 886 tok PASS, Project B 842 tok PASS).
     - NGRAM (`EXP-V100-Q38-LLAMA-Q80-NGRAM-C2-128K-20260925-001`): **PASS_C2_ACTIVE** (Peak processing 2.0, resident true, active_overlap true; TTFT 925.67s, Aggregate decode 2.16 tok/s, Batch Wall 1,489.30s; Project A 886 tok PASS, Project B 1249 tok PASS; NGRAM draft 288/86 A, 561/117 B).

@@ -110,7 +110,7 @@
   - pinned v1.1 model contract가 없으므로 `UNSUPPORTED`.
 
 repository identity가 검증되지 않은 항목은 unresolved 상태를 유지하며 추정값으로 채우지 않는다.
-## 2. C1 — 128K capacity 및 correctness [TODO]
+## 2. C1 — 128K capacity 및 correctness [DONE]
 
 `workloads/capacity/v1.json`을 사용하며, 정확한 live tokenizer 기준으로 materialize한다.
 
@@ -360,7 +360,7 @@ repository identity가 검증되지 않은 항목은 unresolved 상태를 유지
 - pinned v100-skinny v1.1 standalone model contract가 없다.
 - current project에서는 C1/C2 실행 대상으로 예약하지 않는다.
 
-## 3. C2 — 독립적인 128K 에이전트 2개 [TODO — authoritative v2 revalidation]
+## 3. C2 — 독립적인 128K 에이전트 2개 [DONE — authoritative v2 revalidation]
 
 ### 3.0 WBS 3 workload reset (2026-09-25)
 
@@ -517,7 +517,7 @@ WBS 3 authoritative workload는 `workloads/concurrency/v2.json`이다.
     - Project B: 1,016 tokens 생성, `JobQueue.pop` 비원자적 race condition 결함 분석 및 수정안 제시 (PASS).
   - 네 lane(TARGET, NGRAM, MTP, MTP_NGRAM) 모두 128K C2 Active Overlap 및 semantic oracle 검증을 완벽하게 통과함.
 
-### 3.2 Shared TP2 1Cat-vLLM STOCK [TODO — v2 revalidation]
+### 3.2 Shared TP2 1Cat-vLLM STOCK [DONE — v2 revalidation]
 - 공통: TP2, `max_model_len=131072`, `max_num_seqs=2`, C1에서 검증된 exact serving configuration 유지.
 - `scripts/run_c2_onecat.py`는 v2 manifest와 semantic-oracle hash를 evidence에 고정한다.
 
