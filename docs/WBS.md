@@ -1035,8 +1035,8 @@ llama.cpp의 draft-model-free `ngram-mod` 경로를 활성화한다.
   - TTFT: 4,927.28s (~82.1분), Prefill 속도: 6.44 tok/s (31,742 tokens).
   - Decode 속도: 2.72 tok/s (716 completion tokens), Batch Wall Time: 5,189.72s (~86.5분).
   - Peak VRAM: GPU0 0 MiB / GPU1 0 MiB (VRAM 0B 완전 격리 확인).
-  - Peer Ornith server: 128K resident 유지 (RSS 16.26 GiB, CPU 0%).
-  - SwapUsed delta: +14.5 MiB, pswpin/pswpout delta: +1,704 / +4,466, pgmajfault delta: +8,844.
+  - Peer Ornith server: 128K idle resident 유지 (/health 200 OK 확인; 단, smaps_rollup 수집 실패로 6.6 개별 프로세스 RSS/PSS는 0으로 기록되었으며, 공존 건전성은 시스템 전체 MemAvailable 및 헬스체크로 입증됨).
+  - SwapUsed delta: +14.5 MiB, pswpin/pswpout delta: +1,704 / +4,466, pgmajfault delta: +8,844 (86분 실행 동안 경미한 swap 증분 외 심각한 지속적 swap thrashing은 관찰되지 않음).
   - MemAvailable min: ~41.4 GiB (Host Total 62.56 GiB 중 충분한 물리 헤드룸 유지).
   - Post-health: both healthy (`true`).
 - Ornith 1.5 35B-A3B: `EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001`
@@ -1044,8 +1044,8 @@ llama.cpp의 draft-model-free `ngram-mod` 경로를 활성화한다.
   - TTFT: 4,160.26s (~69.3분), Prefill 속도: 7.63 tok/s (31,742 tokens).
   - Decode 속도: 3.15 tok/s (892 completion tokens), Batch Wall Time: 4,443.18s (~74.1분).
   - Peak VRAM: GPU0 0 MiB / GPU1 0 MiB (VRAM 0B 완전 격리 확인).
-  - Peer Gemma server: 128K resident 유지 (RSS 2.41 GiB, CPU 0%).
-  - SwapUsed delta: +12.4 MiB, pswpin/pswpout delta: +113 / +2,101, pgmajfault delta: +1,433.
+  - Peer Gemma server: 128K idle resident 유지 (/health 200 OK 확인; smaps_rollup 개별 프로세스 RSS/PSS는 0 기록 한계 명시).
+  - SwapUsed delta: +12.4 MiB, pswpin/pswpout delta: +113 / +2,101, pgmajfault delta: +1,433 (74분 실행 동안 경미한 swap 증분 외 지속적 swap thrashing은 관찰되지 않음).
   - MemAvailable min: ~41.2 GiB.
   - Post-health: both healthy (`true`).
 - Checkpoints A~G 전 구간 정상 계측 완료:
@@ -1057,12 +1057,12 @@ llama.cpp의 draft-model-free `ngram-mod` 경로를 활성화한다.
 모델별 **`PASS_CPU_128K_SERVER_32K_REQUEST_DUAL_RESIDENT`** 평가 결과:
 1. **Gemma 4 26B-A4B**: **`PASS_CPU_128K_SERVER_32K_REQUEST_DUAL_RESIDENT`**
    - UD-Q6_K_XL / KV Q8_0 / CPU-only / 4-core conservative envelope / NGRAM-MOD 24/48/64 / Server 128K / Request 32K / peer Ornith resident.
-   - 32K 장문 문서 리서치/합성 요청 완수, 출력 정상(`finish_reason=stop`), OOM/크래시 0, 사후 헬스체크 정상, Swap delta +14.5 MiB (스왑 스래싱 없음), GPU VRAM 0B.
+   - 32K 장문 문서 리서치/합성 요청 완수, 출력 정상(`finish_reason=stop`), OOM/크래시 0, 사후 헬스체크 정상, Swap delta +14.5 MiB (지속적 swap thrashing 미관찰), GPU VRAM 0B.
 2. **Ornith 1.5 35B-A3B**: **`PASS_CPU_128K_SERVER_32K_REQUEST_DUAL_RESIDENT`**
    - Q4_K_M / KV Q8_0 / CPU-only / 4-core conservative envelope / NGRAM-MOD 24/48/64 / Server 128K / Request 32K / peer Gemma resident.
-   - 32K 장문 문서 리서치/합성 요청 완수, 출력 정상(`finish_reason=stop`), OOM/크래시 0, 사후 헬스체크 정상, Swap delta +12.4 MiB (스왑 스래싱 없음), GPU VRAM 0B.
+   - 32K 장문 문서 리서치/합성 요청 완수, 출력 정상(`finish_reason=stop`), OOM/크래시 0, 사후 헬스체크 정상, Swap delta +12.4 MiB (지속적 swap thrashing 미관찰), GPU VRAM 0B.
 
-결론: P520 호스트에서 64GB RAM과 CPU 4코어만으로 두 거대 MoE 모델(가중치 합산 약 45GB)을 128K context capacity로 동시 상주시키면서 32K 실사용급 문서 리서치 요청을 오류 및 스왑 스래싱 없이 처리하고, V100 GPU 서빙 자원을 100% 보존할 수 있음을 완벽하게 입증함. WBS 6 전체 종결 [DONE].
+결론: P520 호스트에서 64GB RAM과 CPU 4코어만으로 두 거대 MoE 모델(가중치 합산 약 45GB)을 128K context capacity로 동시 상주시키면서 32K 실사용급 문서 리서치 요청을 오류 및 지속적 스왑 스래싱 없이 처리하고, V100 GPU 서빙 자원을 100% 보존할 수 있음을 완벽하게 입증함. WBS 6 전체 종결 [DONE].
 
 ## 실행 규칙
 - 별도 승인이 없는 한 선언된 configuration당 measured execution은 1회만 수행한다.

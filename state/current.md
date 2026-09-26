@@ -152,9 +152,9 @@
   - Memory Evidence & Limits: Host Total 62.56 GiB, Available 31.59 GiB at snapshot. SwapTotal 4,194,300 kB, SwapFree 528 kB (~4GB swap in use). Startup gate proved dual server startup, health, and 0B VRAM isolation; it did not measure `pswpin`/`pswpout`/`pgmajfault` deltas, so absence of swap thrash is unproven at gate time. Due to `mmap`, initial MemAvailable does not guarantee physical RAM headroom once working sets fault in; memory pressure and stability will be measured during 32K request execution.
   - Post-gate cleanup: Both containers cleanly removed after verification per contract.
 - Status: WBS 6.1~6.5 [DONE], WBS 6.6 [DONE], WBS 6.7 [DONE].
-  - Gemma 4 26B-A4B 32K Serial Request: **`PASS`** (`EXP-P520-CPU-GEMMA4-26B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001`; TTFT 4,927.28s, Prefill 6.44 tok/s, Decode 2.72 tok/s, Wall 5,189.72s, Peak VRAM 0 MiB, SwapUsed delta +14.5 MiB, Post-health PASS).
-  - Ornith 1.5 35B-A3B 32K Serial Request: **`PASS`** (`EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001`; TTFT 4,160.26s, Prefill 7.63 tok/s, Decode 3.15 tok/s, Wall 4,443.18s, Peak VRAM 0 MiB, SwapUsed delta +12.4 MiB, Post-health PASS).
-  - Verdict: Both models awarded **`PASS_CPU_128K_SERVER_32K_REQUEST_DUAL_RESIDENT`**. 64GB RAM / 4-core CPU envelope에서 두 128K 서버 동시 상주 및 32K 실사용 리서치 워크로드 처리 성공, V100 GPU 서빙 자원 100% 보존 확인.
+  - Gemma 4 26B-A4B 32K Serial Request: **`PASS`** (`EXP-P520-CPU-GEMMA4-26B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001`; TTFT 4,927.28s, Prefill 6.44 tok/s, Decode 2.72 tok/s, Wall 5,189.72s, Peak VRAM 0 MiB, SwapUsed delta +14.5 MiB, pswpin +1,704, pswpout +4,466, pgmajfault +8,844, 지속적 swap thrashing 미관찰, Post-health PASS; smaps_rollup 수집 실패로 개별 프로세스 RSS/PSS는 0으로 기록됨).
+  - Ornith 1.5 35B-A3B 32K Serial Request: **`PASS`** (`EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001`; TTFT 4,160.26s, Prefill 7.63 tok/s, Decode 3.15 tok/s, Wall 4,443.18s, Peak VRAM 0 MiB, SwapUsed delta +12.4 MiB, pswpin +113, pswpout +2,101, pgmajfault +1,433, 지속적 swap thrashing 미관찰, Post-health PASS; smaps_rollup 수집 실패로 개별 프로세스 RSS/PSS는 0으로 기록됨).
+  - Verdict: Both models awarded **`PASS_CPU_128K_SERVER_32K_REQUEST_DUAL_RESIDENT`**. 64GB RAM / 4-core CPU envelope에서 두 128K 서버 동시 상주 및 32K 실사용 리서치 워크로드 처리 성공(경미한 swap 증분 외 지속적 thrashing 없음 확인), V100 GPU 서빙 자원 100% 보존 확인.
   - Post-cleanup: 두 컨테이너 `p520-cpu-gemma`, `p520-cpu-ornith` 완전 정리 완료.
 
 ## Next planned work

@@ -893,7 +893,12 @@ def run_measured_experiment_32k(
         "model_identity": {"path": model_path},
         "launch_command": (
             f"docker run -d --name {container_name} -p {port}:{port} "
-            f"--cpuset-cpus 1,2,3,4 -m 30g {selected_image} --host 0.0.0.0 --port {port} -m {model_path}"
+            f"--cpuset-cpus 1,2,3,4 -v /srv/models:/srv/models:ro {selected_image} "
+            f"--n-gpu-layers 0 --ctx-size 131072 --parallel 1 -ctk q8_0 -ctv q8_0 -fa auto "
+            f"-t 4 -tb 4 -b 1024 -ub 256 --cpu-strict 1 --poll 50 --load-mode mmap --cache-ram 0 "
+            f"--no-cache-prompt --no-context-shift --threads-http 1 --no-webui "
+            f"--spec-type ngram-mod --spec-ngram-mod-n-match 24 --spec-ngram-mod-n-min 48 --spec-ngram-mod-n-max 64 "
+            f"--host 0.0.0.0 --port {port} -m {model_path}"
         ),
         "runtime": "llama.cpp",
         "runtime_flavor": "cpu-only",
