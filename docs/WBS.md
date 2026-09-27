@@ -830,7 +830,7 @@ WBS 5 measured phase는 준비 단계의 28개 dry-plan을 한 번에 sweep하�
 
 ### 5.3 llama.cpp frozen tracks
 
-#### 5.3.1 Qwen3.8-27B / llama.cpp [FROZEN — READY_FOR_PRE_RUN_VALIDATION]
+#### 5.3.1 Qwen3.8-27B / llama.cpp [FROZEN — READY_FOR_MEASURED_EXECUTION]
 
 Frozen candidates:
 
@@ -917,7 +917,7 @@ python3 scripts/run_wbs5.py --track qwen-llama --candidate R2 --experiment-id EX
 
 GPU inference 없음. 완료된 R0 repetition과 R1/R2 screening/confirm evidence를 비교한다. TTFT, prefill, mean request decode, aggregate decode, end-to-end TPS, batch wall, VRAM, output integrity, NGRAM counter를 정리하되 이 단계에서 새로운 tuning candidate를 만들지 않는다. 필요한 confirm이 아직 수행되지 않았다면 그 필요성만 명시하고 자동 실행하지 않는다.
 
-#### 5.3.2 Ornith 1.5 9B / llama.cpp [FROZEN — READY_FOR_PRE_RUN_VALIDATION]
+#### 5.3.2 Ornith 1.5 9B / llama.cpp [FROZEN — READY_FOR_MEASURED_EXECUTION]
 
 Frozen candidates:
 
@@ -977,7 +977,7 @@ python3 scripts/run_wbs5.py --track ornith9-llama --candidate R2 --experiment-id
 
 GPU inference 없음. R0/R1/R2의 1GPU×2 배포 topology가 실제로 유지됐는지 먼저 확인하고 성능을 비교한다. routing/active-overlap evidence가 불완전하면 성능 숫자만으로 topology PASS를 선언하지 않는다.
 
-#### 5.3.3 Ornith 1.5 35B-A3B / llama.cpp [FROZEN — READY_FOR_PRE_RUN_VALIDATION]
+#### 5.3.3 Ornith 1.5 35B-A3B / llama.cpp [FROZEN — READY_FOR_MEASURED_EXECUTION]
 
 Frozen candidates:
 
@@ -1045,7 +1045,7 @@ python3 scripts/run_wbs5.py --track ornith35-llama --candidate R3 --experiment-i
 
 GPU inference 없음. R0/R1/R2/R3의 frozen one-variable delta를 다시 확인한 뒤 성능/VRAM/output/overlap/spec evidence를 비교한다. 기존 WBS3에서 관찰된 사실상 직렬 prefill behavior를 수정하기 위한 새 candidate를 추가하지 않는다.
 
-#### 5.3.4 Gemma4 26B-A4B / llama.cpp [FROZEN — READY_FOR_PRE_RUN_VALIDATION]
+#### 5.3.4 Gemma4 26B-A4B / llama.cpp [FROZEN — READY_FOR_MEASURED_EXECUTION / R3 CONDITIONAL]
 
 Frozen candidates:
 
@@ -1127,7 +1127,7 @@ GPU inference 없음. R0/R1/R2와 실행된 경우에만 R3를 비교한다. R3 
 `2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b`를 기준으로 local verification한다.
 설치 package tree만으로 wheel SHA를 추정하지 않으며 local wheel 원본이 없으면 provenance 한계를 명시한다.
 
-#### 5.4.1 Qwen3.8-27B / 1Cat-vLLM [FROZEN — READY_FOR_PRE_RUN_VALIDATION]
+#### 5.4.1 Qwen3.8-27B / 1Cat-vLLM [FROZEN — READY_FOR_MEASURED_EXECUTION / R2 BLOCKED]
 
 현재 evidence를 다음처럼 분리한다.
 
@@ -1205,7 +1205,7 @@ python3 scripts/run_wbs5.py --track qwen-onecat --candidate R2 --experiment-id E
 
 GPU inference 없음. R0/R1/R3 및 나중에 unblock되어 실제 실행된 경우에만 R2를 포함한다. R1 graph hit, R3 E5M2 exact route/scales, active-overlap/queue-only, output integrity를 evidence 범위까지만 기록한다.
 
-#### 5.4.2 Ornith 1.5 9B / 1Cat-vLLM [FROZEN — READY_FOR_PRE_RUN_VALIDATION]
+#### 5.4.2 Ornith 1.5 9B / 1Cat-vLLM [FROZEN — CONDITIONAL_PENDING_GATE / G0]
 
 Frozen candidates:
 
@@ -1297,7 +1297,7 @@ resolved n_predict, actual MTP2 acceptance와 output integrity를 runtime eviden
 
 GPU inference 없음. G0 receipt identity부터 재검증한 후 R0 ~ R3를 비교한다. G0 FAIL이면 이 review는 “track blocked by G0”로 종료하며 performance 후보를 임의 실행/대체하지 않는다.
 
-#### 5.4.3 Ornith 1.5 35B-A3B / 1Cat-vLLM [FROZEN — READY_FOR_PRE_RUN_VALIDATION]
+#### 5.4.3 Ornith 1.5 35B-A3B / 1Cat-vLLM [FROZEN — READY_FOR_MEASURED_EXECUTION]
 
 Frozen candidates:
 
