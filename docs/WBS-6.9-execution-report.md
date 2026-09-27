@@ -8,7 +8,7 @@
 | **대상 모델** | Ornith 1.5 35B-A3B (`Ornith-1.5-35B-Q4_K_M.gguf`, KV `Q8_0`) |
 | **실행 호스트** | `p520-llm` (`/home/loopwhile/v100-llm-test-wbs22-20260924`) |
 | **최적화 스택 1 (OpenVINO)** | `p520-cpu-llama-opt:b10775` (`fb36832f7cd6`) — **CLOSED — FAIL / INCOMPATIBLE** |
-| **최적화 스택 2 (OpenBLAS+LTO)** | `p520-cpu-llama-opt:b10775-blas` — **DONE (Case D Winner: 24.69 tok/s)** |
+| **최적화 스택 2 (OpenBLAS+LTO)** | `p520-cpu-llama-opt:b10775-blas` — **DONE (Prompt-TPS selection: Case D; TTFT: Case C)** |
 | **하드웨어 정책** | GPU 클럭/전력/persistence mode 읽기 전용 유지, VRAM 0B 격리 |
 | **자원 제약 (Coexistence)** | 4 physical CPU cores (`cpuset 1,2,3,4`), `-t 4 -tb 4`, memory mmap |
 
@@ -35,34 +35,51 @@
 
 사용자 명시적 승인에 따라 크래시된 OpenVINO를 제외하고, 유효한 최적화 구성(OpenBLAS + LTO + Flash Attention + Prompt Cache)을 적용한 `p520-cpu-llama-opt:b10775-blas`로 4개 케이스 스크리닝을 진행했습니다.
 
-### 3.1 실험 엄밀성 및 제약 충족
-- **입력 토큰 일관성**: 4개 케이스 모두 정확히 **4,071 prompt tokens** 및 동일 prompt SHA256(`2378b3662af3...`), 동일 prefix SHA256(`01f0a0cb5cf8...`) 적용.
-- **체크포인트 규칙 및 캐시 재사용**: llama.cpp의 `4 + n_ubatch` 체크포인트 규칙을 반영하여 prefix를 1,623 토큰으로 설정, 4개 케이스 전원 `cache_n >= 512` 캐시 재사용 통과.
-- **자원 격리**: 4코어 envelope (`cpuset 1,2,3,4`), GPU VRAM 0B 완벽 격리.
+### 3.1 실험 계약, 최종 matrix 및 사전 시도
 
-### 3.2 4-Case True-4K 실측 성능 비교
+- **최종 accepted matrix**: `005~008` 4개. 모두 정확히 **4,071 total prompt tokens**, 동일 prompt SHA256(`2378b3662af3...`), 동일 prefix SHA256(`01f0a0cb5cf8...`)를 사용했습니다.
+- **Prefix cache**: 최종 prefix는 실측 1,623 tokens이며 네 케이스 모두 `cache_n >= 512` acceptance를 통과했습니다.
+- **중요한 해석 제한**: total prompt는 같지만 cache reuse 양은 같지 않았습니다. llama.cpp timings의 실제 새 평가량은 `prompt_n = total prompt_tokens - cache_n`이므로 A~D의 measured prompt TPS를 순수 `b/ub` 차이로만 귀속할 수 없습니다.
+- **CPU coexistence envelope**: `cpuset 1,2,3,4`, `-t 4 -tb 4`, `--n-gpu-layers 0`. WBS 6.9 runner에는 별도의 sampled GPU VRAM peak telemetry를 추가하지 않았으므로 이 보고서에서는 새로운 “VRAM 0B 실측”을 주장하지 않습니다.
+- **pre-final attempts도 raw evidence로 보존**:
+  - `...-OPTBLAS-...-001`: 이전 1,023-token prefix contract에서 measured request 완료(4,083 total prompt, cache_n 763, 19.63 tok/s). 최종 matrix와 prompt/prefix contract가 달라 superseded diagnostic입니다.
+  - `...-OPTBLAS-...-002`: inference response 후 `cache_n=507 < 512` acceptance gate에서 실패했습니다.
+  - 따라서 “4개 케이스” 또는 “4회”는 **최종 accepted comparison matrix 005~008**을 의미하며, WBS 6.9 과정에서 발생한 모든 물리 inference 실행 수를 의미하지 않습니다.
 
-| Case | Experiment ID | `-b` | `-ub` | Prompt Tokens | Prompt Eval TPS | TTFT (s) | Decode TPS | Batch Wall (s) | Cache N |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **A** | `...-OPTBLAS-C1-4K-20260927-005` | 1024 | 256 | 4,071 | 18.48 tok/s | 146.57s | 6.64 tok/s | 185.03s | 1,363 |
-| **B** | `...-OPTBLAS-C1-4K-20260927-006` | 2048 | 512 | 4,071 | 21.62 tok/s | 137.11s | 5.41 tok/s | 184.30s | 1,107 |
-| **C** | `...-OPTBLAS-C1-4K-20260927-007` | 4096 | 512 | 4,071 | 22.27 tok/s | 133.12s | 5.38 tok/s | 180.58s | 1,107 |
-| **D** | `...-OPTBLAS-C1-4K-20260927-008` | 4096 | 1024 | 4,071 | **24.69 tok/s** | 140.78s | 6.49 tok/s | 180.10s | 595 |
+### 3.2 최종 accepted True-4K measured 결과
 
-```mermaid
-xychart-beta
-    title "True-4K Prompt Evaluation Throughput (tok/s)"
-    x-axis ["Case A (1024/256)", "Case B (2048/512)", "Case C (4096/512)", "Case D (4096/1024)"]
-    y-axis "Prompt tok/s" 15 --> 26
-    bar [18.48, 21.62, 22.27, 24.69]
-```
+| Case | Experiment ID | `-b` | `-ub` | Total Prompt | Cache N | Evaluated `prompt_n` | Prompt Eval TPS | TTFT (s) | Decode TPS | Wall (s) |
+|:---:|:---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| A | `...-005` | 1024 | 256 | 4,071 | 1,363 | 2,708 | 18.48 | 146.57 | 6.64 | 185.03 |
+| B | `...-006` | 2048 | 512 | 4,071 | 1,107 | 2,964 | 21.62 | 137.11 | 5.41 | 184.30 |
+| C | `...-007` | 4096 | 512 | 4,071 | 1,107 | 2,964 | 22.27 | **133.12** | 5.38 | 180.58 |
+| D | `...-008` | 4096 | 1024 | 4,071 | 595 | 3,476 | **24.69** | 140.78 | 6.49 | **180.10** |
 
-### 3.3 Winner 선정
-- **Peak Prompt Eval TPS**: **24.69 tok/s (Case D)**
-- **2% Tie Floor**: $24.69 \times 0.98 = 24.20\text{ tok/s}$
-- **동률 분석**: Case A (18.48), Case B (21.62), Case C (22.27) 모두 2% floor 미달로 단독 1위 (`tied_cases: ["D"]`).
-- **최종 Winner**: **Case D (`-b 4096 -ub 1024`)**
-- **개선율**: 베이스라인(Case A) 대비 **+33.6% 프롬프트 처리 성능 향상** 입증.
+사전 정의된 selection metric인 Prompt Eval TPS 기준으로는 **Case D**가 winner이며 `WBS69-OPTBLAS-4K-WINNER.json`의 판정은 그대로 유효합니다. 다만 A~D의 cache_n과 prompt_n이 다르므로 A 18.48 → D 24.69의 **+33.6%는 순수 b/ub 개선율이 아니라 최종 cached-serving scenario에서 관찰된 prompt-eval TPS 차이**입니다.
+
+실제 latency 관점에서는 **Case C의 TTFT 133.12s가 가장 짧고**, total wall은 C 180.58s / D 180.10s로 약 0.3% 차이라 사실상 비슷합니다. 따라서 D는 throughput-oriented, C는 TTFT-oriented 후보로 구분합니다.
+
+### 3.3 동일 4K / cache_n=0 setup diagnostic
+
+각 최종 케이스의 `setup-compile-warmup.json`에는 동일한 **4,086 prompt tokens / cache_n=0 / prompt_n=4,086** 요청이 저장되어 있습니다. 이는 setup request라 정식 measured matrix가 아니지만, cache reuse 차이가 없는 동일 조건에서 A~D `b/ub` 효과를 비교할 수 있는 보조 evidence입니다.
+
+| Case | `-b/-ub` | Uncached 4K Prompt TPS |
+|:---:|:---:|---:|
+| A | 1024/256 | 19.91 |
+| B | 2048/512 | 23.55 |
+| C | 4096/512 | 23.74 |
+| D | 4096/1024 | **26.02** |
+
+- D는 A보다 약 **30.7%** 높은 prompt throughput을 보였습니다.
+- B→C(`ub=512` 고정, `b=2048→4096`)는 약 **+0.8%**로 작았습니다.
+- C→D(`b=4096` 고정, `ub=512→1024`)는 약 **+9.6%**였습니다.
+- 따라서 현재 4K evidence에서는 단순 `b` 확대보다 **`ub` 확대의 영향이 더 뚜렷**합니다.
+
+### 3.4 True-2K와 True-4K를 함께 본 결론
+
+WBS 6.8 true-2K에서는 A 31.72 / B 31.32 / C 31.34 / D 30.64 tok/s로 A/B/C가 ±2% 동률이었고 큰 b/ub의 이점이 없었습니다. 반면 WBS 6.9의 동일 uncached 4K setup에서는 A 19.91 / B 23.55 / C 23.74 / D 26.02 tok/s로 큰 b/ub가 유리했습니다.
+
+따라서 현재 증거가 지지하는 결론은 **CPU llama.cpp의 최적 b/ub가 prompt/context 길이에 따라 달라질 수 있다**는 것입니다. 2K 결과만으로 4K 이상 장문 prompt의 batch/ubatch 효과를 부정하지 않으며, 4K 결과를 32K의 절대 최적값으로도 일반화하지 않습니다.
 
 ---
 
@@ -82,4 +99,5 @@ xychart-beta
 ## 5. 최종 종결
 
 - **WBS 6 전체**: 6.1~6.8 (Dual-resident feasibility & True-2K) 및 6.9 (OpenBLAS True-4K) **완료 (DONE)**.
+- **핵심 성능 결론**: 2K에서는 작은 b/ub가 충분했지만, 동일 uncached 4K diagnostic에서는 `4096/1024`가 가장 높은 prompt throughput을 보였다. 최적 b/ub는 context 길이에 의존하며, cached measured matrix에서는 D가 Prompt-TPS selection winner, C가 TTFT winner다.
 - **다음 작업**: **WBS 5** (성능 최적화 및 모델별 최종 serving recipe 확정).

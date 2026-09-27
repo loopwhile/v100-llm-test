@@ -177,7 +177,7 @@
     - ±2% 동률 시 최소 b/ub 우선 정책에 따라 **Case A (`-b 1024 -ub 256`)가 최종 Winner**로 선정됨 (`results/raw/WBS68-TRUE2K-WINNER.json`).
   - 32K 후속 규칙 적용:
     - 사전 정의된 contract에 따라, baseline 대비 2%를 초과 개선하는 non-baseline winner가 부재하므로 불필요한 32K 재실행을 생략하고 6.8을 종결함.
-    - 증명된 범위: Xeon W-2135 4-core 조건에서 2,000-token prompt 기준 b/ub를 1024/256 → 2048/512 → 4096/512 → 4096/1024로 확대해도 prefill 개선이 발생하지 않음(±2% 이내 동률). 따라서 "b/ub 확대가 장문 prefill 저하의 해결책이 아니다"는 결론이 확인됨. 단, 다른 변수(스레드, BLAS, ISA 커널 등)를 모두 소진한 것이 아니므로 WBS 6.6 수치를 CPU의 절대적인 32K prefill ceiling으로 과도하게 단정하지 않는다.
+    - 증명된 범위: Xeon W-2135 4-core 조건에서 정확히 2,000-token prompt 기준 b/ub 확대 효과가 관찰되지 않았다. 이 결론은 2K local result이며 4K 이상에 일반화하지 않는다. 실제로 WBS 6.9의 동일 4,086-token / cache_n=0 setup diagnostic에서는 큰 b/ub가 더 높은 prefill throughput을 보였다. WBS 6.6 수치를 CPU의 절대적인 32K prefill ceiling으로도 단정하지 않는다.
 - WBS 6 (6.1~6.8) 전체 **[DONE]**.
 
 
@@ -194,15 +194,17 @@
   - Policy: native-GGML fallback을 거부하고 fail-fast 중단. 하드웨어 읽기 전용 유지, 컨테이너 정리 완료.
   - WBS 6.9 종결: Ornith 1.5 35B 하이브리드 아키텍처는 현재 llama.cpp b10775의 OpenVINO 백엔드와 구조적 비호환이 확인되어 OpenVINO 스택은 closed 처리함.
 - OpenBLAS + LTO True-4K Screening (Cases A~D): **`DONE`**
-  - 사용자 승인 하에 OpenVINO를 제외하고, OpenBLAS + LTO + Flash Attention + Prompt Cache 최적화 스택(`p520-cpu-llama-opt:b10775-blas`, `docker/cpu-optimized/Dockerfile.blas`)으로 전환.
-  - 사전 검증: `results/raw/WBS69-OPTBLAS-4K-PREFLIGHT.json` (OpenBLAS 인식, VRAM 0B).
-  - 4개 케이스 모두 정확히 **4,071 prompt tokens** 및 동일 prompt/prefix SHA256 적용, prefix 1,623 토큰을 통해 llama.cpp `4 + n_ubatch` 체크포인트 규칙 하에서 `cache_n >= 512` 캐시 재사용 전 케이스 검증 통과.
-  - 측정 결과:
-    - Case A (`...-OPTBLAS-C1-4K-20260927-005`, `-b 1024 -ub 256`): Prompt 18.48 tok/s, TTFT 146.57s, Decode 6.64 tok/s, Wall 185.03s, cache_n 1363.
-    - Case B (`...-OPTBLAS-C1-4K-20260927-006`, `-b 2048 -ub 512`): Prompt 21.62 tok/s, TTFT 137.11s, Decode 5.41 tok/s, Wall 184.30s, cache_n 1107.
-    - Case C (`...-OPTBLAS-C1-4K-20260927-007`, `-b 4096 -ub 512`): Prompt 22.27 tok/s, TTFT 133.12s, Decode 5.38 tok/s, Wall 180.58s, cache_n 1107.
-    - Case D (`...-OPTBLAS-C1-4K-20260927-008`, `-b 4096 -ub 1024`): Prompt **24.69 tok/s**, TTFT 140.78s, Decode 6.49 tok/s, Wall 180.10s, cache_n 595.
-  - 최종 Winner: **Case D (`-b 4096 -ub 1024`)** (+33.6% prompt throughput 향상) (`results/raw/WBS69-OPTBLAS-4K-WINNER.json`, `results/raw/WBS69-OPTBLAS-4K-SCREENING-SUMMARY.json`).
+  - OpenBLAS + LTO + Flash Attention + Prompt Cache stack(`p520-cpu-llama-opt:b10775-blas`)으로 최종 accepted matrix `005~008` 완료.
+  - 네 케이스 모두 4,071 total prompt tokens / 동일 prompt-prefix hash를 사용했지만 cache_n은 A 1,363 / B 1,107 / C 1,107 / D 595로 달랐다. 따라서 실제 evaluated prompt_n도 2,708 / 2,964 / 2,964 / 3,476으로 다르며 measured prompt TPS 차이를 순수 b/ub 효과로 단독 해석하지 않는다.
+  - measured 결과:
+    - A 1024/256: 18.48 tok/s, TTFT 146.57s, wall 185.03s.
+    - B 2048/512: 21.62 tok/s, TTFT 137.11s, wall 184.30s.
+    - C 4096/512: 22.27 tok/s, **TTFT 133.12s(best)**, wall 180.58s.
+    - D 4096/1024: **24.69 tok/s(selection winner)**, TTFT 140.78s, **wall 180.10s(best)**.
+  - 동일 uncached setup diagnostic(4,086 prompt tokens, cache_n=0, prompt_n=4,086): A 19.91 / B 23.55 / C 23.74 / D **26.02 tok/s**. 이 보조 evidence에서는 D가 A보다 약 30.7% 높고, B→C 차이는 작으며 C→D의 ub 512→1024에서 약 9.6% 상승했다.
+  - 결론: 2K에서는 b/ub 확대 효과가 없었지만 4K에서는 context-length-dependent 효과가 관찰되었다. D는 throughput-oriented, C는 cached TTFT-oriented recipe로 구분한다.
+  - `+33.6%`는 cache_n이 서로 다른 measured scenario의 관찰 차이이며 순수 b/ub 개선율로 주장하지 않는다.
+  - pre-final `001`은 이전 prefix contract에서 completed 후 superseded, `002`는 cache_n 507로 acceptance fail. 따라서 “4회”는 최종 accepted 005~008 matrix를 의미한다.
 - WBS 6 전체 **[DONE]**.
 
 ## Next planned work

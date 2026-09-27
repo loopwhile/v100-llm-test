@@ -1125,8 +1125,9 @@ Winner policy:
   - Case C (4096/512): 2,000 tok, prompt 31.34 tok/s, TTFT 63.81s
   - Case D (4096/1024): 2,000 tok, prompt 30.64 tok/s, TTFT 65.27s
   - 판정: Case A, B, C가 ±2% 이내 동률(31.72 vs 31.32 vs 31.34 tok/s). ±2% 동률 정책에 따라 가장 작은 설정인 **Case A (`1024/256`)가 Winner**로 선정됨.
-  - baseline 대비 2%를 초과하는 non-baseline winner가 부재하므로, 사전 합의된 정책에 따라 32K 재실행을 생략하고 WBS 6.8 및 WBS 6 전체를 **[DONE]**으로 최종 종결한다.
-- **WBS 6 전체 [DONE]**.
+  - baseline 대비 2%를 초과하는 non-baseline winner가 부재하므로, 사전 합의된 정책에 따라 32K 재실행을 생략하고 WBS 6.8을 종결했다.
+  - **해석 범위**: 이 결과는 정확히 2,000-token prompt에서만 `b/ub` 확대 효과가 관찰되지 않았다는 뜻이다. 이후 WBS 6.9의 true-4K `cache_n=0` setup evidence에서는 큰 `b/ub`, 특히 `ub=1024`가 더 높은 prompt throughput을 보였으므로, 2K 결과를 4K 이상 장문 prompt에 일반화하지 않는다.
+- **WBS 6.1~6.8 [DONE]**.
 
 
 
@@ -1179,27 +1180,44 @@ Winner policy:
 - Ornith 1.5 35B-A3B 하이브리드 아키텍처는 현재 llama.cpp b10775의 OpenVINO 백엔드와 구조적으로 비호환됨이 입증되었으며, OpenVINO 경로는 **`CLOSED — FAIL / INCOMPATIBLE`**로 종결하고 증거를 영구 보존한다.
 
 #### 6.9.5 OpenBLAS + LTO True-4K Screening (Cases A~D) [DONE]
-사용자 승인 하에 OpenVINO를 제외하고, 유효성이 입증된 최적화 스택(OpenBLAS + LTO + Flash Attention + Prompt Cache)을 적용한 `p520-cpu-llama-opt:b10775-blas` 이미지(`docker/cpu-optimized/Dockerfile.blas`)를 통해 True-4K A/B/C/D 스크리닝을 완수했다.
+사용자 승인 하에 OpenVINO를 제외하고, 유효한 최적화 스택(OpenBLAS + LTO + Flash Attention + Prompt Cache)을 적용한 `p520-cpu-llama-opt:b10775-blas` 이미지(`docker/cpu-optimized/Dockerfile.blas`)를 통해 최종 True-4K A/B/C/D 스크리닝을 완수했다.
 
-- **Preflight**: `results/raw/WBS69-OPTBLAS-4K-PREFLIGHT.json` (OpenBLAS 인식 통과, VRAM 0B 격리 유지).
-- **실행 계약 및 검증 기준**:
-  - live tokenizer 검증: 4개 케이스 모두 정확히 **4,071 prompt tokens** 및 동일 prompt hash(`2378b3662af3...`), 동일 prefix hash(`01f0a0cb5cf8...`) 적용.
-  - Prefix cache 검증: llama.cpp의 `4 + n_ubatch` 체크포인트 오프셋을 고려하여 prefix 범위를 1,600~1,638 토큰(실측 1,623 토큰)으로 설정, 모든 케이스에서 `cache_n >= 512` 캐시 재사용 검증 통과.
-  - Coexistence envelope: 4 physical CPU cores (`cpuset 1,2,3,4`), `-t 4 -tb 4`, GPU VRAM 0B 완벽 격리.
-- **측정 결과**:
+- **Preflight**: `results/raw/WBS69-OPTBLAS-4K-PREFLIGHT.json` (OpenBLAS device 인식 통과). Docker CPU-only / `--n-gpu-layers 0` 계약을 유지했으며, WBS 6.9 자체에는 별도의 sampled VRAM peak metric을 추가하지 않았다.
+- **최종 matrix 계약 및 검증 기준**:
+  - 최종 accepted matrix는 `005~008` 4개다. 네 케이스 모두 정확히 **4,071 total prompt tokens** 및 동일 prompt hash(`2378b3662af3...`), 동일 prefix hash(`01f0a0cb5cf8...`)를 사용했다.
+  - Prefix cache 검증: prefix 실측 1,623 tokens, 모든 최종 케이스에서 `cache_n >= 512` 통과.
+  - 단, 실제 새로 평가된 prompt는 `prompt_n = total prompt_tokens - cache_n`이므로 A~D에서 서로 달랐다. 따라서 measured `prompt_per_second` 차이를 순수한 `b/ub` 효과로 단독 귀속하지 않는다.
+  - Coexistence envelope: 4 physical CPU cores (`cpuset 1,2,3,4`), `-t 4 -tb 4`, CPU-only serving.
+- **최종 accepted measured 결과**:
 
-  | Case | Experiment ID | `-b` | `-ub` | Prompt Tokens | Prompt Eval TPS | TTFT (s) | Decode TPS | Batch Wall (s) | Cache N |
-  |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-  | **A** | `...-OPTBLAS-C1-4K-20260927-005` | 1024 | 256 | 4,071 | 18.48 tok/s | 146.57s | 6.64 tok/s | 185.03s | 1,363 |
-  | **B** | `...-OPTBLAS-C1-4K-20260927-006` | 2048 | 512 | 4,071 | 21.62 tok/s | 137.11s | 5.41 tok/s | 184.30s | 1,107 |
-  | **C** | `...-OPTBLAS-C1-4K-20260927-007` | 4096 | 512 | 4,071 | 22.27 tok/s | 133.12s | 5.38 tok/s | 180.58s | 1,107 |
-  | **D** | `...-OPTBLAS-C1-4K-20260927-008` | 4096 | 1024 | 4,071 | **24.69 tok/s** | 140.78s | 6.49 tok/s | 180.10s | 595 |
+  | Case | Experiment ID | `-b` | `-ub` | Total Prompt | `cache_n` | Evaluated `prompt_n` | Prompt Eval TPS | TTFT (s) | Decode TPS | Wall (s) |
+  |:---:|:---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+  | A | `...-005` | 1024 | 256 | 4,071 | 1,363 | 2,708 | 18.48 | 146.57 | 6.64 | 185.03 |
+  | B | `...-006` | 2048 | 512 | 4,071 | 1,107 | 2,964 | 21.62 | 137.11 | 5.41 | 184.30 |
+  | C | `...-007` | 4096 | 512 | 4,071 | 1,107 | 2,964 | 22.27 | **133.12** | 5.38 | 180.58 |
+  | D | `...-008` | 4096 | 1024 | 4,071 | 595 | 3,476 | **24.69** | 140.78 | 6.49 | **180.10** |
 
-- **Winner 선정 및 결론**:
-  - 최고 Prompt Eval 속도: **Case D (24.69 tok/s)**.
-  - 2% tie floor: 24.20 tok/s. Case A (18.48), Case B (21.62), Case C (22.27) 모두 2% floor 미달로 동률 케이스 없음 (`tied_cases: ["D"]`).
-  - Baseline(Case A, 18.48 tok/s) 대비 Case D는 **+33.6% prompt throughput 향상** 달성.
-  - 최종 Winner: **Case D (`-b 4096 -ub 1024`)** (`results/raw/WBS69-OPTBLAS-4K-WINNER.json`, `results/raw/WBS69-OPTBLAS-4K-SCREENING-SUMMARY.json`).
+- **동일 4K / cache_n=0 setup diagnostic**:
+  - 각 최종 케이스의 `setup-compile-warmup.json`에는 동일한 **4,086 prompt tokens / cache_n=0 / prompt_n=4,086** evidence가 있다. 이는 unmeasured setup request이므로 정식 measured matrix와 구분하지만, A~D의 `b/ub` 효과를 cache reuse 차이 없이 비교하는 보조 근거로 사용한다.
+
+  | Case | `-b/-ub` | Uncached 4K Prompt TPS |
+  |:---:|:---:|---:|
+  | A | 1024/256 | 19.91 |
+  | B | 2048/512 | 23.55 |
+  | C | 4096/512 | 23.74 |
+  | D | 4096/1024 | **26.02** |
+
+  - 이 동일 uncached 4K diagnostic에서 D는 A보다 약 **30.7%** 높은 prompt throughput을 보였다.
+  - B→C(`ub=512` 고정, `b=2048→4096`) 차이는 약 0.8%로 작았고, C→D(`b=4096` 고정, `ub=512→1024`)는 약 9.6% 상승했다. 현재 evidence에서는 4K에서 `ub` 확대의 영향이 더 뚜렷하다.
+  - 반대로 WBS 6.8 true-2K에서는 A/B/C가 ±2% 동률이고 D가 느렸으므로, **최적 `b/ub`는 prompt/context 길이에 따라 달라질 수 있다.**
+
+- **Winner 및 serving 해석**:
+  - 사전 정의된 selection metric인 measured Prompt Eval TPS 기준 winner는 **Case D (`4096/1024`)**이며 `WBS69-OPTBLAS-4K-WINNER.json`의 판정은 그대로 유효하다.
+  - 다만 measured cache reuse 양이 다르므로 **18.48→24.69(+33.6%)를 순수한 b/ub 개선율로 표현하지 않는다**. 이는 최종 cached-serving scenario에서 관찰된 prompt-eval TPS 차이다.
+  - 실제 TTFT 최저는 **Case C (133.12s)**이고, total wall은 C 180.58s / D 180.10s로 약 0.3% 차이여서 사실상 비슷하다. 따라서 production serving에서는 D를 throughput-oriented recipe, C를 TTFT-oriented recipe로 구분한다.
+- **pre-final attempt 기록**:
+  - `...-OPTBLAS-...-001`: 이전 1,023-token prefix 계약에서 measured request까지 완료(4,083 total prompt, cache_n 763, 19.63 tok/s)했으나 최종 005~008 matrix와 prompt/prefix contract가 달라 superseded diagnostic으로 보존한다.
+  - `...-OPTBLAS-...-002`: measured inference response를 얻은 뒤 `cache_n=507 < 512` acceptance gate에서 실패했다. 따라서 “4회”는 **최종 accepted comparison matrix 005~008의 크기**를 뜻하며, WBS 6.9 과정에서 발생한 모든 물리 inference 실행 횟수를 뜻하지 않는다.
 - 상세 실행 보고서: [docs/WBS-6.9-execution-report.md](WBS-6.9-execution-report.md)
 - WBS 6.9 전체 [DONE].
 
