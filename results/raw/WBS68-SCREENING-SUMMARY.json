@@ -1,0 +1,110 @@
+{
+  "wbs": "6.8.1",
+  "completed_at_utc": "2026-09-27T06:23:38.684838+00:00",
+  "cases": [
+    {
+      "experiment_id": "EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-2K-20260927-001",
+      "case": "A",
+      "b": 1024,
+      "ub": 256,
+      "prompt_tokens": 922,
+      "completion_tokens": 256,
+      "prompt_ms": 26683.472,
+      "predicted_ms": 26015.782,
+      "ttft_ms": 26683.472,
+      "prompt_eval_tps": 34.55322455788362,
+      "decode_tps": 9.801742649903817,
+      "wall_s": 52.72211480140686,
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 922,
+        "prompt_ms": 26683.472,
+        "prompt_per_token_ms": 28.940859002169198,
+        "prompt_per_second": 34.55322455788362,
+        "predicted_n": 256,
+        "predicted_ms": 26015.782,
+        "predicted_per_token_ms": 102.02267450980392,
+        "predicted_per_second": 9.801742649903817
+      },
+      "measured_at_utc": "2026-09-27T06:18:43.766847+00:00"
+    },
+    {
+      "experiment_id": "EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-2K-20260927-002",
+      "case": "B",
+      "b": 2048,
+      "ub": 512,
+      "prompt_tokens": 922,
+      "completion_tokens": 256,
+      "prompt_ms": 27040.756,
+      "predicted_ms": 25607.476,
+      "ttft_ms": 27040.756,
+      "prompt_eval_tps": 34.09667984134763,
+      "decode_tps": 9.95802944421387,
+      "wall_s": 52.66227078437805,
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 922,
+        "prompt_ms": 27040.756,
+        "prompt_per_token_ms": 29.328368763557485,
+        "prompt_per_second": 34.09667984134763,
+        "predicted_n": 256,
+        "predicted_ms": 25607.476,
+        "predicted_per_token_ms": 100.42147450980391,
+        "predicted_per_second": 9.95802944421387
+      },
+      "measured_at_utc": "2026-09-27T06:20:51.002836+00:00"
+    },
+    {
+      "experiment_id": "EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-2K-20260927-003",
+      "case": "C",
+      "b": 4096,
+      "ub": 512,
+      "prompt_tokens": 922,
+      "completion_tokens": 256,
+      "prompt_ms": 26746.079,
+      "predicted_ms": 26076.783,
+      "ttft_ms": 26746.079,
+      "prompt_eval_tps": 34.47234265628244,
+      "decode_tps": 9.778813590618137,
+      "wall_s": 52.838852405548096,
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 922,
+        "prompt_ms": 26746.079,
+        "prompt_per_token_ms": 29.008762472885035,
+        "prompt_per_second": 34.47234265628244,
+        "predicted_n": 256,
+        "predicted_ms": 26076.783,
+        "predicted_per_token_ms": 102.26189411764706,
+        "predicted_per_second": 9.778813590618137
+      },
+      "measured_at_utc": "2026-09-27T06:22:12.964245+00:00"
+    },
+    {
+      "experiment_id": "EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-2K-20260927-004",
+      "case": "D",
+      "b": 4096,
+      "ub": 1024,
+      "prompt_tokens": 922,
+      "completion_tokens": 256,
+      "prompt_ms": 27185.732,
+      "predicted_ms": 25756.526,
+      "ttft_ms": 27185.732,
+      "prompt_eval_tps": 33.91484915690334,
+      "decode_tps": 9.900403493856276,
+      "wall_s": 52.95794320106506,
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 922,
+        "prompt_ms": 27185.732,
+        "prompt_per_token_ms": 29.485609544468545,
+        "prompt_per_second": 33.91484915690334,
+        "predicted_n": 256,
+        "predicted_ms": 25756.526,
+        "predicted_per_token_ms": 101.00598431372549,
+        "predicted_per_second": 9.900403493856276
+      },
+      "measured_at_utc": "2026-09-27T06:23:35.023558+00:00"
+    }
+  ]
+}

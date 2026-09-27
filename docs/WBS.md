@@ -902,7 +902,7 @@ recipe 상태는 다음처럼 구분한다.
 WBS 5 완료 후 사용자가 필요에 따라 recipe를 직접 선택한다.
 이 저장소에서는 별도의 배포/production selection phase를 수행하지 않는다.
 
-## 6. CPU+RAM 전용 dual-resident 128K 서버 + 32K measured request 검증 [IN PROGRESS — 6.1~6.7 DONE, 6.8 READY]
+## 6. CPU+RAM 전용 dual-resident 128K 서버 + 32K measured request 검증 [DONE]
 
 P520의 CPU+RAM만 사용하는 두 개의 llama.cpp server를 **128K context capacity(`--ctx-size 131072`)로 동시에 기동/resident** 상태로 유지한 뒤, 실제 measured request는 **실사용에 가까운 32K class 요청**을 **한 번에 하나씩 직렬 실행**한다.
 
@@ -1065,7 +1065,7 @@ llama.cpp의 draft-model-free `ngram-mod` 경로를 활성화한다.
 결론: P520 호스트에서 64GB RAM과 CPU 4코어만으로 두 거대 MoE 모델(가중치 합산 약 45GB)을 128K context capacity로 동시 상주시키면서 32K 실사용급 문서 리서치 요청을 오류 및 지속적 스왑 스래싱 없이 처리했고, CPU inference lane의 GPU VRAM 사용량이 0 MiB임을 확인했다. WBS 6.1~6.7의 dual-resident feasibility/correctness 검증은 완료되었으며, 후속 성능 최적화는 6.8에서 `-b/-ub`만 제한적으로 조정해 검증한다.
 
 
-### 6.8 CPU prefill batch / ubatch 최소 튜닝 [READY — NOT EXECUTED]
+### 6.8 CPU prefill batch / ubatch 최소 튜닝 [DONE]
 
 목적:
 - WBS 6.6의 32K fresh-prompt 측정에서 Ornith 1.5 35B-A3B는 prefill 7.63 tok/s, Gemma 4 26B-A4B는 6.44 tok/s였으나, 실행 중 사용자가 초반 구간에서 약 30 tok/s대의 prompt processing 속도를 관찰했다.

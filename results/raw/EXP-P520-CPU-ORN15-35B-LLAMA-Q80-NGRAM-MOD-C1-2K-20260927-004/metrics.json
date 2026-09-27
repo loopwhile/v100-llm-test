@@ -1,0 +1,26 @@
+{
+  "experiment_id": "EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-2K-20260927-004",
+  "case": "D",
+  "b": 4096,
+  "ub": 1024,
+  "prompt_tokens": 922,
+  "completion_tokens": 256,
+  "prompt_ms": 27185.732,
+  "predicted_ms": 25756.526,
+  "ttft_ms": 27185.732,
+  "prompt_eval_tps": 33.91484915690334,
+  "decode_tps": 9.900403493856276,
+  "wall_s": 52.95794320106506,
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 922,
+    "prompt_ms": 27185.732,
+    "prompt_per_token_ms": 29.485609544468545,
+    "prompt_per_second": 33.91484915690334,
+    "predicted_n": 256,
+    "predicted_ms": 25756.526,
+    "predicted_per_token_ms": 101.00598431372549,
+    "predicted_per_second": 9.900403493856276
+  },
+  "measured_at_utc": "2026-09-27T06:23:35.023558+00:00"
+}

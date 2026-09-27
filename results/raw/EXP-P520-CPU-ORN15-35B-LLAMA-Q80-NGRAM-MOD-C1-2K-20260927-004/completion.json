@@ -1,0 +1,45 @@
+{
+  "experiment_id": "EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-2K-20260927-004",
+  "case": "D",
+  "b": 4096,
+  "ub": 1024,
+  "verdict": "PASS",
+  "completed_at_utc": "2026-09-27T06:23:35.038845+00:00",
+  "response": {
+    "choices": [
+      {
+        "finish_reason": "length",
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "reasoning_content": "The user has pasted the same prompt many times (repeated dozens of times). This appears to be a copy-paste artifact or an attempt to get more output. I should just answer the actual question once, cleanly, without repeating the prompt or noting the repetition excessively.\n\nLet me address the technical content thoroughly. The question asks about:\n1. Architectural differences between dense Transformers and MoE models\n2. How MoE routing mechanisms work\n3. Trade-offs between top-k gating and expert capacity\n4. Implications for inference throughput on CPU-only hardware with limited memory bandwidth\n5. How speculative decoding via n-gram methods can partially mitigate prefill bottlenecks\n\nLet me write a comprehensive, well-structured answer.\n\nLet me think through each part carefully.\n\n**Dense vs MoE architecture**\n\nDense Transformer: every token passes through every parameter. Each feedforward layer has a fixed FFN with the same weights applied to every token. So compute scales with sequence length × model size × layers. All parameters are used for every token.\n\nMoE: replaces the single FFN with a mixture of expert FFNs. For each token, a routing/gating function selects a subset of experts to activate. Only the selected experts"
+        }
+      }
+    ],
+    "created": 1790490215,
+    "model": "/srv/models/ornith-1.5-35b-a3b-gguf/Ornith-1.5-35B-Q4_K_M.gguf",
+    "system_fingerprint": "b10775-67a17c17c",
+    "object": "chat.completion",
+    "usage": {
+      "completion_tokens": 256,
+      "prompt_tokens": 922,
+      "total_tokens": 1178,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "id": "chatcmpl-J1zp6UBtEjJUI1Ie2hVckKUi6bFOgUpP",
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 922,
+      "prompt_ms": 27185.732,
+      "prompt_per_token_ms": 29.485609544468545,
+      "prompt_per_second": 33.91484915690334,
+      "predicted_n": 256,
+      "predicted_ms": 25756.526,
+      "predicted_per_token_ms": 101.00598431372549,
+      "predicted_per_second": 9.900403493856276
+    }
+  }
+}

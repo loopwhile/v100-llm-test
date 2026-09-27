@@ -1,0 +1,45 @@
+{
+  "experiment_id": "EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-2K-20260927-003",
+  "case": "C",
+  "b": 4096,
+  "ub": 512,
+  "verdict": "PASS",
+  "completed_at_utc": "2026-09-27T06:22:12.976401+00:00",
+  "response": {
+    "choices": [
+      {
+        "finish_reason": "length",
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "reasoning_content": "The user has pasted the same prompt many times (repeated ~13 times). This is likely an accidental paste or an attempt to emphasize, but the content is identical each time. I should just answer the actual question once, thoroughly. I won't repeat the prompt back or comment excessively on the repetition—just answer cleanly.\n\nLet me address the actual technical question. It has several parts:\n\n1. Architectural differences between dense Transformers and MoE models\n2. How MoE routing mechanisms work\n3. Trade-offs between top-k gating and expert capacity\n4. Implications for inference throughput on CPU-only hardware with limited memory bandwidth\n5. How speculative decoding via n-gram methods can partially mitigate prefill bottlenecks\n\nLet me write a comprehensive but well-organized answer. I'll use headers and some structure since this is a technical comparison with multiple distinct parts.\n\nLet me think through the technical content carefully.\n\n**Dense vs MoE architecture:**\n\nDense Transformer: Every input token passes through every parameter in the model. In the feed-forward (FFN) layer, each token is processed by the full FFN network. So compute scales with both sequence length and total parameter count. All parameters are activated for every token."
+        }
+      }
+    ],
+    "created": 1790490132,
+    "model": "/srv/models/ornith-1.5-35b-a3b-gguf/Ornith-1.5-35B-Q4_K_M.gguf",
+    "system_fingerprint": "b10775-67a17c17c",
+    "object": "chat.completion",
+    "usage": {
+      "completion_tokens": 256,
+      "prompt_tokens": 922,
+      "total_tokens": 1178,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "id": "chatcmpl-C6dGwv4Ymbju8d98Rbmm9w6RV3TzKBdv",
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 922,
+      "prompt_ms": 26746.079,
+      "prompt_per_token_ms": 29.008762472885035,
+      "prompt_per_second": 34.47234265628244,
+      "predicted_n": 256,
+      "predicted_ms": 26076.783,
+      "predicted_per_token_ms": 102.26189411764706,
+      "predicted_per_second": 9.778813590618137
+    }
+  }
+}
