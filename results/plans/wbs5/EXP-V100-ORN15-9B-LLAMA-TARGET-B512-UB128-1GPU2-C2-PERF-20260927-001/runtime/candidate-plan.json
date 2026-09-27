@@ -1,0 +1,583 @@
+{
+  "schema_version": 1,
+  "plan_only": true,
+  "wbs": "5.1",
+  "candidate": {
+    "id": "R0",
+    "candidate_id": "TARGET_BASELINE",
+    "lane": "TARGET",
+    "batch_size": 512,
+    "ubatch_size": 128,
+    "spec_type": "none"
+  },
+  "experiment_id": "EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260927-001",
+  "workload": {
+    "path": "workloads/performance/v1.json",
+    "sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+    "workload_id": "V100-PERFORMANCE-C2-128K-v1",
+    "mode": "performance"
+  },
+  "model": {
+    "model_id": "Ornith-1.5-9B",
+    "artifact": "/srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf",
+    "sha256": "79a9925bb7771dea3530d57b185e97b9713a73a7c06bdb9804f7d019aa42f480",
+    "weight_quant": "Q6_K",
+    "kv": "FP16"
+  },
+  "runtime_contract": {
+    "runtime": "llama.cpp",
+    "image": "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149",
+    "build": 10775,
+    "commit": "67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
+    "backend_context": 131072,
+    "backend_parallel": 1,
+    "kv_unified": true,
+    "kv_unified_per_slot": 131072,
+    "flash_attention": "on",
+    "jinja": true,
+    "reasoning": "off",
+    "no_warmup": true,
+    "topology": "1gpu-x2-independent",
+    "gpu_assignment": {
+      "backend-0": 0,
+      "backend-1": 1
+    },
+    "litellm_version": "1.101.0",
+    "litellm_commit": "18243cd7af4c3325165ba68b21379e2719e051c7",
+    "litellm_image": "ghcr.io/berriai/litellm:v1.101.0",
+    "routing_strategy": "least-busy",
+    "backend_max_parallel_requests": 1,
+    "num_retries": 0,
+    "routing_settled_admission": true
+  },
+  "runtime_cli_evidence": {
+    "source": "P520 pinned image llama-server --help and --version; upstream arg parser at the pinned commit",
+    "version": "0.3.0-dev (build 10775, commit 67a17c17c)",
+    "options": {
+      "-m / --model": {
+        "supported": true,
+        "type": "path",
+        "default": "required model argument"
+      },
+      "--host": {
+        "supported": true,
+        "type": "string",
+        "default": "127.0.0.1"
+      },
+      "--port": {
+        "supported": true,
+        "type": "integer",
+        "default": 8080
+      },
+      "-ngl / --gpu-layers": {
+        "supported": true,
+        "type": "integer or auto/all",
+        "default": "auto"
+      },
+      "--ctx-size": {
+        "supported": true,
+        "type": "integer",
+        "default": 0
+      },
+      "--parallel": {
+        "supported": true,
+        "type": "integer",
+        "default": -1
+      },
+      "--kv-unified": {
+        "supported": true,
+        "type": "boolean switch",
+        "default": "enabled when slots are auto"
+      },
+      "--kv-unified-per-slot": {
+        "supported": true,
+        "type": "integer",
+        "default": "unset"
+      },
+      "--batch-size": {
+        "supported": true,
+        "type": "integer",
+        "default": 2048
+      },
+      "--ubatch-size": {
+        "supported": true,
+        "type": "integer",
+        "default": 512
+      },
+      "--cache-type-k / --cache-type-v": {
+        "supported": true,
+        "type": "KV type",
+        "default": "f16"
+      },
+      "--spec-type": {
+        "supported": true,
+        "accepted": [
+          "none",
+          "ngram-simple"
+        ]
+      },
+      "--spec-ngram-simple-size-n": {
+        "supported": true,
+        "type": "integer",
+        "default": 12
+      },
+      "--spec-ngram-simple-size-m": {
+        "supported": true,
+        "type": "integer",
+        "default": 48
+      },
+      "--spec-ngram-simple-min-hits": {
+        "supported": true,
+        "type": "integer",
+        "default": 1
+      },
+      "--flash-attn": {
+        "supported": true,
+        "accepted": [
+          "on",
+          "off",
+          "auto"
+        ]
+      },
+      "--jinja": {
+        "supported": true,
+        "type": "boolean switch",
+        "default": "enabled"
+      },
+      "--reasoning": {
+        "supported": true,
+        "accepted": [
+          "on",
+          "off",
+          "auto"
+        ]
+      },
+      "--metrics": {
+        "supported": true,
+        "type": "boolean switch",
+        "default": "disabled"
+      },
+      "--slots": {
+        "supported": true,
+        "type": "boolean switch",
+        "default": "enabled"
+      },
+      "--no-warmup": {
+        "supported": true,
+        "default": "warmup enabled"
+      },
+      "cuda_graph_disable": {
+        "supported": false,
+        "note": "no graph switch appears in this pinned --help"
+      }
+    },
+    "upstream_argument_source": "https://github.com/ggml-org/llama.cpp/blob/67a17c17caa95742186f8b1ecadd1b5abd6d5ebb/common/arg.cpp",
+    "sm70_flash_attention_source": {
+      "compute_capability": "V100 SM70 matches GGML_CUDA_CC_VOLTA=700",
+      "dispatch": "pinned CUDA source selects the Volta tile/MMA Flash Attention path when the Volta arch is compiled",
+      "files": [
+        "https://github.com/ggml-org/llama.cpp/blob/67a17c17caa95742186f8b1ecadd1b5abd6d5ebb/ggml/src/ggml-cuda/common.cuh",
+        "https://github.com/ggml-org/llama.cpp/blob/67a17c17caa95742186f8b1ecadd1b5abd6d5ebb/ggml/src/ggml-cuda/fattn.cu"
+      ],
+      "runtime_evidence": "WBS4 ran the same Flash Attention ON contract successfully on the two P520 V100s"
+    }
+  },
+  "warmup_policy": {
+    "no_warmup": true,
+    "cold_independent": true,
+    "full_size_benchmark_warmup": false,
+    "short_routing_preflight_before_c2_only": true
+  },
+  "launch_plan": {
+    "supported_for_planning": true,
+    "runtime": "llama.cpp",
+    "runtime_revision": "10775 / 67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
+    "model": "Ornith-1.5-9B",
+    "model_identity": {
+      "status": "verified_local_artifact_repository_unresolved",
+      "path": "/srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf",
+      "sha256": "79a9925bb7771dea3530d57b185e97b9713a73a7c06bdb9804f7d019aa42f480",
+      "weight_quant": "Q6_K",
+      "kv_candidates": [
+        "FP16"
+      ],
+      "required_spec_lanes": [
+        "target-only",
+        "ngram",
+        "native-mtp",
+        "mtp+ngram"
+      ],
+      "repository": null,
+      "revision": "5957ee5dcb88e9a9f4cd9a23c649320d20a574cd",
+      "filename": "Ornith-1.5-9B-MTP-Q6_K.gguf"
+    },
+    "weight_quant": "Q6_K",
+    "kv_cache": "FP16",
+    "lane": "TARGET",
+    "speculative": "target-only",
+    "ngram": "off",
+    "topology": "1gpu-x2-independent",
+    "concurrency": 2,
+    "context_tokens_per_agent": 131072,
+    "commands": [
+      [
+        "docker",
+        "run",
+        "--rm",
+        "--pull=never",
+        "--name",
+        "v100-test-18080",
+        "--label",
+        "project=v100-llm-test",
+        "--gpus",
+        "device=0",
+        "-p",
+        "127.0.0.1:18080:8080",
+        "-v",
+        "/srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf:/model/target.gguf:ro",
+        "--entrypoint",
+        "llama-server",
+        "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149",
+        "-m",
+        "/model/target.gguf",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8080",
+        "-ngl",
+        "all",
+        "--ctx-size",
+        "131072",
+        "--parallel",
+        "1",
+        "--kv-unified",
+        "--kv-unified-per-slot",
+        "131072",
+        "--batch-size",
+        "512",
+        "--ubatch-size",
+        "128",
+        "--cache-type-k",
+        "f16",
+        "--cache-type-v",
+        "f16",
+        "--flash-attn",
+        "on",
+        "--spec-type",
+        "none",
+        "--jinja",
+        "--reasoning",
+        "off",
+        "--metrics",
+        "--slots",
+        "--no-warmup"
+      ],
+      [
+        "docker",
+        "run",
+        "--rm",
+        "--pull=never",
+        "--name",
+        "v100-test-18081",
+        "--label",
+        "project=v100-llm-test",
+        "--gpus",
+        "device=1",
+        "-p",
+        "127.0.0.1:18081:8080",
+        "-v",
+        "/srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf:/model/target.gguf:ro",
+        "--entrypoint",
+        "llama-server",
+        "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149",
+        "-m",
+        "/model/target.gguf",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8080",
+        "-ngl",
+        "all",
+        "--ctx-size",
+        "131072",
+        "--parallel",
+        "1",
+        "--kv-unified",
+        "--kv-unified-per-slot",
+        "131072",
+        "--batch-size",
+        "512",
+        "--ubatch-size",
+        "128",
+        "--cache-type-k",
+        "f16",
+        "--cache-type-v",
+        "f16",
+        "--flash-attn",
+        "on",
+        "--spec-type",
+        "none",
+        "--jinja",
+        "--reasoning",
+        "off",
+        "--metrics",
+        "--slots",
+        "--no-warmup"
+      ]
+    ],
+    "environment": {},
+    "command_environments": [
+      {},
+      {}
+    ],
+    "endpoints": [
+      "http://127.0.0.1:18079"
+    ],
+    "backend_endpoints": [
+      "http://127.0.0.1:18080",
+      "http://127.0.0.1:18081"
+    ],
+    "gateway": {
+      "runtime": "LiteLLM",
+      "runtime_revision": "1.101.0 / 18243cd7af4c3325165ba68b21379e2719e051c7",
+      "image": "ghcr.io/berriai/litellm:v1.101.0",
+      "endpoint": "http://127.0.0.1:18079",
+      "routing_strategy": "least-busy",
+      "backend_max_parallel_requests": 1,
+      "config": {
+        "model_list": [
+          {
+            "model_name": "Ornith-1.5-9B",
+            "model_info": {
+              "id": "backend-0"
+            },
+            "litellm_params": {
+              "model": "openai/Ornith-1.5-9B",
+              "api_base": "http://127.0.0.1:18080/v1",
+              "api_key": "local-no-key",
+              "max_parallel_requests": 1,
+              "timeout": 1800,
+              "stream_timeout": 1800,
+              "max_retries": 0
+            }
+          },
+          {
+            "model_name": "Ornith-1.5-9B",
+            "model_info": {
+              "id": "backend-1"
+            },
+            "litellm_params": {
+              "model": "openai/Ornith-1.5-9B",
+              "api_base": "http://127.0.0.1:18081/v1",
+              "api_key": "local-no-key",
+              "max_parallel_requests": 1,
+              "timeout": 1800,
+              "stream_timeout": 1800,
+              "max_retries": 0
+            }
+          }
+        ],
+        "router_settings": {
+          "routing_strategy": "least-busy",
+          "num_retries": 0
+        }
+      },
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--pull=never",
+        "--name",
+        "v100-test-litellm",
+        "--label",
+        "project=v100-llm-test",
+        "--network",
+        "host",
+        "-v",
+        "{LITELLM_CONFIG}:/app/config.yaml:ro",
+        "ghcr.io/berriai/litellm:v1.101.0",
+        "--config",
+        "/app/config.yaml",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18079"
+      ]
+    }
+  },
+  "candidate_profile_sha256": "cd64d92df60870d9dc9ec834804f299da7d1ade54c6d04a26a043a2e35e58549",
+  "configuration_sha256": {
+    "config/models/ornith-1.5-9b.json": "f0d36ff39c37b345b529ac9fd9ad8dbf222bca5e4c0457b1836fd6230a883004",
+    "config/runtime-lock.json": "a4d88fd4f22f258f715c605f3b3d9dce75da1a81b42dc1c6db12a93683680d12",
+    "config/profiles/runtime-lanes.json": "2303ef66b9b1eae934da31225e42e8660a6ae6924cca35591a877c10df0f7b2e",
+    "config/profiles/topologies.json": "817a1157673d346f04efde8da7d3cc3e9b3ef2b47b690988808b55a6a4c35956"
+  },
+  "source_sha256": {
+    "scripts/runtime_launcher.py": "65a8c2b55809f8ff3b806c1480d026e3e995eddc7008c282dfa2555ad07952e7",
+    "scripts/bench_harness.py": "e5af666cc3092498ad77c87f3b28ac0b89bfdf64a7ed0c6185b328c0a5bd1521",
+    "scripts/run_1gpu_litellm.py": "3ca66fe9dd65b2117849d6f2d5f6d60f3b1702c8342e132c688fd907ef734266"
+  },
+  "exact_launch_commands": [
+    "docker run --cidfile /home/loopwhile/Data/Workspace_VSCode/v100-llm-test/results/plans/wbs5/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260927-001/runtime/container-0.cid --label experiment=EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260927-001 --rm --pull=never --name exp-v100-orn15-9b-llama-target-b512-ub128-1gpu2-c2-perf-20260927-001-backend-0 --label project=v100-llm-test --gpus device=0 -p 127.0.0.1:18080:8080 -v /srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf:/model/target.gguf:ro --entrypoint llama-server kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149 -m /model/target.gguf --host 0.0.0.0 --port 8080 -ngl all --ctx-size 131072 --parallel 1 --kv-unified --kv-unified-per-slot 131072 --batch-size 512 --ubatch-size 128 --cache-type-k f16 --cache-type-v f16 --flash-attn on --spec-type none --jinja --reasoning off --metrics --slots --no-warmup",
+    "docker run --cidfile /home/loopwhile/Data/Workspace_VSCode/v100-llm-test/results/plans/wbs5/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260927-001/runtime/container-1.cid --label experiment=EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260927-001 --rm --pull=never --name exp-v100-orn15-9b-llama-target-b512-ub128-1gpu2-c2-perf-20260927-001-backend-1 --label project=v100-llm-test --gpus device=1 -p 127.0.0.1:18081:8080 -v /srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf:/model/target.gguf:ro --entrypoint llama-server kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149 -m /model/target.gguf --host 0.0.0.0 --port 8080 -ngl all --ctx-size 131072 --parallel 1 --kv-unified --kv-unified-per-slot 131072 --batch-size 512 --ubatch-size 128 --cache-type-k f16 --cache-type-v f16 --flash-attn on --spec-type none --jinja --reasoning off --metrics --slots --no-warmup",
+    "docker run --cidfile /home/loopwhile/Data/Workspace_VSCode/v100-llm-test/results/plans/wbs5/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260927-001/runtime/container-gateway.cid --label experiment=EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260927-001 --rm --pull=never --name exp-v100-orn15-9b-llama-target-b512-ub128-1gpu2-c2-perf-20260927-001-gateway --label project=v100-llm-test --network host -v /home/loopwhile/Data/Workspace_VSCode/v100-llm-test/results/plans/wbs5/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260927-001/runtime/litellm-config.yaml:/app/config.yaml:ro ghcr.io/berriai/litellm:v1.101.0 --config /app/config.yaml --host 127.0.0.1 --port 18079"
+  ],
+  "raw_config": {
+    "experiment_id": "EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260927-001",
+    "candidate_id": "TARGET_BASELINE",
+    "candidate_key": "R0",
+    "wbs": "5.1",
+    "workload": {
+      "path": "workloads/performance/v1.json",
+      "sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+      "workload_id": "V100-PERFORMANCE-C2-128K-v1",
+      "mode": "performance"
+    },
+    "runtime_contract": {
+      "runtime": "llama.cpp",
+      "image": "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149",
+      "build": 10775,
+      "commit": "67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
+      "backend_context": 131072,
+      "backend_parallel": 1,
+      "kv_unified": true,
+      "kv_unified_per_slot": 131072,
+      "flash_attention": "on",
+      "jinja": true,
+      "reasoning": "off",
+      "no_warmup": true,
+      "topology": "1gpu-x2-independent",
+      "gpu_assignment": {
+        "backend-0": 0,
+        "backend-1": 1
+      },
+      "litellm_version": "1.101.0",
+      "litellm_commit": "18243cd7af4c3325165ba68b21379e2719e051c7",
+      "litellm_image": "ghcr.io/berriai/litellm:v1.101.0",
+      "routing_strategy": "least-busy",
+      "backend_max_parallel_requests": 1,
+      "num_retries": 0,
+      "routing_settled_admission": true
+    },
+    "warmup_policy": {
+      "no_warmup": true,
+      "cold_independent": true,
+      "full_size_benchmark_warmup": false,
+      "short_routing_preflight_before_c2_only": true
+    },
+    "effective_server_commands": [
+      [
+        "docker",
+        "run",
+        "--rm",
+        "--pull=never",
+        "--name",
+        "v100-test-18080",
+        "--label",
+        "project=v100-llm-test",
+        "--gpus",
+        "device=0",
+        "-p",
+        "127.0.0.1:18080:8080",
+        "-v",
+        "/srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf:/model/target.gguf:ro",
+        "--entrypoint",
+        "llama-server",
+        "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149",
+        "-m",
+        "/model/target.gguf",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8080",
+        "-ngl",
+        "all",
+        "--ctx-size",
+        "131072",
+        "--parallel",
+        "1",
+        "--kv-unified",
+        "--kv-unified-per-slot",
+        "131072",
+        "--batch-size",
+        "512",
+        "--ubatch-size",
+        "128",
+        "--cache-type-k",
+        "f16",
+        "--cache-type-v",
+        "f16",
+        "--flash-attn",
+        "on",
+        "--spec-type",
+        "none",
+        "--jinja",
+        "--reasoning",
+        "off",
+        "--metrics",
+        "--slots",
+        "--no-warmup"
+      ],
+      [
+        "docker",
+        "run",
+        "--rm",
+        "--pull=never",
+        "--name",
+        "v100-test-18081",
+        "--label",
+        "project=v100-llm-test",
+        "--gpus",
+        "device=1",
+        "-p",
+        "127.0.0.1:18081:8080",
+        "-v",
+        "/srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf:/model/target.gguf:ro",
+        "--entrypoint",
+        "llama-server",
+        "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149",
+        "-m",
+        "/model/target.gguf",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8080",
+        "-ngl",
+        "all",
+        "--ctx-size",
+        "131072",
+        "--parallel",
+        "1",
+        "--kv-unified",
+        "--kv-unified-per-slot",
+        "131072",
+        "--batch-size",
+        "512",
+        "--ubatch-size",
+        "128",
+        "--cache-type-k",
+        "f16",
+        "--cache-type-v",
+        "f16",
+        "--flash-attn",
+        "on",
+        "--spec-type",
+        "none",
+        "--jinja",
+        "--reasoning",
+        "off",
+        "--metrics",
+        "--slots",
+        "--no-warmup"
+      ]
+    ],
+    "exact_launch_commands": [
+      "docker run --cidfile /home/loopwhile/Data/Workspace_VSCode/v100-llm-test/results/plans/wbs5/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260927-001/runtime/container-0.cid --label experiment=EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260927-001 --rm --pull=never --name exp-v100-orn15-9b-llama-target-b512-ub128-1gpu2-c2-perf-20260927-001-backend-0 --label project=v100-llm-test --gpus device=0 -p 127.0.0.1:18080:8080 -v /srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf:/model/target.gguf:ro --entrypoint llama-server kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149 -m /model/target.gguf --host 0.0.0.0 --port 8080 -ngl all --ctx-size 131072 --parallel 1 --kv-unified --kv-unified-per-slot 131072 --batch-size 512 --ubatch-size 128 --cache-type-k f16 --cache-type-v f16 --flash-attn on --spec-type none --jinja --reasoning off --metrics --slots --no-warmup",
+      "docker run --cidfile /home/loopwhile/Data/Workspace_VSCode/v100-llm-test/results/plans/wbs5/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260927-001/runtime/container-1.cid --label experiment=EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260927-001 --rm --pull=never --name exp-v100-orn15-9b-llama-target-b512-ub128-1gpu2-c2-perf-20260927-001-backend-1 --label project=v100-llm-test --gpus device=1 -p 127.0.0.1:18081:8080 -v /srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf:/model/target.gguf:ro --entrypoint llama-server kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149 -m /model/target.gguf --host 0.0.0.0 --port 8080 -ngl all --ctx-size 131072 --parallel 1 --kv-unified --kv-unified-per-slot 131072 --batch-size 512 --ubatch-size 128 --cache-type-k f16 --cache-type-v f16 --flash-attn on --spec-type none --jinja --reasoning off --metrics --slots --no-warmup",
+      "docker run --cidfile /home/loopwhile/Data/Workspace_VSCode/v100-llm-test/results/plans/wbs5/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260927-001/runtime/container-gateway.cid --label experiment=EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260927-001 --rm --pull=never --name exp-v100-orn15-9b-llama-target-b512-ub128-1gpu2-c2-perf-20260927-001-gateway --label project=v100-llm-test --network host -v /home/loopwhile/Data/Workspace_VSCode/v100-llm-test/results/plans/wbs5/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260927-001/runtime/litellm-config.yaml:/app/config.yaml:ro ghcr.io/berriai/litellm:v1.101.0 --config /app/config.yaml --host 127.0.0.1 --port 18079"
+    ],
+    "gateway_config_path": "/home/loopwhile/Data/Workspace_VSCode/v100-llm-test/results/plans/wbs5/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260927-001/runtime/litellm-config.yaml",
+    "launch_plan_sha256": "220c9c0389f8b71c9f452b88cf58aee4a247923ad6755fc9cf8d16f3a76794e7"
+  },
+  "raw_config_sha256": "592caf73146020d46f70f7f3acd830124c85c059692006df40bc53284ac14516"
+}

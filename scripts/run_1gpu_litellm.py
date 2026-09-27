@@ -23,12 +23,16 @@ import time
 import bench_harness as h
 import build_128k_workload as w
 import runtime_launcher as launcher
+import prepare_wbs5_plan as wbs5_planner
 from measurement_policy import future_config
 
 ROOT = Path(__file__).resolve().parents[1]
 C1_WORKLOAD_MANIFEST = ROOT / "workloads/capacity/v1.json"
 C2_WORKLOAD_MANIFEST = ROOT / "workloads/concurrency/v2.json"
+PERFORMANCE_WORKLOAD_MANIFEST = ROOT / "workloads/performance/v1.json"
 C2_SEMANTIC_ORACLE = ROOT / "workloads/concurrency/v2-ground-truth.json"
+
+WBS5_CANDIDATES = wbs5_planner.frozen_candidates()[1]
 
 LANE_WBS = {
     ("TARGET", 1): "4.1.1",
@@ -63,12 +67,17 @@ def checkpoint(raw, phase, **extra):
 
 def measure(raw):
     config = json.loads((raw / "runtime/planned-config.json").read_text())
+    manifest_path = Path(config.get("workload_manifest_path", C1_WORKLOAD_MANIFEST if config.get("concurrency") == 1 else C2_WORKLOAD_MANIFEST))
+    expected_manifest_sha = config.get("workload_manifest_sha256")
+    if expected_manifest_sha and h.sha(manifest_path.read_bytes()) != expected_manifest_sha:
+        raise ValueError("planned workload manifest SHA256 mismatch")
     timeout_s = 3600 if config.get("concurrency") == 2 else 1800
     adapter = h.make_plan_adapter(config, timeout_s=timeout_s)
 
     if config.get("concurrency") == 1:
         checkpoint(raw, "running", step="materializing_live_tokenizer_workload")
-        manifest = w.load_manifest(C1_WORKLOAD_MANIFEST)
+        manifest_path = Path(config.get("workload_manifest_path", C1_WORKLOAD_MANIFEST))
+        manifest = w.load_manifest(manifest_path)
         workload = w.build(
             manifest,
             adapter,
@@ -78,8 +87,13 @@ def measure(raw):
             sampling=config.get("sampling"),
         )
     else:
-        checkpoint(raw, "running", step="materializing_authoritative_workload_v2")
-        manifest = w.load_manifest(C2_WORKLOAD_MANIFEST)
+        manifest_path = Path(config.get("workload_manifest_path", C2_WORKLOAD_MANIFEST))
+        checkpoint(
+            raw,
+            "running",
+            step=("materializing_wbs5_performance_workload" if config.get("wbs5_candidate") else "materializing_authoritative_workload_v2"),
+        )
+        manifest = w.load_manifest(manifest_path)
         workload = w.build(
             manifest,
             adapter,
@@ -110,7 +124,8 @@ def run(args):
 
 
 def run_locked(args):
-    wbs = LANE_WBS.get((args.lane, args.concurrency), "4.x")
+    candidate = WBS5_CANDIDATES.get(args.wbs5_candidate) if args.wbs5_candidate else None
+    wbs = "5.1" if candidate else LANE_WBS.get((args.lane, args.concurrency), "4.x")
     raw = ROOT / "results/raw" / args.experiment_id
     raw.mkdir(parents=True, exist_ok=False)
     runtime = raw / "runtime"
@@ -132,6 +147,16 @@ def run_locked(args):
     )
     if not plan.get("supported_for_planning"):
         raise RuntimeError("unsupported plan: " + plan.get("reason", "unknown reason"))
+
+    if candidate:
+        for cmd in plan["commands"]:
+            cmd[cmd.index("--batch-size") + 1] = "512"
+            cmd[cmd.index("--ubatch-size") + 1] = str(candidate["ubatch_size"])
+            if cmd[cmd.index("--batch-size") + 1] != "512" or cmd[cmd.index("--spec-type") + 1] != candidate["spec_type"]:
+                raise ValueError("WBS5 launch command violates the frozen candidate contract")
+        workload_sha256 = h.sha(PERFORMANCE_WORKLOAD_MANIFEST.read_bytes())
+    else:
+        workload_sha256 = None
 
     # Prepare server commands and container labels/cids
     backend_cids = []
@@ -173,10 +198,23 @@ def run_locked(args):
         f"experiment={args.experiment_id}",
     ]
 
+    notes = f"WBS {wbs}; Ornith 1.5 9B 1GPUx2 + LiteLLM; concurrency C{args.concurrency}; "
+    if candidate:
+        notes += f"frozen candidate {candidate['candidate_id']}; authoritative workload workloads/performance/v1.json; "
+    if args.concurrency == 2:
+        notes += "one measured 128K batch; no full-size benchmark warmup; "
+        notes += "two short routing-preflight inference requests (max_tokens=16) executed before measured C2 batch."
+    else:
+        notes += "one measured 128K batch; no full-size benchmark warmup."
+
     config = future_config(
         plan
         | dict(
             experiment_id=args.experiment_id,
+            wbs5_candidate=candidate["candidate_id"] if candidate else None,
+            wbs5_candidate_key=args.wbs5_candidate,
+            workload_manifest_path=str(PERFORMANCE_WORKLOAD_MANIFEST if candidate else (C1_WORKLOAD_MANIFEST if args.concurrency == 1 else C2_WORKLOAD_MANIFEST)),
+            workload_manifest_sha256=workload_sha256,
             launch_command="; ".join(shlex.join(c) for c in backend_cmds + [gateway_cmd]),
             backend_variant="stock",
             context_tokens=131072,
@@ -190,14 +228,7 @@ def run_locked(args):
             ),
             tool_parser="none",
             thinking=False,
-            notes=(
-                f"WBS {wbs}; Ornith 1.5 9B 1GPUx2 + LiteLLM; concurrency C{args.concurrency}; "
-                "one measured 128K batch; no full-size benchmark warmup; "
-                "two short routing-preflight inference requests (max_tokens=16) executed before measured C2 batch."
-                if args.concurrency == 2
-                else f"WBS {wbs}; Ornith 1.5 9B 1GPUx2 + LiteLLM; concurrency C{args.concurrency}; "
-                "one measured 128K batch; no full-size benchmark warmup."
-            ),
+            notes=notes,
             routing_preflight_before_measurement=args.concurrency == 2,
             routing_preflight_request_count=2 if args.concurrency == 2 else 0,
             routing_preflight_max_tokens=16 if args.concurrency == 2 else 0,
@@ -524,6 +555,7 @@ def main():
         choices=["TARGET", "NGRAM", "MTP", "MTP_NGRAM", "STOCK"],
     )
     parser.add_argument("--concurrency", type=int, choices=[1, 2])
+    parser.add_argument("--wbs5-candidate", choices=tuple(WBS5_CANDIDATES))
     parser.add_argument("--port", type=int, default=18080)
     parser.add_argument("--gateway-port", type=int, default=18079)
     parser.add_argument("--worker", type=Path)
@@ -534,7 +566,22 @@ def main():
     else:
         if args.retry_of and not args.retry_evidence:
             parser.error("--retry-of requires --retry-evidence")
-        if not args.experiment_id or not args.lane or args.concurrency is None:
+        if args.wbs5_candidate:
+            candidate = WBS5_CANDIDATES[args.wbs5_candidate]
+            if args.concurrency != 2:
+                parser.error("WBS5 frozen candidates require --concurrency 2")
+            if args.lane is not None and args.lane != candidate["lane"]:
+                parser.error("--lane conflicts with the frozen WBS5 candidate")
+            args.lane = candidate["lane"]
+            if not args.experiment_id:
+                parser.error("--experiment-id is required")
+            if not re.fullmatch(r"EXP-V100-ORN15-9B-LLAMA-[A-Z0-9-]+-1GPU2-C2-PERF-\d{8}-\d{3}", args.experiment_id):
+                parser.error("invalid WBS5 experiment ID")
+            try:
+                wbs5_planner.build_plan(args.wbs5_candidate, args.experiment_id)
+            except (KeyError, ValueError) as exc:
+                parser.error(str(exc))
+        elif not args.experiment_id or not args.lane or args.concurrency is None:
             parser.error("--experiment-id, --lane, and --concurrency are required")
         if not re.fullmatch(r"EXP-V100-[A-Z0-9][A-Z0-9-]*", args.experiment_id):
             parser.error("invalid experiment ID")

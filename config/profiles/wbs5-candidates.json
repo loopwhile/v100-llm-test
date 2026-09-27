@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "model_id": "Ornith-1.5-9B",
+  "runtime": "llama.cpp",
+  "topology": "1gpu-x2-independent",
+  "concurrency": 2,
+  "workload": "workloads/performance/v1.json",
+  "candidates": [
+    {
+      "id": "R0",
+      "candidate_id": "TARGET_BASELINE",
+      "lane": "TARGET",
+      "batch_size": 512,
+      "ubatch_size": 128,
+      "spec_type": "none"
+    },
+    {
+      "id": "R1",
+      "candidate_id": "TARGET_UB256",
+      "lane": "TARGET",
+      "batch_size": 512,
+      "ubatch_size": 256,
+      "spec_type": "none"
+    },
+    {
+      "id": "R2",
+      "candidate_id": "NGRAM_DEFAULT",
+      "lane": "NGRAM",
+      "batch_size": 512,
+      "ubatch_size": 128,
+      "spec_type": "ngram-simple",
+      "ngram_size_n": 12,
+      "ngram_size_m": 48
+    }
+  ],
+  "warmup": {
+    "no_warmup": true,
+    "cold_independent": true,
+    "full_size_benchmark_warmup": false,
+    "short_routing_preflight_before_c2_only": true
+  }
+}

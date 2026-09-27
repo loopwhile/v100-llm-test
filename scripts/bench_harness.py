@@ -65,6 +65,39 @@ def metric_value(text,name):
   except (ValueError,IndexError):pass
  return max(vals) if vals else None
 
+def speculative_metric_delta(before,after):
+ """Return per-backend speculative counter deltas from the request window."""
+ names={
+  "draft_tokens":"llamacpp:spec_decode_num_draft_tokens_total",
+  "accepted_tokens":"llamacpp:spec_decode_num_accepted_tokens_total",
+  "verification_steps":"llamacpp:spec_decode_num_drafts_total",
+ }
+ def collect(value,path="root",found=None):
+  if found is None:found={}
+  if isinstance(value,dict):
+   for key,item in value.items():
+    if key=="/metrics" and isinstance(item,str):found[path]=item
+    else:collect(item,f"{path}/{key}",found)
+  return found
+ before_metrics=collect(before);after_metrics=collect(after);rows={}
+ for path,text in after_metrics.items():
+  if path not in before_metrics:continue
+  old=before_metrics[path];deltas={}
+  for field,name in names.items():
+   a=metric_value(old,name);b=metric_value(text,name)
+   deltas[field]=(b-a) if a is not None and b is not None else None
+  drafted=deltas["draft_tokens"];accepted=deltas["accepted_tokens"]
+  deltas["acceptance_ratio"]=(accepted/drafted) if drafted and drafted>0 and accepted is not None else None
+  rows[path]=deltas
+ totals={}
+ for key in names:
+  values=[row[key] for row in rows.values() if row.get(key) is not None]
+  totals[key]=sum(values) if values else None
+ drafted=totals["draft_tokens"];accepted=totals["accepted_tokens"]
+ totals["acceptance_ratio"]=(accepted/drafted) if drafted and drafted>0 else None
+ return {"source":"llama.cpp /metrics before/after measured C2 window","backends":rows,"aggregate":totals,
+         "limitation":"Counters are backend-level; routing-settled admission must be preserved to attribute the two projects."}
+
 def resident_slots(slots):
  if not isinstance(slots,list):return None
  count=0; witnessed=False
@@ -393,7 +426,7 @@ def run_batch(output,config,workload,adapter):
  unexpected=[x for x in output.iterdir() if x.name!="runtime"]
  if unexpected:raise FileExistsError(f"raw experiment directory is not fresh: {unexpected[0]}")
  frozen=dict(config,workload_sha256=sha(canon(workload)));save(output/"config.json",frozen);save(output/"identity.json",{"config_sha256":sha(canon(frozen)),"created_at_utc":utc()});save(output/"workload.json",workload);save(output/"payloads.json",payloads)
- before=adapter.health();save(output/"health-before.json",before);save(output/"server-before.json",adapter.snapshot());receipts=[];errors=[];request_adapters=[adapter.request_adapter(i) if hasattr(adapter,"request_adapter") else adapter for i in range(config["concurrency"])]
+ before=adapter.health();save(output/"health-before.json",before);server_before=adapter.snapshot();save(output/"server-before.json",server_before);receipts=[];errors=[];request_adapters=[adapter.request_adapter(i) if hasattr(adapter,"request_adapter") else adapter for i in range(config["concurrency"])]
  for case,payload,request_adapter in zip(selected,payloads,request_adapters):
   try:
    if not before.get("healthy"):raise RuntimeError("server unhealthy")
@@ -423,7 +456,10 @@ def run_batch(output,config,workload,adapter):
   finally:
    gpu.stop()
    if config["concurrency"]==2 and hasattr(adapter,"stop_overlap_probe"):adapter.stop_overlap_probe()
- gpu_summary=gpu.summary();save(output/"gpu-peak.json",gpu_summary);save(output/"requests.json",records);after=adapter.health();save(output/"health-after.json",after);save(output/"server-after.json",adapter.snapshot())
+ gpu_summary=gpu.summary();save(output/"gpu-peak.json",gpu_summary);save(output/"requests.json",records);after=adapter.health();save(output/"health-after.json",after);server_after=adapter.snapshot();save(output/"server-after.json",server_after)
+ if config.get("runtime")=="llama.cpp" and config.get("ngram") not in (None,"off","N/A"):
+  speculative=speculative_metric_delta(server_before,server_after);save(output/"speculative-evidence.json",speculative)
+ else:speculative=None
  try:evidence=adapter.overlap_evidence(records)
  except Exception as e:evidence={"source":"overlap probe failed","resident":None,"active_overlap":None,"queue_only":None,"error":str(e)}
  for k in ("resident","active_overlap","queue_only"):evidence.setdefault(k,None)
@@ -439,7 +475,9 @@ def run_batch(output,config,workload,adapter):
  elif config["concurrency"]==1:verdict="PASS_C1_128K" if config["context_tokens"]==131072 else "PASS"
  else:verdict=concurrency_verdict
  if verdict not in VALID:raise AssertionError(verdict)
- m=summarize(config,records,evidence,verdict,gpu_summary);m["verdict"]=verdict;m["concurrency_verdict"]=concurrency_verdict;m["mechanical_output_verdict"]="PASS" if values=={PASS} else ("FAIL_OUTPUT" if "FAIL_OUTPUT" in values else "NOT_ALL_PASS");save(output/"metrics.json",m);save(output/"completion.json",{"experiment_id":config["experiment_id"],"verdict":verdict,"completed_at_utc":utc(),"post_health":after});return verdict
+ m=summarize(config,records,evidence,verdict,gpu_summary);m["verdict"]=verdict;m["concurrency_verdict"]=concurrency_verdict;m["mechanical_output_verdict"]="PASS" if values=={PASS} else ("FAIL_OUTPUT" if "FAIL_OUTPUT" in values else "NOT_ALL_PASS")
+ if speculative is not None:m["speculative_evidence"]=speculative["aggregate"]
+ save(output/"metrics.json",m);save(output/"completion.json",{"experiment_id":config["experiment_id"],"verdict":verdict,"completed_at_utc":utc(),"post_health":after});return verdict
 
 
 def inspect_run(output):

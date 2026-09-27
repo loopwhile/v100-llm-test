@@ -109,6 +109,37 @@ class Ornith1GPUx2RunnerTests(unittest.TestCase):
             self.assertEqual(progress["phase"], "results_saved")
             self.assertEqual(progress["verdict"], "PASS_C1_128K")
 
+    def test_measure_worker_uses_explicit_wbs5_performance_manifest(self):
+        with tempfile.TemporaryDirectory() as td:
+            raw = Path(td)
+            runtime = raw / "runtime"
+            runtime.mkdir()
+            config = {
+                "experiment_id": "EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260927-001",
+                "model": "Ornith-1.5-9B",
+                "lane": "TARGET",
+                "concurrency": 2,
+                "topology": "1gpu-x2-independent",
+                "runtime": "llama.cpp",
+                "wbs5_candidate": "TARGET_BASELINE",
+                "workload_manifest_path": str(runner.PERFORMANCE_WORKLOAD_MANIFEST),
+                "endpoints": ["http://127.0.0.1:18079"],
+                "backend_endpoints": ["http://127.0.0.1:18080", "http://127.0.0.1:18081"],
+                "gateway": {"runtime": "LiteLLM", "endpoint": "http://127.0.0.1:18079"},
+            }
+            (runtime / "planned-config.json").write_text(runtime_launcher.json.dumps(config))
+            mock_adapter = Mock()
+            mock_workload = {"mode": "performance", "requests": [{"id": "project-a"}, {"id": "project-b"}]}
+            with patch("bench_harness.make_plan_adapter", return_value=mock_adapter), \
+                 patch("build_128k_workload.load_manifest", return_value={}) as mock_load, \
+                 patch("build_128k_workload.build", return_value=mock_workload), \
+                 patch("bench_harness.run_batch", return_value="PASS_C2_ACTIVE"):
+                runner.measure(raw)
+                mock_load.assert_called_once_with(runner.PERFORMANCE_WORKLOAD_MANIFEST)
+
+            progress = runtime_launcher.json.loads((runtime / "progress.json").read_text())
+            self.assertEqual(progress["step"], "measurement_complete")
+
     def test_preflight_saved_to_runtime(self):
         with tempfile.TemporaryDirectory() as td:
             raw = Path(td)

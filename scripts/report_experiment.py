@@ -282,10 +282,18 @@ def _report(config, metrics, completion, raw_dir, verdicts=None):
         f"- Concurrency: C{concurrency}",
         f"- Prefix cache: {config['prefix_cache_lane']}",
         f"- measured_repetitions: {config.get('measured_repetitions',1)}",
-        "",
-        "## Capacity / Concurrency",
-        "",
     ])
+
+    if config.get("wbs5_candidate"):
+        lines.extend([
+            f"- WBS5 candidate: {config.get('wbs5_candidate')} ({config.get('wbs5_candidate_key','')})",
+            f"- Authoritative workload: {config.get('workload_manifest_path','')} (SHA256 {config.get('workload_manifest_sha256','')})",
+            "- Exact launch configuration:",
+            "```sh",
+            config.get("launch_command", ""),
+            "```",
+        ])
+    lines.extend(["", "## Capacity / Concurrency", ""])
 
     if concurrency == 1:
         lines.append(f"- C1 128K: {_bool_text(metrics.get('c1_128k'))}")
@@ -327,7 +335,26 @@ def _report(config, metrics, completion, raw_dir, verdicts=None):
         f"- End-to-end output tok/s: {metrics.get('end_to_end_output_tps')}",
         f"- Batch wall: {metrics.get('batch_wall_s')}",
         f"- Peak VRAM: {_format_vram(peak0, peak1)}",
+        "- Peak VRAM sampling: nvidia-smi memory.used sampled every 0.5s; transient peaks between samples may be missed.",
         "",
+    ])
+
+    speculative_path = raw_dir / "speculative-evidence.json"
+    if speculative_path.is_file():
+        speculative_evidence = _read(speculative_path)
+        aggregate = speculative_evidence.get("aggregate", {})
+        lines.extend([
+            "",
+            "## Speculative evidence",
+            "",
+            f"- Draft tokens: {aggregate.get('draft_tokens')}",
+            f"- Accepted tokens: {aggregate.get('accepted_tokens')}",
+            f"- Acceptance ratio: {aggregate.get('acceptance_ratio')}",
+            f"- Verification steps: {aggregate.get('verification_steps')}",
+            "- Counters: backend-level /metrics deltas across the measured request window.",
+        ])
+
+    lines.extend([
         "## 증거 경로",
         "",
         f"- Raw artifact: {raw_dir.as_posix()}",
@@ -341,6 +368,7 @@ def _report(config, metrics, completion, raw_dir, verdicts=None):
         "health-before.json", "health-after.json",
         "server-before.json", "server-after.json",
         "acceptance-review.json",
+        "speculative-evidence.json",
     ]
     runtime_candidates = [
         "runtime/routing-preflight.json", "runtime/litellm-config.yaml",

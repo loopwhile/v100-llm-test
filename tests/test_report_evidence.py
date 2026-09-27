@@ -45,6 +45,34 @@ def _make_raw(td, files, config=None, metrics=None, completion=None):
 
 
 class TestEvidenceListing(unittest.TestCase):
+    def test_wbs5_report_preserves_candidate_workload_command_and_ngram_counters(self):
+        with tempfile.TemporaryDirectory() as td:
+            config = {
+                "experiment_id": "EXP-V100-ORN15-9B-LLAMA-NGRAM-B512-UB128-1GPU2-C2-PERF-20260927-003",
+                "model": "Ornith-1.5-9B", "runtime": "llama.cpp", "runtime_revision": "10775 / pinned",
+                "weight_quant": "Q6_K", "kv_cache": "FP16", "speculative": "ngram", "ngram": "ngram-simple",
+                "topology": "1gpu-x2-independent", "context_tokens": 131072, "concurrency": 2,
+                "prefix_cache_lane": "cold-independent", "notes": "test", "wbs5_candidate": "NGRAM_DEFAULT",
+                "wbs5_candidate_key": "R2", "workload_manifest_path": "workloads/performance/v1.json",
+                "workload_manifest_sha256": "abc123", "launch_command": "docker run backend; docker run gateway",
+                "gateway": {"runtime": "LiteLLM", "routing_strategy": "least-busy"},
+            }
+            raw, config, metrics, completion = _make_raw(
+                td, ["speculative-evidence.json"], config=config,
+                metrics={"verdict": "PASS_C2_ACTIVE", "c2_resident": True, "c2_active": True, "queue_only": False},
+                completion={"experiment_id": config["experiment_id"], "verdict": "PASS_C2_ACTIVE", "completed_at_utc": "2026-09-27T00:00:00+00:00"},
+            )
+            (raw / "speculative-evidence.json").write_text(json.dumps({"aggregate": {
+                "draft_tokens": 400, "accepted_tokens": 120, "acceptance_ratio": 0.3, "verification_steps": 58,
+            }}))
+            md = report._report(config, metrics, completion, raw)
+            self.assertIn("NGRAM_DEFAULT (R2)", md)
+            self.assertIn("workloads/performance/v1.json", md)
+            self.assertIn("docker run backend; docker run gateway", md)
+            self.assertIn("Draft tokens: 400", md)
+            self.assertIn("Accepted tokens: 120", md)
+            self.assertIn("Acceptance ratio: 0.3", md)
+
     def test_completed_experiment_lists_actual_files(self):
         """A completed experiment should list only files that exist."""
         with tempfile.TemporaryDirectory() as td:

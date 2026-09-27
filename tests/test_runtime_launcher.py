@@ -15,7 +15,7 @@ class RuntimePlanTests(unittest.TestCase):
   calls=[]
   def execute(cmd,**kwargs):
    calls.append(cmd)
-   return SimpleNamespace(returncode=0,stdout="--spec-type --kv-unified --kv-unified-per-slot --slots",stderr="")
+   return SimpleNamespace(returncode=0,stdout="--spec-type --batch-size --ubatch-size --kv-unified --kv-unified-per-slot --slots --flash-attn --jinja --reasoning --no-warmup",stderr="")
   with patch.object(r.socket,"gethostname",return_value="p520-llm"),patch.object(r.shutil,"which",return_value="docker"),patch.object(Path,"is_file",return_value=True),patch.object(r.subprocess,"run",side_effect=execute):
    self.assertTrue(r.preflight(plan)["pass"])
   help_cmd=next(cmd for cmd in calls if "--help" in cmd)

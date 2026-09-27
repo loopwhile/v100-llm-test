@@ -157,7 +157,7 @@ def preflight(plan):
     h=subprocess.run(["docker","run","--rm","--pull=never","--gpus","all","--entrypoint","llama-server",image,"--help"],
                      capture_output=True,text=True,timeout=60);txt=h.stdout+h.stderr
     add("help:exit",h.returncode==0,txt[:2000] if h.returncode else "")
-    for token in ("--spec-type","--kv-unified","--kv-unified-per-slot","--slots"):add("help:"+token,token in txt)
+    for token in ("--spec-type","--batch-size","--ubatch-size","--kv-unified","--kv-unified-per-slot","--slots","--flash-attn","--jinja","--reasoning","--no-warmup"):add("help:"+token,token in txt)
     if plan["lane"] in ("NGRAM","MTP_NGRAM"):add("help:ngram-simple","ngram-simple" in txt)
     if plan["lane"] in ("MTP","MTP_NGRAM"):
      add("help:draft-mtp","draft-mtp" in txt)
