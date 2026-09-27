@@ -1,5 +1,18 @@
 # Current execution
 
+## WBS 5 frozen-plan integration — 2026-09-27
+
+- WBS 2: **DONE**.
+- WBS 3: **DONE**.
+- WBS 4: **DONE**.
+- WBS 5: llama.cpp 4개 + 1Cat-vLLM 3개, 총 **7개 model/runtime track candidate selection 완료**.
+- 7개 frozen candidate plan 문서화 완료.
+- `docs/WBS.md`에 7개 frozen plan을 공식 실행계획으로 반영 완료.
+- 현재 단계: **후보 선정 완료 / WBS 반영 완료 / Codex CLI local validation / test preparation 직전**.
+- 다음 단계: **Codex CLI local validation / test preparation** -> ChatGPT pre-run final validation.
+- WBS 5 GPU measured run은 **아직 시작하지 않음**.
+- WBS 6 관련 기존 상태/결과는 아래 기록을 그대로 유지한다.
+
 ## WBS 3 authoritative workload reset — 2026-09-25
 
 - User approved redesigning the flawed C2 workload and rerunning **all runnable WBS 3 lanes**, including Qwen3.8 and Ornith 9B.
@@ -234,9 +247,11 @@
 - WBS 2: DONE
 - WBS 3: DONE
 - WBS 4: DONE
+- WBS 5: 7개 model/runtime track candidate selection 및 frozen plan 문서화 완료; 공식 WBS integration 완료.
+- WBS 5 next: Codex CLI local validation / test preparation -> ChatGPT pre-run final validation.
+- WBS 5 GPU measured runs: NOT STARTED.
 - WBS 6.1~6.9: DONE (6.9 OpenVINO CLOSED / OpenBLAS+LTO 4K DONE).
 - WBS 6.10: CLOSED — C32 PASS; prior 32K observed result를 상회하지 못했고 D32는 의도적으로 미실행.
-- Next = WBS 5(성능 최적화 및 모델별 최종 레시피 확정).
 
 
 

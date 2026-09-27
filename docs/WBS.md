@@ -704,203 +704,360 @@ Shared TP2와 다음 항목을 비교한다.
   - 다른 KV quantization (e.g. FP8), 다른 speculative configuration, 다른 runtime에서의 결과까지 물리적으로 불가능하다고 일반화하지 않는다.
   - 프로젝트 불변 규칙에 따라 설정을 임의 변경하는 자동 재시도는 수행하지 않고 closed 처리함.
 
-## 5. 성능 최적화 및 모델별 최종 레시피 확정 [TODO]
+## 5. 성능 최적화 및 모델별 최종 레시피 확정 [PLANNED — FROZEN / READY_FOR_LOCAL_VALIDATION]
 
-WBS 3과 WBS 4에서 capacity/correctness/topology가 검증된 lane을 대상으로 성능을 비교하고,
-각 모델·런타임별로 재현 가능한 **최종 serving recipe**를 남긴다.
+WBS 2/3/4에서 확보한 capacity/correctness/topology evidence와 WBS 5의 performance evidence를 분리한다.
+WBS 5는 아래 7개 model/runtime track에 대해 이미 연구·선정이 끝난 frozen candidate만 실행하며,
+새 candidate 자동 생성, exhaustive grid, 임의 tuning을 수행하지 않는다.
 
-이 프로젝트는 실제 배포 대상을 선택하거나 서비스를 배포하지 않는다.
-사용자는 완료된 recipe 중 필요한 구성을 이후 직접 선택해서 사용한다.
-따라서 별도의 "최종 배포 결정" Phase는 두지 않으며 WBS 5 완료가 이 저장소의 종결점이다.
+현재 단계는 **후보 선정 완료 / frozen plan 문서화 완료 / WBS 공식 계획 반영 완료 / Codex CLI local validation 직전**이다.
+아직 WBS 5 GPU measured run은 시작하지 않았다.
 
-과거 `p520-inference-lab` 및 `qwen3.8-bench` 결과는 acceptance PASS를 소급 부여하는 증거로 사용하지 않는다.
-다만 이미 실측으로 검증된 옵션 조합을 **최적화 후보/재현 recipe의 출처**로 사용할 수 있으며,
-이 저장소의 최종 recipe에는 반드시 이 저장소에서 얻은 fresh evidence를 연결한다.
+### 5.1 authoritative planning input 및 진행 단계
 
-### 5.1 공통 performance 비교
+WBS 5의 candidate 정의는 다음 7개 문서를 authoritative planning input으로 사용한다.
 
-capacity/correctness가 유효한 설정만 정식 performance 비교 대상으로 포함한다.
-지속적인 C2 decode 측정에는 `workloads/performance/v1.json`을 사용한다.
-이 workload는 output 4K를 예약하고 실제 1K 이상 출력을 요구하며,
-NGRAM 비교가 단순 반복 문자열에 과도하게 유리하지 않도록 section별 identifier를 다르게 만든다.
+- `docs/WBS-5 - Qwen 3.8 27B - llama.cpp.md`
+- `docs/WBS-5 - Ornith 1.5 9B - llama.cpp.md`
+- `docs/WBS-5 - Ornith 1.5 35B-A3B - llama.cpp.md`
+- `docs/WBS-5 - Gemma4 26B A4B - llama.cpp.md`
+- `docs/WBS-5 - Qwen 3.8 27B - 1Cat-vLLM.md`
+- `docs/WBS-5 - Ornith 1.5 9B - 1Cat-vLLM.md`
+- `docs/WBS-5 - Ornith 1.5 35B-A3B - 1Cat-vLLM.md`
 
-공통 비교:
-- C1 대비 C2 성능 저하.
-- TTFT / prefill tok/s.
-- mean request decode tok/s.
+이 문서들은 measured result가 아니라 **실행 전 frozen candidate plan**이다.
+candidate ID, 숫자, one-variable delta, invariant, conditional gate를 임의 변경하지 않는다.
+
+WBS 5 단계 흐름:
+
+1. 7개 candidate plan 연구/선정 완료.
+2. 7개 frozen plan 문서화 완료.
+3. `docs/WBS.md` 공식 반영 완료.
+4. Codex CLI local validation / test preparation.
+5. ChatGPT pre-run final validation.
+6. Codex CLI measured runs.
+7. 결과 분석.
+8. 필요 시 Claude independent review.
+9. 모델별 final recipe 확정.
+10. WBS 5 final publication / DONE.
+
+### 5.2 공통 실행 계약
+
+정식 WBS 5 performance workload는 `workloads/performance/v1.json`이다.
+
+고정 workload contract:
+- workload ID: `V100-PERFORMANCE-C2-128K-v1`.
+- context target: **131072/request**.
+- output reserve: 4096/request.
+- minimum actual output: 1024/request.
+- independent Project A/B 2 requests.
+- deterministic sampling contract 유지.
+- WBS 2의 C1 capacity, WBS 3의 shared-TP2 C2 topology, WBS 4의 1GPU×2 topology evidence는 WBS 5 performance result로 대체하거나 혼동하지 않는다.
+
+실행 규칙:
+- 아래 frozen candidate 외 자동 탐색 금지.
+- exhaustive grid 금지.
+- measured run 전에 **Codex CLI local validation이 필수**다.
+- local binary/source/`--help` 검증 전에는 option 존재, default, route hit 가능 여부를 확정 사실로 쓰지 않는다.
+- local validation에서 candidate exact command/config diff가 frozen plan과 다르면 measured run으로 진행하지 않는다.
+- existing raw artifact를 overwrite하지 않는다.
+- candidate/run마다 fresh experiment ID를 사용한다.
+- 자동 retry 금지.
+- 실패 결과도 evidence로 보존한다.
+- 한 candidate의 실패를 이유로 다른 option을 임의 추가/변경하지 않는다.
+- GPU measured run은 여러 track을 동시에 실행하지 않고 직렬 수행한다.
+- `infra-invalid`, `workload-invalid`, artifact/runtime identity mismatch, frozen-delta mismatch는 해당 measured run 전/중 **hard stop**이다.
+- 단순 성능 열세는 infra-invalid가 아니며 candidate failure/performance evidence로 보존할 수 있다.
+- option이 static source에 존재하는 것과 future measured run에서 실제 route/capture/replay가 hit되는 것은 구분한다.
+- `READY_FOR_LOCAL_VALIDATION` 또는 static READY는 measured PASS나 `VALIDATED_RECIPE`를 의미하지 않는다.
+
+공통 evidence:
+- TTFT.
+- prefill tok/s.
+- per-request decode tok/s 및 mean request decode tok/s.
 - aggregate decode tok/s.
 - end-to-end output tok/s.
-- batch wall time.
-- GPU0/GPU1 VRAM.
+- batch wall.
+- actual output tokens.
+- GPU0/GPU1 peak VRAM.
 - power / temperature / clocks.
 - output integrity.
-- speculative lane은 draft / accepted / acceptance ratio.
+- active overlap / queue status.
+- post-health.
+- speculative candidate의 draft / accepted / acceptance ratio.
+- graph candidate에서 가능한 경우 graph eligibility와 실제 reuse/hit evidence를 분리 기록.
 
-### 5.2 llama.cpp 모델별 recipe 최적화
+### 5.3 llama.cpp frozen tracks
 
-WBS 2/3에서 유효한 exact model/artifact/KV/topology를 유지한 상태에서,
-각 모델마다 실제로 의미 있는 옵션만 제한적으로 최적화한다.
+#### 5.3.1 Qwen3.8-27B / llama.cpp [FROZEN — READY_FOR_LOCAL_VALIDATION]
 
-공통 후보:
-- TARGET vs NGRAM.
-- MTP 지원 모델은 MTP vs MTP_NGRAM 및 TARGET vs MTP.
-- `-b / -ub` 조합.
-- CUDA Graph / graph-related runtime option이 현재 pinned build에서 실제 제어 가능할 경우 graph on/off 또는 validated variant.
-- TP2 shared C2에서는 WBS 3에서 검증된 `--parallel`, `--ctx-size`, `--kv-unified`, `--kv-unified-per-slot` contract를 보존한다.
-- speculative depth는 모델이 실제 지원하는 범위 안에서만 조정하며, acceptance와 output integrity를 동시에 확인한다.
+Frozen candidates:
 
-모델별 목적:
-- Qwen3.8-27B: TARGET/NGRAM 성능과 batch/ubatch/graph 계열 최적점을 확보한다. 현재 artifact에는 MTP lane을 새로 만들지 않는다.
-- Ornith 1.5 9B: TARGET/NGRAM/MTP/MTP_NGRAM과 TP2 shared, WBS 4의 1GPU×2 + LiteLLM 결과를 함께 이용해 topology별 recipe를 남긴다.
-- Ornith 1.5 35B-A3B: TARGET/NGRAM/MTP/MTP_NGRAM 중 유효한 조합과 native MTP depth의 실효성을 비교한다.
-- Gemma4 26B-A4B: TARGET/NGRAM 및 corrected dual-draft-device MTP/MTP_NGRAM contract를 기준으로 최적점을 비교한다.
+| Candidate | Frozen configuration / R0 대비 exact delta |
+|---|---|
+| `Q38-LLAMA-WBS5-R0-TARGET-B512-UB128` | TARGET, `--spec-type none`, `--batch-size 512`, `--ubatch-size 128`. |
+| `Q38-LLAMA-WBS5-R1-NGRAM-DEFAULT` | R0에서 **`--spec-type none -> ngram-simple`만 변경**. NGRAM pinned defaults `size_n=12`, `size_m=48`, `min_hits=1`; explicit override 금지. |
+| `Q38-LLAMA-WBS5-R2-TARGET-UB256` | R0에서 **`--ubatch-size 128 -> 256`만 변경**. `--batch-size 512` 유지. |
 
-불필요한 exhaustive grid는 금지한다.
-기존 evidence로 명백히 열세인 옵션은 반복하지 않고, 후보마다 변경 이유와 stop condition을 기록한다.
+보존 invariant:
+- `unsloth/Qwen3.8-27B-GGUF@4ca720788d1e01f1bff70c033e0d0028fd02e502`.
+- `Qwen3.8-27B-UD-Q4_K_M.gguf`, SHA256 `322e194ff79741c7baa497c240f677f54b201b0efab44ca8e50f122b39123482`.
+- weight `UD-Q4_K_M`, KV K/V `q8_0`.
+- llama.cpp b10775 / `67a17c17caa95742186f8b1ecadd1b5abd6d5ebb` / pinned OCI digest.
+- shared TP2, layer split `1,1`, `ctx-size=262144`, `parallel=2`, unified KV, per-slot 131072, FA on, Jinja, reasoning off, metrics/slots/no-warmup.
+- `GGML_CUDA_P2P` 및 `GGML_CUDA_DISABLE_GRAPHS`를 임의 설정하지 않는다.
 
-### 5.3 1Cat-vLLM 모델별 recipe 최적화
+LOCAL_VERIFY_REQUIRED:
+- R0/R1/R2 exact command generation과 one-variable diff.
+- pinned binary의 `spec-type`, `ngram-simple`, batch/ubatch, unified-KV, FA 지원.
+- NGRAM default 12/48/1.
+- graph-capable 여부와 graph reuse evidence 보존 가능 여부.
+- WBS5 workload/telemetry 저장 경로와 fresh experiment ID/overwrite 방지.
 
-현재 하드웨어에서 실제 기동 및 유효 출력을 증명한 STOCK lane만 정식 최적화 대상으로 삼는다.
-v100-skinny는 현재 2×V100-16GB에서 model-load OOM으로 종료됐으므로 성능 튜닝 대상이 아니다.
+실행 순서/stop:
+- local validation은 R0 -> R1 -> R2 순서.
+- measured phase에서 R0는 frozen plan대로 서로 다른 fresh experiment ID로 2회 계획된 repetition을 가질 수 있다. 이는 failure retry가 아니라 사전 등록된 repetition이다.
+- R1/R2는 screening 1회가 기본이며 confirm run은 자동 실행하지 않는다. 필요성이 확인된 경우 동일 configuration/fresh ID로만 수행한다.
+- exact command가 frozen delta 외의 변수를 바꾸거나 artifact/runtime/workload가 불일치하면 hard stop.
+- 최종 recipe 승격에는 frozen configuration identity, valid `performance/v1.json` measured evidence, output integrity, telemetry/provenance가 모두 필요하다.
 
-공통 후보:
-- `max_num_batched_tokens`.
-- `max_num_seqs`.
-- `gpu_memory_utilization`.
-- eager vs CUDA Graph / capture size 조합.
-- model-specific SM70 fast-path environment option.
-- KV dtype은 **이미 해당 model/runtime에서 호환성이 증명된 후보만** 비교한다.
-- speculative decoding은 model-specific compatibility가 확인된 경우에만 비교한다.
-- output integrity를 throughput보다 우선한다.
+#### 5.3.2 Ornith 1.5 9B / llama.cpp [FROZEN — READY_FOR_LOCAL_VALIDATION]
 
-#### 5.3.1 Qwen3.8-27B 128K recovery recipe validation [TODO — 1 measured inference only]
+Frozen candidates:
 
-현재 WBS 2.2.1의 기존 E4M3 acceptance verdict는 증거로 보존한다.
+| Candidate | Frozen configuration / R0 대비 exact delta |
+|---|---|
+| `R0 = TARGET_BASELINE` | **1GPU×2 + LiteLLM**, TARGET, batch 512, ubatch 128. |
+| `R1 = TARGET_UB256` | R0에서 **`--ubatch-size 128 -> 256`만 변경**. |
+| `R2 = NGRAM_DEFAULT` | R0에서 **`--spec-type none -> ngram-simple`만 변경**. batch 512 / ubatch 128 유지, NGRAM parameter tuning 금지. |
 
-`CLOSED — 128K CAPACITY PASS / OUTPUT INTEGRITY FAIL`
+보존 invariant:
+- `/srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf`, SHA256 `79a9925bb7771dea3530d57b185e97b9713a73a7c06bdb9804f7d019aa42f480`.
+- Q6_K weights / FP16 KV / llama.cpp b10775 pinned runtime.
+- GPU0 backend + GPU1 backend, backend별 ctx 131072 / parallel 1 / unified KV per-slot 131072.
+- LiteLLM 1.101.0 single gateway, least-busy, backend `max_parallel_requests=1`, `num_retries=0`, routing-settled admission behavior.
+- FA on, Jinja, reasoning off, no-warmup, cold-independent lane.
 
-추가 1회 실험의 목적은 64K 재현이 아니라,
-**2×V100-16GB에서 Qwen3.8-27B + 1Cat-vLLM의 128K 정상 출력 recipe를 recovery할 수 있는지 검증하는 것**이다.
+LOCAL_VERIFY_REQUIRED:
+- `run_1gpu_litellm.py`와 launcher가 `performance/v1.json` 및 R0/R1/R2 exact override를 표현하는지.
+- candidate ID, exact launch config, gateway/backend evidence가 raw/planned config/report에 보존되는지.
+- ubatch 256과 ngram-simple/pinned defaults의 binary support.
+- active overlap/queue-only, routing evidence, post-health 및 telemetry capture 가능 여부.
 
-과거 저장소에서 정상 출력이 확인된 Qwen 1Cat 경로는 다음 특성을 갖는다.
-- QUASAR NVFP4 / TP2 / `FLASH_ATTN_V100`
-- KV `fp8_e5m2`
-- GDN prefill backend `triton`
-- `VLLM_SM70_GDN_DECODE_FLASHQLA=0`
-- thinking off
-- eager mode
-- target-only.
+실행 순서/stop:
+- R0 -> R1 -> R2.
+- measured 실행 전 gateway와 두 backend의 frozen topology가 exact해야 한다.
+- 다른 topology/KV/context/routing delta가 섞이면 hard stop.
+- final recipe 승격은 1GPU×2 + LiteLLM 배포 topology에서 `performance/v1.json` valid run과 output integrity를 요구한다.
 
-현재 v100-llm-test에서 128K physical capacity와 decode 진입을 성공시킨 요소는 다음이다.
-- `--language-model-only`
-- `gpu_memory_utilization=0.92`
-- `max_model_len=131072`
-- `max_num_seqs=1`
-- `VLLM_FLASH_V100_DECODE_PARTITION_SIZE=256`.
+#### 5.3.3 Ornith 1.5 35B-A3B / llama.cpp [FROZEN — READY_FOR_LOCAL_VALIDATION]
 
-따라서 이번 single recovery candidate는 두 evidence를 결합하되,
-성능 최적화 요소(CUDA Graph, LM-head top1, P2P/custom-allreduce, MTP)는 넣지 않는다.
+Frozen candidates:
 
-128K recovery candidate:
-- model: Qwen3.8-27B QUASAR NVFP4
-- runtime: pinned 1Cat-vLLM 1.5.0
-- topology: TP2 shared
-- attention: `FLASH_ATTN_V100`
-- KV: **`fp8_e5m2`**
-- target-only
-- `max_model_len=131072`
-- `max_num_seqs=1`
-- `--language-model-only`
-- `gpu_memory_utilization=0.92`
-- `--additional-config '{"gdn_prefill_backend":"triton"}'`
-- `VLLM_SM70_GDN_DECODE_FLASHQLA=0`
-- `VLLM_FLASH_V100_DECODE_PARTITION_SIZE=256`
-- eager mode
-- thinking=false
-- historical conservative sampling: temperature=0, top_p=1, seed=38.
+| Candidate | Frozen configuration / R0 대비 exact delta |
+|---|---|
+| `ORN35-LLAMA-WBS5-R0-TARGET` | TARGET, batch 512, ubatch 128, speculative disabled. |
+| `ORN35-LLAMA-WBS5-R1-MTP1` | R0에서 **native MTP `--spec-type draft-mtp --spec-draft-n-max 1`만 활성화**. |
+| `ORN35-LLAMA-WBS5-R2-UB256` | R0에서 **ubatch 128 -> 256만 변경**. batch 512 유지. |
+| `ORN35-LLAMA-WBS5-R3-QUEUE4X` | R0에서 **`CUDA_SCALE_LAUNCH_QUEUES=4x`만 추가**. |
 
-워크로드는 기존 128K acceptance와 동일한 token budget을 유지한다.
-가능하면 기존 diversified realistic 128K workload를 재사용하여
-prompt composition 변화가 결과를 혼동하지 않도록 한다.
-목표는 post-template prompt 약 128.8K~129.0K + output reserve 2048,
-총 131072 이내다.
+보존 invariant:
+- `ornith-ai/Ornith-1.5-35B-A3B-GGUF@12393612fd4f730ff5aadc23e9b8f9648aa49ceb`.
+- `Ornith-1.5-35B-Q4_K_M.gguf`, SHA256 `42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f`.
+- Q4_K_M weights / Q8_0 KV / llama.cpp b10775 pinned OCI.
+- shared TP2 layer split 1,1 / ctx 262144 / parallel 2 / unified KV per-slot 131072.
+- FA on, Jinja, reasoning off, metrics/slots/no-warmup.
+- R1은 companion GGUF가 아니라 embedded native MTP를 사용한다.
 
-새 measured inference는 정확히 1회만 허용한다.
+LOCAL_VERIFY_REQUIRED:
+- binary `draft-mtp`, `spec-draft-n-max`, b/ub, unified-KV 지원.
+- R0~R3 exact command/env one-variable diff.
+- R3 env 전달 여부.
+- performance runner가 prompt-progress/per-slot evidence를 포함한 required metrics를 저장 가능한지.
+- 기존 WBS3의 사실상 직렬 128K×2 prefill behavior는 관찰 대상으로만 남기고 이를 고치기 위한 새 candidate를 만들지 않는다.
 
-판정:
-- 정상 128K output PASS → 새 E5M2/GDN 기반 128K `VALIDATED_RECIPE` 후보로 승격 가능. 기존 E4M3 실패 evidence는 그대로 보존하고, 두 configuration을 구분한다.
-- startup/capacity FAIL → 해당 E5M2/GDN 128K recipe는 current hardware에서 실패로 기록한다. E4M3 capacity PASS는 그대로 보존한다.
-- repetition/invalid output FAIL → Qwen 1Cat 128K recovery 실패로 종료하고 WBS 5에서 Qwen 1Cat throughput tuning을 진행하지 않는다.
+실행 순서/stop:
+- R0 -> R1 -> R2 -> R3.
+- repetition >1은 자동으로 늘리지 않는다.
+- companion artifact 주입, MTP n=2, NGRAM tuning, graph tuning, P2P 강제 등 frozen set 밖 변경 금지.
+- one-variable diff 실패 또는 measured validity failure는 hard stop/invalid로 처리하고 candidate를 재설계하지 않는다.
+- recipe 승격은 frozen candidate exactness + valid performance evidence + output integrity를 요구한다.
 
-이번 1회에서 금지:
-- 64K/96K diagnostic
-- context sweep
-- presence-penalty sweep
-- CUDA Graph
-- LM-head top1
-- P2P/custom-allreduce tuning
-- MTP/DFlash2
-- 추가 retry.
+#### 5.3.4 Gemma4 26B-A4B / llama.cpp [FROZEN — READY_FOR_LOCAL_VALIDATION]
 
-**실행 결과 (`EXP-V100-Q38-1CAT-FP8E5M2-TARGET-RECOVERY-C1-128K-20260925-001`):**
-- 판정: **FAIL_STARTUP** (Capacity: FAIL_CAPACITY, Integrity: NOT_REACHED)
-- 사유: Triton prefill 커널 오버헤드로 인해 profile run 시 가용 KV 캐시 메모리가 1.5 GiB로 축소되어 128K(131,072)에 필요한 2.15 GiB를 확보하지 못함 (`ValueError: To serve at least one request with the model's max seq len (131072), (2.15 GiB KV cache is needed, which is larger than the available KV cache memory (1.5 GiB). Based on the available memory, the estimated maximum model length is 87808.`).
-- Peak VRAM: GPU0 13,987 MiB / GPU1 13,987 MiB.
-- 결론: E5M2 + GDN Triton prefill 128K candidate는 2×V100 16GB에서 capacity-compatible하지 않음. 기존 E4M3 128K capacity PASS는 그대로 보존됨.
+Frozen candidates:
 
-**B200-aligned candidate 128K diagnostic 결과 (`EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C1-128K-20260925-001`):**
-- raw harness 판정: `PASS_C1_128K`; post-hoc semantic audit publication 판정: **FAIL_OUTPUT**.
-- 구성: Qwen3.8-27B QUASAR NVFP4 + TP2 + E4M3 KV + `--reasoning-parser qwen3` + `--tool-call-parser qwen3_coder` + `--default-chat-template-kwargs '{"enable_thinking": false}'` + decode partition 256 + LM-only + util 0.92 + sampling (`temperature: 1.0`, `top_p: 0.95`, `top_k: 20`, `presence_penalty: 0.15`).
-- 측정 결과: 128,834 prompt 토큰 수용, TTFT 740.60s, decode 9.27 tok/s, 280 토큰 출력 후 `finish_reason=stop`. 이 1회에서는 repetition collapse가 관찰되지 않았다.
-- semantic audit: 응답이 task가 요구한 구체적인 cross-file/component correctness risk를 snapshot 근거로 특정하지 못했으므로 `FAIL_OUTPUT`. mechanical non-repetition과 task-level correctness를 분리한다.
-- provenance caveat: raw artifact에는 upstream B200 recipe URL/revision receipt가 없으므로 'official' 출처를 독립 검증하지 않는다.
-- 결론: 128K capacity 및 단일 non-repetition 실행 증거는 보존하지만 formal C1 PASS로 승격하지 않는다. Qwen 1Cat의 C2 및 throughput tuning eligibility는 복원하지 않는다.
+| Candidate | Frozen configuration / R0 대비 exact delta |
+|---|---|
+| `G4-LCPP-WBS5-R0-TARGET-B512-UB128` | TARGET, batch 512, ubatch 128, FP16 KV. |
+| `G4-LCPP-WBS5-R1-NGRAM-DEFAULT-B512-UB128` | R0에서 **`--spec-type none -> ngram-simple`만 변경**. explicit N/M/hits override 금지. |
+| `G4-LCPP-WBS5-R2-TARGET-B1024-UB128` | R0에서 **`--batch-size 512 -> 1024`만 변경**. ubatch 128 유지. |
+| `G4-LCPP-WBS5-R3-TARGET-B512-UB128-GRAPHOFF` | **CONDITIONAL**. R0에서 graph-off 축만 변경하며 실제 option/binary support와 Gate B를 만족할 때만 실행. |
 
-### 5.4 Qwen3.8-27B 1Cat 추가 성능 특성화 [BLOCKED — semantic revalidation required]
+보존 invariant:
+- `unsloth/gemma-4-26B-A4B-it-qat-GGUF@7b92b5b28818151e8669af2e45e88d6086f490dd`.
+- `gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf`, SHA256 `a7c5bc715f5ff8e99a3e8901ce7d2b42b402c669bf24f7c5250747633d0f5891`.
+- UD-Q4_K_XL weights / FP16 KV / llama.cpp b10775 pinned OCI.
+- shared TP2 layer split 1,1 / ctx 262144 / parallel 2 / unified KV per-slot 131072 / FA on.
 
-현재 authoritative publication verdict가 `FAIL_OUTPUT`이므로 Qwen 1Cat은 정식 성능 최적화 대상이 아니다.
-사용자가 fresh 128K semantic revalidation을 명시적으로 승인하고 그 실행이 PASS한 경우에만 아래 후보를 검토한다.
+LOCAL_VERIFY_REQUIRED:
+- pinned binary의 layer/tensor split, unified-KV, b/ub, ngram-simple 및 default 12/48/1.
+- CUDA Graph compile/support status와 `GGML_CUDA_DISABLE_GRAPHS`의 실제 유효성.
+- R3의 graph control을 model load 없이 증명할 수 없으면 `VERIFY_DURING_R0_STARTUP`으로 남긴다.
+- R3 Gate B인 **R0 VRAM upward drift 또는 graph-related instability**는 measured evidence 전에는 `PENDING_MEASURED_EVIDENCE`다.
 
-PASS 시 과거 evidence를 참고해 다음 중 필요한 최소 실험만 수행한다.
-- target-only CUDA Graph capture [1,2] recovery.
-- LM-head top1.
-- P2P/custom all-reduce.
-- MBT 2048 → 4096 → 8192는 concurrency/topology와 메모리 여유가 실제로 필요할 때만 단계적으로 검증한다.
-- Native MTP1은 현재 artifact/runtime이 지원하고 historical compatible contract를 재현할 수 있을 때만 별도 configuration으로 검증한다.
-- historical evidence에서 MTP1은 LM-head top1 OFF, P2P/custom-allreduce OFF가 호환 조건이었으므로 target-only fast-path 옵션을 그대로 혼합하지 않는다.
+실행 순서/stop:
+- R0 -> R1 -> R2. R3는 static support 확인 후에도 Gate B가 충족될 때만 조건부 실행한다.
+- R3 gate가 충족되지 않아도 대체 candidate를 추가하지 않는다.
+- artifact/runtime/binary/workload mismatch 또는 OFAT diff 위반은 hard stop.
+- final recipe 승격은 valid measured evidence와 output integrity를 요구하며, R3는 conditional status를 그대로 보존한다.
 
-기존 128K E4M3 failure profiles, E5M2/GDN capacity failure, B200-aligned E4M3 diagnostic은 서로 다른 configuration/evidence로 명확히 분리한다.
-B200-aligned diagnostic은 현재 validated final recipe가 아니며, fresh semantic PASS 전에는 최종 recipe/C2 lane으로 승격하지 않는다.
+### 5.4 1Cat-vLLM frozen tracks
 
-### 5.5 모델·런타임별 최종 recipe 기록
+1Cat-vLLM common identity는 pinned **1Cat-vLLM 1.5.0** / wheel SHA256
+`2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b`를 기준으로 local verification한다.
+설치 package tree만으로 wheel SHA를 추정하지 않으며 local wheel 원본이 없으면 provenance 한계를 명시한다.
 
-WBS 5 종료 시 **실제로 검증된 각 모델·런타임 조합별 recipe**를 남긴다.
-하나의 overall winner나 자동 배포 구성을 선택하지 않는다.
+#### 5.4.1 Qwen3.8-27B / 1Cat-vLLM [FROZEN — READY_FOR_LOCAL_VALIDATION]
 
-각 recipe에 반드시 포함:
+현재 evidence를 다음처럼 분리한다.
+
+- E4M3 TP2 shared에서 **128K C1 physical capacity 성공 evidence가 존재**한다.
+- B200-aligned diagnostic에서 **128,834 prompt tokens 수용 + completion decode 완료**가 기록되어 있다.
+- 같은 실행에는 mechanical non-repetition completion evidence가 있다.
+- authoritative `FAIL_OUTPUT`은 해당 synthetic/semantic audit의 task-level correctness failure이며 startup/capacity failure와 동일하지 않다.
+- 기존 C2 evidence에는 `QUEUE_ONLY`가 존재하므로 **C2 ACTIVE가 검증됐다고 쓰지 않는다**.
+- 따라서 이 track을 blanket `BLOCKED — semantic revalidation required`로 닫지 않는다. 다만 위 evidence를 WBS5 performance PASS로 승격하지도 않는다.
+
+Frozen candidates:
+
+| Candidate | Frozen axis |
+|---|---|
+| `R0-E4M3-128K-SEMANTIC-BASELINE` | E4M3 128K semantic baseline. LM-only, max len 131072, max seqs 1, MBT 2048, util 0.92, eager, `FLASH_ATTN_V100`, decode partition 256의 feasibility를 local source에서 검증. |
+| `R1-E4M3-128K-CUDAGRAPH-C1` | R0의 E4M3 baseline에서 **CUDA Graph C1 축만** 변경. exact CLI/config key, capture-size `[1]`, mode는 pinned local source에서 확정해야 한다. |
+| `R2-E4M3-128K-ORIGINAL-FLASHQLA-PREFILL` | R0에서 **Original FlashQLA prefill route 축만** 변경. `VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL`의 exact 0/1 semantics와 route 조건은 local source 검증 전 확정하지 않는다. |
+| `R3-E5M2-128K-KV-ROUTE` | R0에서 **KV dtype을 explicit `fp8_e4m3 -> fp8_e5m2` 축으로만 변경**. generic `fp8` alias는 candidate가 아니다. |
+
+LOCAL_VERIFY_REQUIRED:
+- actual pinned runtime/model/native-extension identity.
+- `speculators_config`와 `mtp_num_hidden_layers`를 구분한 model metadata.
+- R0 option/default 및 speculative auto-enable 가능성.
+- R1 exact graph syntax/mode/capture shape와 TP2/GDN/Flash-V100 graph path.
+- R2 original FlashQLA env semantics, module/TileLang 존재, static compile prerequisites.
+- R3 explicit E5M2 parser/SM70/Flash-V100 route 및 GDN recurrent-state 영향.
+- launcher/service environment contamination audit.
+- R1/R2/R3가 R0 대비 정확히 한 축만 바뀌는지 normalized diff.
+
+실행 순서/stop:
+- local validation은 R0 -> R1 -> R2 -> R3.
+- measured phase admission은 local validation과 ChatGPT pre-run final validation 이후 별도로 결정한다. frozen 상태 자체를 measured validation으로 간주하지 않는다.
+- R0 semantic baseline의 measured output이 final recipe로 승격되려면 task-level semantic/output integrity를 통과해야 한다.
+- C2 performance claim에는 `performance/v1.json`에서 active-overlap 여부를 새 evidence로 기록해야 하며 기존 `QUEUE_ONLY`를 ACTIVE로 재해석하지 않는다.
+- unsupported/unknown local route는 해당 candidate를 local blocker로 남기고 대체 tuning을 추가하지 않는다.
+
+#### 5.4.2 Ornith 1.5 9B / 1Cat-vLLM [FROZEN — READY_FOR_LOCAL_VALIDATION]
+
+Frozen candidates:
+
+| Candidate | Frozen configuration / R0 대비 exact delta |
+|---|---|
+| `ORN15-9B-1CAT-WBS5-R0-BASELINE` | NVFP4 TP2, FP16 KV, max len 131072, max seqs 2, MBT 4096, util 0.90, target `FLASH_ATTN_V100` eager, speculative MTP1, drafter `TRITON_ATTN`. |
+| `ORN15-9B-1CAT-WBS5-R1-MBT8192` | R0에서 **MBT 4096 -> 8192만 변경**. |
+| `ORN15-9B-1CAT-WBS5-R2-TARGET-GRAPH` | R0에서 **target `--enforce-eager` 제거만 변경**. MTP speculative config 유지. |
+| `ORN15-9B-1CAT-WBS5-R3-MTP2` | R0에서 **`num_speculative_tokens 1 -> 2`만 변경**. target eager와 MBT 4096은 R0 값으로 유지. |
+
+보존 invariant:
+- `ornith-ai/Ornith-1.5-9B-NVFP4@155f200d85ad58464571c77d5e1122ea5d419d7b`.
+- `/srv/models/ornith-1.5-9b-nvfp4`.
+- TP2 / CUDA-visible GPU 0,1 / NVFP4 / FP16 KV / max seqs 2 / baseline MBT 4096 / util 0.90.
+- target `FLASH_ATTN_V100`; R0/R1/R3 target eager; speculative MTP baseline depth 1; drafter `TRITON_ATTN`.
+- prefix caching 및 pinned runtime의 linear-attention/Mamba defaults를 candidate tuning으로 변경하지 않는다.
+
+LOCAL_VERIFY_REQUIRED:
+- runtime/model identity, exact-SM70 NVFP4 TurboMind path, prefix/Mamba/MTP defaults.
+- R1 MBT 8192 static admission 및 verifier graph-shape dependency.
+- R2 target graph eligibility, expected MTP1 decode query/capture shapes, automatic graph/compile side effects.
+- R3 exact `mtp_num_hidden_layers`, n_predict derivation, MTP2 validation rule, same-layer reuse 여부, expected graph shapes.
+- prefix-cache common-prefix length을 static하게 알 수 없으면 `NEEDS FUTURE RUNTIME CHECK`.
+- metric formula와 normalized R0~R3 command diff.
+
+Admission gate:
+- WBS3 Project B semantic discrepancy 때문에 WBS5 measured candidate 전에 별도 **G0 semantic requalification**이 필요하다.
+- G0는 pre-registered WBS3 concurrency semantic oracle를 사용하며 이 planning integration에서 실행하지 않는다.
+- G0 전에 workload/oracle path/hash와 seeded `JobQueue.pop` check -> await -> heappop race가 그대로인지 local validation한다.
+- G0를 통과하기 전에는 WBS5 measured candidate를 실행하지 않는다.
+
+실행 순서/stop:
+- local validation: R0 -> R1 -> R2 -> R3.
+- G0 admission -> ChatGPT pre-run validation -> WBS5 measured sequence.
+- frozen delta 이외 hidden effective change가 발견되면 해당 candidate는 measured admission 전에 stop/block.
+- final recipe 승격에는 G0 admission, valid `performance/v1.json` evidence, output integrity, active-overlap/telemetry provenance가 필요하다.
+
+#### 5.4.3 Ornith 1.5 35B-A3B / 1Cat-vLLM [FROZEN — READY_FOR_LOCAL_VALIDATION]
+
+Frozen candidates:
+
+| Candidate | Frozen configuration / R0 대비 exact delta |
+|---|---|
+| `R0-BASELINE-EAGER-MBT4096` | TP2 target-only, E5M2 KV, max len 131072, max seqs 2, MBT 4096, util 0.90, `FLASH_ATTN_V100`, `VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL=0`, eager. |
+| `R1-GRAPH-AUTO-MBT4096` | R0에서 **`--enforce-eager` 제거만 변경**. |
+| `R2-EAGER-MBT8192` | R0에서 **MBT 4096 -> 8192만 변경**. eager/max seqs/util/KV 유지. |
+
+보존 invariant:
+- `ornith-ai/Ornith-1.5-35B-A3B-NVFP4@94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa`.
+- `/srv/models/ornith-1.5-35b-a3b-nvfp4`.
+- TP2 / dtype half / E5M2 KV / target-only / `FLASH_ATTN_V100` / max len 131072 / max seqs 2 / util 0.90.
+- baseline original-prefill env 0; R0/R2 eager.
+
+LOCAL_VERIFY_REQUIRED:
+- installed runtime identity와 wheel provenance.
+- WBS5 runner가 `performance/v1.json` 및 required C2 metrics를 지원하는지.
+- R0 exact CLI와 speculative config가 암묵적으로 생성되지 않는지.
+- R1 SM70 auto graph policy, compile-cache guard, graph-aware FLASH_ATTN_V100/E5M2/NVFP4 route와 disabling env contamination.
+- R2 MBT 8192 scheduler/Mamba alignment static validity와 launcher overwrite 여부.
+- R0/R1/R2 exact normalized command diff.
+
+실행 순서/stop:
+- R0 -> R1 -> R2.
+- static source support와 actual future graph route hit를 구분한다.
+- R2는 static validity와 runtime VRAM fit을 구분하며 GPU model-load 전에는 VRAM fit을 확정하지 않는다.
+- frozen-delta violation, runtime/artifact mismatch, invalid workload는 hard stop.
+- final recipe 승격에는 valid measured performance evidence와 output integrity가 필요하다.
+
+### 5.5 final recipe 승격 및 publication
+
+WBS 5에서는 하나의 overall winner나 자동 배포 구성을 선택하지 않는다.
+각 model/runtime track에서 실제 검증된 configuration만 recipe로 남긴다.
+
+`VALIDATED_RECIPE` 승격 공통 조건:
+- frozen candidate identity와 exact model/runtime/artifact provenance가 일치.
+- candidate별 LOCAL_VERIFY_REQUIRED 항목이 measured run 전에 해소되거나 runtime-only uncertainty로 명확히 등록.
+- `workloads/performance/v1.json` measured run이 infra/workload-invalid 없이 완료.
+- required performance/telemetry/evidence가 보존.
+- output integrity가 유효.
+- topology/concurrency claim은 해당 measured evidence가 실제로 증명한 범위까지만 기록.
+- conditional candidate는 gate가 실제 충족된 경우에만 실행/승격.
+- failed/unsupported candidate는 raw verdict를 수정하지 않고 실패 조건 자체를 evidence로 보존.
+
+각 final recipe에는 최소한 다음을 기록한다.
 - exact model repository/revision/local artifact identity.
 - runtime/version/commit 또는 wheel/image digest.
 - weight quant / KV dtype.
 - speculative method/depth.
 - topology.
-- exact launch command.
-- relevant environment variables.
-- context ceiling 및 concurrency envelope.
-- batch/ubatch 또는 max-num-batched-tokens/max-num-seqs.
+- exact launch command 및 relevant environment variables.
+- context ceiling / concurrency envelope.
+- batch/ubatch 또는 MBT/max-num-seqs.
 - graph/eager 설정.
-- measured C1/C2 성능.
-- peak VRAM 및 주요 telemetry.
+- measured performance.
+- peak VRAM 및 telemetry.
 - output-integrity verdict.
 - known limitations / unsupported combinations.
 - 근거 experiment IDs.
 
-recipe 상태는 다음처럼 구분한다.
-- `VALIDATED_RECIPE`: 정의된 범위에서 capacity/correctness/performance가 모두 유효.
-- `BOUNDED_RECIPE`: 특정 context/concurrency까지만 유효함이 증명됨.
-- `FAILED/UNSUPPORTED`: 재현 가능한 실패 조건만 보존하며 사용 recipe로 승격하지 않음.
+WBS 5 final publication 전 7개 track candidate ID/delta/invariant가 frozen source 문서와 다시 일치하는지 검토하고,
+measured run을 하지 않은 candidate를 `VALIDATED`로 표기하지 않는다.
 
-WBS 5 완료 후 사용자가 필요에 따라 recipe를 직접 선택한다.
-이 저장소에서는 별도의 배포/production selection phase를 수행하지 않는다.
 
 ## 6. CPU+RAM 전용 dual-resident 128K 서버 + 32K measured request 검증 [DONE]
 
