@@ -1,0 +1,1119 @@
+{
+  "schema_version": 1,
+  "audit_main": "606d81f706ca1575dd1ea9b05a11d69aee756ec7",
+  "scope": "Qwen3.8-27B / 1Cat-vLLM WBS5 static audit only",
+  "decision": "ADD_BASELINE_INVARIANT",
+  "classification": "A — known-good serving-route reproduction invariant; not proof of causal necessity for all 128K decode or semantic correctness",
+  "flag": "VLLM_SM70_GDN_DECODE_FLASHQLA",
+  "pinned_source_default": "1",
+  "autoconfig_if_missing": "1",
+  "explicit_override": "0",
+  "static_resolution": {
+    "omitted": "enable_flashqla_decode=True; FlashQLA route eligible subject to dtype/layout/state/head/TP/SM70-SM75/import checks",
+    "explicit_0": "enable_flashqla_decode=False; _can_use_flashqla_decode returns False with env_disabled before GPU checks; packed decode takes exact mixed-QKV fallback"
+  },
+  "source": {
+    "vllm/envs.py": {
+      "installed_path": "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/envs.py",
+      "sha256": "09eb574df2856a44374aa0d96733b1d1d7621740562d41ca23bf4deeec73e7c2",
+      "lines": [
+        {
+          "line": 3251,
+          "text": "    # SM70 FlashQLA decode route for Qwen GDN. Default-on for SM70 migration"
+        },
+        {
+          "line": 3252,
+          "text": "    # baselines; route checks still verify platform, dtype, head shape, and"
+        },
+        {
+          "line": 3253,
+          "text": "    # FlashQLA import availability before using the kernel."
+        },
+        {
+          "line": 3254,
+          "text": "    \"VLLM_SM70_GDN_DECODE_FLASHQLA\": lambda: bool("
+        },
+        {
+          "line": 3255,
+          "text": "        int(os.getenv(\"VLLM_SM70_GDN_DECODE_FLASHQLA\", \"1\"))"
+        },
+        {
+          "line": 3256,
+          "text": "    ),"
+        }
+      ]
+    },
+    "vllm/config/vllm.py": {
+      "installed_path": "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/config/vllm.py",
+      "sha256": "42344a6fadeedc1ef3579c60594d1b18ee2ebdbc5c171b2772e9f4f941cc98a9",
+      "lines": [
+        {
+          "line": 1500,
+          "text": "        attention_backend = self.attention_config.backend"
+        },
+        {
+          "line": 1501,
+          "text": "        attention_backend_name = getattr(attention_backend, \"name\", attention_backend)"
+        },
+        {
+          "line": 1502,
+          "text": "        sm70_flash_v100_backend = ("
+        },
+        {
+          "line": 1503,
+          "text": "            attention_backend is None"
+        },
+        {
+          "line": 1504,
+          "text": "            or attention_backend_name in (\"FLASH_ATTN_V100\", \"FLASHINFER_SM70\")"
+        },
+        {
+          "line": 1505,
+          "text": "        )"
+        },
+        {
+          "line": 1506,
+          "text": "        sm70_flash_v100_baseline = ("
+        },
+        {
+          "line": 1507,
+          "text": "            current_platform.is_cuda()"
+        },
+        {
+          "line": 1508,
+          "text": "            and current_platform.is_device_capability((7, 0))"
+        },
+        {
+          "line": 1509,
+          "text": "            and envs.VLLM_SM70_FLASH_ATTN_V100"
+        },
+        {
+          "line": 1510,
+          "text": "            and sm70_flash_v100_backend"
+        },
+        {
+          "line": 1511,
+          "text": "        )"
+        },
+        {
+          "line": 1512,
+          "text": "        if sm70_flash_v100_baseline:"
+        },
+        {
+          "line": 1574,
+          "text": "            sm70_baseline_env_defaults = {"
+        },
+        {
+          "line": 1575,
+          "text": "                \"VLLM_ENABLE_FLA_PACKED_RECURRENT_DECODE\": \"1\","
+        },
+        {
+          "line": 1576,
+          "text": "                \"VLLM_SM70_GDN_KKT_SCHEDULE\": \"1\","
+        },
+        {
+          "line": 1577,
+          "text": "                \"VLLM_SM70_GDN_DELTA_H_SCHEDULE\": \"1\","
+        },
+        {
+          "line": 1578,
+          "text": "                \"VLLM_SM70_GDN_CHUNK_O_SCHEDULE\": \"1\","
+        },
+        {
+          "line": 1579,
+          "text": "                \"VLLM_SM70_FLA_RECURRENT_SCHEDULE\": \"1\","
+        },
+        {
+          "line": 1580,
+          "text": "                \"VLLM_SM70_FUSED_SIGMOID_GATING_SCHED\": \"1\","
+        },
+        {
+          "line": 1581,
+          "text": "                \"VLLM_SM70_GEMMA_RMS_NORM_COMPILE_NATIVE\": \"1\","
+        },
+        {
+          "line": 1582,
+          "text": "                \"VLLM_SM70_GDN_DECODE_FLASHQLA\": \"1\","
+        },
+        {
+          "line": 1583,
+          "text": "            }"
+        },
+        {
+          "line": 1598,
+          "text": "            for env_name, env_value in sm70_baseline_env_defaults.items():"
+        },
+        {
+          "line": 1599,
+          "text": "                if env_name not in os.environ:"
+        },
+        {
+          "line": 1600,
+          "text": "                    os.environ[env_name] = env_value"
+        },
+        {
+          "line": 1601,
+          "text": "                    logger.info_once("
+        },
+        {
+          "line": 1602,
+          "text": "                        \"Auto-setting %s=%s for the SM70 Flash-V100 \""
+        },
+        {
+          "line": 1603,
+          "text": "                        \"baseline. Set it explicitly to override.\","
+        },
+        {
+          "line": 1604,
+          "text": "                        env_name,"
+        },
+        {
+          "line": 1605,
+          "text": "                        env_value,"
+        },
+        {
+          "line": 1606,
+          "text": "                    )"
+        }
+      ]
+    },
+    "vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py": {
+      "installed_path": "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py",
+      "sha256": "5f62fa805fdb56502c54b34a5a59619911e7ecc0c199641e39dcbe3372e68202",
+      "lines": [
+        {
+          "line": 2444,
+          "text": "        self.compare_sm70_fused_sigmoid_mixed_qkv = ("
+        },
+        {
+          "line": 2445,
+          "text": "            envs.VLLM_SM70_FUSED_SIGMOID_MIXED_QKV_COMPARE"
+        },
+        {
+          "line": 2446,
+          "text": "        )"
+        },
+        {
+          "line": 2447,
+          "text": "        self.enable_flashqla_decode = envs.VLLM_SM70_GDN_DECODE_FLASHQLA"
+        },
+        {
+          "line": 3670,
+          "text": "    def _can_use_flashqla_decode("
+        },
+        {
+          "line": 3671,
+          "text": "        self,"
+        },
+        {
+          "line": 3672,
+          "text": "        mixed_qkv: torch.Tensor,"
+        },
+        {
+          "line": 3673,
+          "text": "        state_indices: torch.Tensor | None,"
+        },
+        {
+          "line": 3674,
+          "text": "        num_decode_tokens: int,"
+        },
+        {
+          "line": 3675,
+          "text": "        *,"
+        },
+        {
+          "line": 3676,
+          "text": "        layer_name: LayerNameType | None = None,"
+        },
+        {
+          "line": 3677,
+          "text": "        stage: str = \"decode\","
+        },
+        {
+          "line": 3678,
+          "text": "    ) -> bool:"
+        },
+        {
+          "line": 3679,
+          "text": "        if layer_name is None:"
+        },
+        {
+          "line": 3680,
+          "text": "            layer_name = _encode_layer_name(self.prefix)"
+        },
+        {
+          "line": 3681,
+          "text": "        reason = \"ok\""
+        },
+        {
+          "line": 3682,
+          "text": "        if not self.enable_flashqla_decode:"
+        },
+        {
+          "line": 3683,
+          "text": "            reason = \"env_disabled\""
+        },
+        {
+          "line": 3684,
+          "text": "            _sm70_log_flashqla_decode_route("
+        },
+        {
+          "line": 3685,
+          "text": "                layer_name=layer_name,"
+        },
+        {
+          "line": 3686,
+          "text": "                stage=stage,"
+        },
+        {
+          "line": 3687,
+          "text": "                decision=\"skip\","
+        },
+        {
+          "line": 3688,
+          "text": "                reason=reason,"
+        },
+        {
+          "line": 3689,
+          "text": "                mixed_qkv=mixed_qkv,"
+        },
+        {
+          "line": 3690,
+          "text": "                state_indices=state_indices,"
+        },
+        {
+          "line": 3691,
+          "text": "                num_decode_tokens=num_decode_tokens,"
+        },
+        {
+          "line": 3692,
+          "text": "            )"
+        },
+        {
+          "line": 3693,
+          "text": "            return False"
+        },
+        {
+          "line": 3694,
+          "text": "        if num_decode_tokens <= 0 or state_indices is None:"
+        },
+        {
+          "line": 3695,
+          "text": "            reason = \"no_decode_tokens_or_state_indices\""
+        },
+        {
+          "line": 3706,
+          "text": "        if state_indices.dtype != torch.int32:"
+        },
+        {
+          "line": 3707,
+          "text": "            reason = \"state_indices_dtype\""
+        },
+        {
+          "line": 3708,
+          "text": "            _sm70_log_flashqla_decode_route("
+        },
+        {
+          "line": 3709,
+          "text": "                layer_name=layer_name,"
+        },
+        {
+          "line": 3710,
+          "text": "                stage=stage,"
+        },
+        {
+          "line": 3711,
+          "text": "                decision=\"skip\","
+        },
+        {
+          "line": 3712,
+          "text": "                reason=reason,"
+        },
+        {
+          "line": 3713,
+          "text": "                mixed_qkv=mixed_qkv,"
+        },
+        {
+          "line": 3714,
+          "text": "                state_indices=state_indices,"
+        },
+        {
+          "line": 3715,
+          "text": "                num_decode_tokens=num_decode_tokens,"
+        },
+        {
+          "line": 3716,
+          "text": "            )"
+        },
+        {
+          "line": 3717,
+          "text": "            return False"
+        },
+        {
+          "line": 3718,
+          "text": "        if ("
+        },
+        {
+          "line": 3719,
+          "text": "            not mixed_qkv.is_cuda"
+        },
+        {
+          "line": 3720,
+          "text": "            or mixed_qkv.dtype != torch.float16"
+        },
+        {
+          "line": 3721,
+          "text": "            or _sm70_mixed_qkv_decode_layout(mixed_qkv) == \"unsupported\""
+        },
+        {
+          "line": 3722,
+          "text": "        ):"
+        },
+        {
+          "line": 3723,
+          "text": "            reason = \"mixed_qkv_contract\""
+        },
+        {
+          "line": 3724,
+          "text": "            _sm70_log_flashqla_decode_route("
+        },
+        {
+          "line": 3725,
+          "text": "                layer_name=layer_name,"
+        },
+        {
+          "line": 3726,
+          "text": "                stage=stage,"
+        },
+        {
+          "line": 3727,
+          "text": "                decision=\"skip\","
+        },
+        {
+          "line": 3728,
+          "text": "                reason=reason,"
+        },
+        {
+          "line": 3729,
+          "text": "                mixed_qkv=mixed_qkv,"
+        },
+        {
+          "line": 3730,
+          "text": "                state_indices=state_indices,"
+        },
+        {
+          "line": 3731,
+          "text": "                num_decode_tokens=num_decode_tokens,"
+        },
+        {
+          "line": 3732,
+          "text": "            )"
+        },
+        {
+          "line": 3733,
+          "text": "            return False"
+        },
+        {
+          "line": 3734,
+          "text": "        if self.head_k_dim != 128 or self.head_v_dim != 128:"
+        },
+        {
+          "line": 3735,
+          "text": "            reason = \"head_dim\""
+        },
+        {
+          "line": 3736,
+          "text": "            _sm70_log_flashqla_decode_route("
+        },
+        {
+          "line": 3737,
+          "text": "                layer_name=layer_name,"
+        },
+        {
+          "line": 3738,
+          "text": "                stage=stage,"
+        },
+        {
+          "line": 3739,
+          "text": "                decision=\"skip\","
+        },
+        {
+          "line": 3740,
+          "text": "                reason=reason,"
+        },
+        {
+          "line": 3741,
+          "text": "                mixed_qkv=mixed_qkv,"
+        },
+        {
+          "line": 3742,
+          "text": "                state_indices=state_indices,"
+        },
+        {
+          "line": 3743,
+          "text": "                num_decode_tokens=num_decode_tokens,"
+        },
+        {
+          "line": 3744,
+          "text": "            )"
+        },
+        {
+          "line": 3745,
+          "text": "            return False"
+        },
+        {
+          "line": 3746,
+          "text": "        if self.num_k_heads % self.tp_size != 0 or self.num_v_heads % self.tp_size != 0:"
+        },
+        {
+          "line": 3747,
+          "text": "            reason = \"head_tp_divisibility\""
+        },
+        {
+          "line": 3748,
+          "text": "            _sm70_log_flashqla_decode_route("
+        },
+        {
+          "line": 3749,
+          "text": "                layer_name=layer_name,"
+        },
+        {
+          "line": 3750,
+          "text": "                stage=stage,"
+        },
+        {
+          "line": 3751,
+          "text": "                decision=\"skip\","
+        },
+        {
+          "line": 3752,
+          "text": "                reason=reason,"
+        },
+        {
+          "line": 3753,
+          "text": "                mixed_qkv=mixed_qkv,"
+        },
+        {
+          "line": 3754,
+          "text": "                state_indices=state_indices,"
+        },
+        {
+          "line": 3755,
+          "text": "                num_decode_tokens=num_decode_tokens,"
+        },
+        {
+          "line": 3756,
+          "text": "            )"
+        },
+        {
+          "line": 3757,
+          "text": "            return False"
+        },
+        {
+          "line": 3758,
+          "text": "        capability = torch.cuda.get_device_capability(mixed_qkv.device)"
+        },
+        {
+          "line": 3759,
+          "text": "        if capability[0] != 7 or capability[1] not in (0, 5):"
+        },
+        {
+          "line": 3760,
+          "text": "            reason = \"device_capability\""
+        },
+        {
+          "line": 3761,
+          "text": "            _sm70_log_flashqla_decode_route("
+        },
+        {
+          "line": 3762,
+          "text": "                layer_name=layer_name,"
+        },
+        {
+          "line": 3763,
+          "text": "                stage=stage,"
+        },
+        {
+          "line": 3764,
+          "text": "                decision=\"skip\","
+        },
+        {
+          "line": 3765,
+          "text": "                reason=reason,"
+        },
+        {
+          "line": 3766,
+          "text": "                mixed_qkv=mixed_qkv,"
+        },
+        {
+          "line": 3767,
+          "text": "                state_indices=state_indices,"
+        },
+        {
+          "line": 3768,
+          "text": "                num_decode_tokens=num_decode_tokens,"
+        },
+        {
+          "line": 3769,
+          "text": "            )"
+        },
+        {
+          "line": 3770,
+          "text": "            return False"
+        },
+        {
+          "line": 3771,
+          "text": "        available = _flashqla_sm70_decode_available()"
+        },
+        {
+          "line": 3772,
+          "text": "        if not available:"
+        },
+        {
+          "line": 3773,
+          "text": "            reason = \"flashqla_decode_import\""
+        },
+        {
+          "line": 3774,
+          "text": "        _sm70_log_flashqla_decode_route("
+        },
+        {
+          "line": 3775,
+          "text": "            layer_name=layer_name,"
+        },
+        {
+          "line": 3776,
+          "text": "            stage=stage,"
+        },
+        {
+          "line": 3777,
+          "text": "            decision=\"take\" if available else \"skip\","
+        },
+        {
+          "line": 3778,
+          "text": "            reason=reason,"
+        },
+        {
+          "line": 3779,
+          "text": "            mixed_qkv=mixed_qkv,"
+        },
+        {
+          "line": 3780,
+          "text": "            state_indices=state_indices,"
+        },
+        {
+          "line": 3781,
+          "text": "            num_decode_tokens=num_decode_tokens,"
+        },
+        {
+          "line": 3782,
+          "text": "        )"
+        },
+        {
+          "line": 3783,
+          "text": "        return available"
+        },
+        {
+          "line": 6176,
+          "text": "        out_buf = core_attn_out[:num_decode_tokens].unsqueeze(1)"
+        },
+        {
+          "line": 6177,
+          "text": "        assert non_spec_query_start_loc is not None"
+        },
+        {
+          "line": 6178,
+          "text": "        cu_seqlens = non_spec_query_start_loc[: num_decode_tokens + 1]"
+        },
+        {
+          "line": 6179,
+          "text": "        if self._can_use_flashqla_decode("
+        },
+        {
+          "line": 6180,
+          "text": "            mixed_qkv_non_spec,"
+        },
+        {
+          "line": 6181,
+          "text": "            state_indices,"
+        },
+        {
+          "line": 6182,
+          "text": "            num_decode_tokens,"
+        },
+        {
+          "line": 6183,
+          "text": "            layer_name=layer_name,"
+        },
+        {
+          "line": 6184,
+          "text": "            stage=\"packed_explicit\","
+        },
+        {
+          "line": 6185,
+          "text": "        ):"
+        },
+        {
+          "line": 6186,
+          "text": "            _log_runtime_route_once(\"SM70 FlashQLA GDN decode route enabled.\")"
+        },
+        {
+          "line": 6187,
+          "text": "            qla_out = self._forward_core_decode_flashqla("
+        },
+        {
+          "line": 6188,
+          "text": "                mixed_qkv=mixed_qkv_non_spec,"
+        },
+        {
+          "line": 6189,
+          "text": "                a=a,"
+        },
+        {
+          "line": 6190,
+          "text": "                b=b,"
+        },
+        {
+          "line": 6191,
+          "text": "                ssm_state=ssm_state,"
+        },
+        {
+          "line": 6192,
+          "text": "                state_indices=state_indices,"
+        },
+        {
+          "line": 6193,
+          "text": "                num_decode_tokens=num_decode_tokens,"
+        },
+        {
+          "line": 6194,
+          "text": "                cu_seqlens=cu_seqlens,"
+        },
+        {
+          "line": 6195,
+          "text": "                core_attn_out=core_attn_out,"
+        },
+        {
+          "line": 6196,
+          "text": "            )"
+        },
+        {
+          "line": 6197,
+          "text": "            _sm70_gdn_graph_buffer_copy(\"recurrent_out\", layer_name, qla_out, \"core\")"
+        },
+        {
+          "line": 6198,
+          "text": "            _sm70_gdn_graph_buffer_copy_state_slice("
+        },
+        {
+          "line": 6199,
+          "text": "                \"post_ssm_state\","
+        },
+        {
+          "line": 6200,
+          "text": "                layer_name,"
+        },
+        {
+          "line": 6201,
+          "text": "                ssm_state,"
+        },
+        {
+          "line": 6202,
+          "text": "                non_spec_state_indices_tensor,"
+        },
+        {
+          "line": 6203,
+          "text": "                num_decode_tokens,"
+        },
+        {
+          "line": 6204,
+          "text": "            )"
+        },
+        {
+          "line": 6205,
+          "text": "            return"
+        },
+        {
+          "line": 6206,
+          "text": "        _log_runtime_route_once(\"SM70 exact mixed-QKV GDN decode route enabled.\")"
+        },
+        {
+          "line": 6207,
+          "text": "        fused_sigmoid_gating_delta_rule_update_mixed_qkv_out("
+        },
+        {
+          "line": 6208,
+          "text": "            A_log=self.A_log,"
+        },
+        {
+          "line": 6209,
+          "text": "            a=a,"
+        },
+        {
+          "line": 6210,
+          "text": "            b=b,"
+        },
+        {
+          "line": 6211,
+          "text": "            dt_bias=self.dt_bias,"
+        },
+        {
+          "line": 6212,
+          "text": "            mixed_qkv=mixed_qkv_non_spec,"
+        },
+        {
+          "line": 6213,
+          "text": "            num_q_heads=self.num_k_heads // self.tp_size,"
+        },
+        {
+          "line": 6214,
+          "text": "            num_v_heads=self.num_v_heads // self.tp_size,"
+        },
+        {
+          "line": 6215,
+          "text": "            head_k_dim=self.head_k_dim,"
+        },
+        {
+          "line": 6216,
+          "text": "            head_v_dim=self.head_v_dim,"
+        },
+        {
+          "line": 6217,
+          "text": "            scale=self.head_k_dim**-0.5,"
+        },
+        {
+          "line": 6218,
+          "text": "            initial_state=ssm_state,"
+        },
+        {
+          "line": 6219,
+          "text": "            out=out_buf,"
+        },
+        {
+          "line": 6220,
+          "text": "            cu_seqlens=cu_seqlens,"
+        },
+        {
+          "line": 6221,
+          "text": "            ssm_state_indices=state_indices,  # type: ignore[arg-type]"
+        },
+        {
+          "line": 6222,
+          "text": "            use_qk_l2norm_in_kernel=True,"
+        },
+        {
+          "line": 6223,
+          "text": "        )"
+        }
+      ]
+    }
+  },
+  "distribution_metadata": {
+    "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/1cat_vllm-1.5.0.dist-info/METADATA": [
+      "Name: 1cat-vllm",
+      "Version: 1.5.0"
+    ]
+  },
+  "historical_success": {
+    "experiment_id": "EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C1-128K-20260925-001",
+    "runtime_revision": "1.5.0 wheel sha256:2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b",
+    "model_identity": {
+      "repository": "QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4",
+      "revision": "15d2e47bffe5d8ad23928879f8f7d2f74909e259",
+      "path": "/srv/models/qwen3.8-vllm/Qwen3.8-27B-QUASAR-NVFP4"
+    },
+    "environment": {
+      "VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL": "0",
+      "VLLM_FLASH_V100_DECODE_PARTITION_SIZE": "256",
+      "VLLM_SM70_GDN_DECODE_FLASHQLA": "0"
+    },
+    "config_matches_planned_config": true,
+    "log_evidence": [
+      {
+        "line": 167,
+        "text": "(Worker_TP0 pid=33013) INFO 09-25 16:38:14 [qwen_gdn_linear_attn.py:373] SM70 exact mixed-QKV GDN decode route enabled."
+      },
+      {
+        "line": 169,
+        "text": "(Worker_TP1 pid=33014) INFO 09-25 16:38:14 [flash_attn_v100.py:1159] FLASH_ATTN_V100 FP8 KV cache decode path active (kv_cache_dtype=fp8_e4m3, route=xqa_paged)."
+      },
+      {
+        "line": 170,
+        "text": "(Worker_TP0 pid=33013) WARNING 09-25 16:38:14 [jit_monitor.py:103] Triton kernel JIT compilation during inference: fused_sigmoid_gating_delta_rule_update_kernel. This causes a latency spike; consider extending warmup to cover this shape/config."
+      },
+      {
+        "line": 172,
+        "text": "(Worker_TP0 pid=33013) INFO 09-25 16:38:14 [flash_attn_v100.py:1159] FLASH_ATTN_V100 FP8 KV cache decode path active (kv_cache_dtype=fp8_e4m3, route=xqa_paged)."
+      }
+    ],
+    "limits": "Completed decode/mechanical termination; later semantic audit FAIL_OUTPUT preserved. Log does not print literal flag=0 and does not prove every layer/timestep."
+  },
+  "old_wbs5": {
+    "R0": {
+      "candidate_id": "R0-E4M3-128K-SEMANTIC-BASELINE",
+      "environment": {
+        "VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL": "0",
+        "VLLM_FLASH_V100_DECODE_PARTITION_SIZE": "256",
+        "VLLM_SM70_GDN_DECODE_FLASHQLA": null
+      },
+      "configuration_sha256": "50b91d5d98c4318ed87ad4ad7c71786c1b6e9f61232cca760af92e61194ed9ac",
+      "normalized_delta_from_r0": [],
+      "plan_sha256": "8b95cc4b74535695d77912add3718eb8516903a25b3778f37fc7a8ed164c6fa1"
+    },
+    "R1": {
+      "candidate_id": "R1-E4M3-128K-CUDAGRAPH-C1",
+      "environment": {
+        "VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL": "0",
+        "VLLM_FLASH_V100_DECODE_PARTITION_SIZE": "256",
+        "VLLM_SM70_GDN_DECODE_FLASHQLA": null
+      },
+      "configuration_sha256": "4e2de1776139f7290cd414808d2ba1d69e237b13b867982eba6979be59f4ca27",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--compilation-config",
+          "r0": null,
+          "candidate": [
+            "{\"cudagraph_capture_sizes\":[1]}"
+          ]
+        },
+        {
+          "path": "/servers/0/argv/--enforce-eager",
+          "r0": [
+            true
+          ],
+          "candidate": null
+        }
+      ],
+      "plan_sha256": "bae121e120d6cf6cc4398bf192a67cbc06e99984e5867611506d19f71cef4bb1"
+    },
+    "R2": {
+      "candidate_id": "R2-E4M3-128K-ORIGINAL-FLASHQLA-PREFILL",
+      "environment": {
+        "VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL": "1",
+        "VLLM_FLASH_V100_DECODE_PARTITION_SIZE": "256",
+        "VLLM_SM70_GDN_DECODE_FLASHQLA": null
+      },
+      "configuration_sha256": "ab2baf882c2cb03a985180c9f669b901bc70250c6bf72687296782aa5e0efa95",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/environment/VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL",
+          "r0": "0",
+          "candidate": "1"
+        }
+      ],
+      "plan_sha256": "4f05a433dd1d1f65f0d7824f14e261e498343b064c8d0c1d11aae108b6b69276"
+    },
+    "R3": {
+      "candidate_id": "R3-E5M2-128K-KV-ROUTE",
+      "environment": {
+        "VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL": "0",
+        "VLLM_FLASH_V100_DECODE_PARTITION_SIZE": "256",
+        "VLLM_SM70_GDN_DECODE_FLASHQLA": null
+      },
+      "configuration_sha256": "ad3fb2d853f273e22d8a79743b667bb32ecca9def9e06431fa9c5074a1765361",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--kv-cache-dtype/0",
+          "r0": "fp8_e4m3",
+          "candidate": "fp8_e5m2"
+        }
+      ],
+      "plan_sha256": "82737c672d83acbc50e0854f54e0b21fafa00929c7ac53d0ac0a5dabc8ba2f7c"
+    }
+  },
+  "history": [
+    {
+      "experiment_id": "EXP-V100-Q38-1CAT-FP8E4M3-TARGET-C1-128K-20260924-003",
+      "recorded_config_flag": null,
+      "raw_verdict": "PASS_C1_128K",
+      "log_evidence": [
+        {
+          "line": 26,
+          "text": "(APIServer pid=73601) INFO 09-24 19:38:21 [vllm.py:1601] Auto-setting VLLM_SM70_GDN_DECODE_FLASHQLA=1 for the SM70 Flash-V100 baseline. Set it explicitly to override."
+        },
+        {
+          "line": 41,
+          "text": "(Worker_TP0 pid=73749) INFO 09-24 19:38:52 [qwen_gdn_linear_attn.py:2528] SM70 FlashQLA GDN decode route enabled."
+        }
+      ],
+      "note": null
+    },
+    {
+      "experiment_id": "EXP-V100-Q38-1CAT-FP8E4M3-TARGET-DIAG-REALISTIC-128K-20260925-003",
+      "recorded_config_flag": null,
+      "raw_verdict": "PASS_C1_128K",
+      "log_evidence": [
+        {
+          "line": 26,
+          "text": "(APIServer pid=153264) INFO 09-25 01:46:46 [vllm.py:1601] Auto-setting VLLM_SM70_GDN_DECODE_FLASHQLA=1 for the SM70 Flash-V100 baseline. Set it explicitly to override."
+        },
+        {
+          "line": 41,
+          "text": "(Worker_TP0 pid=153413) INFO 09-25 01:47:16 [qwen_gdn_linear_attn.py:2528] SM70 FlashQLA GDN decode route enabled."
+        }
+      ],
+      "note": null
+    },
+    {
+      "experiment_id": "EXP-V100-Q38-1CAT-FP8E5M2-TARGET-RECOVERY-C1-128K-20260925-001",
+      "recorded_config_flag": "0",
+      "raw_verdict": "FAIL_STARTUP",
+      "log_evidence": [],
+      "note": null
+    },
+    {
+      "experiment_id": "EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C1-128K-20260925-001",
+      "recorded_config_flag": "0",
+      "raw_verdict": "PASS_C1_128K",
+      "log_evidence": [
+        {
+          "line": 167,
+          "text": "(Worker_TP0 pid=33013) INFO 09-25 16:38:14 [qwen_gdn_linear_attn.py:373] SM70 exact mixed-QKV GDN decode route enabled."
+        }
+      ],
+      "note": null
+    },
+    {
+      "experiment_id": "EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C2-128K-20260925-001",
+      "recorded_config_flag": null,
+      "raw_verdict": "FAIL_OUTPUT",
+      "log_evidence": [
+        {
+          "line": 6591,
+          "text": "(Worker_TP0 pid=85017) INFO 09-25 19:24:44 [qwen_gdn_linear_attn.py:373] SM70 exact mixed-QKV GDN decode route enabled."
+        }
+      ],
+      "note": "Raw verdict is not automatically semantic PASS. C2 saved command_environments lacks the override, but runner assigns 0 and runtime log shows exact mixed-QKV; do not equate missing receipt key with actual missing env."
+    }
+  ],
+  "runtime_receipt_needed_later": [
+    "exact worker environment with GDN_DECODE_FLASHQLA=0",
+    "resolved enable_flashqla_decode=False and route receipts from both TP workers",
+    "actual decode route evidence; no inference performed by this audit"
+  ],
+  "execution": {
+    "gpu_inference": false,
+    "server_startup": false,
+    "model_load": false,
+    "benchmark": false,
+    "runtime_import": false
+  },
+  "introduction": {
+    "first_confirmed_repository_128k_override_commit": "3f13eaa",
+    "recovery_commit_time": "2026-09-25T16:14:05+09:00",
+    "b200_commit": "eb3f5da",
+    "b200_commit_time": "2026-09-25T16:40:26+09:00",
+    "scope": "First preserved 128K override found in this repository, not a claim about every earlier external experiment."
+  },
+  "file_sha256": {
+    "results/raw/EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C1-128K-20260925-001/config.json": "ba9142bade569b76966061a2d57e19216bc2c394bf7ee0405822564ee53fb16a",
+    "results/raw/EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C1-128K-20260925-001/runtime/planned-config.json": "acb7b25bc50dd9a4288521f065f6cc0decb7ed6a3e9521bbb7652bf7fb1992d5",
+    "results/raw/EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C1-128K-20260925-001/runtime/server-0.log": "5d4f3638776329838940e2e561b4d12c4274812e8e5cf7648dbf777372639f3c",
+    "scripts/run_b200recipe_onecat.py": "8db2c2444878031270779c7f2aa32d273e921f7a1eec9600aa5f7ad035552057",
+    "config/models/qwen3.8-27b.json": "0496bbeded0a02bf6ef8b826c77c58be504fe5271d56e478d0ec28c914e905f7",
+    "config/wbs5-input-lock.json": "1a4f30d400c54b483cb01ec0e4fac7bfe6d3d90e325694a47eb11552706b4b6a"
+  },
+  "new_wbs5": {
+    "R0": {
+      "candidate_id": "R0-E4M3-128K-SEMANTIC-BASELINE",
+      "configuration_sha256": "5e09c2a6711b48d9bddf63fc38ff79935d6f94449cd093bbf6c3bcdb2b18f17b",
+      "planned_config_sha256": "89a1a571ac18a499f00c833be90b2a674a379a354edec81ad1d8502ae6c7f387",
+      "normalized_change_from_previous_baseline": [
+        {
+          "path": "/servers/0/environment/VLLM_SM70_GDN_DECODE_FLASHQLA",
+          "r0": null,
+          "candidate": "0"
+        }
+      ],
+      "normalized_delta_from_r0": [],
+      "environment": {
+        "VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL": "0",
+        "VLLM_FLASH_V100_DECODE_PARTITION_SIZE": "256",
+        "VLLM_SM70_GDN_DECODE_FLASHQLA": "0"
+      }
+    },
+    "R1": {
+      "candidate_id": "R1-E4M3-128K-CUDAGRAPH-C1",
+      "configuration_sha256": "e3bd1ebdca0031972417e70432830f015efdaf016ef016371acf3bbda992dd72",
+      "planned_config_sha256": "5f38e2132c64bd65489e73049633a895e1a98af56c47075cc2ff9bf19bd6e620",
+      "normalized_change_from_previous_baseline": [
+        {
+          "path": "/servers/0/environment/VLLM_SM70_GDN_DECODE_FLASHQLA",
+          "r0": null,
+          "candidate": "0"
+        }
+      ],
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--compilation-config",
+          "r0": null,
+          "candidate": [
+            "{\"cudagraph_capture_sizes\":[1]}"
+          ]
+        },
+        {
+          "path": "/servers/0/argv/--enforce-eager",
+          "r0": [
+            true
+          ],
+          "candidate": null
+        }
+      ],
+      "environment": {
+        "VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL": "0",
+        "VLLM_FLASH_V100_DECODE_PARTITION_SIZE": "256",
+        "VLLM_SM70_GDN_DECODE_FLASHQLA": "0"
+      }
+    },
+    "R2": {
+      "candidate_id": "R2-E4M3-128K-ORIGINAL-FLASHQLA-PREFILL",
+      "configuration_sha256": "02440f20d913d4bbfcabd7369425e43f93efee49ee3864c0705a2032399a6712",
+      "planned_config_sha256": "d01de6d3f9340df953ba649a99f751e8118fcb79dc3306743ca45ac2be97e9ce",
+      "normalized_change_from_previous_baseline": [
+        {
+          "path": "/servers/0/environment/VLLM_SM70_GDN_DECODE_FLASHQLA",
+          "r0": null,
+          "candidate": "0"
+        }
+      ],
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/environment/VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL",
+          "r0": "0",
+          "candidate": "1"
+        }
+      ],
+      "environment": {
+        "VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL": "1",
+        "VLLM_FLASH_V100_DECODE_PARTITION_SIZE": "256",
+        "VLLM_SM70_GDN_DECODE_FLASHQLA": "0"
+      }
+    },
+    "R3": {
+      "candidate_id": "R3-E5M2-128K-KV-ROUTE",
+      "configuration_sha256": "f859c32e9b3553c27994a383c2d42d76e4524a5620e644bcbf92df4630d9946c",
+      "planned_config_sha256": "6a94297480667be65add17855bf6a916f0523e05da4d0d21384b062a5b23c799",
+      "normalized_change_from_previous_baseline": [
+        {
+          "path": "/servers/0/environment/VLLM_SM70_GDN_DECODE_FLASHQLA",
+          "r0": null,
+          "candidate": "0"
+        }
+      ],
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--kv-cache-dtype/0",
+          "r0": "fp8_e4m3",
+          "candidate": "fp8_e5m2"
+        }
+      ],
+      "environment": {
+        "VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL": "0",
+        "VLLM_FLASH_V100_DECODE_PARTITION_SIZE": "256",
+        "VLLM_SM70_GDN_DECODE_FLASHQLA": "0"
+      }
+    }
+  },
+  "input_lock": "UNCHANGED: WBS5-only dispatch override; model/profile/runtime/workload/frozen document input bytes unchanged. New contract source hash recorded in Qwen plans.",
+  "other_tracks": "No other track file or normalized configuration changed; their dry-plan source receipts remain historical preparation snapshots."
+}

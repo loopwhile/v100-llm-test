@@ -317,7 +317,7 @@
         "batches_in_this_invocation": 1
       },
       "status": "STATIC_READY",
-      "configuration_sha256": "50b91d5d98c4318ed87ad4ad7c71786c1b6e9f61232cca760af92e61194ed9ac",
+      "configuration_sha256": "5e09c2a6711b48d9bddf63fc38ff79935d6f94449cd093bbf6c3bcdb2b18f17b",
       "plan_path": "EXP-V100-WBS5-QWEN-ONECAT-R0-PERF-20260928-001/candidate-plan.json"
     },
     {
@@ -334,7 +334,7 @@
         "batches_in_this_invocation": 1
       },
       "status": "STATIC_READY",
-      "configuration_sha256": "4e2de1776139f7290cd414808d2ba1d69e237b13b867982eba6979be59f4ca27",
+      "configuration_sha256": "e3bd1ebdca0031972417e70432830f015efdaf016ef016371acf3bbda992dd72",
       "plan_path": "EXP-V100-WBS5-QWEN-ONECAT-R1-PERF-20260928-001/candidate-plan.json"
     },
     {
@@ -351,7 +351,7 @@
         "batches_in_this_invocation": 1
       },
       "status": "BLOCKED_BY_HOST_TOOLCHAIN",
-      "configuration_sha256": "ab2baf882c2cb03a985180c9f669b901bc70250c6bf72687296782aa5e0efa95",
+      "configuration_sha256": "02440f20d913d4bbfcabd7369425e43f93efee49ee3864c0705a2032399a6712",
       "plan_path": "EXP-V100-WBS5-QWEN-ONECAT-R2-PERF-20260928-001/candidate-plan.json"
     },
     {
@@ -368,7 +368,7 @@
         "batches_in_this_invocation": 1
       },
       "status": "STATIC_READY",
-      "configuration_sha256": "ad3fb2d853f273e22d8a79743b667bb32ecca9def9e06431fa9c5074a1765361",
+      "configuration_sha256": "f859c32e9b3553c27994a383c2d42d76e4524a5620e644bcbf92df4630d9946c",
       "plan_path": "EXP-V100-WBS5-QWEN-ONECAT-R3-PERF-20260928-001/candidate-plan.json"
     },
     {

@@ -152,3 +152,13 @@ GPU MEASURED INFERENCE EXECUTED: NO
 Qwen artifact provenance gap은 pinned HF revision의 upstream LFS/metadata hash manifest를 새 state receipt에 저장해 해소했다. 8A의 실제 shard hash와 일치한다. model tensor 다운로드/교체는 없으며 installed bytes/metadata는 future pre-run identity guard에서 다시 확인한다. CUDA userspace12.8.90과 nvcc는 별개다. `nvidia-cuda-nvcc-cu12`12.9.86 설치만으로 nvcc 존재를 주장하지 않는다; TileLang source가 해당 패키지는 ptxas만 제공한다고 명시한다. [8D receipt](../state/wbs5-toolchain-receipt.json).
 
 Frozen max-num-seqs=1 및 MBT2048을 유지하면서 performance A/B 두 독립 client request를 보낸다. 이 계획만으로 C2 ACTIVE라고 주장하지 않으며 실제 queue-only/overlap evidence를 저장한다. graph C1 axis를 seq2로 변경하지 않았다.
+
+## Qwen GDN decode baseline 추가 static audit — 2026-09-28
+
+판정: **ADD_BASELINE_INVARIANT**. pinned 1Cat-vLLM 1.5.0은 GDN_DECODE_FLASHQLA 생략 시 default/SM70 auto-config가 **1**이며 explicit 0과 같지 않다. 과거 B200 C1 128K config/planned config는 0을 전달하고 server log167행은 exact mixed-QKV GDN decode, 170행은 해당 Triton JIT를 기록한다. 따라서 Qwen WBS5 R0~R3 모두 `VLLM_SM70_GDN_DECODE_FLASHQLA=0`을 공통 invariant로 고정했다. 위 8A 명령 예시는 당시 관찰로 보존하며 현재 명령/환경은 재생성된 네 dry plan이 기준이다.
+
+후보 간 OFAT delta, deterministic sampling, performance/v1, thinking/tool 계약은 유지했다. diagnostic parser/sampling은 복사하지 않았다. normalized baseline/config SHA 및 Qwen plan/manifest를 갱신했고 input lock/model/runtime pin/다른 track/기존 raw/report는 변경하지 않았다. R0/R1/R3 STATIC_READY, R2 BLOCKED_BY_HOST_TOOLCHAIN 상태는 그대로다.
+
+이 설정은 known-good serving route 재현 invariant(A)이며 모든 128K decode 성공에 필수라는 인과 증명은 아니다. flag1에서도 과거 decode 완료 사례가 있었고 B200의 semantic FAIL_OUTPUT도 유지한다. future startup/measured에서 worker별 effective flag/resolved route/kernel hit를 확인해야 한다.
+
+검증: 관련 pytest **33 passed, 25 subtests passed**, 전체 pytest **149 passed, 25 subtests passed**, validate_repo **Repository contract: PASS**, AST/JSON/보존 검사 및 diff --check PASS. GPU inference/server startup/model load/benchmark executed: **NO**. [비교/도입 이력/근거 및 새 SHA](WBS-5-Qwen-1Cat-GDN-decode-audit.md), [source/raw receipt](../state/wbs5-qwen-gdn-route-audit.json). 다음 단계는 ChatGPT pre-run final validation이다.

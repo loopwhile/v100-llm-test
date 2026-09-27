@@ -129,6 +129,9 @@ def launch_plan(track, candidate, root=ROOT, port=18080, gateway_port=18079):
         # Deliberately exclude ambient PYTHONPATH and WBS3 Qwen forced overrides.
         plan["command_environments"][0]["PYTHONPATH"] = str(root / "scripts/runtime_hooks")
         if track == "qwen-onecat":
+            # Reproduce the B200 128K serving route, not its diagnostic sampling.
+            # Pinned 1Cat defaults/auto-sets this to 1; omission is not env=0.
+            plan["command_environments"][0]["VLLM_SM70_GDN_DECODE_FLASHQLA"] = "0"
             set_value(cmd, "--max-num-seqs", 1)
             set_value(cmd, "--max-num-batched-tokens", 2048)
             if candidate == "R1":

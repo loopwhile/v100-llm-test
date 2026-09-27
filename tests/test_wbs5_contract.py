@@ -21,6 +21,68 @@ def plan(track="qwen-llama", candidate="R0", sequence=1, label=None):
 
 
 class FrozenContractTests(unittest.TestCase):
+    def test_qwen_known_serving_decode_invariant_is_common_and_not_an_ofat_axis(self):
+        raw = ROOT / "results/raw/EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C1-128K-20260925-001"
+        old = json.loads((raw / "config.json").read_text())
+        planned = json.loads((raw / "runtime/planned-config.json").read_text())
+        flag = "VLLM_SM70_GDN_DECODE_FLASHQLA"
+        self.assertEqual(old["command_environments"][0][flag], "0")
+        self.assertEqual(old["command_environments"], planned["command_environments"])
+        for i in range(4):
+            p = plan("qwen-onecat", f"R{i}")
+            env = p["launch_plan"]["command_environments"][0]
+            self.assertEqual(env[flag], "0")
+            self.assertEqual(env["VLLM_FLASH_V100_DECODE_PARTITION_SIZE"], "256")
+            self.assertEqual(env["VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL"], "1" if i == 2 else "0")
+            self.assertFalse(any(flag in row["path"] for row in p["normalized_delta_from_r0"]))
+            dry = runner.dispatch(p)
+            self.assertEqual(dry["effective_environment"][0][flag], "0")
+            self.assertFalse(dry["measured_inference_executed"])
+            config = runner.build_config(p, dry["effective_environment"])
+            self.assertEqual(config["sampling"], {"temperature": 0, "top_p": 1, "seed": 520})
+            self.assertEqual(config["tool_parser"], "none")
+            self.assertFalse(config["thinking"])
+            self.assertNotIn("--reasoning-parser", p["launch_plan"]["commands"][0])
+            self.assertNotIn("--tool-call-parser", p["launch_plan"]["commands"][0])
+        for track in set(c.TRACKS) - {"qwen-onecat"}:
+            self.assertNotIn(flag, c.launch_plan(track, "R0")["command_environments"][0])
+
+    def test_qwen_decode_invariant_drop_enable_and_ambient_drift_are_rejected(self):
+        flag = "VLLM_SM70_GDN_DECODE_FLASHQLA"
+        for i in range(4):
+            baseline = c.launch_plan("qwen-onecat", f"R{i}")
+            for value in (None, "1"):
+                changed = copy.deepcopy(baseline)
+                if value is None:
+                    del changed["command_environments"][0][flag]
+                else:
+                    changed["command_environments"][0][flag] = value
+                with self.assertRaisesRegex(ValueError, "FROZEN_DELTA_MISMATCH"):
+                    c.assert_launch("qwen-onecat", f"R{i}", changed)
+            with self.assertRaisesRegex(ValueError, "FROZEN_DELTA_MISMATCH"):
+                c.effective_environments(baseline, {flag: "1"})
+            self.assertEqual(c.effective_environments(baseline, {flag: "0"})[0][flag], "0")
+
+    def test_pinned_decode_default_static_source_and_historical_route_receipt(self):
+        import ast
+        receipt = json.loads((ROOT / "state/wbs5-qwen-gdn-route-audit.json").read_text())
+        self.assertEqual(receipt["decision"], "ADD_BASELINE_INVARIANT")
+        self.assertEqual(receipt["pinned_source_default"], "1")
+        self.assertEqual(receipt["historical_success"]["environment"][receipt["flag"]], "0")
+        # Parse only the saved source expression; do not import vLLM/torch or
+        # evaluate the runtime configuration/device checks.
+        rows = receipt["source"]["vllm/envs.py"]["lines"]
+        expression = "{" + "\n".join(row["text"].strip() for row in rows if 3254 <= row["line"] <= 3256) + "}"
+        parsed = ast.parse(expression, mode="eval")
+        get = next(node for node in ast.walk(parsed) if isinstance(node, ast.Call)
+                   and isinstance(node.func, ast.Attribute) and node.func.attr == "getenv")
+        self.assertEqual([node.value for node in get.args], [receipt["flag"], "1"])
+        raw = ROOT / "results/raw" / receipt["historical_success"]["experiment_id"]
+        log = (raw / "runtime/server-0.log").read_text()
+        self.assertIn("SM70 exact mixed-QKV GDN decode route enabled.", log)
+        self.assertIn("fused_sigmoid_gating_delta_rule_update_kernel", log)
+        self.assertFalse(any(receipt["execution"].values()))
+
     def test_all_frozen_ids_and_counts(self):
         expected = {"qwen-llama": 3, "ornith9-llama": 3, "ornith35-llama": 4,
                     "gemma-llama": 4, "qwen-onecat": 4, "ornith9-onecat": 4, "ornith35-onecat": 3}
