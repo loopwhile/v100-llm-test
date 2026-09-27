@@ -1,14 +1,17 @@
 # WBS-5 로컬 실행 가능성 리뷰 — Ornith 1.5 35B-A3B / 1Cat-vLLM
 
-검토 기준: 로컬 `main` checkout @ `8233d2f46513bbe5e61a72b1aecc39504d1c7044`. 작업 범위는 파일/source/config 및 메모리 내 plan-only command 비교다. 서버, 모델, CUDA graph, 추론, VRAM, benchmark를 실행하지 않았다. 기존 report/artifact는 변경하지 않았다.
+검토 기준: source inspection snapshot은 로컬 `main` @ `8233d2f46513bbe5e61a72b1aecc39504d1c7044`; 현재 workspace `main`은 `d9501207566fba98663ba861b55c1bacc9aa09ff`이며 그 사이 commit들은 WBS5 리뷰 문서만 변경했다. GitHub `origin/main`도 해당 시점에 `d9501207566fba98663ba861b55c1bacc9aa09ff`였다. 설치 runtime/source/CLI와 모델 receipt를 P520에서 read-only로 확인하고, 서버/model load/CUDA graph capture/추론/VRAM 측정/benchmark는 실행하지 않았다. plan command는 메모리 내에서만 비교했다. historical raw artifacts와 measured reports/plans는 변경하지 않았다.
 
 ## A. Environment Receipt
 
-- **Repo:** 현재 branch `main`, HEAD `8233d2f46513bbe5e61a72b1aecc39504d1c7044`.
-- **지정 Python:** `/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python` 및 상위 runtime 경로가 존재하지 않는다. 따라서 그 환경에서 Python/version, installed distribution metadata, package files, CLI/help 또는 source를 읽지 못했다.
-- **대체 로컬 Python:** `/usr/bin/python3`, Python 3.12.3. 이 환경에는 `1cat-vllm`, `1cat_vllm`, `vllm` distribution이 설치되지 않았다. 지정 환경의 증거로 대체 사용하지 않았다.
-- **Wheel:** `config/runtime-lock.json`의 repository receipt는 1Cat-vLLM 1.5.0, `1cat_vllm-1.5.0-cp312-cp312-linux_x86_64.whl`, expected SHA256 `2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b`라고 기록한다. 지정 runtime 및 wheel 원본이 없어 **wheel SHA provenance: repo receipt only / local wheel file unavailable**. 설치 package tree와 동일하다고 추정하지 않는다.
-- **Model receipt:** `config/models/ornith-1.5-35b-a3b.json`은 `ornith-ai/Ornith-1.5-35B-A3B-NVFP4@94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa`, `/srv/models/ornith-1.5-35b-a3b-nvfp4`, NVFP4를 기록한다. 이 경로도 현재 filesystem에 없어 local artifact receipt 검증은 못 했다. config는 compatibility가 host startup pending이라고 명시한다.
+- **Repo:** source inspection branch `main`, HEAD `8233d2f46513bbe5e61a72b1aecc39504d1c7044`; review update branch `main`, HEAD `d9501207566fba98663ba861b55c1bacc9aa09ff`.
+- **지정 Python:** P520 `/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python`은 Python 3.12.14.
+- **설치 package:** 지정 venv의 distribution metadata는 `1cat-vllm` 1.5.0, 2,525 package file을 보고하고 `vllm` package tree는 해당 venv의 `site-packages/vllm`에 있다. package `WHEEL` tag는 `cp312-cp312-linux_x86_64`; `direct_url.json`은 wheel 경로 `/home/loopwhile/1cat-vllm-wheel/1cat_vllm-1.5.0-cp312-cp312-linux_x86_64.whl`를 가리킨다. `pip` module은 venv에 없어 `pip show`는 실행할 수 없었지만 metadata/API로 receipt를 확인했다.
+- **Wheel:** direct-url 경로의 wheel 파일이 존재하며 SHA256은 `2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b`로 `config/runtime-lock.json`의 expected SHA와 일치한다. 이로써 해당 wheel artifact receipt는 확인했지만 설치 tree 전체가 그 wheel에서 변경 없이 생성됐다는 점까지 독립 검증한 것은 아니다.
+- **CLI/help:** 지정 Python의 `python -m vllm.entrypoints.openai.api_server --help`에서 `--model`, `--served-model-name`, `--trust-remote-code`, `--dtype`, `--attention-backend`, `--tensor-parallel-size`, `--kv-cache-dtype`, `--max-model-len`, `--max-num-seqs`, `--max-num-batched-tokens`, `--gpu-memory-utilization`, `--enforce-eager` 옵션을 확인했다. `--kv-cache-dtype` help choices에 `fp8_e5m2`가 있다. help 노출은 parser 옵션의 존재를 확인하지만 exact model의 startup/route 동작을 보증하지 않는다.
+- **Model receipt:** `config/models/ornith-1.5-35b-a3b.json`은 `ornith-ai/Ornith-1.5-35B-A3B-NVFP4@94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa`, `/srv/models/ornith-1.5-35b-a3b-nvfp4`, NVFP4를 기록한다. P520 경로와 파일은 존재한다. 다만 `.sync_complete`는 label `b200-1-35b-checkpoint-4500`, source `/mnt/hicache/models/checkpoint/nvfp4/checkpoint-4500-NVFP4`, destination `/mnt/ceph/c-af57nace6susi9bu/nvfp4_exports/b200-1/checkpoint-4500-NVFP4` 및 manifest SHA를 가리킨다. 추가로 `.cache/huggingface/download/`의 config, index, 세 weight shard 및 `.sync_complete` metadata를 확인했고 모두 고정 revision `94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa`를 기록했다. B200 문자열은 해당 revision에서 다운로드된 파일의 내용이며, 이것만으로 local model mismatch를 주장할 수 없다. 다운로드 revision receipt는 일치한다. 이번 검토에서 전체 tensor SHA를 다시 계산한 것은 아니다.
+- **Model files/config:** `config.json`은 `model_type=qwen3_5_moe`, `architectures=[Qwen3_5MoeForConditionalGeneration]`; `model.safetensors.index.json`은 94,393 tensor names와 3 shard를 가리킨다. 이는 config shape의 참고 정보이며, checkpoint revision/weight identity를 증명하지 않는다. 모델은 load하지 않았다.
+- **P520 runtime environment:** graph/compile 관련 queried variables (`TORCH_COMPILE_DISABLE`, `VLLM_USE_BREAKABLE_CUDAGRAPH`, `VLLM_SM70_*`, `VLLM_DISABLE_COMPILE_CACHE`, `VLLM_COMPILE*`, `CUDA_GRAPH*`)는 shell snapshot에서 설정되지 않았다. Runner는 별도 env를 추가/제거할 수 있으므로 최종 child env는 plan만으로 확정하지 않는다.
 
 ## B. WBS5 Harness Readiness
 
@@ -26,7 +29,7 @@ WBS 공식 workload는 `workloads/performance/v1.json`이며 2개 독립 Project
 
 **핵심 gap:** 현재 `run_c2_onecat.py`는 C2/v2 workload에 고정되어 있고, Ornith 35B 1Cat-vLLM에 대한 WBS5 candidate selector, `performance/v1.json` 선택, 후보별 exact override/identity가 없다. `run_c1_onecat.py`도 capacity C1 전용이다. 따라서 현재 harness metric capability만으로 WBS5 실행 준비가 되었다고 볼 수 없다.
 
-Warmup: 이 track의 candidate spec은 별도 full-size warmup을 정의하지 않는다. 기존 C2 runner는 server healthy 이후 한 measured batch를 실행하지만 performance workload/candidate별 warmup 정책을 raw config에 기록하는 WBS5 path가 없다. R1에서 graph capture/compile이 언제 일어나는지는 설치 source를 못 봐서 UNKNOWN이다.
+Warmup: 이 track의 candidate spec은 별도 full-size warmup을 정의하지 않는다. 기존 C2 runner는 server healthy 이후 한 measured batch를 실행하지만 performance workload/candidate별 warmup 정책을 raw config에 기록하는 WBS5 path가 없다. 설치 source `vllm/v1/worker/gpu/cudagraph_utils.py:311-320`는 graph capture 전에 forward warmup 후 capture를 수행한다. 즉 R1 graph capture/compile은 server initialization 중 발생할 수 있어, measured request warmup과 구분되는 startup capture receipt가 필요하다.
 
 ## C. Candidate Static Validation
 
@@ -34,35 +37,36 @@ Warmup: 이 track의 candidate spec은 별도 full-size warmup을 정의하지 �
 
 | Candidate | CLI valid | Runner expressible | Static config valid | Runtime route source exists | GPU execution still needed |
 |---|---|---|---|---|---|
-| R0-BASELINE-EAGER-MBT4096 | UNKNOWN — 지정 설치 없음 | PARTIAL — launcher가 baseline command는 만들지만 WBS5 workload/ID/report 경로 없음 | PASS — checked-in profile와 task contract 기준 | UNKNOWN — installed source 없음 | YES — route/VRAM/실제 workload 필요 |
-| R1-GRAPH-AUTO-MBT4096 | UNKNOWN — 지정 설치 없음 | FAIL — `--enforce-eager` 제거를 선택하는 WBS5 candidate path 없음 | PASS — R0에서 flag 하나 제거한 in-memory delta | UNKNOWN — installed graph source 없음 | YES — auto policy/실제 route hit 검증 필요 |
-| R2-EAGER-MBT8192 | UNKNOWN — 지정 설치 없음 | FAIL — MBT candidate override path 없음; runner 기본 4096 유지 | PASS (정적 한정) — 2096 < 8192이며 다른 config 불변 | UNKNOWN — installed scheduler source 없음 | YES — runtime admission/VRAM fit 필요 |
+| R0-BASELINE-EAGER-MBT4096 | PARTIAL — P520 help에 exact option names 노출, model/runtime startup 미실행 | PARTIAL — launcher baseline argv는 만들지만 WBS5 workload/ID/report 경로 없음 | PASS — checked-in profile와 task contract 기준 | PASS — eager flag가 argv에 연결됨; model compatibility는 미검증 | YES — route/VRAM/workload 필요 |
+| R1-GRAPH-AUTO-MBT4096 | PARTIAL — P520 help에 exact option names 노출, model/runtime startup 미실행 | FAIL — `--enforce-eager` 제거를 선택하는 WBS5 candidate path 없음 | PASS — R0에서 flag 하나 제거한 in-memory delta | PASS — 조건 충족 시 설치 source가 SM70 compile-graph flag를 자동 설정; exact checkpoint route는 미검증 | YES — graph capture/route 필요 |
+| R2-EAGER-MBT8192 | PARTIAL — P520 help에 MBT option 노출, model/runtime startup 미실행 | FAIL — MBT candidate override path 없음; runner 기본 4096 유지 | PASS (정적 한정) — align-mode assertion의 `2096 <= 8192` | PASS — scheduler source에 bound assertion 있음; runtime admission/model block size는 startup 미검증 | YES — VRAM/runtime admission 필요 |
 
-R0의 source-config 계획은 model path/revision, TP2, half dtype, E5M2 KV, target-only, `FLASH_ATTN_V100`, max len 131072, max seqs 2, util 0.90, baseline env `VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL=0`, eager를 표현한다. `runtime_launcher.py:103-119`는 target-only이면 `speculative_config` 인자를 만들지 않는다. 다만 pinned CLI가 해당 값들을 받는지는 UNKNOWN이다.
+R0의 source-config 계획은 model path/revision, TP2, half dtype, E5M2 KV, target-only, `FLASH_ATTN_V100`, max len 131072, max seqs 2, util 0.90, baseline env `VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL=0`, eager를 표현한다. `runtime_launcher.py:103-119`는 target-only이면 `speculative_config` 인자를 만들지 않는다. P520 `--help`에는 command의 주요 옵션과 `fp8_e5m2` KV choice가 나타난다. Help와 source 검사는 실제 model startup이나 exact-checkpoint compatibility를 입증하지 않는다.
 
 ## D. R1 Graph Source Audit
 
-요구된 installed package source는 지정 venv가 없어 접근 불가하다. 체크아웃 내 `scripts/runtime_hooks/sitecustomize.py`는 Transformers/Gemma4 compatibility hook만 다루며 1Cat graph policy를 구현하지 않는다. 검색한 repository source에서도 아래 symbol/logic을 확인할 수 없었다. **미발견은 지원 부재의 증거가 아니다.**
+Installed source was inspected under the designated venv's `site-packages/vllm`. The source defines an automatic SM70 Flash-V100 compile-graph path. The behavior is conditional, and exact checkpoint route selection remains unverified because no model was loaded.
 
-| 조사 항목 | 판정 |
+| 조사 항목 | 설치 source 관찰 |
 |---|---|
-| `VLLM_SM70_FLASH_V100_0DOT3_COMPILE_GRAPH` / SM70 device capability gate / `FULL_AND_PIECEWISE` / `VLLM_COMPILE` | UNKNOWN — pinned package source unavailable |
-| `VLLM_DISABLE_COMPILE_CACHE` 및 compile-cache quality guard | UNKNOWN |
-| no-MTP CUDA Graph capture-size selection | UNKNOWN |
-| `FLASH_ATTN_V100` 및 `fp8_e5m2` graph-aware dispatch | UNKNOWN |
-| SM70 NVFP4 TurboMind W4A16 path와 graph 제한 여부 | UNKNOWN |
-| Qwen3.5-MoE path가 full/piecewise graph를 금지하는지 | UNKNOWN |
-| `--enforce-eager` 제거 시 auto graph policy가 선택될 수 있는지 | UNKNOWN — runner command에 explicit graph-enable 인자는 없고, auto policy 여부는 installed source 확인이 필요 |
-| 현재 shell의 `TORCH_COMPILE_DISABLE`, `VLLM_USE_BREAKABLE_CUDAGRAPH`, `VLLM_SM70_*`, `VLLM_DISABLE_COMPILE_CACHE`, `VLLM_COMPILE`, graph 관련 변수 | 이 review shell에서는 해당 변수들이 설정되지 않음. P520 실행 환경은 접근 불가하므로 UNKNOWN |
+| `--enforce-eager` 제거 후 default graph policy | `vllm/config/vllm.py:454,475` sets default `cudagraph_mode=FULL_AND_PIECEWISE`; v1 graph configuration is therefore available when eager is off. |
+| SM70 Flash-V100 compile graph and `VLLM_COMPILE` | `vllm/envs.py:304,558` defaults `VLLM_SM70_FLASH_ATTN_V100=True`, graph flag false. In `VllmConfig.__post_init__` (`vllm/config/vllm.py:1500-1512,1574-1605`), CUDA SM70 + Flash-V100 baseline + no compile-disable/no-compile override auto-sets `VLLM_SM70_FLASH_V100_0DOT3_COMPILE_GRAPH=1`. Lines 1620-1647 then select `CompilationMode.VLLM_COMPILE`, `FULL_AND_PIECEWISE`, and no-MTP capture sizes. R1 removes eager and no disabling env was present in the P520 shell snapshot, so this source gate is statically reachable on the designated V100 setup. |
+| Compile-cache quality guard | Source has an explicit guard: `vllm/config/vllm.py:1775-1795` auto-sets `VLLM_DISABLE_COMPILE_CACHE=1` unless profiling override is enabled; explicit `=0` is marked diagnostic-only because of observed deterministic greedy token drift. |
+| no-MTP capture sizing | `_sm70_nomtp_cudagraph_capture_sizes()` is called by `VllmConfig.__post_init__` at `vllm/config/vllm.py:1645-1655`; task's target-only config has no speculative config, so source follows no-MTP sizing. |
+| `FLASH_ATTN_V100` / E5M2 / graph awareness | `vllm/v1/attention/backends/flash_attn_v100.py:479-483` explicitly admits `fp8_e5m2`; `FlashAttnV100MetadataBuilder` declares `AttentionCGSupport.UNIFORM_BATCH` at line 3080. Backend source contains graph metadata paths. This proves a source route exists, not that this checkpoint selects it at runtime. |
+| Qwen3.5-MoE graph restriction | `qwen3_5.py` implements the Qwen3.5 MoE model and GDN/Mamba state hooks (e.g. lines 1151-1181); no model-local `cudagraph_mode=NONE` or full/piecewise prohibition was found. Generic source/model config remains the authority; actual route is unverified. |
+| SM70 NVFP4/TurboMind | `compressed_tensors_w4a4_nvfp4.py:206-222` allows min capability 70 only when the SM70 TurboMind route/forced Marlin/emulation applies; `_sm70_ops.py` and the same scheme include explicit SM70 NVFP4 QPN2 operations. `compressed_tensors_wNa16.py:229-255` has a separate `sm70_tm.should_prepare_turbomind` dense compressed-uint4 path. These are quantization-specific routes, not proof the target checkpoint maps to them; no source statement found that NVFP4 itself forbids graph capture. |
+| Qwen3.5-MoE and Mamba scheduler | Scheduler config assertion in `vllm/config/vllm.py:2930-2944` governs align mode. The model config's GDN/Mamba hooks do not declare a graph prohibition. |
+| P520 ambient env snapshot | Queried `TORCH_COMPILE_DISABLE`, `VLLM_USE_BREAKABLE_CUDAGRAPH`, all `VLLM_SM70_*`, `VLLM_DISABLE_COMPILE_CACHE`, `VLLM_COMPILE*`, and `CUDA_GRAPH*` variables were unset in the P520 shell. The runner inherits `os.environ.copy()` then sets its planned values (`runtime_launcher.py:113-118`), so its final child environment still needs to be stored in WBS5 evidence. |
 
-launcher는 자식 환경을 `os.environ.copy()`한 다음 `CUDA_VISIBLE_DEVICES=0,1`, `VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL=0`, `PYTHONPATH=scripts/runtime_hooks`를 덮어쓴다 (`runtime_launcher.py:113-118`). graph-disabling 환경을 정리하지 않으므로 P520의 ambient environment는 measured 전에 별도 확인해야 한다. 실제 graph route hit는 요구대로 **NOT VERIFIED UNTIL MEASURED RUN**.
+Conclusion: removing `--enforce-eager` can reach both generic FULL_AND_PIECEWISE defaults and the source's conditional SM70 Flash-V100 compile-graph path; the latter automatically enables its quality guard on the baseline described above. Neither conclusion verifies graph capture or the exact Ornith weight/attention/quantization route. Actual route hit remains **NOT VERIFIED UNTIL MEASURED RUN**.
 
 ## E. R2 MBT Static Audit
 
 - `runtime_launcher.py:112`는 MBT 4096을 hard-code한다. `run_c2_onecat.py:137-141`의 유일한 MBT 변경은 Qwen 27B에서 2048로 내리는 조건부 override다. Ornith 35B-A3B에는 적용되지 않는다. R2용 8192 override는 없다.
-- 저장소의 기존 WBS 기록은 MBT 2048에서 Mamba align `block_size=2096 > 2048`로 startup 실패, MBT 4096에서 C1 pass라고 기술한다 (`docs/WBS.md:281-290`). 주어진 정적 조건과 비교하면 `2096 <= 8192`이므로 동일한 단순 upper-bound 검사는 통과할 크기다. 하지만 installed scheduler source가 없어 `8192`의 실제 parser/admission 동작이나 추가 alignment 조건은 확정할 수 없다.
+- P520 installed parser source `vllm/engine/arg_utils.py:1399-1401` wires `--max-num-batched-tokens` to scheduler integer config; `--help` exposes the option. Scheduler constraint is explicit in `vllm/config/vllm.py:2930-2944`: in Mamba cache align mode, `block_size <= max_num_batched_tokens`. Existing WBS record documents block_size 2096 and the 2048 failure (`docs/WBS.md:281-290`), so 8192 satisfies that same bound (`2096 <= 8192`). Exact model-derived block size/admission cannot be rechecked without startup.
 - R2 diff는 max-num-batched-tokens만 8192로 바꾸므로 max-num-seqs=2, eager, util=0.90, E5M2 KV는 유지된다. 이는 plan-only 비교이며 current runner는 값을 4096으로 낼 것이다.
-- 판정: **STATICALLY VALID, RUNTIME VRAM FIT UNVERIFIED**. exact `--max-num-batched-tokens 8192` CLI acceptance도 지정 package 부재로 UNKNOWN. GPU model-load 없이 VRAM fit을 주장하지 않는다.
+- 판정: **STATICALLY VALID, RUNTIME VRAM FIT UNVERIFIED**. Installed help/source accept the integer option and the known align bound is satisfied; actual model scheduler admission and GPU memory fit remain unverified. No model-load/VRAM claim is made.
 
 ## F. Exact Command Diff
 
@@ -101,9 +105,10 @@ R0 -> R2:
 ## G. Blocking Issues
 
 1. **BLOCKED_BY_HARNESS:** Ornith 35B 1Cat C2 runner는 `workloads/concurrency/v2.json`으로 고정되어 있다. WBS5 `performance/v1.json`, frozen candidate ID, exact R1/R2 override를 받는 runner 경로와 plan/report identity가 필요하다. 기존 WBS2/3 runner behavior를 보존하는 명시적 WBS5 dispatch가 필요하다.
-2. **NEEDS_LOCAL_RUNTIME_CONFIRMATION:** 지정 Python/installed package/wheel source/model path가 이 실행 환경에 없어 CLI parser, runtime version, package SHA provenance, graph/compile-cache/attention/NVFP4/Mamba scheduler source를 검증하지 못했다. 이 상태를 source support 부재로 단정하지 않는다.
-3. **R2 runtime fit pending:** MBT 8192의 CLI/scheduler acceptance는 local package 확인 필요. GPU memory fit은 모델 로드 후 확인할 항목이며 현재 결론에서 제외했다.
-4. **R1 route pending:** source/설정에서 graph 정책을 확인하더라도 실제 Ornith + E5M2 + Flash-V100 runtime route hit은 측정 전 확정할 수 없다.
+2. **MODEL REVISION RECEIPT MATCHED:** config/index/세 weight shard와 `.sync_complete`의 Hugging Face download metadata는 모두 고정 revision과 일치한다. `.sync_complete`의 B200 내부 경로는 revision 불일치 blocker로 취급하지 않는다. 모델 startup과 실제 tensor 사용은 실행하지 않았다.
+3. **STARTUP/ROUTE CONFIRMATION PENDING:** P520 Python, 1cat-vllm metadata, direct-url wheel SHA, CLI help 및 relevant source는 확인했다. 그러나 model/server startup은 금지되어 실행하지 않았다. 따라서 exact checkpoint loading, graph capture, quantization/attention dispatch 및 VRAM fit은 미확인이다.
+4. **R2 runtime fit pending:** CLI/source는 MBT integer 및 align bound를 확인시켜 주지만 model-derived scheduler admission과 GPU memory fit은 model startup/inference를 금지해 미확인이다.
+5. **R1 route pending:** source상 default/SM70 auto graph policy path는 존재한다. 실제 Ornith + E5M2 + Flash-V100 route hit은 측정 전 확정할 수 없다.
 
 새 candidate나 recipe 변경은 제안하지 않는다. MTP/NGRAM/DFlash/다른 MBT/KV/util 설정도 검토 대상에 넣지 않았다.
 
@@ -113,4 +118,4 @@ R0 -> R2:
 - **R1-GRAPH-AUTO-MBT4096 — `BLOCKED_BY_HARNESS`**
 - **R2-EAGER-MBT8192 — `BLOCKED_BY_HARNESS`**
 
-세 candidate 모두 exact static command는 생성 가능하지만 현 C2 runner는 WBS5 workload/identity를 연결하지 않는다. 설치 package 부재는 별도의 local runtime confirmation blocker이며, candidate의 source support 여부를 FAIL로 표시하지 않았다.
+세 candidate 모두 exact static command는 생성 가능하지만 현 C2 runner는 WBS5 workload/identity를 연결하지 않는다. P520 runtime metadata/wheel SHA/source/CLI와 model download revision receipt는 확보했다. WBS5 harness 연결과 eventual startup/runtime route 확인이 남아 있으며, measured inference는 실행하지 않았다.
