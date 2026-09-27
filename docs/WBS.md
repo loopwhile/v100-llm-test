@@ -1259,8 +1259,10 @@ Workload:
 - C32/D32의 `prompt_tokens`와 raw prompt SHA256이 동일하지 않으면 comparison summary 생성 금지.
 
 Experiment IDs:
-- C32: `EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-32K-20260927-001`.
-- D32: `EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-32K-20260927-002`.
+- 초기 C32 attempt `...-001`: runner identity validation 누락(`runtime_revision` 등)으로 **measured request 제출 전 실패**. 부분 raw evidence는 P520 측에 보존하며 최종 비교에는 사용하지 않는다.
+- corrected C32: `EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-32K-20260927-003`.
+- corrected D32: `EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-32K-20260927-004`.
+- corrected runner는 harness required identity 전체를 채우고 `h.validate(config)`를 raw directory 생성 전에 실행한다.
 
 Primary comparison:
 - prefill tok/s.

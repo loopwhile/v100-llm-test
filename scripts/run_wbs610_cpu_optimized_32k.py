@@ -20,6 +20,7 @@ import argparse
 import fcntl
 import json
 from pathlib import Path
+import shlex
 import socket
 import subprocess
 import sys
@@ -49,13 +50,13 @@ CASES: List[Dict[str, Any]] = [
         "case": "C32",
         "b": 4096,
         "ub": 512,
-        "exp_id": "EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-32K-20260927-001",
+        "exp_id": "EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-32K-20260927-003",
     },
     {
         "case": "D32",
         "b": 4096,
         "ub": 1024,
-        "exp_id": "EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-32K-20260927-002",
+        "exp_id": "EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-32K-20260927-004",
     },
 ]
 
@@ -186,28 +187,24 @@ def run_case(case: Dict[str, Any], image: str, device_evidence: str) -> Dict[str
     if raw.exists():
         raise RuntimeError(f"immutable experiment directory exists: {raw}")
 
-    stop_container()
-    time.sleep(1)
-
-    cp = command(server_command(case, image), check=False, timeout=60)
-    if cp.returncode != 0:
-        raise RuntimeError(f"failed to start {case['case']}: {cp.stderr}")
-
-    raw.mkdir(parents=True, exist_ok=False)
-    runtime = raw / "runtime"
-    runtime.mkdir()
-
+    digest = image_digest(image)
+    launch_args = server_command(case, image)
     config = future_config({
         "experiment_id": case["exp_id"],
         "measured_repetitions": 1,
         "warmup_count": 0,
         "model": MODEL_NAME,
         "model_key": "ornith-1.5-35b-a3b",
-        "model_identity": {"path": MODEL_PATH},
+        "model_identity": {
+            "path": MODEL_PATH,
+            "weight_quant": "Q4_K_M",
+        },
         "runtime": "llama.cpp",
+        "runtime_revision": "b10775 / 67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
         "runtime_flavor": "cpu-only-openblas-lto",
         "runtime_image": image,
-        "runtime_image_digest": image_digest(image),
+        "runtime_image_digest": digest,
+        "launch_command": shlex.join(launch_args),
         "backend_variant": "CPU-ONLY-W2135-OPTBLAS",
         "topology": "cpu-standalone-4core",
         "topology_detail": "logical CPU IDs 1,2,3,4 mapped to four distinct physical cores",
@@ -220,6 +217,9 @@ def run_case(case: Dict[str, Any], image: str, device_evidence: str) -> Dict[str
         "speculative": "ngram-mod",
         "ngram": "ngram-mod-24-48-64",
         "prefix_cache_lane": "cold-independent",
+        "chat_template": "model-native/default llama.cpp chat template",
+        "tool_parser": "none",
+        "thinking": False,
         "b": case["b"],
         "ub": case["ub"],
         "optimization_stack": [
@@ -239,10 +239,27 @@ def run_case(case: Dict[str, Any], image: str, device_evidence: str) -> Dict[str
             "so both cases evaluate the same full materialized prompt."
         ),
     })
+
+    # Validate the complete harness identity before starting a container or
+    # creating immutable raw evidence. This prevents preparation-only failures
+    # from consuming an experiment ID.
+    h.validate(config)
+
+    stop_container()
+    time.sleep(1)
+
+    cp = command(launch_args, check=False, timeout=60)
+    if cp.returncode != 0:
+        raise RuntimeError(f"failed to start {case['case']}: {cp.stderr}")
+
+    raw.mkdir(parents=True, exist_ok=False)
+    runtime = raw / "runtime"
+    runtime.mkdir()
+
     h.save(runtime / "planned-config.json", config)
     h.save(runtime / "device-evidence.json", {
         "image": image,
-        "image_digest": image_digest(image),
+        "image_digest": digest,
         "list_devices": device_evidence,
     })
 

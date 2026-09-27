@@ -211,11 +211,12 @@
 ## WBS 6.10 optimized CPU true-32K C vs D plan (2026-09-27)
 
 - Goal: 4K의 상위 두 recipe인 C(`4096/512`)와 D(`4096/1024`)를 true-32K에서 직접 비교.
-- measured test: **정확히 2개** (C32 1회, D32 1회).
+- measured test: **정확히 2개** (corrected C32 1회, corrected D32 1회). 초기 `...-001`은 harness identity validation에서 measured submission 전에 실패했으므로 measured test에 포함하지 않는다.
 - prompt cache OFF: `--cache-ram 0 --no-cache-prompt`; 4K에서 발생한 cache_n 차이를 제거하고 ubatch 효과를 직접 비교.
 - fixed: Ornith 35B Q4_K_M, Q8_0 KV, OpenBLAS+LTO image, FA ON, 4 physical cores, 128K server capacity, ngram-mod, no GPU offload.
 - workload: 기존 `v1-32k.json`, live tokenizer materialization, 동일 prompt tokens/hash 강제.
 - runner: `python3 scripts/run_wbs610_cpu_optimized_32k.py --run`.
+- 2026-09-27 runner fix: required identity(`runtime_revision`, `launch_command`, `chat_template`, `tool_parser`, `thinking`)를 보완하고 raw 생성 전 `h.validate(config)`를 수행. corrected IDs = `...-003` / `...-004`.
 - Status: **READY / NOT EXECUTED**.
 
 ## Next planned work
