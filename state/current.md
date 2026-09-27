@@ -186,21 +186,33 @@
 - Goal: weight/KV quantization은 그대로 두고 serving-side 최적화들을 한 optimized stack으로 묶어 Ornith 35B Q4_K_M true-4K 성능을 측정하고자 함.
 - Image Build: `docker/cpu-optimized/Dockerfile`을 통해 `p520-cpu-llama-opt:b10775` 빌드 성공 (`GGML_BACKEND_DL=ON`, `GGML_CPU_ALL_VARIANTS=ON`, OpenVINO 2026.3.1, OpenBLAS).
 - Preflight: `results/raw/WBS69-OPT4K-PREFLIGHT.json` — OpenBLAS 및 OPENVINO0 디바이스 인식 통과 (`openvino_device_visible: true`).
-- Execution & Verdict: **`CLOSED — FAIL / INCOMPATIBLE`**
+- OpenVINO Execution & Verdict: **`CLOSED — FAIL / INCOMPATIBLE`**
   - Case A (`EXP-P520-CPU-ORN15-35B-OPTSTACK-C1-4K-20260927-001`): 서버 헬스체크 통과 후 4K compile warmup 중 `HTTP 500 / llama_decode ret = -3` 크래시.
   - Root Cause:
     1. `ScatterBase` rank mismatch: Ornith 1.5 35B의 2D KV cache `cache_k_l3 [131072, 512]`에 대해 OpenVINO `translate_set_rows`가 4D updates 텐서를 생성하여 OpenVINO core 검증(`scatter_base.cpp:52`)에서 `rank(data)=2, rank(indices)=1, rank(updates)=4` 위반.
     2. Recurrent/Conv dynamic state inference 실패: SSM/Conv 상태 노드의 동적 차원 추론 실패로 정적 shape 고정 및 shape mismatch 예외 발생.
   - Policy: native-GGML fallback을 거부하고 fail-fast 중단. 하드웨어 읽기 전용 유지, 컨테이너 정리 완료.
-  - WBS 6.9 종결: Ornith 1.5 35B 하이브리드 아키텍처는 현재 llama.cpp b10775의 OpenVINO 백엔드와 구조적 비호환이 확인되어 closed 처리함.
+  - WBS 6.9 종결: Ornith 1.5 35B 하이브리드 아키텍처는 현재 llama.cpp b10775의 OpenVINO 백엔드와 구조적 비호환이 확인되어 OpenVINO 스택은 closed 처리함.
+- OpenBLAS + LTO True-4K Screening (Cases A~D): **`DONE`**
+  - 사용자 승인 하에 OpenVINO를 제외하고, OpenBLAS + LTO + Flash Attention + Prompt Cache 최적화 스택(`p520-cpu-llama-opt:b10775-blas`, `docker/cpu-optimized/Dockerfile.blas`)으로 전환.
+  - 사전 검증: `results/raw/WBS69-OPTBLAS-4K-PREFLIGHT.json` (OpenBLAS 인식, VRAM 0B).
+  - 4개 케이스 모두 정확히 **4,071 prompt tokens** 및 동일 prompt/prefix SHA256 적용, prefix 1,623 토큰을 통해 llama.cpp `4 + n_ubatch` 체크포인트 규칙 하에서 `cache_n >= 512` 캐시 재사용 전 케이스 검증 통과.
+  - 측정 결과:
+    - Case A (`...-OPTBLAS-C1-4K-20260927-005`, `-b 1024 -ub 256`): Prompt 18.48 tok/s, TTFT 146.57s, Decode 6.64 tok/s, Wall 185.03s, cache_n 1363.
+    - Case B (`...-OPTBLAS-C1-4K-20260927-006`, `-b 2048 -ub 512`): Prompt 21.62 tok/s, TTFT 137.11s, Decode 5.41 tok/s, Wall 184.30s, cache_n 1107.
+    - Case C (`...-OPTBLAS-C1-4K-20260927-007`, `-b 4096 -ub 512`): Prompt 22.27 tok/s, TTFT 133.12s, Decode 5.38 tok/s, Wall 180.58s, cache_n 1107.
+    - Case D (`...-OPTBLAS-C1-4K-20260927-008`, `-b 4096 -ub 1024`): Prompt **24.69 tok/s**, TTFT 140.78s, Decode 6.49 tok/s, Wall 180.10s, cache_n 595.
+  - 최종 Winner: **Case D (`-b 4096 -ub 1024`)** (+33.6% prompt throughput 향상) (`results/raw/WBS69-OPTBLAS-4K-WINNER.json`, `results/raw/WBS69-OPTBLAS-4K-SCREENING-SUMMARY.json`).
+- WBS 6 전체 **[DONE]**.
 
 ## Next planned work
 
 - WBS 2: DONE
 - WBS 3: DONE
 - WBS 4: DONE
-- WBS 6: DONE (6.1~6.8 PASS, 6.9 CLOSED — FAIL / INCOMPATIBLE).
+- WBS 6: DONE (6.1~6.8 PASS, 6.9 OpenVINO CLOSED / OpenBLAS+LTO DONE with Case D Winner).
 - Next = WBS 5(성능 최적화 및 모델별 최종 레시피 확정).
+
 
 
 

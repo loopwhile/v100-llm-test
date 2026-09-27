@@ -1,0 +1,8 @@
+{
+  "at_utc": "2026-09-27T09:03:40.773009+00:00",
+  "image": "p520-cpu-llama-opt:b10775-blas",
+  "image_digest": "p520-cpu-llama-opt@sha256:5f4f7d9d7bc5c0539eef15d88c43051f23c3bc696acbbd7ab96da041eb29e3e9",
+  "blas_device_visible": true,
+  "list_devices": "Available devices:\n  BLAS: OpenBLAS (0 MiB, 0 MiB free)\n\n",
+  "measured_requests": 0
+}

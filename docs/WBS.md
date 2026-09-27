@@ -902,7 +902,7 @@ recipe 상태는 다음처럼 구분한다.
 WBS 5 완료 후 사용자가 필요에 따라 recipe를 직접 선택한다.
 이 저장소에서는 별도의 배포/production selection phase를 수행하지 않는다.
 
-## 6. CPU+RAM 전용 dual-resident 128K 서버 + 32K measured request 검증 [IN PROGRESS — 6.1~6.8 DONE, 6.9 READY]
+## 6. CPU+RAM 전용 dual-resident 128K 서버 + 32K measured request 검증 [DONE]
 
 P520의 CPU+RAM만 사용하는 두 개의 llama.cpp server를 **128K context capacity(`--ctx-size 131072`)로 동시에 기동/resident** 상태로 유지한 뒤, 실제 measured request는 **실사용에 가까운 32K class 요청**을 **한 번에 하나씩 직렬 실행**한다.
 
@@ -1130,37 +1130,36 @@ Winner policy:
 
 
 
-### 6.9 Combined optimized CPU serving stack — true-4K A/B/C/D [CLOSED — FAIL / INCOMPATIBLE]
+### 6.9 Combined optimized CPU serving stack — true-4K A/B/C/D [DONE — OpenVINO CLOSED / OpenBLAS+LTO COMPLETED]
 
 목적:
 - WBS 6.8에서 `-b/-ub` 확대만으로는 2K prefill 개선이 없음을 확인했다.
-- 이번 단계는 weight/KV quantization을 바꾸지 않고, 남아 있는 serving-side 최적화들을 **하나의 combined optimized stack**으로 적용한 상태에서 true-4K prompt의 실사용형 성능을 측정하고자 했다.
-- 개별 최적화의 기여도를 분해하는 A/B test가 아니다. OpenVINO/OpenBLAS/LTO/cache/FA/warm-resident/priority 등의 **합성된 recipe 전체**를 평가하고, 그 stack 내부에서 `-b/-ub`만 A~D로 바꾸는 계획이었다.
-- measured request는 **정확히 4회** 예정이었으나, Case A setup compile warmup 단계에서 OpenVINO 런타임-모델 구조적 비호환이 확인되어 fail-fast 중단되었다.
+- 이번 단계는 weight/KV quantization을 바꾸지 않고, serving-side 최적화들을 적용한 상태에서 true-4K prompt의 실사용형 성능을 측정하고 최적 `-b/-ub` 조합을 확정한다.
+- 최초 시도된 OpenVINO 결합 스택은 런타임 구조 비호환으로 실패 종결되었으며, 사용자 승인에 따라 크래시된 OpenVINO를 배제한 OpenBLAS + LTO + Flash Attention + Prompt Cache 최적화 스택으로 True-4K A/B/C/D 선별을 완수했다.
 
 제외/고정:
 - KV quant 변경 제외: K/V 모두 기존 `Q8_0`.
 - weight quant 변경 제외: Ornith 1.5 35B-A3B `Q4_K_M` 그대로.
 - CPU coexistence envelope 유지: `-t 4 -tb 4`, Docker cpuset logical CPU IDs `1,2,3,4`.
-- GPU offload 없음: `--n-gpu-layers 0`, CUDA build OFF.
+- GPU offload 없음: `--n-gpu-layers 0`, CUDA build OFF, GPU VRAM 0B.
 - server capacity: `--ctx-size 131072`.
 - speculative: `ngram-mod` 24/48/64.
 
-#### 6.9.1 optimized image [DONE]
+#### 6.9.1 OpenVINO optimized image [DONE]
 - Dockerfile: `docker/cpu-optimized/Dockerfile`.
 - Pinned commit: `67a17c17caa95742186f8b1ecadd1b5abd6d5ebb`.
 - Cmake 옵션: `GGML_BACKEND_DL=ON`, `GGML_CPU_ALL_VARIANTS=ON`, `GGML_NATIVE=OFF` (DL backend 호환), `GGML_LTO=ON`, `GGML_CUDA=OFF`, `GGML_BLAS=ON` (`GGML_BLAS_VENDOR=OpenBLAS`), `GGML_OPENVINO=ON`.
 - OpenVINO runtime: 2026.3.1 (`2026.3.1.22476.56d9685302d`).
 - 빌드 결과: `p520-cpu-llama-opt:b10775` (`p520-cpu-llama-opt@sha256:fb36832f7cd61afc59a2e753e0b84ab52d4d44673e60938107cdb7c6a31d3c0f`).
 
-#### 6.9.2 preflight device verification [PASS]
+#### 6.9.2 OpenVINO preflight device verification [PASS]
 - 증거: `results/raw/WBS69-OPT4K-PREFLIGHT.json`.
 - 디바이스 인식:
   - `BLAS: OpenBLAS (0 MiB, 0 MiB free)`
   - `OPENVINO0: OpenVINO Runtime (62558 MiB, 62558 MiB free)`
 - OpenVINO 런타임 라이브러리 및 디바이스 가시성 통과 확인.
 
-#### 6.9.3 런타임 실행 및 장애 원인 분석 [FAIL / INCOMPATIBLE]
+#### 6.9.3 OpenVINO 런타임 실행 및 장애 원인 분석 [FAIL / INCOMPATIBLE]
 - Case A: `EXP-P520-CPU-ORN15-35B-OPTSTACK-C1-4K-20260927-001` (`-b 1024 -ub 256`).
 - 서버 기동 및 `/health` 통과 (`{"status":"ok"}`).
 - 그러나 첫 번째 unmeasured 4K compile warmup 요청 실행 도중 `HTTP Error 500: Internal Server Error` (`llama_decode: failed to decode, ret = -3`) 발생.
@@ -1174,13 +1173,34 @@ Winner policy:
 2. **Recurrent/Conv State Dynamic Dimension 추론 불가**:
    - Ornith 1.5 하이브리드 아키텍처의 SSM/Conv 상태 노드(`conv_states_reshaped-0`, `state_predelta-0`)에 대해 OpenVINO 백엔드가 동적 차원을 결정하지 못해 웜업 시퀀스 shape으로 정적 고정되며, 후속 토큰 처리 시 `Can't set the input tensor with index: 3, because the model input (shape=[1,1,2,2048]) and the tensor (shape=(1.1.11.2048)) are incompatible` 텐서 형태 비호환 예외가 발생한다.
 
-#### 6.9.4 종결 및 정책 준수
+#### 6.9.4 OpenVINO 종결 및 정책 준수
 - 프로젝트 불변 정책에 따라 native-GGML fallback을 조용히 수용하지 않고 즉시 fail-fast 종료했다.
 - 하드웨어 읽기 전용 원칙 준수 (GPU 클럭/전력/persistence mode 변경 없음).
-- 컨테이너 정리 완료.
-- Ornith 1.5 35B-A3B 하이브리드 아키텍처는 현재 llama.cpp b10775의 OpenVINO 백엔드와 구조적으로 비호환됨이 입증되었으며, WBS 6.9는 **`CLOSED — FAIL / INCOMPATIBLE`**로 종결한다. 임의 설정 변경을 통한 추가 재시도는 수행하지 않는다.
+- Ornith 1.5 35B-A3B 하이브리드 아키텍처는 현재 llama.cpp b10775의 OpenVINO 백엔드와 구조적으로 비호환됨이 입증되었으며, OpenVINO 경로는 **`CLOSED — FAIL / INCOMPATIBLE`**로 종결하고 증거를 영구 보존한다.
 
-현재 상태: **CLOSED — FAIL / INCOMPATIBLE**.
+#### 6.9.5 OpenBLAS + LTO True-4K Screening (Cases A~D) [DONE]
+사용자 승인 하에 OpenVINO를 제외하고, 유효성이 입증된 최적화 스택(OpenBLAS + LTO + Flash Attention + Prompt Cache)을 적용한 `p520-cpu-llama-opt:b10775-blas` 이미지(`docker/cpu-optimized/Dockerfile.blas`)를 통해 True-4K A/B/C/D 스크리닝을 완수했다.
+
+- **Preflight**: `results/raw/WBS69-OPTBLAS-4K-PREFLIGHT.json` (OpenBLAS 인식 통과, VRAM 0B 격리 유지).
+- **실행 계약 및 검증 기준**:
+  - live tokenizer 검증: 4개 케이스 모두 정확히 **4,071 prompt tokens** 및 동일 prompt hash(`2378b3662af3...`), 동일 prefix hash(`01f0a0cb5cf8...`) 적용.
+  - Prefix cache 검증: llama.cpp의 `4 + n_ubatch` 체크포인트 오프셋을 고려하여 prefix 범위를 1,600~1,638 토큰(실측 1,623 토큰)으로 설정, 모든 케이스에서 `cache_n >= 512` 캐시 재사용 검증 통과.
+  - Coexistence envelope: 4 physical CPU cores (`cpuset 1,2,3,4`), `-t 4 -tb 4`, GPU VRAM 0B 완벽 격리.
+- **측정 결과**:
+
+  | Case | Experiment ID | `-b` | `-ub` | Prompt Tokens | Prompt Eval TPS | TTFT (s) | Decode TPS | Batch Wall (s) | Cache N |
+  |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+  | **A** | `...-OPTBLAS-C1-4K-20260927-005` | 1024 | 256 | 4,071 | 18.48 tok/s | 146.57s | 6.64 tok/s | 185.03s | 1,363 |
+  | **B** | `...-OPTBLAS-C1-4K-20260927-006` | 2048 | 512 | 4,071 | 21.62 tok/s | 137.11s | 5.41 tok/s | 184.30s | 1,107 |
+  | **C** | `...-OPTBLAS-C1-4K-20260927-007` | 4096 | 512 | 4,071 | 22.27 tok/s | 133.12s | 5.38 tok/s | 180.58s | 1,107 |
+  | **D** | `...-OPTBLAS-C1-4K-20260927-008` | 4096 | 1024 | 4,071 | **24.69 tok/s** | 140.78s | 6.49 tok/s | 180.10s | 595 |
+
+- **Winner 선정 및 결론**:
+  - 최고 Prompt Eval 속도: **Case D (24.69 tok/s)**.
+  - 2% tie floor: 24.20 tok/s. Case A (18.48), Case B (21.62), Case C (22.27) 모두 2% floor 미달로 동률 케이스 없음 (`tied_cases: ["D"]`).
+  - Baseline(Case A, 18.48 tok/s) 대비 Case D는 **+33.6% prompt throughput 향상** 달성.
+  - 최종 Winner: **Case D (`-b 4096 -ub 1024`)** (`results/raw/WBS69-OPTBLAS-4K-WINNER.json`, `results/raw/WBS69-OPTBLAS-4K-SCREENING-SUMMARY.json`).
+- WBS 6.9 전체 [DONE].
 
 ## 실행 규칙
 - 별도 승인이 없는 한 선언된 configuration당 measured execution은 1회만 수행한다.

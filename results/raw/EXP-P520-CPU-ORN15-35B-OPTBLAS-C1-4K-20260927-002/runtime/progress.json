@@ -1,0 +1,5 @@
+{
+  "phase": "failed",
+  "error": "RuntimeError('prompt-cache optimization not proven: cache_n=507, required>=512')",
+  "updated_at_utc": "2026-09-27T08:57:32.797614+00:00"
+}

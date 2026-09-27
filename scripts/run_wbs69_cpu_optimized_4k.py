@@ -44,7 +44,7 @@ from measurement_policy import future_config
 
 ROOT = Path(__file__).resolve().parents[1]
 
-DEFAULT_IMAGE = "p520-cpu-llama-opt:b10775"
+DEFAULT_IMAGE = "p520-cpu-llama-opt:b10775-blas"
 ORNITH_MODEL_PATH = "/srv/models/ornith-1.5-35b-a3b-gguf/Ornith-1.5-35B-Q4_K_M.gguf"
 ORNITH_MODEL_NAME = "Ornith-1.5-35B-Q4_K_M.gguf"
 PORT = 8084
@@ -52,8 +52,8 @@ CONTAINER = "p520-cpu-ornith-opt"
 
 TARGET_MIN = 4000
 TARGET_MAX = 4096
-PREFIX_MIN = 1000
-PREFIX_MAX = 1024
+PREFIX_MIN = 1600
+PREFIX_MAX = 1638
 COMPLETION_TOKENS = 256
 CACHE_REUSE_MIN = 256
 CACHE_HIT_ACCEPT_MIN = 512
@@ -64,25 +64,25 @@ CASES: List[Dict[str, Any]] = [
         "case": "A",
         "b": 1024,
         "ub": 256,
-        "exp_id": "EXP-P520-CPU-ORN15-35B-OPTSTACK-C1-4K-20260927-001",
+        "exp_id": "EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-4K-20260927-005",
     },
     {
         "case": "B",
         "b": 2048,
         "ub": 512,
-        "exp_id": "EXP-P520-CPU-ORN15-35B-OPTSTACK-C1-4K-20260927-002",
+        "exp_id": "EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-4K-20260927-006",
     },
     {
         "case": "C",
         "b": 4096,
         "ub": 512,
-        "exp_id": "EXP-P520-CPU-ORN15-35B-OPTSTACK-C1-4K-20260927-003",
+        "exp_id": "EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-4K-20260927-007",
     },
     {
         "case": "D",
         "b": 4096,
         "ub": 1024,
-        "exp_id": "EXP-P520-CPU-ORN15-35B-OPTSTACK-C1-4K-20260927-004",
+        "exp_id": "EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-4K-20260927-008",
     },
 ]
 
@@ -127,7 +127,6 @@ def image_digest(image: str) -> str:
 def list_devices(image: str) -> str:
     cp = command([
         "docker", "run", "--rm",
-        "-e", "GGML_OPENVINO_DEVICE=CPU",
         "--entrypoint", "/app/llama-server",
         image,
         "--list-devices",
@@ -135,9 +134,9 @@ def list_devices(image: str) -> str:
     output = (cp.stdout or "") + "\n" + (cp.stderr or "")
     if cp.returncode != 0:
         raise RuntimeError(f"optimized image --list-devices failed:\n{output}")
-    if "openvino" not in output.lower():
+    if "blas" not in output.lower():
         raise RuntimeError(
-            "OpenVINO device is not visible in optimized image; refusing native fallback.\n"
+            "BLAS device is not visible in optimized image; refusing fallback.\n"
             + output
         )
     return output
@@ -151,10 +150,7 @@ def server_command(case: Dict[str, Any], image: str, cache_dir: Path) -> List[st
         "-p", f"{PORT}:{PORT}",
         "--cpuset-cpus", "1,2,3,4",
         "-v", "/srv/models:/srv/models:ro",
-        "-v", f"{cache_dir}:/var/cache/wbs69-openvino",
-        "-e", "GGML_OPENVINO_DEVICE=CPU",
-        "-e", "GGML_OPENVINO_CACHE_DIR=/var/cache/wbs69-openvino/runtime",
-        "-e", "GGML_OPENVINO_COMPILED_MODEL_CACHE_DIR=/var/cache/wbs69-openvino/compiled",
+        "-e", "GGML_OPENVINO_DEVICE=",
         image,
         "--host", "0.0.0.0",
         "--port", str(PORT),
@@ -345,9 +341,9 @@ def run_case(
         "setup_requests": 2,
         "setup_requests_measured": False,
         "optimization_stack": [
-            "OpenVINO CPU backend",
             "OpenBLAS build",
             "GGML_LTO=ON",
+            "GGML_CPU_ALL_VARIANTS=ON",
             "Flash Attention forced on",
             "mmap + lazy-mode off + server warmup",
             "prompt cache + cache reuse",
@@ -396,7 +392,6 @@ def run_case(
             "list_devices": device_evidence,
             "server_log": logs_after_warmup,
         })
-        require_openvino_runtime(logs_after_warmup)
 
         prefix_content, prefix_tokens, prefix_receipt = calibrate_content(
             adapter,
@@ -534,9 +529,9 @@ def main() -> None:
     with lock_path.open("a+") as lock_fh:
         fcntl.flock(lock_fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
 
-        summary_path = ROOT / "results/raw/WBS69-OPT4K-SCREENING-SUMMARY.json"
-        winner_path = ROOT / "results/raw/WBS69-OPT4K-WINNER.json"
-        preflight_path = ROOT / "results/raw/WBS69-OPT4K-PREFLIGHT.json"
+        summary_path = ROOT / "results/raw/WBS69-OPTBLAS-4K-SCREENING-SUMMARY.json"
+        winner_path = ROOT / "results/raw/WBS69-OPTBLAS-4K-WINNER.json"
+        preflight_path = ROOT / "results/raw/WBS69-OPTBLAS-4K-PREFLIGHT.json"
         if summary_path.exists() or winner_path.exists():
             raise RuntimeError("WBS 6.9 summary/winner already exists; refusing overwrite")
 
@@ -545,7 +540,7 @@ def main() -> None:
             "at_utc": h.utc(),
             "image": args.selected_image,
             "image_digest": image_digest(args.selected_image),
-            "openvino_device_visible": True,
+            "blas_device_visible": True,
             "list_devices": device_evidence,
             "measured_requests": 0,
         })

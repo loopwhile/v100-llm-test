@@ -1,0 +1,14 @@
+{
+  "wbs": "6.9",
+  "selection_policy": "within_2pct_of_peak_then_smallest_b_ub",
+  "peak_prompt_eval_tps": 24.690205927327163,
+  "tie_floor_prompt_eval_tps": 24.19640180878062,
+  "tied_cases": [
+    "D"
+  ],
+  "winner_case": "D",
+  "winner_b": 4096,
+  "winner_ub": 1024,
+  "winner_prompt_eval_tps": 24.690205927327163,
+  "selected_at_utc": "2026-09-27T09:34:08.397744+00:00"
+}

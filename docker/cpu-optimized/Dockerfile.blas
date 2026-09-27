@@ -1,0 +1,5 @@
+# P520 OpenBLAS + LTO optimized CPU-only llama.cpp image (without OpenVINO)
+# Contract: WBS 6.9 OpenBLAS + LTO serving optimization stack
+FROM p520-cpu-llama-opt:b10775
+ENV GGML_OPENVINO_DEVICE=
+RUN rm -f /app/*openvino*

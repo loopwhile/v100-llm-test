@@ -1,0 +1,33 @@
+{
+  "experiment_id": "EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-4K-20260927-001",
+  "case": "A",
+  "b": 1024,
+  "ub": 256,
+  "prompt_tokens": 4083,
+  "completion_tokens": 256,
+  "cache_n": 763,
+  "common_prefix_prompt_tokens": 1023,
+  "prompt_eval_tps": 19.634939400012318,
+  "ttft_ms": 169086.338,
+  "decode_tps": 8.242602748891855,
+  "wall_s": 200.0573534965515,
+  "prompt_messages_sha256": "0b41d4c499e0ebeb249dfd75ff09a3fae80b750ae494a618fc8721d4db0e95da",
+  "prefix_messages_sha256": "0324bc26760f95501ba2d6fe7016ce753f6b126a6f158a4e807cf04151d925d9",
+  "tokenizer_receipt": {
+    "source": "llama tokenizer",
+    "prompt_tokens": 4083,
+    "formatted_prompt_sha256": "fd3cec9f1151ca16f367c0a17186f6845b81890e6c1d0ca2b28683be3d70c5b8"
+  },
+  "timings": {
+    "cache_n": 763,
+    "prompt_n": 3320,
+    "prompt_ms": 169086.338,
+    "prompt_per_token_ms": 50.92961987951807,
+    "prompt_per_second": 19.634939400012318,
+    "predicted_n": 256,
+    "predicted_ms": 30936.83,
+    "predicted_per_token_ms": 121.32090196078433,
+    "predicted_per_second": 8.242602748891855
+  },
+  "measured_at_utc": "2026-09-27T08:50:16.979874+00:00"
+}

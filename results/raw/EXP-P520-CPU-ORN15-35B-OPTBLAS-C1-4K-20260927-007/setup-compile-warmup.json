@@ -1,0 +1,28 @@
+{
+  "measured": false,
+  "prompt_tokens": 4086,
+  "tokenizer_receipt": {
+    "source": "llama tokenizer",
+    "prompt_tokens": 4086,
+    "formatted_prompt_sha256": "d8fe9d06187608e3f48115ace10f704527f44fa70c7675cb4b3cc4e4491d7fa7"
+  },
+  "response_usage": {
+    "completion_tokens": 1,
+    "prompt_tokens": 4086,
+    "total_tokens": 4087,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "response_timings": {
+    "cache_n": 0,
+    "prompt_n": 4086,
+    "prompt_ms": 172123.671,
+    "prompt_per_token_ms": 42.125225403817915,
+    "prompt_per_second": 23.73874538151118,
+    "predicted_n": 1,
+    "predicted_ms": 0.001,
+    "predicted_per_token_ms": 0.0,
+    "predicted_per_second": 0.0
+  }
+}
