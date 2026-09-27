@@ -208,16 +208,26 @@
 - WBS 6 전체 **[DONE]**.
 
 
-## WBS 6.10 optimized CPU true-32K C vs D plan (2026-09-27)
+## WBS 6.10 optimized CPU true-32K 결과 (2026-09-27)
 
-- Goal: 4K의 상위 두 recipe인 C(`4096/512`)와 D(`4096/1024`)를 true-32K에서 직접 비교.
-- measured test: **정확히 2개** (corrected C32 1회, corrected D32 1회). 초기 `...-001`은 harness identity validation에서 measured submission 전에 실패했으므로 measured test에 포함하지 않는다.
-- prompt cache OFF: `--cache-ram 0 --no-cache-prompt`; 4K에서 발생한 cache_n 차이를 제거하고 ubatch 효과를 직접 비교.
-- fixed: Ornith 35B Q4_K_M, Q8_0 KV, OpenBLAS+LTO image, FA ON, 4 physical cores, 128K server capacity, ngram-mod, no GPU offload.
-- workload: 기존 `v1-32k.json`, live tokenizer materialization, 동일 prompt tokens/hash 강제.
-- runner: `python3 scripts/run_wbs610_cpu_optimized_32k.py --run`.
-- 2026-09-27 runner fix: required identity(`runtime_revision`, `launch_command`, `chat_template`, `tool_parser`, `thinking`)를 보완하고 raw 생성 전 `h.validate(config)`를 수행. corrected IDs = `...-003` / `...-004`.
-- Status: **READY / NOT EXECUTED**.
+- Goal: WBS 6.9의 C(`4096/512`) / D(`4096/1024`) 후보가 true-32K에서 실질적인 CPU prefill 가속을 제공하는지 검증.
+- measured cache: OFF (`--cache-ram 0 --no-cache-prompt`).
+- stack: Ornith 35B Q4_K_M / Q8_0, `p520-cpu-llama-opt:b10775-blas`, OpenBLAS+LTO, FA ON, repack, 4 physical cores, 128K server, ngram-mod, no GPU offload.
+- 초기 `...-001`: required harness identity 누락으로 measured submission 전 validation 종료. partial preparation evidence만 보존.
+- corrected C32 `EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-32K-20260927-003`: **PASS**.
+  - `b=4096 / ub=512`.
+  - prompt 31,743 tokens.
+  - Prefill **7.3849 tok/s**, TTFT **4,298.53s**, Decode **3.1405 tok/s**, Wall **4,553.92s**, Peak VRAM 0/0 MiB.
+  - raw prompt SHA256 `75f3de663d9196805b399c70da3f1dd048629c9fca71b7337f0893b6b4527147`.
+- 기존 WBS 6.6 Ornith 32K observed result(31,743 tokens, 7.6303 tok/s, TTFT 4,160.26s, decode 3.1495, wall 4,443.18s) 대비 C32는 prefill -3.22%, TTFT +3.32%, decode -0.28%, wall +2.49%.
+  - 단, WBS 6.6(native + dual-resident)과 WBS 6.10(combined optimized + single-server)은 동일 controlled A/B가 아니므로 특정 개별 최적화의 효과로 귀속하지 않는다.
+  - 결론 범위: **현재 combined optimized C32 configuration이 기존 32K observed result를 상회하지 못함**.
+- runtime progress: cumulative prompt TPS 4K 23.32 → 8K 18.39 → 12K 14.61 → 16K 12.05 → 20K 10.28 → 24K 8.99 → 28K 7.99 → final 약 7.39. 4K 결과의 32K 일반화는 불가.
+- `--prio 1` / `--prio-batch 1`: runtime permission denied로 실제 priority 상승 미적용.
+- D32 `...-004`: **NOT RUN — INTENTIONALLY STOPPED**. C32 결과 후 추가 장시간 실행의 기대 가치가 낮아 사용자 결정으로 중단.
+- D32가 없으므로 C-vs-D full comparison 및 aggregate `WBS610-OPTBLAS-32K-C-VS-D.json`은 생성하지 않음.
+- 상세 보고서: `docs/WBS-6.10-execution-report.md`.
+- Status: **CLOSED — C32 PASS / C32 DID NOT OUTPERFORM PRIOR 32K OBSERVATION / D32 NOT RUN**.
 
 ## Next planned work
 
@@ -225,7 +235,7 @@
 - WBS 3: DONE
 - WBS 4: DONE
 - WBS 6.1~6.9: DONE (6.9 OpenVINO CLOSED / OpenBLAS+LTO 4K DONE).
-- WBS 6.10: READY — optimized true-32K C32 vs D32, exactly 2 measured requests.
+- WBS 6.10: CLOSED — C32 PASS; prior 32K observed result를 상회하지 못했고 D32는 의도적으로 미실행.
 - Next = WBS 5(성능 최적화 및 모델별 최종 레시피 확정).
 
 

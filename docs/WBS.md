@@ -1029,7 +1029,7 @@ llama.cpp의 draft-model-free `ngram-mod` 경로를 활성화한다.
 
 서버는 128K context(`--ctx-size 131072`)로 dual-resident 상태를 유지하며, 실제 measured request는 실사용 리서치/문서 합성형 32K request(`prompt tokens + output reserve <= 32768`)를 직렬로 1회씩 수행하여 완료했다.
 
-- 워크로드: `workloads/capacity/v1-32k.json` (live serving model tokenizer 기준 32K budget 준수, prompt tokens 31,742 및 output reserve 1,024개 evidence 명시). 코딩 벤치마크가 아닌 장문 문서 요약/리서치 합성 워크로드.
+- 워크로드: `workloads/capacity/v1-32k.json` (live serving model tokenizer 기준 32K budget 준수; Gemma prompt 31,742 tokens, Ornith prompt 31,743 tokens, output reserve 1,024개 evidence 명시). 코딩 벤치마크가 아닌 장문 문서 요약/리서치 합성 워크로드.
 - Gemma 4 26B-A4B: `EXP-P520-CPU-GEMMA4-26B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001`
   - 판정: **`PASS`** (Harness PASS, Output PASS, Server Health PASS).
   - TTFT: 4,927.28s (~82.1분), Prefill 속도: 6.44 tok/s (31,742 tokens).
@@ -1041,7 +1041,7 @@ llama.cpp의 draft-model-free `ngram-mod` 경로를 활성화한다.
   - Post-health: both healthy (`true`).
 - Ornith 1.5 35B-A3B: `EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001`
   - 판정: **`PASS`** (Harness PASS, Output PASS, Server Health PASS).
-  - TTFT: 4,160.26s (~69.3분), Prefill 속도: 7.63 tok/s (31,742 tokens).
+  - TTFT: 4,160.26s (~69.3분), Prefill 속도: 7.63 tok/s (31,743 tokens).
   - Decode 속도: 3.15 tok/s (892 completion tokens), Batch Wall Time: 4,443.18s (~74.1분).
   - Peak VRAM: GPU0 0 MiB / GPU1 0 MiB (VRAM 0B 완전 격리 확인).
   - Peer Gemma server: 128K idle resident 유지 (/health 200 OK 확인; smaps_rollup 개별 프로세스 RSS/PSS는 0 기록 한계 명시).
@@ -1222,64 +1222,66 @@ Winner policy:
 - WBS 6.9 전체 [DONE].
 
 
-### 6.10 Optimized CPU true-32K — C vs D ubatch validation [READY — EXACTLY 2 MEASURED TESTS]
+### 6.10 Optimized CPU true-32K validation [CLOSED — C32 PASS / D32 NOT RUN]
 
 목적:
-- WBS 6.9 true-4K에서 최종 후보로 남은 Case C(`b4096/ub512`)와 Case D(`b4096/ub1024`)를 32K에서 직접 비교한다.
-- 4K cached matrix에서는 `cache_n`이 C/D에서 달라 순수 `ub` 효과 해석이 섞였으므로, 32K 본 측정에서는 **prompt cache를 완전히 비활성화**한다.
-- 따라서 measured variable은 `ub=512 vs 1024` 하나이며 `b=4096`과 나머지 optimized stack은 동일하다.
-- measured request는 **정확히 2회**, 각 case 1회다.
+- WBS 6.9 true-4K에서 상위 후보로 남은 Case C(`b4096/ub512`)와 Case D(`b4096/ub1024`)가 true-32K에서도 실질적인 CPU prefill 가속을 제공하는지 확인한다.
+- 4K cached matrix의 `cache_n` 차이를 제거하기 위해 32K measured request에서는 prompt cache를 완전히 비활성화한다.
+- 최초 계획은 C32/D32 각 1회 비교였으나, C32가 장시간 측정 후 기존 32K observed result를 상회하지 못해 사용자 결정으로 D32는 실행하지 않았다. 따라서 이 단계는 완전한 C-vs-D 비교가 아니라 C32 validation 결과로 종결한다.
 
 공통 고정:
 - model: Ornith 1.5 35B-A3B `Q4_K_M`.
 - KV: `Q8_0`.
-- image: `p520-cpu-llama-opt:b10775-blas`.
-- OpenBLAS + LTO + `GGML_CPU_ALL_VARIANTS=ON`.
-- `-fa on`.
+- runtime: llama.cpp b10775 / commit `67a17c17caa95742186f8b1ecadd1b5abd6d5ebb`.
+- image: `p520-cpu-llama-opt:b10775-blas` (`sha256:5f4f7d9d7bc5c0539eef15d88c43051f23c3bc696acbbd7ab96da041eb29e3e9`).
+- OpenBLAS + LTO + `GGML_CPU_ALL_VARIANTS=ON`, `-fa on`, `--repack`.
 - `-t 4 -tb 4`, cpuset logical CPU IDs `1,2,3,4`.
 - `--ctx-size 131072 --parallel 1`.
-- `--load-mode mmap --lazy-mode off --warmup --repack`.
-- `--cpu-strict 1 --cpu-strict-batch 1`.
-- `--prio 1 --prio-batch 1 --poll 50 --poll-batch 1`.
+- `--load-mode mmap --lazy-mode off --warmup`.
+- `--cpu-strict 1 --cpu-strict-batch 1 --poll 50 --poll-batch 1`.
 - ngram-mod 24/48/64.
 - `--n-gpu-layers 0`.
 - measured cache policy: `--cache-ram 0 --no-cache-prompt`.
-- full-size 32K setup/warmup inference는 추가하지 않는다.
 
-Measured matrix:
-| Case | `-b` | `-ub` | Measured request |
-|:---:|---:|---:|---:|
-| C32 | 4096 | 512 | 1 × true-32K |
-| D32 | 4096 | 1024 | 1 × true-32K |
+실행 기록:
+- 초기 C32 attempt `EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-32K-20260927-001`:
+  - harness required identity(`runtime_revision`, `launch_command`, `chat_template`, `tool_parser`, `thinking`) 누락으로 measured request 제출 전 validation 단계에서 종료.
+  - partial preparation evidence만 immutable raw로 보존.
+  - corrected runner는 container/raw 생성 전에 `h.validate(config)`를 수행한다.
+- corrected C32 `EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-32K-20260927-003`: **PASS**.
+  - `-b 4096 -ub 512`.
+  - exact prompt tokens: **31,743**.
+  - raw prompt SHA256: `75f3de663d9196805b399c70da3f1dd048629c9fca71b7337f0893b6b4527147`.
+  - Prefill: **7.3849 tok/s**.
+  - TTFT: **4,298.53s** (~71.64분).
+  - Decode: **3.1405 tok/s**.
+  - Batch wall: **4,553.92s** (~75.90분).
+  - sampled Peak VRAM: GPU0/GPU1 **0 MiB**.
+  - output/mechanical verdict PASS, post-health 정상.
+- runtime caveat:
+  - `--prio 1` / `--prio-batch 1`은 container에서 `Permission denied` / `Operation not permitted`가 발생하여 실제 priority 상승은 적용되지 않았다.
 
-Workload:
-- 기존 `workloads/capacity/v1-32k.json` 재사용.
-- 매 case live Ornith tokenizer로 materialize.
-- `prompt + output reserve(1024) <= 32768` 강제.
-- C32/D32의 `prompt_tokens`와 raw prompt SHA256이 동일하지 않으면 comparison summary 생성 금지.
+기존 WBS 6.6 Ornith 32K observed result와의 참고 비교:
+- WBS 6.6: 31,743 prompt tokens, Prefill 7.6303 tok/s, TTFT 4,160.26s, Decode 3.1495 tok/s, Wall 4,443.18s.
+- WBS 6.10 C32: Prefill **-3.22%**, TTFT **+3.32%**, Decode **-0.28%**, Wall **+2.49%**.
+- 단, WBS 6.6은 native CPU stack + dual-resident 조건이고 WBS 6.10은 combined optimized stack + single-server 조건이므로 동일 controlled A/B가 아니다. 차이를 OpenBLAS, LTO, b/ub 등 특정 단일 설정 효과로 귀속하지 않는다.
+- 직접 확인된 결론은 **이번 combined optimized C32 configuration이 기존 32K observed result를 상회하지 못했다**는 것이다.
 
-Experiment IDs:
-- 초기 C32 attempt `...-001`: runner identity validation 누락(`runtime_revision` 등)으로 **measured request 제출 전 실패**. 부분 raw evidence는 P520 측에 보존하며 최종 비교에는 사용하지 않는다.
-- corrected C32: `EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-32K-20260927-003`.
-- corrected D32: `EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-32K-20260927-004`.
-- corrected runner는 harness required identity 전체를 채우고 `h.validate(config)`를 raw directory 생성 전에 실행한다.
+Long-context runtime progression:
+- 누적 prompt throughput은 4K 23.32 → 8K 18.39 → 12K 14.61 → 16K 12.05 → 20K 10.28 → 24K 8.99 → 28K 7.99 → final 약 7.39 tok/s로 감소했다.
+- 따라서 WBS 6.9의 4K b/ub 이득을 32K 전체 prefill에 직접 일반화할 수 없다.
 
-Primary comparison:
-- prefill tok/s.
-- TTFT.
-- batch wall.
-- decode tok/s는 secondary evidence.
-- 결과가 4K의 D>C 패턴을 유지하는지, 뒤집히는지를 관찰한다. 32K 결과를 128K로 자동 일반화하지 않는다.
+D32:
+- `EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-32K-20260927-004`: **NOT RUN — INTENTIONALLY STOPPED**.
+- C32 한 건이 약 76분 소요됐음에도 기존 32K observed result를 상회하지 못해 추가 장시간 D32 측정의 기대 가치가 낮다고 판단하여 사용자 결정으로 중단했다.
+- D32가 실행되지 않았으므로 `ub=1024`의 true-32K 성능은 판정하지 않는다.
+- `results/raw/WBS610-OPTBLAS-32K-C-VS-D.json`은 두 case 완료를 전제로 하므로 생성되지 않은 것이 정상이다.
 
-Runner:
-```bash
-python3 scripts/run_wbs610_cpu_optimized_32k.py --run
-```
+상세 실행 보고서:
+- [docs/WBS-6.10-execution-report.md](WBS-6.10-execution-report.md)
 
-Aggregate evidence:
-- `results/raw/WBS610-OPTBLAS-32K-C-VS-D.json`.
-
-현재 상태: **READY / NOT EXECUTED**.
+최종 상태:
+- **CLOSED — C32 PASS / C32 DID NOT OUTPERFORM PRIOR 32K OBSERVATION / D32 NOT RUN**.
 
 ## 실행 규칙
 - 별도 승인이 없는 한 선언된 configuration당 measured execution은 1회만 수행한다.

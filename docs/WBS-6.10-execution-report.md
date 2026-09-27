@@ -8,7 +8,9 @@ WBS 6.9 true-4K에서 상위 후보였던 C(`b=4096, ub=512`)와 D(`b=4096, ub=1
 
 ## 2. 실행 스택
 
+- runtime: llama.cpp b10775 / commit `67a17c17caa95742186f8b1ecadd1b5abd6d5ebb`
 - image: `p520-cpu-llama-opt:b10775-blas`
+- image digest: `sha256:5f4f7d9d7bc5c0539eef15d88c43051f23c3bc696acbbd7ab96da041eb29e3e9`
 - OpenBLAS
 - LTO
 - `GGML_CPU_ALL_VARIANTS`
@@ -146,8 +148,8 @@ D32가 실행되지 않았으므로 `ub=1024`가 true-32K에서 C32보다 빠른
 
 ## 9. Final verdict
 
-**WBS 6.10: CLOSED — C32 PASS / NO 32K PERFORMANCE GAIN OBSERVED / D32 NOT RUN**
+**WBS 6.10: CLOSED — C32 PASS / C32 DID NOT OUTPERFORM PRIOR 32K OBSERVATION / D32 NOT RUN**
 
 이 결과는 개별 최적화가 각각 무효임을 증명하는 것이 아니다.
 
-증명된 범위는 **현재 combined optimized C32 serving configuration이 기존 Ornith 32K observed result보다 빠르지 않았다**는 것이다.
+증명된 범위는 **현재 combined optimized C32 serving configuration이 기존 Ornith 32K observed result보다 빠르지 않았다**는 것이다. D32는 실행하지 않았으므로 optimized stack 전체 또는 `ub=1024`의 32K 성능까지 부정하는 결론으로 확대하지 않는다.
