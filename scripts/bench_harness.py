@@ -172,12 +172,16 @@ class HTTPAdapter:
     try:
      slots=self.call("/slots")
      if isinstance(slots,list):
+      if getattr(self,"_wbs5_slot_sink",None):sample["slots"]=slots
       active=sum(1 for slot in slots if isinstance(slot,dict) and slot.get("is_processing"))
       sample["processing"]=max(sample["processing"] or 0,active);sample["resident_slots"]=resident_slots(slots)
     except Exception:pass
    else:
     sample["processing"]=metric_value(metrics,"vllm:num_requests_running");sample["waiting"]=metric_value(metrics,"vllm:num_requests_waiting");sample["kv_usage"]=metric_value(metrics,"vllm:kv_cache_usage_perc")
   except Exception as e:sample["error"]=str(e)
+  if getattr(self,"_wbs5_slot_sink",None):
+   import wbs5_evidence
+   wbs5_evidence.persist_slot_sample(self._wbs5_slot_sink,sample)
   return sample
  def start_overlap_probe(self,expected_concurrency=2,interval_s=.1):
   self._probe_samples=[];self._probe_stop=threading.Event()
@@ -420,6 +424,12 @@ def summarize(config,records,evidence,verdict,gpu_summary):
 
 def run_batch(output,config,workload,adapter):
  config=future_config(config);validate(config)
+ if config.get("phase")=="WBS5":
+  import run_wbs5
+  run_wbs5.validate_worker_config(config)
+  run_wbs5.validate_workload(workload)
+  import wbs5_evidence
+  wbs5_evidence.install_slot_sinks(adapter,output)
  if config["topology"]=="1gpu-x2-independent" and not isinstance(adapter,LiteLLMGatewayAdapter):raise ValueError("1gpu-x2-independent acceptance requires LiteLLM single-gateway adapter")
  if config["measured_repetitions"]!=1:raise ValueError("one measured batch only")
  selected,hashes=cases(workload,config["concurrency"]);payloads=[body(config,workload,x) for x in selected];output=Path(output);output.mkdir(parents=True,exist_ok=True)
@@ -457,7 +467,11 @@ def run_batch(output,config,workload,adapter):
    gpu.stop()
    if config["concurrency"]==2 and hasattr(adapter,"stop_overlap_probe"):adapter.stop_overlap_probe()
  gpu_summary=gpu.summary();save(output/"gpu-peak.json",gpu_summary);save(output/"requests.json",records);after=adapter.health();save(output/"health-after.json",after);server_after=adapter.snapshot();save(output/"server-after.json",server_after)
- if config.get("runtime")=="llama.cpp" and config.get("ngram") not in (None,"off","N/A"):
+ if config.get("phase")=="WBS5":
+  import wbs5_evidence
+  speculative=wbs5_evidence.metric_delta(server_before,server_after,config["runtime"]);save(output/"speculative-evidence.json",speculative)
+  save(output/"slot-progress.json",wbs5_evidence.slot_progress(adapter))
+ elif config.get("runtime")=="llama.cpp" and config.get("ngram") not in (None,"off","N/A"):
   speculative=speculative_metric_delta(server_before,server_after);save(output/"speculative-evidence.json",speculative)
  else:speculative=None
  try:evidence=adapter.overlap_evidence(records)
@@ -477,6 +491,10 @@ def run_batch(output,config,workload,adapter):
  if verdict not in VALID:raise AssertionError(verdict)
  m=summarize(config,records,evidence,verdict,gpu_summary);m["verdict"]=verdict;m["concurrency_verdict"]=concurrency_verdict;m["mechanical_output_verdict"]="PASS" if values=={PASS} else ("FAIL_OUTPUT" if "FAIL_OUTPUT" in values else "NOT_ALL_PASS")
  if speculative is not None:m["speculative_evidence"]=speculative["aggregate"]
+ if config.get("phase")=="WBS5":
+  counts=[r.get("actual_output_tokens") for r in records]
+  m["total_output_tokens"]=sum(counts) if counts and all(type(x) is int for x in counts) else None
+  m["candidate_id"]=config["candidate_id"];m["workload_manifest_sha256"]=config["workload_manifest_sha256"]
  save(output/"metrics.json",m);save(output/"completion.json",{"experiment_id":config["experiment_id"],"verdict":verdict,"completed_at_utc":utc(),"post_health":after});return verdict
 
 

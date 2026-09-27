@@ -1,0 +1,14 @@
+{
+  "repository": "ornith-ai/Ornith-1.5-9B-NVFP4",
+  "revision": "155f200d85ad58464571c77d5e1122ea5d419d7b",
+  "source": "https://huggingface.co/api/models/ornith-ai/Ornith-1.5-9B-NVFP4/tree/155f200d85ad58464571c77d5e1122ea5d419d7b?recursive=true&expand=false",
+  "sha256": {
+    "assets/ornith_9b_eval.png": "5f13eb1febaa4656e2b23baea365bc6e03c052ec8b523e1c45b4a2b183393c43",
+    "assets/ornith_logo.png": "458ee0d85baea4d1fc0b099245f243b21006f696921f896a5b59980a6eadef6a",
+    "model.safetensors": "1cdf915951ce890af09973dba6403a457c6098f31e8613225eef0204c7dd4caa",
+    "tokenizer.json": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+    "config.json": "84bd143f937ebe7f2eb26fe251c2219d318f1945367d8b332ad74b3a80fdd057",
+    "tokenizer_config.json": "316230d6a809701f4db5ea8f8fc862bc3a6f3229c937c174e674ff3ca0a64ac8"
+  },
+  "scope": "revision-bound upstream metadata/LFS hash manifest; no model tensors downloaded"
+}

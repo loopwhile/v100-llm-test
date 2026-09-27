@@ -1,0 +1,2331 @@
+{
+  "inspection_utc": "2026-09-27T15:22:47.169486+00:00",
+  "host": "p520-llm",
+  "scope": "read-only discovery; no compiler, GPU, server, model or inference invoked",
+  "nvcc_which": null,
+  "nvcc_find": [],
+  "nvcc_version": null,
+  "nvcc_absolute_path": null,
+  "CUDA_HOME": null,
+  "CUDA_PATH": null,
+  "cuda_toolkit_roots": [],
+  "system_cuda_runtime_header": false,
+  "installed_packages": {
+    "nvidia-cuda-runtime-cu12": "12.8.90",
+    "nvidia-cuda-nvcc-cu12": "12.9.86",
+    "nvidia-cuda-nvcc": null,
+    "tilelang": "0.1.10",
+    "1cat-vllm": "1.5.0"
+  },
+  "source_inspection": {
+    "tilelang/env.py": {
+      "exists": true,
+      "path": "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/tilelang/env.py",
+      "lines": [
+        {
+          "line": 78,
+          "text": "    # inside ``Map::find`` / vector reallocation under the autotuner ThreadPool."
+        },
+        {
+          "line": 79,
+          "text": "    #"
+        },
+        {
+          "line": 80,
+          "text": "    # Pinning the default to \"0\" lets the GIL serialize tvm-ffi calls (matching"
+        },
+        {
+          "line": 81,
+          "text": "    # the upstream contract). Subprocess work like ``nvcc`` still releases the"
+        },
+        {
+          "line": 82,
+          "text": "    # GIL on its own via the ``subprocess`` module, so the autotuner pool keeps"
+        },
+        {
+          "line": 83,
+          "text": "    # real concurrency exactly where it matters. Users that opt back into the"
+        },
+        {
+          "line": 84,
+          "text": "    # upstream behavior can still set ``TVM_FFI_RELEASE_GIL_BY_DEFAULT=1`` in"
+        },
+        {
+          "line": 85,
+          "text": "    # their environment."
+        },
+        {
+          "line": 108,
+          "text": "    return False"
+        },
+        {
+          "line": 109,
+          "text": ""
+        },
+        {
+          "line": 110,
+          "text": ""
+        },
+        {
+          "line": 111,
+          "text": "def _find_cuda_home() -> str:"
+        },
+        {
+          "line": 112,
+          "text": "    \"\"\"Find the CUDA install path."
+        },
+        {
+          "line": 113,
+          "text": ""
+        },
+        {
+          "line": 114,
+          "text": "    Adapted from https://github.com/pytorch/pytorch/blob/main/torch/utils/cpp_extension.py"
+        },
+        {
+          "line": 115,
+          "text": "    \"\"\""
+        },
+        {
+          "line": 116,
+          "text": "    # Guess #1"
+        },
+        {
+          "line": 117,
+          "text": "    cuda_home = os.environ.get(\"CUDA_HOME\") or os.environ.get(\"CUDA_PATH\")"
+        },
+        {
+          "line": 118,
+          "text": "    if cuda_home is None:"
+        },
+        {
+          "line": 119,
+          "text": "        # Guess #2"
+        },
+        {
+          "line": 120,
+          "text": "        nvcc_path = shutil.which(\"nvcc\")"
+        },
+        {
+          "line": 121,
+          "text": "        if nvcc_path is not None:"
+        },
+        {
+          "line": 122,
+          "text": "            # Standard CUDA pattern"
+        },
+        {
+          "line": 123,
+          "text": "            if \"cuda\" in nvcc_path.lower():"
+        },
+        {
+          "line": 124,
+          "text": "                cuda_home = os.path.dirname(os.path.dirname(nvcc_path))"
+        },
+        {
+          "line": 125,
+          "text": "            # NVIDIA HPC SDK pattern"
+        },
+        {
+          "line": 126,
+          "text": "            elif \"hpc_sdk\" in nvcc_path.lower():"
+        },
+        {
+          "line": 127,
+          "text": "                # Navigate to the root directory of nvhpc"
+        },
+        {
+          "line": 128,
+          "text": "                cuda_home = os.path.dirname(os.path.dirname(os.path.dirname(nvcc_path)))"
+        },
+        {
+          "line": 129,
+          "text": "            # Generic fallback for non-standard or symlinked installs"
+        },
+        {
+          "line": 130,
+          "text": "            else:"
+        },
+        {
+          "line": 131,
+          "text": "                cuda_home = os.path.dirname(os.path.dirname(nvcc_path))"
+        },
+        {
+          "line": 132,
+          "text": ""
+        },
+        {
+          "line": 133,
+          "text": "        elif _get_package_version(\"nvidia-cuda-nvcc\") is not None:"
+        },
+        {
+          "line": 134,
+          "text": "            # Guess #3"
+        },
+        {
+          "line": 135,
+          "text": "            # from pypi package nvidia-cuda-nvcc, only nvidia-cuda-nvcc>=13.0 works."
+        },
+        {
+          "line": 136,
+          "text": "            # nvidia-cuda-nvcc-cu12, etc. only installs `ptxas`, not `nvcc`"
+        },
+        {
+          "line": 137,
+          "text": "            for file in importlib.metadata.files(\"nvidia-cuda-nvcc\") or []:"
+        },
+        {
+          "line": 138,
+          "text": "                if file.name == \"nvcc\" or file.name == \"nvcc.exe\":"
+        },
+        {
+          "line": 139,
+          "text": "                    cuda_home = str(pathlib.Path(file.locate()).parent.parent)"
+        },
+        {
+          "line": 140,
+          "text": "                    break"
+        },
+        {
+          "line": 141,
+          "text": "            else:"
+        },
+        {
+          "line": 142,
+          "text": "                raise AssertionError(\"`nvidia-cuda-nvcc` installed but no `nvcc` found\")"
+        },
+        {
+          "line": 143,
+          "text": ""
+        },
+        {
+          "line": 144,
+          "text": "        else:"
+        },
+        {
+          "line": 145,
+          "text": "            # Guess #4"
+        },
+        {
+          "line": 146,
+          "text": "            if sys.platform == \"win32\":"
+        },
+        {
+          "line": 284,
+          "text": "    \"\"\""
+        },
+        {
+          "line": 285,
+          "text": ""
+        },
+        {
+          "line": 286,
+          "text": "    # CUDA/ROCm home directories"
+        },
+        {
+          "line": 287,
+          "text": "    CUDA_HOME = _find_cuda_home()"
+        },
+        {
+          "line": 288,
+          "text": "    ROCM_HOME = _find_rocm_home()"
+        },
+        {
+          "line": 289,
+          "text": ""
+        },
+        {
+          "line": 290,
+          "text": "    # Path to the TileLang package root"
+        },
+        {
+          "line": 291,
+          "text": "    TILELANG_PACKAGE_PATH = pathlib.Path(__file__).resolve().parent"
+        },
+        {
+          "line": 335,
+          "text": "        Detect target CUDA architecture and set TORCH_CUDA_ARCH_LIST"
+        },
+        {
+          "line": 336,
+          "text": "        to ensure PyTorch extensions are built for the proper GPU arch."
+        },
+        {
+          "line": 337,
+          "text": "        \"\"\""
+        },
+        {
+          "line": 338,
+          "text": "        from tilelang.contrib import nvcc"
+        },
+        {
+          "line": 339,
+          "text": "        from tilelang.utils.target import determine_target"
+        },
+        {
+          "line": 340,
+          "text": ""
+        },
+        {
+          "line": 341,
+          "text": "        target = determine_target(return_object=True)  # get target GPU"
+        },
+        {
+          "line": 342,
+          "text": "        compute_version = nvcc.get_target_compute_version(target)  # e.g. \"8.6\""
+        },
+        {
+          "line": 343,
+          "text": "        major, minor = nvcc.parse_compute_version(compute_version)  # split to (8, 6)"
+        },
+        {
+          "line": 344,
+          "text": "        os.environ[\"TORCH_CUDA_ARCH_LIST\"] = f\"{major}.{minor}\"  # set env var for PyTorch"
+        },
+        {
+          "line": 345,
+          "text": ""
+        },
+        {
+          "line": 346,
+          "text": "    # Cache control API (wrap CacheState)"
+        },
+        {
+          "line": 347,
+          "text": "    def is_cache_enabled(self) -> bool:"
+        },
+        {
+          "line": 397,
+          "text": "disable_cache = env.disable_cache  # CacheState.disable"
+        },
+        {
+          "line": 398,
+          "text": "is_cache_enabled = env.is_cache_enabled  # CacheState.is_enabled"
+        },
+        {
+          "line": 399,
+          "text": ""
+        },
+        {
+          "line": 400,
+          "text": "# Export CUDA_HOME and ROCM_HOME, both are static variables"
+        },
+        {
+          "line": 401,
+          "text": "# after initialization."
+        },
+        {
+          "line": 402,
+          "text": "CUDA_HOME = env.CUDA_HOME"
+        },
+        {
+          "line": 403,
+          "text": "ROCM_HOME = env.ROCM_HOME"
+        },
+        {
+          "line": 404,
+          "text": ""
+        },
+        {
+          "line": 405,
+          "text": ""
+        },
+        {
+          "line": 406,
+          "text": "def get_cuda_dll_search_dirs() -> list[str]:"
+        },
+        {
+          "line": 407,
+          "text": "    \"\"\"Return CUDA_HOME-derived DLL search directories (Windows only)."
+        },
+        {
+          "line": 408,
+          "text": ""
+        },
+        {
+          "line": 409,
+          "text": "    The CUDA_HOME value itself is auto-detected by ``_find_cuda_home`` (env vars,"
+        },
+        {
+          "line": 410,
+          "text": "    ``nvcc`` on PATH, pip ``nvidia-cuda-nvcc`` package, or default install paths)."
+        },
+        {
+          "line": 411,
+          "text": "    This helper expands it into the subdirectories that actually contain"
+        },
+        {
+          "line": 412,
+          "text": "    ``nvcuda.dll`` / ``cudart64_*.dll`` / ``nvrtc64_*.dll`` / ``nvvm*.dll``."
+        },
+        {
+          "line": 413,
+          "text": "    \"\"\""
+        },
+        {
+          "line": 414,
+          "text": "    if not sys.platform.startswith(\"win32\") or not CUDA_HOME:"
+        },
+        {
+          "line": 415,
+          "text": "        return []"
+        },
+        {
+          "line": 416,
+          "text": "    cands = ["
+        },
+        {
+          "line": 417,
+          "text": "        CUDA_HOME,"
+        },
+        {
+          "line": 418,
+          "text": "        os.path.join(CUDA_HOME, \"bin\"),"
+        },
+        {
+          "line": 419,
+          "text": "        os.path.join(CUDA_HOME, \"bin\", \"x86_64\"),"
+        },
+        {
+          "line": 420,
+          "text": "        os.path.join(CUDA_HOME, \"lib\", \"x64\"),"
+        },
+        {
+          "line": 421,
+          "text": "        os.path.join(CUDA_HOME, \"nvvm\", \"bin\"),"
+        },
+        {
+          "line": 422,
+          "text": "    ]"
+        },
+        {
+          "line": 423,
+          "text": "    return [os.path.abspath(p) for p in cands if os.path.isdir(p)]"
+        },
+        {
+          "line": 424,
+          "text": ""
+        },
+        {
+          "line": 425,
+          "text": ""
+        }
+      ]
+    },
+    "tilelang/contrib/nvcc.py": {
+      "exists": true,
+      "path": "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/tilelang/contrib/nvcc.py",
+      "lines": [
+        {
+          "line": 1,
+          "text": "# pylint: disable=invalid-name"
+        },
+        {
+          "line": 2,
+          "text": "# modified from apache tvm python/tvm/contrib/nvcc.py"
+        },
+        {
+          "line": 3,
+          "text": "\"\"\"Utility to invoke nvcc compiler in the system\"\"\""
+        },
+        {
+          "line": 4,
+          "text": ""
+        },
+        {
+          "line": 5,
+          "text": "from __future__ import annotations"
+        },
+        {
+          "line": 6,
+          "text": ""
+        },
+        {
+          "line": 7,
+          "text": "import os"
+        },
+        {
+          "line": 8,
+          "text": "import subprocess"
+        },
+        {
+          "line": 9,
+          "text": "import warnings"
+        },
+        {
+          "line": 10,
+          "text": "import contextlib"
+        },
+        {
+          "line": 11,
+          "text": "from tilelang.env import CUDA_HOME, CUTLASS_INCLUDE_DIR, TILELANG_TEMPLATE_PATH, env"
+        },
+        {
+          "line": 12,
+          "text": "import shutil"
+        },
+        {
+          "line": 13,
+          "text": "import tempfile"
+        },
+        {
+          "line": 14,
+          "text": "import tvm_ffi"
+        },
+        {
+          "line": 15,
+          "text": "from tilelang import tvm as tvm"
+        },
+        {
+          "line": 19,
+          "text": "from tvm.contrib import utils"
+        },
+        {
+          "line": 20,
+          "text": ""
+        },
+        {
+          "line": 21,
+          "text": ""
+        },
+        {
+          "line": 22,
+          "text": "def get_nvcc_subprocess_env() -> dict[str, str] | None:"
+        },
+        {
+          "line": 23,
+          "text": "    \"\"\"Return the environment used by NVCC subprocesses."
+        },
+        {
+          "line": 24,
+          "text": ""
+        },
+        {
+          "line": 25,
+          "text": "    On Windows, the pip CUDA toolkit can provide nvcc without a system CUDA"
+        },
+        {
+          "line": 26,
+          "text": "    install, but nvcc still needs MSVC's host compiler environment."
+        },
+        {
+          "line": 27,
+          "text": "    \"\"\""
+        },
+        {
+          "line": 28,
+          "text": "    if os.name != \"nt\":"
+        },
+        {
+          "line": 29,
+          "text": "        return None"
+        },
+        {
+          "line": 30,
+          "text": ""
+        },
+        {
+          "line": 54,
+          "text": "        The cuda code."
+        },
+        {
+          "line": 55,
+          "text": ""
+        },
+        {
+          "line": 56,
+          "text": "    target_format : str"
+        },
+        {
+          "line": 57,
+          "text": "        The target format of nvcc compiler."
+        },
+        {
+          "line": 58,
+          "text": ""
+        },
+        {
+          "line": 59,
+          "text": "    arch : str"
+        },
+        {
+          "line": 60,
+          "text": "        The cuda architecture."
+        },
+        {
+          "line": 61,
+          "text": ""
+        },
+        {
+          "line": 93,
+          "text": "        out_file.write(code)"
+        },
+        {
+          "line": 94,
+          "text": ""
+        },
+        {
+          "line": 95,
+          "text": "    file_target = path_target if path_target else temp_target"
+        },
+        {
+          "line": 96,
+          "text": "    cmd = [get_nvcc_compiler()]"
+        },
+        {
+          "line": 97,
+          "text": "    cmd += [f\"--{target_format}\", \"-O3\"]"
+        },
+        {
+          "line": 98,
+          "text": "    # Always include line info for better profiling and mapping"
+        },
+        {
+          "line": 99,
+          "text": "    cmd += [\"-lineinfo\"]"
+        },
+        {
+          "line": 100,
+          "text": "    if isinstance(arch, list):"
+        },
+        {
+          "line": 122,
+          "text": "    cmd += [\"-o\", file_target]"
+        },
+        {
+          "line": 123,
+          "text": "    cmd += [temp_code]"
+        },
+        {
+          "line": 124,
+          "text": ""
+        },
+        {
+          "line": 125,
+          "text": "    compiler_env = get_nvcc_subprocess_env()"
+        },
+        {
+          "line": 126,
+          "text": "    if compiler_env is None:"
+        },
+        {
+          "line": 127,
+          "text": "        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)"
+        },
+        {
+          "line": 128,
+          "text": "    else:"
+        },
+        {
+          "line": 129,
+          "text": "        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=compiler_env)"
+        },
+        {
+          "line": 181,
+          "text": "    except Exception:"
+        },
+        {
+          "line": 182,
+          "text": "        pass"
+        },
+        {
+          "line": 183,
+          "text": "    try:"
+        },
+        {
+          "line": 184,
+          "text": "        if CUDA_HOME:"
+        },
+        {
+          "line": 185,
+          "text": "            options.append(f\"-I{os.path.join(CUDA_HOME, 'include')}\")"
+        },
+        {
+          "line": 186,
+          "text": "    except Exception:"
+        },
+        {
+          "line": 187,
+          "text": "        pass"
+        },
+        {
+          "line": 188,
+          "text": ""
+        },
+        {
+          "line": 189,
+          "text": "    # Preserve user flags exactly, including repeated tokens required by NVCC"
+        },
+        {
+          "line": 225,
+          "text": ""
+        },
+        {
+          "line": 226,
+          "text": ""
+        },
+        {
+          "line": 227,
+          "text": "def _find_tool(name: str) -> str | None:"
+        },
+        {
+          "line": 228,
+          "text": "    \"\"\"Find a CUDA binary in PATH or under CUDA_HOME/bin.\"\"\""
+        },
+        {
+          "line": 229,
+          "text": "    path = shutil.which(name)"
+        },
+        {
+          "line": 230,
+          "text": "    if path:"
+        },
+        {
+          "line": 231,
+          "text": "        return path"
+        },
+        {
+          "line": 232,
+          "text": "    if CUDA_HOME:"
+        },
+        {
+          "line": 233,
+          "text": "        candidate = os.path.join(CUDA_HOME, \"bin\", name)"
+        },
+        {
+          "line": 234,
+          "text": "        if os.path.exists(candidate):"
+        },
+        {
+          "line": 235,
+          "text": "            return candidate"
+        },
+        {
+          "line": 236,
+          "text": "    return None"
+        },
+        {
+          "line": 237,
+          "text": ""
+        },
+        {
+          "line": 294,
+          "text": "            os.remove(cubin_path)"
+        },
+        {
+          "line": 295,
+          "text": ""
+        },
+        {
+          "line": 296,
+          "text": ""
+        },
+        {
+          "line": 297,
+          "text": "def find_cuda_path():"
+        },
+        {
+          "line": 298,
+          "text": "    \"\"\"Utility function to find cuda path"
+        },
+        {
+          "line": 299,
+          "text": ""
+        },
+        {
+          "line": 300,
+          "text": "    Returns"
+        },
+        {
+          "line": 301,
+          "text": "    -------"
+        },
+        {
+          "line": 302,
+          "text": "    path : str"
+        },
+        {
+          "line": 303,
+          "text": "        Path to cuda root."
+        },
+        {
+          "line": 304,
+          "text": "    \"\"\""
+        },
+        {
+          "line": 305,
+          "text": "    if CUDA_HOME:"
+        },
+        {
+          "line": 306,
+          "text": "        return CUDA_HOME"
+        },
+        {
+          "line": 307,
+          "text": "    raise RuntimeError("
+        },
+        {
+          "line": 308,
+          "text": "        \"Failed to automatically detect CUDA installation. Please set the CUDA_HOME environment variable manually (e.g., export CUDA_HOME=/usr/local/cuda).\""
+        },
+        {
+          "line": 309,
+          "text": "    )"
+        },
+        {
+          "line": 310,
+          "text": ""
+        },
+        {
+          "line": 311,
+          "text": ""
+        },
+        {
+          "line": 312,
+          "text": "def get_cuda_library_dirs(cuda_path=None):"
+        },
+        {
+          "line": 313,
+          "text": "    \"\"\"Return CUDA library directories that nvcc may need for host linking.\"\"\""
+        },
+        {
+          "line": 314,
+          "text": "    if cuda_path is None:"
+        },
+        {
+          "line": 315,
+          "text": "        cuda_path = find_cuda_path()"
+        },
+        {
+          "line": 316,
+          "text": ""
+        },
+        {
+          "line": 317,
+          "text": "    base_dirs = []"
+        },
+        {
+          "line": 318,
+          "text": "    targets_dir = os.path.join(cuda_path, \"targets\")"
+        },
+        {
+          "line": 319,
+          "text": "    if os.path.isdir(targets_dir):"
+        },
+        {
+          "line": 349,
+          "text": "    cuda_path : Optional[str]"
+        },
+        {
+          "line": 350,
+          "text": ""
+        },
+        {
+          "line": 351,
+          "text": "        Path to cuda root.  If None is passed, will use"
+        },
+        {
+          "line": 352,
+          "text": "        `find_cuda_path()` as default."
+        },
+        {
+          "line": 353,
+          "text": ""
+        },
+        {
+          "line": 354,
+          "text": "    Returns"
+        },
+        {
+          "line": 355,
+          "text": "    -------"
+        },
+        {
+          "line": 356,
+          "text": "    version : float"
+        },
+        {
+          "line": 358,
+          "text": ""
+        },
+        {
+          "line": 359,
+          "text": "    \"\"\""
+        },
+        {
+          "line": 360,
+          "text": "    if cuda_path is None:"
+        },
+        {
+          "line": 361,
+          "text": "        cuda_path = find_cuda_path()"
+        },
+        {
+          "line": 362,
+          "text": ""
+        },
+        {
+          "line": 363,
+          "text": "    version_file_path = os.path.join(cuda_path, \"version.txt\")"
+        },
+        {
+          "line": 364,
+          "text": "    if not os.path.exists(version_file_path):"
+        },
+        {
+          "line": 365,
+          "text": "        # Debian/Ubuntu repackaged CUDA path"
+        },
+        {
+          "line": 371,
+          "text": "    except FileNotFoundError:"
+        },
+        {
+          "line": 372,
+          "text": "        pass"
+        },
+        {
+          "line": 373,
+          "text": ""
+        },
+        {
+          "line": 374,
+          "text": "    cmd = [os.path.join(cuda_path, \"bin\", \"nvcc\"), \"--version\"]"
+        },
+        {
+          "line": 375,
+          "text": "    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)"
+        },
+        {
+          "line": 376,
+          "text": "    (out, _) = proc.communicate()"
+        },
+        {
+          "line": 377,
+          "text": "    out = py_str(out)"
+        },
+        {
+          "line": 378,
+          "text": "    if proc.returncode == 0:"
+        },
+        {
+          "line": 383,
+          "text": "    raise RuntimeError(\"Cannot read cuda version file\")"
+        },
+        {
+          "line": 384,
+          "text": ""
+        },
+        {
+          "line": 385,
+          "text": ""
+        },
+        {
+          "line": 386,
+          "text": "@tvm_ffi.register_global_func(\"tvm.contrib.nvcc.get_compute_version\", override=True)"
+        },
+        {
+          "line": 387,
+          "text": "def get_target_compute_version(target=None):"
+        },
+        {
+          "line": 388,
+          "text": "    \"\"\"Utility function to get compute capability of compilation target."
+        },
+        {
+          "line": 389,
+          "text": ""
+        },
+        {
+          "line": 390,
+          "text": "    Looks for the target arch in three different places, first in the target input, then the"
+        },
+        {
+          "line": 530,
+          "text": "        return False"
+        },
+        {
+          "line": 531,
+          "text": ""
+        },
+        {
+          "line": 532,
+          "text": ""
+        },
+        {
+          "line": 533,
+          "text": "@tvm_ffi.register_global_func(\"tvm.contrib.nvcc.supports_bf16\", override=True)"
+        },
+        {
+          "line": 534,
+          "text": "def have_bf16(compute_version):"
+        },
+        {
+          "line": 535,
+          "text": "    \"\"\"Either bf16 support is provided in the compute capability or not"
+        },
+        {
+          "line": 536,
+          "text": ""
+        },
+        {
+          "line": 537,
+          "text": "    Parameters"
+        },
+        {
+          "line": 543,
+          "text": "    return major >= 8"
+        },
+        {
+          "line": 544,
+          "text": ""
+        },
+        {
+          "line": 545,
+          "text": ""
+        },
+        {
+          "line": 546,
+          "text": "@tvm_ffi.register_global_func(\"tvm.contrib.nvcc.supports_fp8\", override=True)"
+        },
+        {
+          "line": 547,
+          "text": "def have_fp8(compute_version):"
+        },
+        {
+          "line": 548,
+          "text": "    \"\"\"Whether fp8 support is provided in the specified compute capability or not"
+        },
+        {
+          "line": 549,
+          "text": ""
+        },
+        {
+          "line": 550,
+          "text": "    Parameters"
+        },
+        {
+          "line": 560,
+          "text": "    return any(conditions)"
+        },
+        {
+          "line": 561,
+          "text": ""
+        },
+        {
+          "line": 562,
+          "text": ""
+        },
+        {
+          "line": 563,
+          "text": "@tvm_ffi.register_global_func(\"tvm.contrib.nvcc.supports_tma\", override=True)"
+        },
+        {
+          "line": 564,
+          "text": "def have_tma(target):"
+        },
+        {
+          "line": 565,
+          "text": "    \"\"\"Whether TMA support is provided in the specified compute capability or not"
+        },
+        {
+          "line": 566,
+          "text": ""
+        },
+        {
+          "line": 567,
+          "text": "    Parameters"
+        },
+        {
+          "line": 595,
+          "text": "    return major >= 9"
+        },
+        {
+          "line": 596,
+          "text": ""
+        },
+        {
+          "line": 597,
+          "text": ""
+        },
+        {
+          "line": 598,
+          "text": "def get_nvcc_compiler() -> str:"
+        },
+        {
+          "line": 599,
+          "text": "    \"\"\"Get the path to the nvcc compiler\"\"\""
+        },
+        {
+          "line": 600,
+          "text": "    return os.path.join(find_cuda_path(), \"bin\", \"nvcc\")"
+        }
+      ]
+    },
+    "tilelang/engine/lower.py": {
+      "exists": true,
+      "path": "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/tilelang/engine/lower.py",
+      "lines": [
+        {
+          "line": 10,
+          "text": "import tvm_ffi"
+        },
+        {
+          "line": 11,
+          "text": "from tvm.ir import CallingConv"
+        },
+        {
+          "line": 12,
+          "text": "from tvm.target import Target"
+        },
+        {
+          "line": 13,
+          "text": "from tilelang.contrib import hipcc, nvcc"
+        },
+        {
+          "line": 14,
+          "text": "from tilelang.env import COMPOSABLE_KERNEL_INCLUDE_DIR, CUTLASS_INCLUDE_DIR, TILELANG_TEMPLATE_PATH"
+        },
+        {
+          "line": 15,
+          "text": "from tilelang.transform import PassConfigKey"
+        },
+        {
+          "line": 16,
+          "text": "from tilelang.transform.metal import MarkHostMetalContext"
+        },
+        {
+          "line": 17,
+          "text": "from tilelang.engine.param import KernelParam, CompiledArtifact"
+        },
+        {
+          "line": 102,
+          "text": ""
+        },
+        {
+          "line": 103,
+          "text": "@tvm_ffi.register_global_func(\"tilelang_callback_cuda_compile\", override=True)"
+        },
+        {
+          "line": 104,
+          "text": "def tilelang_callback_cuda_compile(code, target, pass_config=None):"
+        },
+        {
+          "line": 105,
+          "text": "    target_arch = nvcc.get_target_arch(nvcc.get_target_compute_version(target))"
+        },
+        {
+          "line": 106,
+          "text": ""
+        },
+        {
+          "line": 107,
+          "text": "    arch = [f\"-arch=sm_{target_arch}\"]"
+        },
+        {
+          "line": 108,
+          "text": "    compile_format = \"cubin\""
+        },
+        {
+          "line": 109,
+          "text": ""
+        },
+        {
+          "line": 149,
+          "text": "        options.append(\"-w\")  # Suppress warnings to make ptxas output more readable"
+        },
+        {
+          "line": 150,
+          "text": "        verbose = True"
+        },
+        {
+          "line": 151,
+          "text": ""
+        },
+        {
+          "line": 152,
+          "text": "    ptx = nvcc.compile_cuda("
+        },
+        {
+          "line": 153,
+          "text": "        code,"
+        },
+        {
+          "line": 154,
+          "text": "        compile_format,"
+        },
+        {
+          "line": 155,
+          "text": "        arch,"
+        },
+        {
+          "line": 156,
+          "text": "        options=options,"
+        }
+      ]
+    },
+    "flash_qla/ops/gated_delta_rule/chunk/__init__.py": {
+      "exists": true,
+      "path": "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/flash_qla/ops/gated_delta_rule/chunk/__init__.py",
+      "lines": []
+    }
+  },
+  "original_route_source": {
+    "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py": {
+      "lines": [
+        {
+          "line": 386,
+          "text": "    return envs.VLLM_SM70_PROFILE_TRACE and not torch.compiler.is_compiling()"
+        },
+        {
+          "line": 387,
+          "text": ""
+        },
+        {
+          "line": 388,
+          "text": ""
+        },
+        {
+          "line": 389,
+          "text": "def _sm70_flashqla_original_prefill_enabled() -> bool:"
+        },
+        {
+          "line": 390,
+          "text": "    raw = os.getenv(\"VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL\")"
+        },
+        {
+          "line": 391,
+          "text": "    if raw is None:"
+        },
+        {
+          "line": 392,
+          "text": "        raw = os.getenv(\"FLASH_QLA_SM70_USE_ORIGINAL_TILELANG\")"
+        },
+        {
+          "line": 393,
+          "text": "    if raw is None:"
+        },
+        {
+          "line": 394,
+          "text": "        return True"
+        },
+        {
+          "line": 395,
+          "text": "    return raw.strip().lower() not in (\"0\", \"false\", \"no\", \"off\", \"\")"
+        },
+        {
+          "line": 396,
+          "text": ""
+        },
+        {
+          "line": 1843,
+          "text": "        return result.unsqueeze(0), None"
+        },
+        {
+          "line": 1844,
+          "text": ""
+        },
+        {
+          "line": 1845,
+          "text": ""
+        },
+        {
+          "line": 1846,
+          "text": "def flashqla_sm70_chunk_gated_delta_rule("
+        },
+        {
+          "line": 1847,
+          "text": "    q: torch.Tensor,"
+        },
+        {
+          "line": 1848,
+          "text": "    k: torch.Tensor,"
+        },
+        {
+          "line": 1849,
+          "text": "    v: torch.Tensor,"
+        },
+        {
+          "line": 1850,
+          "text": "    g: torch.Tensor,"
+        },
+        {
+          "line": 1851,
+          "text": "    beta: torch.Tensor,"
+        },
+        {
+          "line": 1852,
+          "text": "    initial_state: torch.Tensor,"
+        },
+        {
+          "line": 1853,
+          "text": "    output_final_state: bool,"
+        },
+        {
+          "line": 1861,
+          "text": "    core_attn_out: torch.Tensor | None = None,"
+        },
+        {
+          "line": 1862,
+          "text": "    gate_is_exp: bool = False,"
+        },
+        {
+          "line": 1863,
+          "text": "):"
+        },
+        {
+          "line": 1864,
+          "text": "    use_original_tilelang = _sm70_flashqla_original_prefill_enabled()"
+        },
+        {
+          "line": 1865,
+          "text": "    if use_original_tilelang:"
+        },
+        {
+          "line": 1866,
+          "text": "        from flash_qla.ops.gated_delta_rule.chunk import ("
+        },
+        {
+          "line": 1867,
+          "text": "            chunk_gated_delta_rule_fwd_sm70_tilelang,"
+        },
+        {
+          "line": 1868,
+          "text": "        )"
+        },
+        {
+          "line": 1869,
+          "text": ""
+        },
+        {
+          "line": 1870,
+          "text": "        _log_runtime_route_once("
+        },
+        {
+          "line": 1871,
+          "text": "            \"Using original FlashQLA-SM70 TileLang GDN prefill path \""
+        },
+        {
+          "line": 1999,
+          "text": "    return out, final_state"
+        },
+        {
+          "line": 2000,
+          "text": ""
+        },
+        {
+          "line": 2001,
+          "text": ""
+        },
+        {
+          "line": 2002,
+          "text": "def flashqla_sm70_chunk_gated_delta_rule_vllm_decode("
+        },
+        {
+          "line": 2003,
+          "text": "    q: torch.Tensor,"
+        },
+        {
+          "line": 2004,
+          "text": "    k: torch.Tensor,"
+        },
+        {
+          "line": 2005,
+          "text": "    v: torch.Tensor,"
+        },
+        {
+          "line": 2006,
+          "text": "    g: torch.Tensor,"
+        },
+        {
+          "line": 2007,
+          "text": "    beta: torch.Tensor,"
+        },
+        {
+          "line": 2008,
+          "text": "    initial_state: torch.Tensor,"
+        },
+        {
+          "line": 2009,
+          "text": "    cu_seqlens: torch.Tensor,"
+        },
+        {
+          "line": 2151,
+          "text": "                core_attn_out=core_attn_out,"
+        },
+        {
+          "line": 2152,
+          "text": "                gate_is_exp=gate_is_exp,"
+        },
+        {
+          "line": 2153,
+          "text": "            )"
+        },
+        {
+          "line": 2154,
+          "text": "        o, final_state = flashqla_sm70_chunk_gated_delta_rule("
+        },
+        {
+          "line": 2155,
+          "text": "            q=q,"
+        },
+        {
+          "line": 2156,
+          "text": "            k=k,"
+        },
+        {
+          "line": 2157,
+          "text": "            v=v,"
+        },
+        {
+          "line": 2158,
+          "text": "            g=g,"
+        },
+        {
+          "line": 2159,
+          "text": "            beta=beta,"
+        },
+        {
+          "line": 2160,
+          "text": "            initial_state=initial_state,"
+        },
+        {
+          "line": 2161,
+          "text": "            output_final_state=output_final_state,"
+        },
+        {
+          "line": 4525,
+          "text": "            dtype,"
+        },
+        {
+          "line": 4526,
+          "text": "            state_dtype,"
+        },
+        {
+          "line": 4527,
+          "text": "            self.gdn_prefill_backend,"
+        },
+        {
+          "line": 4528,
+          "text": "            _sm70_flashqla_original_prefill_enabled(),"
+        },
+        {
+          "line": 4529,
+          "text": "            _sm70_flashqla_direct_output_enabled(),"
+        },
+        {
+          "line": 4530,
+          "text": "            _sm70_flashqla_indexed_prefill_enabled(),"
+        },
+        {
+          "line": 4531,
+          "text": "            num_k_heads,"
+        },
+        {
+          "line": 4532,
+          "text": "            num_v_heads,"
+        },
+        {
+          "line": 4533,
+          "text": "            self.head_k_dim,"
+        },
+        {
+          "line": 4534,
+          "text": "            self.head_v_dim,"
+        },
+        {
+          "line": 4535,
+          "text": "            qkv_dim,"
+        },
+        {
+          "line": 4741,
+          "text": "        dummy_prefill_core_attn_out = None"
+        },
+        {
+          "line": 4742,
+          "text": "        if ("
+        },
+        {
+          "line": 4743,
+          "text": "            self.gdn_prefill_backend == \"flashqla_sm70\""
+        },
+        {
+          "line": 4744,
+          "text": "            and _sm70_flashqla_original_prefill_enabled()"
+        },
+        {
+          "line": 4745,
+          "text": "            and _sm70_flashqla_direct_output_enabled()"
+        },
+        {
+          "line": 4746,
+          "text": "        ):"
+        },
+        {
+          "line": 4747,
+          "text": "            dummy_prefill_core_attn_out = torch.empty("
+        },
+        {
+          "line": 4748,
+          "text": "                T,"
+        },
+        {
+          "line": 4749,
+          "text": "                num_v_heads,"
+        },
+        {
+          "line": 4750,
+          "text": "                self.head_v_dim,"
+        },
+        {
+          "line": 4751,
+          "text": "                device=device,"
+        },
+        {
+          "line": 4764,
+          "text": "        trace_prefill_warmup = ("
+        },
+        {
+          "line": 4765,
+          "text": "            _sm70_profile_trace_enabled()"
+        },
+        {
+          "line": 4766,
+          "text": "            and self.gdn_prefill_backend == \"flashqla_sm70\""
+        },
+        {
+          "line": 4767,
+          "text": "            and _sm70_flashqla_original_prefill_enabled()"
+        },
+        {
+          "line": 4768,
+          "text": "        )"
+        },
+        {
+          "line": 4769,
+          "text": "        prefill_warmup_start = time.perf_counter()"
+        },
+        {
+          "line": 4770,
+          "text": "        if trace_prefill_warmup:"
+        },
+        {
+          "line": 4771,
+          "text": "            logger.info("
+        },
+        {
+          "line": 4772,
+          "text": "                \"SM70 profile trace: GDN prefill warmup enter layer=%s \""
+        },
+        {
+          "line": 4773,
+          "text": "                \"T=%d q_shape=%s v_shape=%s direct_output=%s\","
+        },
+        {
+          "line": 4774,
+          "text": "                self.prefix,"
+        },
+        {
+          "line": 4818,
+          "text": "            )"
+        },
+        {
+          "line": 4819,
+          "text": "            if ("
+        },
+        {
+          "line": 4820,
+          "text": "                self.gdn_prefill_backend == \"flashqla_sm70\""
+        },
+        {
+          "line": 4821,
+          "text": "                and _sm70_flashqla_original_prefill_enabled()"
+        },
+        {
+          "line": 4822,
+          "text": "                and _sm70_flashqla_indexed_prefill_enabled()"
+        },
+        {
+          "line": 4823,
+          "text": "            ):"
+        },
+        {
+          "line": 4824,
+          "text": "                indexed_state = torch.zeros("
+        },
+        {
+          "line": 4825,
+          "text": "                    1,"
+        },
+        {
+          "line": 4826,
+          "text": "                    num_v_heads,"
+        },
+        {
+          "line": 4827,
+          "text": "                    self.head_v_dim,"
+        },
+        {
+          "line": 4828,
+          "text": "                    self.head_k_dim,"
+        },
+        {
+          "line": 5583,
+          "text": "        else:"
+        },
+        {
+          "line": 5584,
+          "text": "            query_spec, key_spec, value_spec = self.rearrange_mixed_qkv(mixed_qkv_spec)"
+        },
+        {
+          "line": 5585,
+          "text": "        prefill_l2norm_in_kernel = False"
+        },
+        {
+          "line": 5586,
+          "text": "        use_original_flashqla_prefill = _sm70_flashqla_original_prefill_enabled()"
+        },
+        {
+          "line": 5587,
+          "text": "        prefill_gate_is_exp = False"
+        },
+        {
+          "line": 5588,
+          "text": "        if attn_metadata.num_prefills > 0:"
+        },
+        {
+          "line": 5589,
+          "text": "            profile_start = _sm70_gdn_prefill_profile_start()"
+        },
+        {
+          "line": 5590,
+          "text": "            assert mixed_qkv_non_spec is not None, ("
+        },
+        {
+          "line": 5591,
+          "text": "                \"mixed_qkv_non_spec must be provided for prefill path\""
+        },
+        {
+          "line": 5592,
+          "text": "            )"
+        },
+        {
+          "line": 5593,
+          "text": "            if spec_sequence_masks is not None:"
+        }
+      ]
+    },
+    "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/vllm/v1/attention/backends/gdn_attn.py": {
+      "lines": [
+        {
+          "line": 319,
+          "text": "        logger.exception(\"Failed to write DDTree trace event to %s\", trace_path)"
+        },
+        {
+          "line": 320,
+          "text": ""
+        },
+        {
+          "line": 321,
+          "text": ""
+        },
+        {
+          "line": 322,
+          "text": "def _sm70_flashqla_original_prefill_enabled() -> bool:"
+        },
+        {
+          "line": 323,
+          "text": "    raw = os.getenv(\"VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL\")"
+        },
+        {
+          "line": 324,
+          "text": "    if raw is None:"
+        },
+        {
+          "line": 325,
+          "text": "        raw = os.getenv(\"FLASH_QLA_SM70_USE_ORIGINAL_TILELANG\")"
+        },
+        {
+          "line": 326,
+          "text": "    if raw is None:"
+        },
+        {
+          "line": 327,
+          "text": "        return True"
+        },
+        {
+          "line": 328,
+          "text": "    return raw.strip().lower() not in (\"0\", \"false\", \"no\", \"off\", \"\")"
+        },
+        {
+          "line": 329,
+          "text": ""
+        },
+        {
+          "line": 1790,
+          "text": "        chunk_offsets: torch.Tensor | None = None"
+        },
+        {
+          "line": 1791,
+          "text": "        flashqla_original_prefill = ("
+        },
+        {
+          "line": 1792,
+          "text": "            self.gdn_prefill_backend == \"flashqla_sm70\""
+        },
+        {
+          "line": 1793,
+          "text": "            and _sm70_flashqla_original_prefill_enabled()"
+        },
+        {
+          "line": 1794,
+          "text": "        )"
+        },
+        {
+          "line": 1795,
+          "text": "        if num_prefills > 0 and ("
+        },
+        {
+          "line": 1796,
+          "text": "            self.gdn_prefill_backend != \"flashqla_sm70\" or flashqla_original_prefill"
+        },
+        {
+          "line": 1797,
+          "text": "        ):"
+        },
+        {
+          "line": 1798,
+          "text": "            from vllm.model_executor.layers.fla.ops.utils import FLA_CHUNK_SIZE"
+        },
+        {
+          "line": 1799,
+          "text": ""
+        },
+        {
+          "line": 1800,
+          "text": "            if self.gdn_prefill_backend == \"cutedsl\":"
+        }
+      ]
+    }
+  },
+  "sm70_tilelang_source": {
+    "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/flash_qla/ops/gated_delta_rule/chunk/__init__.py": {
+      "sha256": "1db883d8fa7bf96e78a6ac21e99913b01e468ce23644341170f3340e17082640",
+      "lines": [
+        {
+          "line": 115,
+          "text": "    return g, A, o, h, final_state"
+        },
+        {
+          "line": 116,
+          "text": ""
+        },
+        {
+          "line": 117,
+          "text": ""
+        },
+        {
+          "line": 118,
+          "text": "def chunk_gated_delta_rule_fwd_sm70_tilelang("
+        },
+        {
+          "line": 119,
+          "text": "    q: torch.Tensor,"
+        },
+        {
+          "line": 120,
+          "text": "    k: torch.Tensor,"
+        },
+        {
+          "line": 121,
+          "text": "    v: torch.Tensor,"
+        },
+        {
+          "line": 122,
+          "text": "    g: torch.Tensor,"
+        },
+        {
+          "line": 123,
+          "text": "    beta: torch.Tensor,"
+        },
+        {
+          "line": 124,
+          "text": "    scale: float | None = None,"
+        },
+        {
+          "line": 125,
+          "text": "    initial_state: torch.Tensor | None = None,"
+        }
+      ]
+    },
+    "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/flash_qla/ops/gated_delta_rule/chunk/cp_context.py": {
+      "sha256": "c1a272ab699a70cff7c925816ff5579ca42e2dde5f802fd587ebdab902fe9f78",
+      "lines": [
+        {
+          "line": 4,
+          "text": "import math"
+        },
+        {
+          "line": 5,
+          "text": ""
+        },
+        {
+          "line": 6,
+          "text": "import torch"
+        },
+        {
+          "line": 7,
+          "text": "import tilelang"
+        },
+        {
+          "line": 8,
+          "text": ""
+        },
+        {
+          "line": 9,
+          "text": "from flash_qla.utils import tensor_cache"
+        },
+        {
+          "line": 10,
+          "text": ""
+        },
+        {
+          "line": 11,
+          "text": "from .hopper import get_warmup_chunks, fused_gdr_h, correct_initial_states"
+        },
+        {
+          "line": 12,
+          "text": ""
+        },
+        {
+          "line": 13,
+          "text": ""
+        },
+        {
+          "line": 14,
+          "text": "MULTI_PROCESSOR_COUNT = torch.cuda.get_device_properties().multi_processor_count"
+        }
+      ]
+    },
+    "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/flash_qla/ops/gated_delta_rule/chunk/hopper/fused_bwd.py": {
+      "sha256": "824ccdcf32146e7961f3206bca13481e00a655e88ea23994fa29eb28f6c865d6",
+      "lines": [
+        {
+          "line": 2,
+          "text": "# Licensed under The MIT License [see LICENSE for details]"
+        },
+        {
+          "line": 3,
+          "text": ""
+        },
+        {
+          "line": 4,
+          "text": "import torch"
+        },
+        {
+          "line": 5,
+          "text": "import tilelang"
+        },
+        {
+          "line": 6,
+          "text": "import tilelang.language as T"
+        },
+        {
+          "line": 7,
+          "text": ""
+        },
+        {
+          "line": 8,
+          "text": "from flash_qla.utils import prepare_chunk_offsets"
+        },
+        {
+          "line": 9,
+          "text": ""
+        },
+        {
+          "line": 10,
+          "text": ""
+        },
+        {
+          "line": 11,
+          "text": "@tilelang.jit("
+        },
+        {
+          "line": 12,
+          "text": "    # out_idx=[-5, -4, -3, -2, -1],"
+        },
+        {
+          "line": 13,
+          "text": "    pass_configs={"
+        },
+        {
+          "line": 14,
+          "text": "        tilelang.PassConfigKey.TL_ENABLE_FAST_MATH: True,"
+        },
+        {
+          "line": 15,
+          "text": "        tilelang.PassConfigKey.TL_DISABLE_DATA_RACE_CHECK: True,"
+        },
+        {
+          "line": 16,
+          "text": "    },"
+        },
+        {
+          "line": 17,
+          "text": ")"
+        },
+        {
+          "line": 18,
+          "text": "def tilelang_fused_chunk_gdr_bwd("
+        }
+      ]
+    },
+    "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/flash_qla/ops/gated_delta_rule/chunk/hopper/cp_fwd.py": {
+      "sha256": "a2c3f3a3ac25ab0b4e786740b5cdcd36770908729820d0fd6c99a0c3b5e68971",
+      "lines": [
+        {
+          "line": 2,
+          "text": "# Licensed under The MIT License [see LICENSE for details]"
+        },
+        {
+          "line": 3,
+          "text": ""
+        },
+        {
+          "line": 4,
+          "text": "import torch"
+        },
+        {
+          "line": 5,
+          "text": "import tilelang"
+        },
+        {
+          "line": 6,
+          "text": "import tilelang.language as T"
+        },
+        {
+          "line": 7,
+          "text": ""
+        },
+        {
+          "line": 8,
+          "text": ""
+        },
+        {
+          "line": 9,
+          "text": "@tilelang.jit()"
+        },
+        {
+          "line": 10,
+          "text": "def tilelang_get_warmup_chunks("
+        },
+        {
+          "line": 11,
+          "text": "    num_heads,"
+        },
+        {
+          "line": 12,
+          "text": "    chunk_size,"
+        },
+        {
+          "line": 13,
+          "text": "    threshold,"
+        },
+        {
+          "line": 14,
+          "text": "    accum_dtype,"
+        },
+        {
+          "line": 15,
+          "text": "    g_dtype,"
+        },
+        {
+          "line": 16,
+          "text": "    mask_dtype,"
+        },
+        {
+          "line": 101,
+          "text": "    return num_warmup_chunks, fallback_mask"
+        },
+        {
+          "line": 102,
+          "text": ""
+        },
+        {
+          "line": 103,
+          "text": ""
+        },
+        {
+          "line": 104,
+          "text": "@tilelang.jit()"
+        },
+        {
+          "line": 105,
+          "text": "def tilelang_correct_h0("
+        },
+        {
+          "line": 106,
+          "text": "    H,"
+        },
+        {
+          "line": 107,
+          "text": "    DK,"
+        },
+        {
+          "line": 108,
+          "text": "    DV,"
+        },
+        {
+          "line": 109,
+          "text": "    res_dtype,"
+        },
+        {
+          "line": 110,
+          "text": "    accum_dtype,"
+        },
+        {
+          "line": 111,
+          "text": "    buffer_dtype,"
+        }
+      ]
+    },
+    "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/flash_qla/ops/gated_delta_rule/chunk/hopper/prepare_h.py": {
+      "sha256": "0a69019f2a699954a6a20c97b7f510dd1fdbb8bf0d6ce3cfb9e2f5a6f0821248",
+      "lines": [
+        {
+          "line": 2,
+          "text": "# Licensed under The MIT License [see LICENSE for details]"
+        },
+        {
+          "line": 3,
+          "text": ""
+        },
+        {
+          "line": 4,
+          "text": "import torch"
+        },
+        {
+          "line": 5,
+          "text": "import tilelang"
+        },
+        {
+          "line": 6,
+          "text": "import tilelang.language as T"
+        },
+        {
+          "line": 7,
+          "text": ""
+        },
+        {
+          "line": 8,
+          "text": "from flash_qla.utils import prepare_chunk_offsets"
+        },
+        {
+          "line": 9,
+          "text": ""
+        },
+        {
+          "line": 10,
+          "text": ""
+        },
+        {
+          "line": 11,
+          "text": "@tilelang.jit("
+        },
+        {
+          "line": 12,
+          "text": "    pass_configs={"
+        },
+        {
+          "line": 13,
+          "text": "        tilelang.PassConfigKey.TL_ENABLE_FAST_MATH: True,"
+        },
+        {
+          "line": 14,
+          "text": "    },"
+        },
+        {
+          "line": 15,
+          "text": ")"
+        },
+        {
+          "line": 16,
+          "text": "def tilelang_prepare_h("
+        },
+        {
+          "line": 17,
+          "text": "    H,"
+        },
+        {
+          "line": 18,
+          "text": "    Hg,"
+        }
+      ]
+    },
+    "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/flash_qla/ops/gated_delta_rule/chunk/hopper/kkt_solve.py": {
+      "sha256": "3f133e4d787eb35c39aa3f16142339fa9d6cdd0e3d8534edd59a721116dfcbc0",
+      "lines": [
+        {
+          "line": 4,
+          "text": "from typing import Optional"
+        },
+        {
+          "line": 5,
+          "text": ""
+        },
+        {
+          "line": 6,
+          "text": "import torch"
+        },
+        {
+          "line": 7,
+          "text": "import tilelang"
+        },
+        {
+          "line": 8,
+          "text": "import tilelang.language as T"
+        },
+        {
+          "line": 9,
+          "text": ""
+        },
+        {
+          "line": 10,
+          "text": "from flash_qla.utils import prepare_chunk_indices"
+        },
+        {
+          "line": 11,
+          "text": ""
+        },
+        {
+          "line": 12,
+          "text": ""
+        },
+        {
+          "line": 13,
+          "text": "@tilelang.jit("
+        },
+        {
+          "line": 14,
+          "text": "    # out_idx=[-1],"
+        },
+        {
+          "line": 15,
+          "text": "    pass_configs={"
+        },
+        {
+          "line": 16,
+          "text": "        tilelang.PassConfigKey.TL_ENABLE_FAST_MATH: True,"
+        },
+        {
+          "line": 17,
+          "text": "        # tilelang.PassConfigKey.TL_DISABLE_TMA_LOWER: True,"
+        },
+        {
+          "line": 18,
+          "text": "        # tilelang.PassConfigKey.TL_ENABLE_ASYNC_COPY: True,"
+        },
+        {
+          "line": 19,
+          "text": "    },"
+        },
+        {
+          "line": 20,
+          "text": ")"
+        },
+        {
+          "line": 302,
+          "text": "    return tilelang_kkt_solve_kernel"
+        },
+        {
+          "line": 303,
+          "text": ""
+        },
+        {
+          "line": 304,
+          "text": ""
+        },
+        {
+          "line": 305,
+          "text": "@tilelang.jit("
+        },
+        {
+          "line": 306,
+          "text": "    pass_configs={"
+        },
+        {
+          "line": 307,
+          "text": "        tilelang.PassConfigKey.TL_ENABLE_FAST_MATH: True,"
+        },
+        {
+          "line": 308,
+          "text": "    },"
+        },
+        {
+          "line": 309,
+          "text": ")"
+        },
+        {
+          "line": 310,
+          "text": "def tilelang_kkt_solve_sm70("
+        },
+        {
+          "line": 311,
+          "text": "    H,"
+        },
+        {
+          "line": 312,
+          "text": "    Hg,"
+        }
+      ]
+    },
+    "/home/loopwhile/qwen3.8-bench-runtime/venv/lib/python3.12/site-packages/flash_qla/ops/gated_delta_rule/chunk/hopper/fused_fwd.py": {
+      "sha256": "cd59285a16865cd51048b8eb43032f8c596266e61aeee9f3c1ee9418410de23d",
+      "lines": [
+        {
+          "line": 4,
+          "text": "import os"
+        },
+        {
+          "line": 5,
+          "text": ""
+        },
+        {
+          "line": 6,
+          "text": "import torch"
+        },
+        {
+          "line": 7,
+          "text": "import tilelang"
+        },
+        {
+          "line": 8,
+          "text": "import tilelang.language as T"
+        },
+        {
+          "line": 9,
+          "text": ""
+        },
+        {
+          "line": 10,
+          "text": "from flash_qla.utils import prepare_chunk_offsets"
+        },
+        {
+          "line": 11,
+          "text": ""
+        },
+        {
+          "line": 12,
+          "text": ""
+        },
+        {
+          "line": 13,
+          "text": "MULTI_PROCESSOR_COUNT = torch.cuda.get_device_properties().multi_processor_count"
+        },
+        {
+          "line": 14,
+          "text": "TARGET_NUM_CTAS = int(MULTI_PROCESSOR_COUNT * 0.7)"
+        },
+        {
+          "line": 15,
+          "text": ""
+        },
+        {
+          "line": 16,
+          "text": ""
+        },
+        {
+          "line": 17,
+          "text": "@tilelang.jit("
+        },
+        {
+          "line": 18,
+          "text": "    # out_idx=[-3, -2, -1],"
+        },
+        {
+          "line": 19,
+          "text": "    pass_configs={"
+        },
+        {
+          "line": 20,
+          "text": "        tilelang.PassConfigKey.TL_ENABLE_FAST_MATH: True,"
+        },
+        {
+          "line": 21,
+          "text": "        # tilelang.PassConfigKey.TL_DISABLE_THREAD_STORAGE_SYNC: True,"
+        },
+        {
+          "line": 22,
+          "text": "    },"
+        },
+        {
+          "line": 23,
+          "text": ")"
+        },
+        {
+          "line": 24,
+          "text": "def tilelang_fused_chunk_gdr_fwd("
+        },
+        {
+          "line": 535,
+          "text": "    return tilelang_fused_chunk_gdr_fwd_kernel"
+        },
+        {
+          "line": 536,
+          "text": ""
+        },
+        {
+          "line": 537,
+          "text": ""
+        },
+        {
+          "line": 538,
+          "text": "@tilelang.jit("
+        },
+        {
+          "line": 539,
+          "text": "    pass_configs={"
+        },
+        {
+          "line": 540,
+          "text": "        tilelang.PassConfigKey.TL_ENABLE_FAST_MATH: True,"
+        },
+        {
+          "line": 541,
+          "text": "    },"
+        },
+        {
+          "line": 542,
+          "text": ")"
+        },
+        {
+          "line": 543,
+          "text": "def tilelang_fused_chunk_gdr_fwd_sm70("
+        },
+        {
+          "line": 544,
+          "text": "    H,"
+        },
+        {
+          "line": 545,
+          "text": "    Hg,"
+        }
+      ]
+    }
+  },
+  "candidate": "R2-E4M3-128K-ORIGINAL-FLASHQLA-PREFILL",
+  "status": "BLOCKED_BY_HOST_TOOLCHAIN",
+  "missing_components": [
+    "nvcc executable",
+    "complete SM70-compatible CUDA development toolkit (headers and development libraries)"
+  ],
+  "required_compiler_range": "Installed sources require nvcc; no exact version range was established by static inspection. Must support SM70 and pinned TileLang/1Cat CUDA userspace 12.8.",
+  "proposed_user_approved_host_change": "Provision an isolated CUDA 12.8 development toolkit including nvcc/headers/development libraries, for example /opt/cuda-12.8; retain driver and pinned Python/runtime/model artifacts. Approval is pending; no installation performed.",
+  "future_r2_child_environment": {
+    "CUDA_HOME": "<verified isolated CUDA 12.8 toolkit root, currently unavailable>",
+    "PATH": "<verified toolkit root>/bin:<recorded base PATH>"
+  },
+  "env_policy": "Only R2 after explicit host-change approval and compile-only discovery validation; never inject into R0/R1/R3. Current R2 guard refuses execution and adds no fictional toolkit environment.",
+  "compiler_smoke_test": "NOT RUN: no nvcc; no JIT/import/model load/inference attempted.",
+  "sm70_wrapper_dependency": "chunk/__init__.py:118 SM70/SM75 wrapper checks compute version then calls _load_hopper_backend(); shared fused_gdr_fwd/kkt_solve/chunk_local_cumsum are TileLang JIT functions. No wrapper import or JIT executed."
+}

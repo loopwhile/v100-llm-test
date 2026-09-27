@@ -68,6 +68,8 @@ def checkpoint(raw, phase, **extra):
 def save_lifecycle_peak(runtime, peak_probe):
     """Persist lifecycle VRAM evidence without overwriting measured-window gpu-peak.json."""
     summary = dict(peak_probe.summary())
+    # Return the same JSON representation that is persisted (GPU keys are strings).
+    summary = json.loads(json.dumps(summary))
     summary["source"] = "nvidia-smi memory.used sampled during runner lifecycle"
     summary["limitation"] = (
         "Lifecycle sampling includes startup, routing preflight, measured request, and cleanup; "
@@ -80,6 +82,9 @@ def save_lifecycle_peak(runtime, peak_probe):
 
 def measure(raw):
     config = json.loads((raw / "runtime/planned-config.json").read_text())
+    if config.get("phase") == "WBS5":
+        import run_wbs5
+        return run_wbs5.measure(raw)
     manifest_path = Path(config.get("workload_manifest_path", C1_WORKLOAD_MANIFEST if config.get("concurrency") == 1 else C2_WORKLOAD_MANIFEST))
     expected_manifest_sha = config.get("workload_manifest_sha256")
     if expected_manifest_sha and h.sha(manifest_path.read_bytes()) != expected_manifest_sha:
@@ -137,6 +142,8 @@ def run(args):
 
 
 def run_locked(args):
+    if args.wbs5_candidate and not getattr(args, "wbs5_plan", None):
+        raise ValueError("WBS5 requires explicit run_wbs5 dispatch and run label")
     candidate = WBS5_CANDIDATES.get(args.wbs5_candidate) if args.wbs5_candidate else None
     wbs = "5.1" if candidate else LANE_WBS.get((args.lane, args.concurrency), "4.x")
     raw = ROOT / "results/raw" / args.experiment_id
@@ -168,6 +175,9 @@ def run_locked(args):
             if cmd[cmd.index("--batch-size") + 1] != "512" or cmd[cmd.index("--spec-type") + 1] != candidate["spec_type"]:
                 raise ValueError("WBS5 launch command violates the frozen candidate contract")
         workload_sha256 = h.sha(PERFORMANCE_WORKLOAD_MANIFEST.read_bytes())
+        import wbs5_contract
+        plan = args.wbs5_plan["launch_plan"]
+        wbs5_contract.assert_launch("ornith9-llama", args.wbs5_candidate, plan)
     else:
         workload_sha256 = None
 
@@ -255,6 +265,15 @@ def run_locked(args):
         )
         config = future_config(config)
 
+    if candidate:
+        import run_wbs5
+        environments = wbs5_contract.effective_environments(plan)
+        environments.append(dict(environments[0]))
+        config = run_wbs5.build_config(args.wbs5_plan, environments)
+        if config["effective_server_commands"] != backend_cmds + [gateway_cmd]:
+            raise ValueError("FROZEN_DELTA_MISMATCH: final backend/gateway command")
+        run_wbs5.validate_worker_config(config)
+
     h.validate(config)
     h.save(runtime / "plan.json", plan)
     h.save(runtime / "planned-config.json", config)
@@ -304,7 +323,10 @@ def run_locked(args):
                         ],
                         5,
                     )
-                    stream.write(json.dumps(dict(at_utc=h.utc(), csv=value)) + "\n")
+                    row = dict(at_utc=h.utc(), csv=value)
+                    if candidate:
+                        row["monotonic_s"] = time.monotonic()
+                    stream.write(json.dumps(row) + "\n")
                     stream.flush()
                 except Exception as exc:
                     stream.write(
@@ -314,6 +336,12 @@ def run_locked(args):
                 stop.wait(2)
 
     try:
+        if candidate:
+            import wbs5_evidence
+            receipt = wbs5_evidence.pre_run_receipt(args.wbs5_plan)
+            h.save(runtime / "pre-run-receipt.json", receipt)
+            h.save(runtime / "effective-environment.json", config["effective_environment"])
+            wbs5_evidence.validate_pre_run(receipt)
         inventory = command(["nvidia-smi"]) + "\n" + command(["ss", "-ltnp"])
         (runtime / "host-before.txt").write_text(inventory)
         if command(
@@ -380,16 +408,22 @@ def run_locked(args):
         checkpoint(raw, "running", step="servers_startup")
 
         # Launch backends
+        if candidate:
+            run_wbs5.identity_check(args.wbs5_plan, runtime)
+            h.save(runtime / "effective-environment.json", wbs5_evidence.environment_receipt(config))
+            run_wbs5.validate_worker_config(config)
         envs = plan.get("command_environments") or [plan.get("environment", {}) for _ in backend_cmds]
         for i, (cmd, extra_env) in enumerate(zip(backend_cmds, envs)):
             env = os.environ.copy()
             env.update({k: str(v) for k, v in extra_env.items()})
+            if candidate:
+                env = config["effective_environment"][i]
             log_f = (runtime / f"server-{i}.log").open("x")
             server_processes.append(subprocess.Popen(cmd, env=env, stdout=log_f, stderr=subprocess.STDOUT))
 
         # Launch gateway
         gw_log_f = (runtime / "gateway.log").open("x")
-        gateway_process = subprocess.Popen(gateway_cmd, env=os.environ.copy(), stdout=gw_log_f, stderr=subprocess.STDOUT)
+        gateway_process = subprocess.Popen(gateway_cmd, env=config["effective_environment"][-1] if candidate else os.environ.copy(), stdout=gw_log_f, stderr=subprocess.STDOUT)
 
         # Health polling
         adapter = h.make_plan_adapter(plan, timeout_s=5)
@@ -442,6 +476,8 @@ def run_locked(args):
         )
 
         with (runtime / "measurement.log").open("x") as log:
+            if candidate:
+                run_wbs5.validate_worker_config(config)
             child = subprocess.run(
                 [sys.executable, __file__, "--worker", str(raw)],
                 stdout=log,
@@ -553,6 +589,8 @@ def run_locked(args):
             runtime / "exit.json",
             dict(exit_code=exit_code, verdict=verdict, completed_at_utc=h.utc()),
         )
+        if candidate:
+            wbs5_evidence.finalize(raw)
 
     return exit_code
 
@@ -569,6 +607,9 @@ def main():
     )
     parser.add_argument("--concurrency", type=int, choices=[1, 2])
     parser.add_argument("--wbs5-candidate", choices=tuple(WBS5_CANDIDATES))
+    parser.add_argument("--run-label")
+    parser.add_argument("--execute-measured", action="store_true")
+    parser.add_argument("--output-root", type=Path)
     parser.add_argument("--port", type=int, default=18080)
     parser.add_argument("--gateway-port", type=int, default=18079)
     parser.add_argument("--worker", type=Path)
@@ -594,6 +635,18 @@ def main():
                 wbs5_planner.build_plan(args.wbs5_candidate, args.experiment_id)
             except (KeyError, ValueError) as exc:
                 parser.error(str(exc))
+            if args.retry_of:
+                parser.error("WBS5 does not permit retry metadata")
+            if not args.run_label:
+                parser.error("WBS5 requires --run-label")
+            import run_wbs5
+            import wbs5_contract
+            plan = wbs5_contract.build_plan("ornith9-llama", args.wbs5_candidate, args.experiment_id, args.run_label)
+            result = run_wbs5.dispatch(plan, execute_measured=args.execute_measured, output_root=args.output_root)
+            if isinstance(result, int):
+                raise SystemExit(result)
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+            return
         elif not args.experiment_id or not args.lane or args.concurrency is None:
             parser.error("--experiment-id, --lane, and --concurrency are required")
         if not re.fullmatch(r"EXP-V100-[A-Z0-9][A-Z0-9-]*", args.experiment_id):

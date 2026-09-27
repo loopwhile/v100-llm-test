@@ -125,3 +125,30 @@ Environment audit scope: current P520 noninteractive SSH shell, readable /etc/sy
 The forced E4M3 and ORIGINAL_PREFILL0 would directly erase R3/R2 if the existing Qwen runner were reused; source eligibility alone is insufficient. No new candidate/optimization/source mutation proposed or performed.
 
 GPU MEASURED INFERENCE EXECUTED: NO
+
+## 8B~8D remediation result — 2026-09-28
+
+8A 관찰/과거 verdict는 위에 보존한다. 아래는 새 runner 구현 이후의 준비 상태이며 measured PASS를 뜻하지 않는다.
+
+- Runner readiness: **READY_FOR_PRE_RUN_VALIDATION**. `scripts/run_wbs5.py` 명시적 track/candidate dispatch; 기본 동작은 dry-plan이다. 기존 WBS3 runner의 concurrency/v2 기본값은 유지한다.
+- Frozen guard: pinned input SHA와 normalized effective argv/env OFAT allowlist, final worker config/command drift를 검사하며 위반은 `FROZEN_DELTA_MISMATCH`로 중단한다. context 131072/request, independent A/B, reserve4096/min1024, temp0/top_p1/seed520을 유지한다.
+- Identity/evidence: candidate ID/run label/workload SHA/model+runtime+artifact hash, exact argv 및 host/container environment receipt; fresh raw exclusive creation, telemetry/post-health/output integrity/total output tokens 경로를 연결했다. 반복/confirm/실패 retry를 자동 실행하지 않는다.
+- Metric remediation: 기존 TTFT/prefill/per-request decode/mean decode/aggregate decode/end-to-end TPS/batch wall 산식 유지. 새 WBS5 run만 graph-evidence.json, slot-progress JSONL/JSON, speculative counters/ratio를 저장한다. missing/ambiguous/reset counters와 unavailable slot fields는 UNKNOWN/null; raw server log는 보존한다.
+- Remaining runtime-only unknown: **VERIFY_AT_STARTUP / VERIFY_DURING_MEASURED_RUN** — capture/replay/TP2 collective, E5M2 route/scales, actual Original Prefill route, VRAM fit 및 output integrity.
+- Remaining blocker/gate: R2만 BLOCKED_BY_HOST_TOOLCHAIN: nvcc/완전한 CUDA 개발 toolkit 부재. 다른 후보는 차단하지 않는다.
+- BLOCKED_BY_HARNESS: **없음**. Pre-run ChatGPT Ready: **YES** (host approval/gate가 남아 있는 후보는 measured admission 금지).
+- Tests: 전체 `pytest` **146 passed, 25 subtests passed**; WBS5 offline 24 tests 포함. `scripts/validate_repo.py`: **Repository contract: PASS**. Python AST/JSON validation 및 git diff --check PASS. 실제 HTTP/GPU를 쓰는 inference test는 실행하지 않았다.
+- Measured inference executed: **NO**. GPU server startup/model load/G0/128K request/benchmark/설치/host 설정 변경도 실행하지 않았다.
+
+| Candidate | Run label | 8C state | Dry plan |
+|---|---|---|---|
+| `R0-E4M3-128K-SEMANTIC-BASELINE` | `screening-1` | `STATIC_READY` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-QWEN-ONECAT-R0-PERF-20260928-001/candidate-plan.json) |
+| `R1-E4M3-128K-CUDAGRAPH-C1` | `screening-1` | `STATIC_READY` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-QWEN-ONECAT-R1-PERF-20260928-001/candidate-plan.json) |
+| `R2-E4M3-128K-ORIGINAL-FLASHQLA-PREFILL` | `screening-1` | `BLOCKED_BY_HOST_TOOLCHAIN` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-QWEN-ONECAT-R2-PERF-20260928-001/candidate-plan.json) |
+| `R3-E5M2-128K-KV-ROUTE` | `screening-1` | `STATIC_READY` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-QWEN-ONECAT-R3-PERF-20260928-001/candidate-plan.json) |
+
+공통 구현/guard/evidence 및 8D receipt 설명: [WBS5 preparation report](WBS-5-preparation-readiness.md). 다음 단계는 ChatGPT의 pre-run final validation이며 자동 measured 실행으로 이어지지 않는다.
+
+Qwen artifact provenance gap은 pinned HF revision의 upstream LFS/metadata hash manifest를 새 state receipt에 저장해 해소했다. 8A의 실제 shard hash와 일치한다. model tensor 다운로드/교체는 없으며 installed bytes/metadata는 future pre-run identity guard에서 다시 확인한다. CUDA userspace12.8.90과 nvcc는 별개다. `nvidia-cuda-nvcc-cu12`12.9.86 설치만으로 nvcc 존재를 주장하지 않는다; TileLang source가 해당 패키지는 ptxas만 제공한다고 명시한다. [8D receipt](../state/wbs5-toolchain-receipt.json).
+
+Frozen max-num-seqs=1 및 MBT2048을 유지하면서 performance A/B 두 독립 client request를 보낸다. 이 계획만으로 C2 ACTIVE라고 주장하지 않으며 실제 queue-only/overlap evidence를 저장한다. graph C1 axis를 seq2로 변경하지 않았다.

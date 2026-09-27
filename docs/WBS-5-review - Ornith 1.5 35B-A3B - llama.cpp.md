@@ -103,3 +103,26 @@ R0~R3 measured execution 전 local validation 순서는 고정 후보 순서 `R0
 ## F. 최종 verdict
 
 **NOT_READY** — frozen candidate command는 source/config로 계획할 수 있고 정규화한 delta를 대조했다. P520의 main HEAD, pinned OCI digest, model SHA 및 GPU/topology snapshot은 확인했다. Pinned help/version 및 R3 container env 전달 자체는 확인했지만 현재 runner는 concurrency/v2 고정이며 이 track의 WBS5 performance runner가 없다. R3 container env 전달, MTP metric capture, per-slot prompt-progress capture도 보강되어야 한다. 이 verdict는 별도 measured-inference 실행 승인이 아니다.
+
+## 8B~8D remediation result — 2026-09-28
+
+8A 관찰/과거 verdict는 위에 보존한다. 아래는 새 runner 구현 이후의 준비 상태이며 measured PASS를 뜻하지 않는다.
+
+- Runner readiness: **READY_FOR_PRE_RUN_VALIDATION**. `scripts/run_wbs5.py` 명시적 track/candidate dispatch; 기본 동작은 dry-plan이다. 기존 WBS3 runner의 concurrency/v2 기본값은 유지한다.
+- Frozen guard: pinned input SHA와 normalized effective argv/env OFAT allowlist, final worker config/command drift를 검사하며 위반은 `FROZEN_DELTA_MISMATCH`로 중단한다. context 131072/request, independent A/B, reserve4096/min1024, temp0/top_p1/seed520을 유지한다.
+- Identity/evidence: candidate ID/run label/workload SHA/model+runtime+artifact hash, exact argv 및 host/container environment receipt; fresh raw exclusive creation, telemetry/post-health/output integrity/total output tokens 경로를 연결했다. 반복/confirm/실패 retry를 자동 실행하지 않는다.
+- Metric remediation: 기존 TTFT/prefill/per-request decode/mean decode/aggregate decode/end-to-end TPS/batch wall 산식 유지. 새 WBS5 run만 graph-evidence.json, slot-progress JSONL/JSON, speculative counters/ratio를 저장한다. missing/ambiguous/reset counters와 unavailable slot fields는 UNKNOWN/null; raw server log는 보존한다.
+- Remaining runtime-only unknown: **VERIFY_AT_STARTUP / VERIFY_DURING_MEASURED_RUN** — native embedded MTP correctness/acceptance, slot prefill serialization, graph reuse, VRAM fit.
+- Remaining blocker/gate: 없음. companion draft model 없이 MTP n=1; R3 env는 Docker --env로 전달한다.
+- BLOCKED_BY_HARNESS: **없음**. Pre-run ChatGPT Ready: **YES** (host approval/gate가 남아 있는 후보는 measured admission 금지).
+- Tests: 전체 `pytest` **146 passed, 25 subtests passed**; WBS5 offline 24 tests 포함. `scripts/validate_repo.py`: **Repository contract: PASS**. Python AST/JSON validation 및 git diff --check PASS. 실제 HTTP/GPU를 쓰는 inference test는 실행하지 않았다.
+- Measured inference executed: **NO**. GPU server startup/model load/G0/128K request/benchmark/설치/host 설정 변경도 실행하지 않았다.
+
+| Candidate | Run label | 8C state | Dry plan |
+|---|---|---|---|
+| `ORN35-LLAMA-WBS5-R0-TARGET` | `screening-1` | `STATIC_READY` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-ORNITH35-LLAMA-R0-PERF-20260928-001/candidate-plan.json) |
+| `ORN35-LLAMA-WBS5-R1-MTP1` | `screening-1` | `STATIC_READY` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-001/candidate-plan.json) |
+| `ORN35-LLAMA-WBS5-R2-UB256` | `screening-1` | `STATIC_READY` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/candidate-plan.json) |
+| `ORN35-LLAMA-WBS5-R3-QUEUE4X` | `screening-1` | `STATIC_READY` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-ORNITH35-LLAMA-R3-PERF-20260928-001/candidate-plan.json) |
+
+공통 구현/guard/evidence 및 8D receipt 설명: [WBS5 preparation report](WBS-5-preparation-readiness.md). 다음 단계는 ChatGPT의 pre-run final validation이며 자동 measured 실행으로 이어지지 않는다.

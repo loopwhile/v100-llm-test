@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "start_main": "a78f0a8762b22724051e0d095eb48bb2de9b9b03",
+  "sha256": {
+    "config/models/gemma4-26b-a4b.json": "8c799e88fe2b249f1cf0c735f279966cc7a0073881c803b0c8408885dc20eb1d",
+    "config/models/ornith-1.5-35b-a3b.json": "6bf470cfbf0f1ee0007435300001ce9cc1b23bcf3987f9cdd1d6079490d4550a",
+    "config/models/ornith-1.5-9b.json": "f0d36ff39c37b345b529ac9fd9ad8dbf222bca5e4c0457b1836fd6230a883004",
+    "config/models/qwen3.8-27b.json": "0496bbeded0a02bf6ef8b826c77c58be504fe5271d56e478d0ec28c914e905f7",
+    "config/profiles/acceptance-128k.json": "27aaf239a946d0306a1520c48d7e6fdade3bd25ca755470b21b0f54b64d78c68",
+    "config/profiles/runtime-lanes.json": "2303ef66b9b1eae934da31225e42e8660a6ae6924cca35591a877c10df0f7b2e",
+    "config/profiles/topologies.json": "817a1157673d346f04efde8da7d3cc3e9b3ef2b47b690988808b55a6a4c35956",
+    "config/profiles/wbs5-candidates.json": "cd64d92df60870d9dc9ec834804f299da7d1ade54c6d04a26a043a2e35e58549",
+    "config/runtime-lock.json": "a4d88fd4f22f258f715c605f3b3d9dce75da1a81b42dc1c6db12a93683680d12",
+    "workloads/performance/v1.json": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+    "workloads/concurrency/v2.json": "ab6ac578301c8f48700d5a50c808e1bfb42538f186c50a82168509215dc9e479",
+    "workloads/concurrency/v2-ground-truth.json": "221d0606a19b08e223d3eecac59ff99da151441dace3f5937ebed29a275ed7bb",
+    "scripts/runtime_launcher.py": "65a8c2b55809f8ff3b806c1480d026e3e995eddc7008c282dfa2555ad07952e7",
+    "docs/WBS-5 - Gemma4 26B A4B - llama.cpp.md": "7ead89d626c04f04678e825d4ab0d6420793a3100d0ff2578590d7ec3aa8782e",
+    "docs/WBS-5 - Ornith 1.5 35B-A3B - 1Cat-vLLM.md": "423f1f237a6b7b08417a4711ea04c295631f9e377c8db819cdf8ebd9248fae58",
+    "docs/WBS-5 - Ornith 1.5 35B-A3B - llama.cpp.md": "127c957ae5b1b56dd4654b05e10e7cdbf3ca3a29fffeb21858d014e3ee364aa6",
+    "docs/WBS-5 - Ornith 1.5 9B - 1Cat-vLLM.md": "8f917f043d74ffb488a49b13be5bea51050db6a75dd8b642743123c0a39ffa8c",
+    "docs/WBS-5 - Ornith 1.5 9B - llama.cpp.md": "a031eb3d4288dd206f5005db0d3fe4a7ff031e82cb280ec7127d9d005cf23079",
+    "docs/WBS-5 - Qwen 3.8 27B - 1Cat-vLLM.md": "4da7faf379c245d5809764370d53c3ee82cd581b72070c44320c768a05caba80",
+    "docs/WBS-5 - Qwen 3.8 27B - llama.cpp.md": "79c2c6ecdd179e51f9c0c7686a711749309561cf80d16aeb19941a352959cb54",
+    "state/wbs5-artifact-receipts/ornith35-onecat.json": "72d09883354e8b38fff3d73bed631a5541d90de6f2bc37a3cac57ac8af16dabf",
+    "state/wbs5-artifact-receipts/ornith9-onecat.json": "0a8d1a9d29bd70c8120c43518b3e34e7d932724c71d194d0f9e9f144ee2563e7",
+    "state/wbs5-artifact-receipts/qwen-onecat.json": "8c2dea111779697db9859d09b633b2c978760c39f5b8a828f77055f460de84b2"
+  }
+}

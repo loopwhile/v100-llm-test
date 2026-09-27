@@ -1,0 +1,494 @@
+{
+  "phase": "WBS5-8C",
+  "frozen_tracks": 7,
+  "frozen_candidates": 25,
+  "dry_plans": 28,
+  "measured_inference_executed": false,
+  "raw_directories_created": false,
+  "candidate_status_counts": {
+    "STATIC_READY": 19,
+    "CONDITIONAL_PENDING_GATE": 5,
+    "BLOCKED_BY_HOST_TOOLCHAIN": 1
+  },
+  "workload_path": "workloads/performance/v1.json",
+  "workload_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+  "input_lock_sha256": "1a4f30d400c54b483cb01ec0e4fac7bfe6d3d90e325694a47eb11552706b4b6a",
+  "plans": [
+    {
+      "track": "qwen-llama",
+      "candidate_key": "R0",
+      "candidate_id": "Q38-LLAMA-WBS5-R0-TARGET-B512-UB128",
+      "experiment_id": "EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-001",
+      "run_identity": {
+        "label": "repetition-1",
+        "kind": "repetition",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "5e01a180e3daf2320997fd1c6ea39cc884367b8e20f8141511e9e7f9c2276e96",
+      "plan_path": "EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "qwen-llama",
+      "candidate_key": "R0",
+      "candidate_id": "Q38-LLAMA-WBS5-R0-TARGET-B512-UB128",
+      "experiment_id": "EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-002",
+      "run_identity": {
+        "label": "repetition-2",
+        "kind": "repetition",
+        "index": 2,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "5e01a180e3daf2320997fd1c6ea39cc884367b8e20f8141511e9e7f9c2276e96",
+      "plan_path": "EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-002/candidate-plan.json"
+    },
+    {
+      "track": "qwen-llama",
+      "candidate_key": "R1",
+      "candidate_id": "Q38-LLAMA-WBS5-R1-NGRAM-DEFAULT",
+      "experiment_id": "EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "56517c9ee467b89d46eb211fc39a669b288813d747bb006447231b45c4943ee3",
+      "plan_path": "EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "qwen-llama",
+      "candidate_key": "R1",
+      "candidate_id": "Q38-LLAMA-WBS5-R1-NGRAM-DEFAULT",
+      "experiment_id": "EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-002",
+      "run_identity": {
+        "label": "confirm-1",
+        "kind": "confirm",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "56517c9ee467b89d46eb211fc39a669b288813d747bb006447231b45c4943ee3",
+      "plan_path": "EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-002/candidate-plan.json"
+    },
+    {
+      "track": "qwen-llama",
+      "candidate_key": "R2",
+      "candidate_id": "Q38-LLAMA-WBS5-R2-TARGET-UB256",
+      "experiment_id": "EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "7bb2031d35687846839c27cd0d6d87649280a97dbaf015cc1bb57ac9fdfd6d9c",
+      "plan_path": "EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "qwen-llama",
+      "candidate_key": "R2",
+      "candidate_id": "Q38-LLAMA-WBS5-R2-TARGET-UB256",
+      "experiment_id": "EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-002",
+      "run_identity": {
+        "label": "confirm-1",
+        "kind": "confirm",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "7bb2031d35687846839c27cd0d6d87649280a97dbaf015cc1bb57ac9fdfd6d9c",
+      "plan_path": "EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-002/candidate-plan.json"
+    },
+    {
+      "track": "ornith9-llama",
+      "candidate_key": "R0",
+      "candidate_id": "TARGET_BASELINE",
+      "experiment_id": "EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "63048c1908be000f2309992c26ab5ac7075d3f84dda6f108a3e0d77d6e8c4be5",
+      "plan_path": "EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "ornith9-llama",
+      "candidate_key": "R1",
+      "candidate_id": "TARGET_UB256",
+      "experiment_id": "EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "c6933aca605c596224e45f7bfffff65405703b225e62d3dd74685de2c56331ab",
+      "plan_path": "EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "ornith9-llama",
+      "candidate_key": "R2",
+      "candidate_id": "NGRAM_DEFAULT",
+      "experiment_id": "EXP-V100-ORN15-9B-LLAMA-NGRAM-B512-UB128-1GPU2-C2-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "3dde907776e967fae3f397c000a588e47654a089a2265268e5eb53fa205aa327",
+      "plan_path": "EXP-V100-ORN15-9B-LLAMA-NGRAM-B512-UB128-1GPU2-C2-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "ornith35-llama",
+      "candidate_key": "R0",
+      "candidate_id": "ORN35-LLAMA-WBS5-R0-TARGET",
+      "experiment_id": "EXP-V100-WBS5-ORNITH35-LLAMA-R0-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "dcdfab3bd7b57c71dc313b867b1feefd7770898e6bb9820079bd9585d516c9fa",
+      "plan_path": "EXP-V100-WBS5-ORNITH35-LLAMA-R0-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "ornith35-llama",
+      "candidate_key": "R1",
+      "candidate_id": "ORN35-LLAMA-WBS5-R1-MTP1",
+      "experiment_id": "EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "c3edfef92d58414744f94d9e4ad41afa4ebc0be0690984972624792231031b5b",
+      "plan_path": "EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "ornith35-llama",
+      "candidate_key": "R2",
+      "candidate_id": "ORN35-LLAMA-WBS5-R2-UB256",
+      "experiment_id": "EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "4252ccbe93e014a972be06ebe6d046af998493fecb7472c9ec665d0df3a2aad1",
+      "plan_path": "EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "ornith35-llama",
+      "candidate_key": "R3",
+      "candidate_id": "ORN35-LLAMA-WBS5-R3-QUEUE4X",
+      "experiment_id": "EXP-V100-WBS5-ORNITH35-LLAMA-R3-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "d67aa13b3d4b35076ff60cecaec0067f3853f22cc9a67d9349641ebadd313754",
+      "plan_path": "EXP-V100-WBS5-ORNITH35-LLAMA-R3-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "gemma-llama",
+      "candidate_key": "R0",
+      "candidate_id": "G4-LCPP-WBS5-R0-TARGET-B512-UB128",
+      "experiment_id": "EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "e2075376ea251e443dc7e1994f05aaf80478829c89cc79bcdebf26d5c063be9a",
+      "plan_path": "EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "gemma-llama",
+      "candidate_key": "R1",
+      "candidate_id": "G4-LCPP-WBS5-R1-NGRAM-DEFAULT-B512-UB128",
+      "experiment_id": "EXP-V100-WBS5-GEMMA-LLAMA-R1-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "21829a1f1ddd26124f4303ab7436a96e55c8e24b9a7fe1050884450d6fa9371d",
+      "plan_path": "EXP-V100-WBS5-GEMMA-LLAMA-R1-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "gemma-llama",
+      "candidate_key": "R2",
+      "candidate_id": "G4-LCPP-WBS5-R2-TARGET-B1024-UB128",
+      "experiment_id": "EXP-V100-WBS5-GEMMA-LLAMA-R2-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "bbebd1abbe792f45cacb24c87551c2850ada74a319f0098e2d91182d45884b33",
+      "plan_path": "EXP-V100-WBS5-GEMMA-LLAMA-R2-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "gemma-llama",
+      "candidate_key": "R3",
+      "candidate_id": "G4-LCPP-WBS5-R3-TARGET-B512-UB128-GRAPHOFF",
+      "experiment_id": "EXP-V100-WBS5-GEMMA-LLAMA-R3-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "CONDITIONAL_PENDING_GATE",
+      "configuration_sha256": "a3ab90aac27856ce620964a528dc1e05f59adf79e71ead775e2c0fc3d2f21de6",
+      "plan_path": "EXP-V100-WBS5-GEMMA-LLAMA-R3-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "qwen-onecat",
+      "candidate_key": "R0",
+      "candidate_id": "R0-E4M3-128K-SEMANTIC-BASELINE",
+      "experiment_id": "EXP-V100-WBS5-QWEN-ONECAT-R0-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "50b91d5d98c4318ed87ad4ad7c71786c1b6e9f61232cca760af92e61194ed9ac",
+      "plan_path": "EXP-V100-WBS5-QWEN-ONECAT-R0-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "qwen-onecat",
+      "candidate_key": "R1",
+      "candidate_id": "R1-E4M3-128K-CUDAGRAPH-C1",
+      "experiment_id": "EXP-V100-WBS5-QWEN-ONECAT-R1-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "4e2de1776139f7290cd414808d2ba1d69e237b13b867982eba6979be59f4ca27",
+      "plan_path": "EXP-V100-WBS5-QWEN-ONECAT-R1-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "qwen-onecat",
+      "candidate_key": "R2",
+      "candidate_id": "R2-E4M3-128K-ORIGINAL-FLASHQLA-PREFILL",
+      "experiment_id": "EXP-V100-WBS5-QWEN-ONECAT-R2-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "BLOCKED_BY_HOST_TOOLCHAIN",
+      "configuration_sha256": "ab2baf882c2cb03a985180c9f669b901bc70250c6bf72687296782aa5e0efa95",
+      "plan_path": "EXP-V100-WBS5-QWEN-ONECAT-R2-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "qwen-onecat",
+      "candidate_key": "R3",
+      "candidate_id": "R3-E5M2-128K-KV-ROUTE",
+      "experiment_id": "EXP-V100-WBS5-QWEN-ONECAT-R3-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "ad3fb2d853f273e22d8a79743b667bb32ecca9def9e06431fa9c5074a1765361",
+      "plan_path": "EXP-V100-WBS5-QWEN-ONECAT-R3-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "ornith9-onecat",
+      "candidate_key": "R0",
+      "candidate_id": "ORN15-9B-1CAT-WBS5-R0-BASELINE",
+      "experiment_id": "EXP-V100-WBS5-ORNITH9-ONECAT-R0-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "CONDITIONAL_PENDING_GATE",
+      "configuration_sha256": "476587fbe3cc7be63b8bfc7e09d4871e941759d1e96e0e8502f2aa1fc0f381ae",
+      "plan_path": "EXP-V100-WBS5-ORNITH9-ONECAT-R0-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "ornith9-onecat",
+      "candidate_key": "R1",
+      "candidate_id": "ORN15-9B-1CAT-WBS5-R1-MBT8192",
+      "experiment_id": "EXP-V100-WBS5-ORNITH9-ONECAT-R1-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "CONDITIONAL_PENDING_GATE",
+      "configuration_sha256": "345a84fe9c139645435c3c7a0d1ae16be6972127d0b9c1a68056eca4181b2997",
+      "plan_path": "EXP-V100-WBS5-ORNITH9-ONECAT-R1-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "ornith9-onecat",
+      "candidate_key": "R2",
+      "candidate_id": "ORN15-9B-1CAT-WBS5-R2-TARGET-GRAPH",
+      "experiment_id": "EXP-V100-WBS5-ORNITH9-ONECAT-R2-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "CONDITIONAL_PENDING_GATE",
+      "configuration_sha256": "a6272cf074b60ee179dc7cb42d88e873ac5834e1399233673cb9db92d443f0c9",
+      "plan_path": "EXP-V100-WBS5-ORNITH9-ONECAT-R2-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "ornith9-onecat",
+      "candidate_key": "R3",
+      "candidate_id": "ORN15-9B-1CAT-WBS5-R3-MTP2",
+      "experiment_id": "EXP-V100-WBS5-ORNITH9-ONECAT-R3-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "CONDITIONAL_PENDING_GATE",
+      "configuration_sha256": "cad661f17cdf9cf9af404ef99def4b3fa2e8c82362d192ca2bf6904601222889",
+      "plan_path": "EXP-V100-WBS5-ORNITH9-ONECAT-R3-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "ornith35-onecat",
+      "candidate_key": "R0",
+      "candidate_id": "R0-BASELINE-EAGER-MBT4096",
+      "experiment_id": "EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "13656935f8ac5b0e159eb324f6ff9431f30a575279ca8c2dca0b8e8b7a3fd437",
+      "plan_path": "EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "ornith35-onecat",
+      "candidate_key": "R1",
+      "candidate_id": "R1-GRAPH-AUTO-MBT4096",
+      "experiment_id": "EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "c736583f8f1b19e7273bbc11f133f4ff5947cb5021426787fd81924cd25927ff",
+      "plan_path": "EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260928-001/candidate-plan.json"
+    },
+    {
+      "track": "ornith35-onecat",
+      "candidate_key": "R2",
+      "candidate_id": "R2-EAGER-MBT8192",
+      "experiment_id": "EXP-V100-WBS5-ORNITH35-ONECAT-R2-PERF-20260928-001",
+      "run_identity": {
+        "label": "screening-1",
+        "kind": "screening",
+        "index": 1,
+        "automatic_retry": false,
+        "automatic_confirm": false,
+        "batches_in_this_invocation": 1
+      },
+      "status": "STATIC_READY",
+      "configuration_sha256": "e566ba87ed5542a5d0f7799f2693ffffdfb820e68017107f1ed021cc89bd0f19",
+      "plan_path": "EXP-V100-WBS5-ORNITH35-ONECAT-R2-PERF-20260928-001/candidate-plan.json"
+    }
+  ]
+}

@@ -119,3 +119,25 @@ R0 -> R2:
 - **R2-EAGER-MBT8192 — `BLOCKED_BY_HARNESS`**
 
 세 candidate 모두 exact static command는 생성 가능하지만 현 C2 runner는 WBS5 workload/identity를 연결하지 않는다. P520 runtime metadata/wheel SHA/source/CLI와 model download revision receipt는 확보했다. WBS5 harness 연결과 eventual startup/runtime route 확인이 남아 있으며, measured inference는 실행하지 않았다.
+
+## 8B~8D remediation result — 2026-09-28
+
+8A 관찰/과거 verdict는 위에 보존한다. 아래는 새 runner 구현 이후의 준비 상태이며 measured PASS를 뜻하지 않는다.
+
+- Runner readiness: **READY_FOR_PRE_RUN_VALIDATION**. `scripts/run_wbs5.py` 명시적 track/candidate dispatch; 기본 동작은 dry-plan이다. 기존 WBS3 runner의 concurrency/v2 기본값은 유지한다.
+- Frozen guard: pinned input SHA와 normalized effective argv/env OFAT allowlist, final worker config/command drift를 검사하며 위반은 `FROZEN_DELTA_MISMATCH`로 중단한다. context 131072/request, independent A/B, reserve4096/min1024, temp0/top_p1/seed520을 유지한다.
+- Identity/evidence: candidate ID/run label/workload SHA/model+runtime+artifact hash, exact argv 및 host/container environment receipt; fresh raw exclusive creation, telemetry/post-health/output integrity/total output tokens 경로를 연결했다. 반복/confirm/실패 retry를 자동 실행하지 않는다.
+- Metric remediation: 기존 TTFT/prefill/per-request decode/mean decode/aggregate decode/end-to-end TPS/batch wall 산식 유지. 새 WBS5 run만 graph-evidence.json, slot-progress JSONL/JSON, speculative counters/ratio를 저장한다. missing/ambiguous/reset counters와 unavailable slot fields는 UNKNOWN/null; raw server log는 보존한다.
+- Remaining runtime-only unknown: **VERIFY_AT_STARTUP / VERIFY_DURING_MEASURED_RUN** — target graph auto capture/replay, MBT8192 VRAM fit, output integrity 및 prefix-cache behavior.
+- Remaining blocker/gate: 없음. target-only 및 E5M2 invariant를 유지한다.
+- BLOCKED_BY_HARNESS: **없음**. Pre-run ChatGPT Ready: **YES** (host approval/gate가 남아 있는 후보는 measured admission 금지).
+- Tests: 전체 `pytest` **146 passed, 25 subtests passed**; WBS5 offline 24 tests 포함. `scripts/validate_repo.py`: **Repository contract: PASS**. Python AST/JSON validation 및 git diff --check PASS. 실제 HTTP/GPU를 쓰는 inference test는 실행하지 않았다.
+- Measured inference executed: **NO**. GPU server startup/model load/G0/128K request/benchmark/설치/host 설정 변경도 실행하지 않았다.
+
+| Candidate | Run label | 8C state | Dry plan |
+|---|---|---|---|
+| `R0-BASELINE-EAGER-MBT4096` | `screening-1` | `STATIC_READY` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/candidate-plan.json) |
+| `R1-GRAPH-AUTO-MBT4096` | `screening-1` | `STATIC_READY` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260928-001/candidate-plan.json) |
+| `R2-EAGER-MBT8192` | `screening-1` | `STATIC_READY` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-ORNITH35-ONECAT-R2-PERF-20260928-001/candidate-plan.json) |
+
+공통 구현/guard/evidence 및 8D receipt 설명: [WBS5 preparation report](WBS-5-preparation-readiness.md). 다음 단계는 ChatGPT의 pre-run final validation이며 자동 measured 실행으로 이어지지 않는다.

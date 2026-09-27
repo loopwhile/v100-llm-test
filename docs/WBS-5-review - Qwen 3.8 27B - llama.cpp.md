@@ -120,3 +120,30 @@ Proposal only, no implementation/source edit in this static review:
 **BLOCKED**: pinned binary and frozen command syntax are supported; artifact receipt is in section D. Required integrated Qwen WBS5 workload/candidate/structured evidence/repetition path is incomplete. This report does not equate static capability with executed performance or semantic success.
 
 GPU MEASURED INFERENCE EXECUTED: NO
+
+## 8B~8D remediation result — 2026-09-28
+
+8A 관찰/과거 verdict는 위에 보존한다. 아래는 새 runner 구현 이후의 준비 상태이며 measured PASS를 뜻하지 않는다.
+
+- Runner readiness: **READY_FOR_PRE_RUN_VALIDATION**. `scripts/run_wbs5.py` 명시적 track/candidate dispatch; 기본 동작은 dry-plan이다. 기존 WBS3 runner의 concurrency/v2 기본값은 유지한다.
+- Frozen guard: pinned input SHA와 normalized effective argv/env OFAT allowlist, final worker config/command drift를 검사하며 위반은 `FROZEN_DELTA_MISMATCH`로 중단한다. context 131072/request, independent A/B, reserve4096/min1024, temp0/top_p1/seed520을 유지한다.
+- Identity/evidence: candidate ID/run label/workload SHA/model+runtime+artifact hash, exact argv 및 host/container environment receipt; fresh raw exclusive creation, telemetry/post-health/output integrity/total output tokens 경로를 연결했다. 반복/confirm/실패 retry를 자동 실행하지 않는다.
+- Metric remediation: 기존 TTFT/prefill/per-request decode/mean decode/aggregate decode/end-to-end TPS/batch wall 산식 유지. 새 WBS5 run만 graph-evidence.json, slot-progress JSONL/JSON, speculative counters/ratio를 저장한다. missing/ambiguous/reset counters와 unavailable slot fields는 UNKNOWN/null; raw server log는 보존한다.
+- Remaining runtime-only unknown: **VERIFY_AT_STARTUP / VERIFY_DURING_MEASURED_RUN** — graph reuse, prefix-cache behavior, VRAM fit 및 실제 NGRAM acceptance.
+- Remaining blocker/gate: 없음. R0 2회 repetition 및 R1/R2 optional confirm은 각각 explicit label/fresh ID로만 지원한다.
+- BLOCKED_BY_HARNESS: **없음**. Pre-run ChatGPT Ready: **YES** (host approval/gate가 남아 있는 후보는 measured admission 금지).
+- Tests: 전체 `pytest` **146 passed, 25 subtests passed**; WBS5 offline 24 tests 포함. `scripts/validate_repo.py`: **Repository contract: PASS**. Python AST/JSON validation 및 git diff --check PASS. 실제 HTTP/GPU를 쓰는 inference test는 실행하지 않았다.
+- Measured inference executed: **NO**. GPU server startup/model load/G0/128K request/benchmark/설치/host 설정 변경도 실행하지 않았다.
+
+| Candidate | Run label | 8C state | Dry plan |
+|---|---|---|---|
+| `Q38-LLAMA-WBS5-R0-TARGET-B512-UB128` | `repetition-1` | `STATIC_READY` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-001/candidate-plan.json) |
+| `Q38-LLAMA-WBS5-R0-TARGET-B512-UB128` | `repetition-2` | `STATIC_READY` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-002/candidate-plan.json) |
+| `Q38-LLAMA-WBS5-R1-NGRAM-DEFAULT` | `screening-1` | `STATIC_READY` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-001/candidate-plan.json) |
+| `Q38-LLAMA-WBS5-R1-NGRAM-DEFAULT` | `confirm-1` | `STATIC_READY` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-002/candidate-plan.json) |
+| `Q38-LLAMA-WBS5-R2-TARGET-UB256` | `screening-1` | `STATIC_READY` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/candidate-plan.json) |
+| `Q38-LLAMA-WBS5-R2-TARGET-UB256` | `confirm-1` | `STATIC_READY` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-002/candidate-plan.json) |
+
+공통 구현/guard/evidence 및 8D receipt 설명: [WBS5 preparation report](WBS-5-preparation-readiness.md). 다음 단계는 ChatGPT의 pre-run final validation이며 자동 measured 실행으로 이어지지 않는다.
+
+R0 repetition-1/-2는 동일 normalized config/workload SHA로 각각 한 번만 계획한다. R1/R2 confirm-1은 optional plan이며 자동 실행하지 않는다. 각 label은 fresh experiment ID를 사용한다.

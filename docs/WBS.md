@@ -704,13 +704,14 @@ Shared TP2와 다음 항목을 비교한다.
   - 다른 KV quantization (e.g. FP8), 다른 speculative configuration, 다른 runtime에서의 결과까지 물리적으로 불가능하다고 일반화하지 않는다.
   - 프로젝트 불변 규칙에 따라 설정을 임의 변경하는 자동 재시도는 수행하지 않고 closed 처리함.
 
-## 5. 성능 최적화 및 모델별 최종 레시피 확정 [PLANNED — FROZEN / READY_FOR_LOCAL_VALIDATION]
+## 5. 성능 최적화 및 모델별 최종 레시피 확정 [PLANNED — FROZEN / READY_FOR_PRE_RUN_VALIDATION]
 
 WBS 2/3/4에서 확보한 capacity/correctness/topology evidence와 WBS 5의 performance evidence를 분리한다.
 WBS 5는 아래 7개 model/runtime track에 대해 이미 연구·선정이 끝난 frozen candidate만 실행하며,
 새 candidate 자동 생성, exhaustive grid, 임의 tuning을 수행하지 않는다.
 
-현재 단계는 **후보 선정 완료 / frozen plan 문서화 완료 / WBS 공식 계획 반영 완료 / Codex CLI local validation 직전**이다.
+현재 단계는 **8A 및 8B~8D runner/harness 구현·dry-plan·static/unit validation 완료 / READY_FOR_PRE_RUN_VALIDATION**이다.
+25개 frozen candidate의 28개 dry-plan을 저장했다. Qwen 1Cat R2는 host toolchain BLOCKED, Ornith9 1Cat G0 및 Gemma R3 Gate B는 pending이다. Harness blocker는 없다. [준비 결과](WBS-5-preparation-readiness.md).
 아직 WBS 5 GPU measured run은 시작하지 않았다.
 
 ### 5.1 authoritative planning input 및 진행 단계
@@ -733,7 +734,7 @@ WBS 5 단계 흐름:
 1. 7개 candidate plan 연구/선정 완료.
 2. 7개 frozen plan 문서화 완료.
 3. `docs/WBS.md` 공식 반영 완료.
-4. Codex CLI local validation / test preparation.
+4. Codex CLI local validation / test preparation 완료 (8A~8D; measured inference 없음).
 5. ChatGPT pre-run final validation.
 6. Codex CLI measured runs.
 7. 결과 분석.
@@ -769,7 +770,7 @@ WBS 5 단계 흐름:
 - `infra-invalid`, `workload-invalid`, artifact/runtime identity mismatch, frozen-delta mismatch는 해당 measured run 전/중 **hard stop**이다.
 - 단순 성능 열세는 infra-invalid가 아니며 candidate failure/performance evidence로 보존할 수 있다.
 - option이 static source에 존재하는 것과 future measured run에서 실제 route/capture/replay가 hit되는 것은 구분한다.
-- `READY_FOR_LOCAL_VALIDATION` 또는 static READY는 measured PASS나 `VALIDATED_RECIPE`를 의미하지 않는다.
+- `READY_FOR_PRE_RUN_VALIDATION` 또는 static READY는 measured PASS나 `VALIDATED_RECIPE`를 의미하지 않는다.
 
 공통 evidence:
 - TTFT.
@@ -789,7 +790,7 @@ WBS 5 단계 흐름:
 
 ### 5.3 llama.cpp frozen tracks
 
-#### 5.3.1 Qwen3.8-27B / llama.cpp [FROZEN — READY_FOR_LOCAL_VALIDATION]
+#### 5.3.1 Qwen3.8-27B / llama.cpp [FROZEN — READY_FOR_PRE_RUN_VALIDATION]
 
 Frozen candidates:
 
@@ -821,7 +822,7 @@ LOCAL_VERIFY_REQUIRED:
 - exact command가 frozen delta 외의 변수를 바꾸거나 artifact/runtime/workload가 불일치하면 hard stop.
 - 최종 recipe 승격에는 frozen configuration identity, valid `performance/v1.json` measured evidence, output integrity, telemetry/provenance가 모두 필요하다.
 
-#### 5.3.2 Ornith 1.5 9B / llama.cpp [FROZEN — READY_FOR_LOCAL_VALIDATION]
+#### 5.3.2 Ornith 1.5 9B / llama.cpp [FROZEN — READY_FOR_PRE_RUN_VALIDATION]
 
 Frozen candidates:
 
@@ -850,7 +851,7 @@ LOCAL_VERIFY_REQUIRED:
 - 다른 topology/KV/context/routing delta가 섞이면 hard stop.
 - final recipe 승격은 1GPU×2 + LiteLLM 배포 topology에서 `performance/v1.json` valid run과 output integrity를 요구한다.
 
-#### 5.3.3 Ornith 1.5 35B-A3B / llama.cpp [FROZEN — READY_FOR_LOCAL_VALIDATION]
+#### 5.3.3 Ornith 1.5 35B-A3B / llama.cpp [FROZEN — READY_FOR_PRE_RUN_VALIDATION]
 
 Frozen candidates:
 
@@ -883,7 +884,7 @@ LOCAL_VERIFY_REQUIRED:
 - one-variable diff 실패 또는 measured validity failure는 hard stop/invalid로 처리하고 candidate를 재설계하지 않는다.
 - recipe 승격은 frozen candidate exactness + valid performance evidence + output integrity를 요구한다.
 
-#### 5.3.4 Gemma4 26B-A4B / llama.cpp [FROZEN — READY_FOR_LOCAL_VALIDATION]
+#### 5.3.4 Gemma4 26B-A4B / llama.cpp [FROZEN — READY_FOR_PRE_RUN_VALIDATION]
 
 Frozen candidates:
 
@@ -918,7 +919,7 @@ LOCAL_VERIFY_REQUIRED:
 `2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b`를 기준으로 local verification한다.
 설치 package tree만으로 wheel SHA를 추정하지 않으며 local wheel 원본이 없으면 provenance 한계를 명시한다.
 
-#### 5.4.1 Qwen3.8-27B / 1Cat-vLLM [FROZEN — READY_FOR_LOCAL_VALIDATION]
+#### 5.4.1 Qwen3.8-27B / 1Cat-vLLM [FROZEN — READY_FOR_PRE_RUN_VALIDATION]
 
 현재 evidence를 다음처럼 분리한다.
 
@@ -955,7 +956,7 @@ LOCAL_VERIFY_REQUIRED:
 - C2 performance claim에는 `performance/v1.json`에서 active-overlap 여부를 새 evidence로 기록해야 하며 기존 `QUEUE_ONLY`를 ACTIVE로 재해석하지 않는다.
 - unsupported/unknown local route는 해당 candidate를 local blocker로 남기고 대체 tuning을 추가하지 않는다.
 
-#### 5.4.2 Ornith 1.5 9B / 1Cat-vLLM [FROZEN — READY_FOR_LOCAL_VALIDATION]
+#### 5.4.2 Ornith 1.5 9B / 1Cat-vLLM [FROZEN — READY_FOR_PRE_RUN_VALIDATION]
 
 Frozen candidates:
 
@@ -993,7 +994,7 @@ Admission gate:
 - frozen delta 이외 hidden effective change가 발견되면 해당 candidate는 measured admission 전에 stop/block.
 - final recipe 승격에는 G0 admission, valid `performance/v1.json` evidence, output integrity, active-overlap/telemetry provenance가 필요하다.
 
-#### 5.4.3 Ornith 1.5 35B-A3B / 1Cat-vLLM [FROZEN — READY_FOR_LOCAL_VALIDATION]
+#### 5.4.3 Ornith 1.5 35B-A3B / 1Cat-vLLM [FROZEN — READY_FOR_PRE_RUN_VALIDATION]
 
 Frozen candidates:
 

@@ -147,3 +147,26 @@ Required separate G0 uses pre-registered oracle, not performance nonempty criter
 Project B still seeds JobQueue.pop nonempty check -> explicit await asyncio.sleep(0) -> heapq.heappop race; with one job/two workers the second pop may raise IndexError. Ground truth requires correct mechanism/reproduction and grounded fix. G0 not executed here. No artifact/version mismatch found that statically prevents preparing G0; exact metadata mapping and route are registered startup unknowns. Before WBS5 measured execution: G0 semantic requalification must PASS separately; frozen candidate dispatch/performance workload and effective env/config receipts must be integrated; fresh raw IDs and counters preserved. Existing benchmark results are not modified or relabeled.
 
 GPU MEASURED INFERENCE EXECUTED: NO
+
+## 8B~8D remediation result — 2026-09-28
+
+8A 관찰/과거 verdict는 위에 보존한다. 아래는 새 runner 구현 이후의 준비 상태이며 measured PASS를 뜻하지 않는다.
+
+- Runner readiness: **READY_FOR_PRE_RUN_VALIDATION**. `scripts/run_wbs5.py` 명시적 track/candidate dispatch; 기본 동작은 dry-plan이다. 기존 WBS3 runner의 concurrency/v2 기본값은 유지한다.
+- Frozen guard: pinned input SHA와 normalized effective argv/env OFAT allowlist, final worker config/command drift를 검사하며 위반은 `FROZEN_DELTA_MISMATCH`로 중단한다. context 131072/request, independent A/B, reserve4096/min1024, temp0/top_p1/seed520을 유지한다.
+- Identity/evidence: candidate ID/run label/workload SHA/model+runtime+artifact hash, exact argv 및 host/container environment receipt; fresh raw exclusive creation, telemetry/post-health/output integrity/total output tokens 경로를 연결했다. 반복/confirm/실패 retry를 자동 실행하지 않는다.
+- Metric remediation: 기존 TTFT/prefill/per-request decode/mean decode/aggregate decode/end-to-end TPS/batch wall 산식 유지. 새 WBS5 run만 graph-evidence.json, slot-progress JSONL/JSON, speculative counters/ratio를 저장한다. missing/ambiguous/reset counters와 unavailable slot fields는 UNKNOWN/null; raw server log는 보존한다.
+- Remaining runtime-only unknown: **VERIFY_AT_STARTUP / VERIFY_DURING_MEASURED_RUN** — target/drafter graph shapes, MTP correctness/acceptance, VRAM fit 및 semantic correctness.
+- Remaining blocker/gate: R0~R3 모두 CONDITIONAL_PENDING_GATE: WBS3 Project A/B G0 semantic requalification PASS receipt가 필요하다. G0 inference 미실행.
+- BLOCKED_BY_HARNESS: **없음**. Pre-run ChatGPT Ready: **YES** (host approval/gate가 남아 있는 후보는 measured admission 금지).
+- Tests: 전체 `pytest` **146 passed, 25 subtests passed**; WBS5 offline 24 tests 포함. `scripts/validate_repo.py`: **Repository contract: PASS**. Python AST/JSON validation 및 git diff --check PASS. 실제 HTTP/GPU를 쓰는 inference test는 실행하지 않았다.
+- Measured inference executed: **NO**. GPU server startup/model load/G0/128K request/benchmark/설치/host 설정 변경도 실행하지 않았다.
+
+| Candidate | Run label | 8C state | Dry plan |
+|---|---|---|---|
+| `ORN15-9B-1CAT-WBS5-R0-BASELINE` | `screening-1` | `CONDITIONAL_PENDING_GATE` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-ORNITH9-ONECAT-R0-PERF-20260928-001/candidate-plan.json) |
+| `ORN15-9B-1CAT-WBS5-R1-MBT8192` | `screening-1` | `CONDITIONAL_PENDING_GATE` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-ORNITH9-ONECAT-R1-PERF-20260928-001/candidate-plan.json) |
+| `ORN15-9B-1CAT-WBS5-R2-TARGET-GRAPH` | `screening-1` | `CONDITIONAL_PENDING_GATE` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-ORNITH9-ONECAT-R2-PERF-20260928-001/candidate-plan.json) |
+| `ORN15-9B-1CAT-WBS5-R3-MTP2` | `screening-1` | `CONDITIONAL_PENDING_GATE` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-ORNITH9-ONECAT-R3-PERF-20260928-001/candidate-plan.json) |
+
+공통 구현/guard/evidence 및 8D receipt 설명: [WBS5 preparation report](WBS-5-preparation-readiness.md). 다음 단계는 ChatGPT의 pre-run final validation이며 자동 measured 실행으로 이어지지 않는다.
