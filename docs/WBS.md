@@ -1221,6 +1221,64 @@ Winner policy:
 - 상세 실행 보고서: [docs/WBS-6.9-execution-report.md](WBS-6.9-execution-report.md)
 - WBS 6.9 전체 [DONE].
 
+
+### 6.10 Optimized CPU true-32K — C vs D ubatch validation [READY — EXACTLY 2 MEASURED TESTS]
+
+목적:
+- WBS 6.9 true-4K에서 최종 후보로 남은 Case C(`b4096/ub512`)와 Case D(`b4096/ub1024`)를 32K에서 직접 비교한다.
+- 4K cached matrix에서는 `cache_n`이 C/D에서 달라 순수 `ub` 효과 해석이 섞였으므로, 32K 본 측정에서는 **prompt cache를 완전히 비활성화**한다.
+- 따라서 measured variable은 `ub=512 vs 1024` 하나이며 `b=4096`과 나머지 optimized stack은 동일하다.
+- measured request는 **정확히 2회**, 각 case 1회다.
+
+공통 고정:
+- model: Ornith 1.5 35B-A3B `Q4_K_M`.
+- KV: `Q8_0`.
+- image: `p520-cpu-llama-opt:b10775-blas`.
+- OpenBLAS + LTO + `GGML_CPU_ALL_VARIANTS=ON`.
+- `-fa on`.
+- `-t 4 -tb 4`, cpuset logical CPU IDs `1,2,3,4`.
+- `--ctx-size 131072 --parallel 1`.
+- `--load-mode mmap --lazy-mode off --warmup --repack`.
+- `--cpu-strict 1 --cpu-strict-batch 1`.
+- `--prio 1 --prio-batch 1 --poll 50 --poll-batch 1`.
+- ngram-mod 24/48/64.
+- `--n-gpu-layers 0`.
+- measured cache policy: `--cache-ram 0 --no-cache-prompt`.
+- full-size 32K setup/warmup inference는 추가하지 않는다.
+
+Measured matrix:
+| Case | `-b` | `-ub` | Measured request |
+|:---:|---:|---:|---:|
+| C32 | 4096 | 512 | 1 × true-32K |
+| D32 | 4096 | 1024 | 1 × true-32K |
+
+Workload:
+- 기존 `workloads/capacity/v1-32k.json` 재사용.
+- 매 case live Ornith tokenizer로 materialize.
+- `prompt + output reserve(1024) <= 32768` 강제.
+- C32/D32의 `prompt_tokens`와 raw prompt SHA256이 동일하지 않으면 comparison summary 생성 금지.
+
+Experiment IDs:
+- C32: `EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-32K-20260927-001`.
+- D32: `EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-32K-20260927-002`.
+
+Primary comparison:
+- prefill tok/s.
+- TTFT.
+- batch wall.
+- decode tok/s는 secondary evidence.
+- 결과가 4K의 D>C 패턴을 유지하는지, 뒤집히는지를 관찰한다. 32K 결과를 128K로 자동 일반화하지 않는다.
+
+Runner:
+```bash
+python3 scripts/run_wbs610_cpu_optimized_32k.py --run
+```
+
+Aggregate evidence:
+- `results/raw/WBS610-OPTBLAS-32K-C-VS-D.json`.
+
+현재 상태: **READY / NOT EXECUTED**.
+
 ## 실행 규칙
 - 별도 승인이 없는 한 선언된 configuration당 measured execution은 1회만 수행한다.
 - 실패 후 context, quantization, KV, speculative method, topology를 조용히 변경해서는 안 된다.

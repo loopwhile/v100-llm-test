@@ -207,12 +207,24 @@
   - pre-final `001`은 이전 prefix contract에서 completed 후 superseded, `002`는 cache_n 507로 acceptance fail. 따라서 “4회”는 최종 accepted 005~008 matrix를 의미한다.
 - WBS 6 전체 **[DONE]**.
 
+
+## WBS 6.10 optimized CPU true-32K C vs D plan (2026-09-27)
+
+- Goal: 4K의 상위 두 recipe인 C(`4096/512`)와 D(`4096/1024`)를 true-32K에서 직접 비교.
+- measured test: **정확히 2개** (C32 1회, D32 1회).
+- prompt cache OFF: `--cache-ram 0 --no-cache-prompt`; 4K에서 발생한 cache_n 차이를 제거하고 ubatch 효과를 직접 비교.
+- fixed: Ornith 35B Q4_K_M, Q8_0 KV, OpenBLAS+LTO image, FA ON, 4 physical cores, 128K server capacity, ngram-mod, no GPU offload.
+- workload: 기존 `v1-32k.json`, live tokenizer materialization, 동일 prompt tokens/hash 강제.
+- runner: `python3 scripts/run_wbs610_cpu_optimized_32k.py --run`.
+- Status: **READY / NOT EXECUTED**.
+
 ## Next planned work
 
 - WBS 2: DONE
 - WBS 3: DONE
 - WBS 4: DONE
-- WBS 6: DONE (6.1~6.8 PASS, 6.9 OpenVINO CLOSED / OpenBLAS+LTO DONE with Case D Winner).
+- WBS 6.1~6.9: DONE (6.9 OpenVINO CLOSED / OpenBLAS+LTO 4K DONE).
+- WBS 6.10: READY — optimized true-32K C32 vs D32, exactly 2 measured requests.
 - Next = WBS 5(성능 최적화 및 모델별 최종 레시피 확정).
 
 
