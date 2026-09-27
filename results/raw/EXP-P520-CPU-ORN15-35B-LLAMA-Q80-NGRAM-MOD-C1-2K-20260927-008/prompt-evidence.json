@@ -1,0 +1,12 @@
+{
+  "experiment_id": "EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-2K-20260927-008",
+  "target_min_prompt_tokens": 2000,
+  "target_max_prompt_tokens": 2048,
+  "calibrated_prompt_tokens": 2000,
+  "raw_prompt_sha256": "27760d5ac90845a5266421dde35c0a5731df1ee078830ef9606b1a7d48ad98a7",
+  "tokenizer_receipt": {
+    "source": "llama tokenizer",
+    "prompt_tokens": 2000,
+    "formatted_prompt_sha256": "6269d0b294181dff8b466f4e0d44fbcfbfa04a86bd0e11e28d045bb57214aa10"
+  }
+}

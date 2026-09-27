@@ -1,0 +1,18 @@
+{
+  "wbs": "6.8.1",
+  "screening_revision": "true-2k-v2",
+  "selection_policy": "within_2pct_of_peak_then_smallest_b_ub",
+  "tie_tolerance": 0.02,
+  "peak_prompt_eval_tps": 31.721014439310608,
+  "tie_floor_prompt_eval_tps": 31.086594150524395,
+  "tied_cases": [
+    "A",
+    "B",
+    "C"
+  ],
+  "winner_case": "A",
+  "winner_b": 1024,
+  "winner_ub": 256,
+  "winner_prompt_eval_tps": 31.721014439310608,
+  "selected_at_utc": "2026-09-27T07:09:03.159436+00:00"
+}

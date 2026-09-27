@@ -902,7 +902,7 @@ recipe 상태는 다음처럼 구분한다.
 WBS 5 완료 후 사용자가 필요에 따라 recipe를 직접 선택한다.
 이 저장소에서는 별도의 배포/production selection phase를 수행하지 않는다.
 
-## 6. CPU+RAM 전용 dual-resident 128K 서버 + 32K measured request 검증 [IN PROGRESS — 6.1~6.7 DONE, 6.8 TRUE-2K READY]
+## 6. CPU+RAM 전용 dual-resident 128K 서버 + 32K measured request 검증 [DONE]
 
 P520의 CPU+RAM만 사용하는 두 개의 llama.cpp server를 **128K context capacity(`--ctx-size 131072`)로 동시에 기동/resident** 상태로 유지한 뒤, 실제 measured request는 **실사용에 가까운 32K class 요청**을 **한 번에 하나씩 직렬 실행**한다.
 
@@ -1065,7 +1065,7 @@ llama.cpp의 draft-model-free `ngram-mod` 경로를 활성화한다.
 결론: P520 호스트에서 64GB RAM과 CPU 4코어만으로 두 거대 MoE 모델(가중치 합산 약 45GB)을 128K context capacity로 동시 상주시키면서 32K 실사용급 문서 리서치 요청을 오류 및 지속적 스왑 스래싱 없이 처리했고, CPU inference lane의 GPU VRAM 사용량이 0 MiB임을 확인했다. WBS 6.1~6.7의 dual-resident feasibility/correctness 검증은 완료되었으며, 후속 성능 최적화는 6.8에서 `-b/-ub`만 제한적으로 조정해 검증한다.
 
 
-### 6.8 CPU prefill batch / ubatch 최소 튜닝 [REOPENED — TRUE 2K SCREENING READY]
+### 6.8 CPU prefill batch / ubatch 최소 튜닝 [DONE]
 
 정정 사항:
 - 2026-09-27 최초 6.8.1 실행 `EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-2K-20260927-001~004`는 experiment ID와 문서상 "2K"로 표기되었지만, raw `usage.prompt_tokens` 및 `metrics.json`의 실제 prompt는 네 케이스 모두 **922 tokens**였다.
@@ -1118,8 +1118,15 @@ Winner policy:
 현재 상태:
 - WBS 6.1~6.7: 기존 PASS 유지.
 - 922-token legacy screening: 완료 및 보존.
-- **true-2K 4-case screening: READY / NOT EXECUTED.**
-- WBS 6.8 및 WBS 6 전체 종결 판정은 true-2K screening 결과 이후 갱신한다.
+- **true-2K 4-case screening: [DONE]**
+  - `results/raw/WBS68-TRUE2K-SCREENING-SUMMARY.json`, `WBS68-TRUE2K-WINNER.json`
+  - Case A (1024/256): 2,000 tok, prompt 31.72 tok/s, TTFT 63.05s
+  - Case B (2048/512): 2,000 tok, prompt 31.32 tok/s, TTFT 63.87s
+  - Case C (4096/512): 2,000 tok, prompt 31.34 tok/s, TTFT 63.81s
+  - Case D (4096/1024): 2,000 tok, prompt 30.64 tok/s, TTFT 65.27s
+  - 판정: Case A, B, C가 ±2% 이내 동률(31.72 vs 31.32 vs 31.34 tok/s). ±2% 동률 정책에 따라 가장 작은 설정인 **Case A (`1024/256`)가 Winner**로 선정됨.
+  - baseline 대비 2%를 초과하는 non-baseline winner가 부재하므로, 사전 합의된 정책에 따라 32K 재실행을 생략하고 WBS 6.8 및 WBS 6 전체를 **[DONE]**으로 최종 종결한다.
+- **WBS 6 전체 [DONE]**.
 
 
 ## 실행 규칙
