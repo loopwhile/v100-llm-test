@@ -1,0 +1,26 @@
+{
+  "experiment_id": "EXP-P520-CPU-ORN15-35B-OPTSTACK-C1-4K-20260927-001",
+  "measured_repetitions": 1,
+  "warmup_count": 0,
+  "case": "A",
+  "b": 1024,
+  "ub": 256,
+  "measured_prompt_target": "4000..4096",
+  "common_prefix_target": "1000..1024",
+  "setup_requests": 2,
+  "setup_requests_measured": false,
+  "optimization_stack": [
+    "OpenVINO CPU backend",
+    "OpenBLAS build",
+    "GGML_LTO=ON",
+    "Flash Attention forced on",
+    "mmap + lazy-mode off + server warmup",
+    "prompt cache + cache reuse",
+    "weight repack",
+    "strict batch affinity",
+    "medium priority",
+    "polling"
+  ],
+  "measurement_policy": "v100-c1-c2-single-execution-v1",
+  "repetition_count": 1
+}

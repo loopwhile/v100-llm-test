@@ -1,0 +1,8 @@
+{
+  "at_utc": "2026-09-27T08:11:27.299029+00:00",
+  "image": "p520-cpu-llama-opt:b10775",
+  "image_digest": "p520-cpu-llama-opt@sha256:fb36832f7cd61afc59a2e753e0b84ab52d4d44673e60938107cdb7c6a31d3c0f",
+  "openvino_device_visible": true,
+  "list_devices": "Available devices:\n  BLAS: OpenBLAS (0 MiB, 0 MiB free)\n  OPENVINO0: OpenVINO Runtime (62558 MiB, 62558 MiB free)\n\n",
+  "measured_requests": 0
+}

@@ -181,34 +181,27 @@
 - WBS 6 (6.1~6.8) 전체 **[DONE]**.
 
 
-## WBS 6.9 combined optimized CPU true-4K plan (2026-09-27)
+## WBS 6.9 combined optimized CPU true-4K 결과 (2026-09-27)
 
-- Goal: weight/KV quantization은 그대로 두고 serving-side 최적화들을 한 optimized stack으로 묶어 Ornith 35B Q4_K_M true-4K 성능을 측정한다.
-- measured test는 **정확히 4개**:
-  - A \`b1024/ub256\`
-  - B \`b2048/ub512\`
-  - C \`b4096/ub512\`
-  - D \`b4096/ub1024\`
-- fixed: 4 physical cores (\`-t/-tb 4\`, cpuset \`1,2,3,4\`), Q8_0 KV, 128K server context, ngram-mod, no GPU offload.
-- optimized image: \`docker/cpu-optimized/Dockerfile\`, tag \`p520-cpu-llama-opt:b10775\`.
-- build stack: b10775 + \`GGML_NATIVE=ON\` + \`GGML_LTO=ON\` + OpenVINO CPU + OpenBLAS-enabled build + CUDA OFF.
-- runtime stack: FA ON, mmap, lazy-mode off, warmup, prompt cache/reuse, repack, strict batch affinity, medium priority, polling.
-- per-case setup (unmeasured): unrelated 4K compile warmup 1회 + ~1K common-prefix cache prime 1회.
-- measured prompt: live tokenizer true-4K (4,000~4,096), A~D 동일 prompt/prefix hash, \`cache_n >= 512\` 요구.
-- OpenVINO가 \`--list-devices\` 및 runtime log에서 확인되지 않으면 native fallback을 인정하지 않고 중단.
-- runner: \`scripts/run_wbs69_cpu_optimized_4k.py --run\`.
-- aggregate evidence 예정: \`WBS69-OPT4K-SCREENING-SUMMARY.json\`, \`WBS69-OPT4K-WINNER.json\`.
-- Status: **READY / NOT EXECUTED**.
-
+- Goal: weight/KV quantization은 그대로 두고 serving-side 최적화들을 한 optimized stack으로 묶어 Ornith 35B Q4_K_M true-4K 성능을 측정하고자 함.
+- Image Build: `docker/cpu-optimized/Dockerfile`을 통해 `p520-cpu-llama-opt:b10775` 빌드 성공 (`GGML_BACKEND_DL=ON`, `GGML_CPU_ALL_VARIANTS=ON`, OpenVINO 2026.3.1, OpenBLAS).
+- Preflight: `results/raw/WBS69-OPT4K-PREFLIGHT.json` — OpenBLAS 및 OPENVINO0 디바이스 인식 통과 (`openvino_device_visible: true`).
+- Execution & Verdict: **`CLOSED — FAIL / INCOMPATIBLE`**
+  - Case A (`EXP-P520-CPU-ORN15-35B-OPTSTACK-C1-4K-20260927-001`): 서버 헬스체크 통과 후 4K compile warmup 중 `HTTP 500 / llama_decode ret = -3` 크래시.
+  - Root Cause:
+    1. `ScatterBase` rank mismatch: Ornith 1.5 35B의 2D KV cache `cache_k_l3 [131072, 512]`에 대해 OpenVINO `translate_set_rows`가 4D updates 텐서를 생성하여 OpenVINO core 검증(`scatter_base.cpp:52`)에서 `rank(data)=2, rank(indices)=1, rank(updates)=4` 위반.
+    2. Recurrent/Conv dynamic state inference 실패: SSM/Conv 상태 노드의 동적 차원 추론 실패로 정적 shape 고정 및 shape mismatch 예외 발생.
+  - Policy: native-GGML fallback을 거부하고 fail-fast 중단. 하드웨어 읽기 전용 유지, 컨테이너 정리 완료.
+  - WBS 6.9 종결: Ornith 1.5 35B 하이브리드 아키텍처는 현재 llama.cpp b10775의 OpenVINO 백엔드와 구조적 비호환이 확인되어 closed 처리함.
 
 ## Next planned work
 
 - WBS 2: DONE
 - WBS 3: DONE
 - WBS 4: DONE
-- WBS 6.1~6.8: DONE.
-- WBS 6.9: READY — optimized CPU true-4K A/B/C/D, measured exactly 4 requests.
-- Next = optimized image build → preflight → `python3 scripts/run_wbs69_cpu_optimized_4k.py --run`.
+- WBS 6: DONE (6.1~6.8 PASS, 6.9 CLOSED — FAIL / INCOMPATIBLE).
+- Next = WBS 5(성능 최적화 및 모델별 최종 레시피 확정).
+
 
 
 

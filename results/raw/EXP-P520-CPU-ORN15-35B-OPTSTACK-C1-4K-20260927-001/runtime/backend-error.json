@@ -1,0 +1,17 @@
+{
+  "status": "failed",
+  "reason": "OpenVINO runtime incompatibilities with Ornith-1.5-35B architecture",
+  "errors": [
+    {
+      "type": "ScatterBase rank mismatch in set_rows.cpp",
+      "friendly_name": "ScatterBase",
+      "description": "Ornith 1.5 35B allocates 2D KV cache tensor [131072, 512]. llama.cpp ggml-openvino op translate_set_rows assumes a 4D dst tensor and constructs a 4D updates tensor [1, 1, n, 512] with axis 2. OpenVINO core validation at src/core/src/op/util/scatter_base.cpp:52 checks 'updates_shape.rank() == indices_shape.rank() + data_shape.rank() - 1' and fails (Got rank(data)=2, rank(indices)=1, rank(updates)=4), aborting graph compute with status -1.",
+      "log_snippet": "0.50.160.235 E GGML OpenVINO backend ov::Exception: Check 'data_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() || updates_shape.rank().is_dynamic() || updates_shape.rank().get_length() == indices_shape.rank().get_length() + data_shape.rank().get_length() - 1' failed at src/core/src/op/util/scatter_base.cpp:52:\nWhile validating node 'util::ScatterBase ScatterBase_107878 (opset1::Convert cache_k_l3#32277[0]:f32[131072,512], opset1::Squeeze Squeeze_107875[0]:i64[2], opset1::Reshape Reshape_107877[0]:dynamic[1,1,2,512], opset1::Constant Constant_107873[0]:i64[]) -> (dynamic[...])' with friendly_name 'ScatterBase_107878':\nUpdates rank is expected to be rank(indices) + rank(data) - 1. Got: rank(data) = 2, rank(indices) = 1, rank(updates) = 4\n0.50.160.246 E graph_compute: ggml_backend_sched_graph_compute_async failed with error -1\n0.50.160.438 E llama_decode: failed to decode, ret = -3"
+    },
+    {
+      "type": "Dynamic dimension inference failure on hybrid recurrent/conv states",
+      "description": "OpenVINO backend fails to determine dynamic dimensions for conv_states and state_predelta nodes, baking static warmup dimensions into the compiled model. Subsequent requests with different sequence lengths fail input tensor shape checks.",
+      "log_snippet": "0.04.592.508 W ggml-openvino: cannot determine dynamic dim for RESHAPE node 'conv_states_reshaped-0'\n0.04.592.519 W ggml-openvino: dynamic dim value mismatch for VIEW node 'conv_state_last-0', src[0]: 'conv_input-0'\n0.04.592.531 W ggml-openvino: cannot determine dynamic dim for RESHAPE node 'state_predelta-0'\n...\n0.59.148.145 E GGML OpenVINO backend ov::Exception: Check 'shape.compatible(ov::PartialShape(tensor->get_shape()))' failed at src/plugins/intel_cpu/src/infer_request.cpp:385: Can't set the input tensor with index: 3, because the model input (shape=[1,1,2,2048]) and the tensor (shape=(1.1.11.2048)) are incompatible"
+    }
+  ]
+}

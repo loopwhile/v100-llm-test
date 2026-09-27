@@ -31,6 +31,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ocl-icd-opencl-dev \
     opencl-headers \
     opencl-clhpp-headers \
+    pkg-config \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
@@ -55,11 +56,11 @@ RUN bash -c 'source "${OpenVINO_DIR}/setupvars.sh" && \
       -DCMAKE_BUILD_TYPE=Release \
       -DLLAMA_BUILD_TESTS=OFF \
       -DLLAMA_BUILD_EXAMPLES=OFF \
-      -DGGML_NATIVE=ON \
+      -DGGML_NATIVE=OFF \
       -DGGML_LTO=ON \
       -DGGML_CUDA=OFF \
       -DGGML_BACKEND_DL=ON \
-      -DGGML_CPU_ALL_VARIANTS=OFF \
+      -DGGML_CPU_ALL_VARIANTS=ON \
       -DGGML_BLAS=ON \
       -DGGML_BLAS_VENDOR=OpenBLAS \
       -DGGML_OPENVINO=ON && \
