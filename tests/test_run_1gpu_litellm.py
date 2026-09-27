@@ -13,6 +13,35 @@ import runtime_launcher
 
 
 class Ornith1GPUx2RunnerTests(unittest.TestCase):
+    def test_lifecycle_peak_receipt_does_not_overwrite_measured_window_peak(self):
+        with tempfile.TemporaryDirectory() as td:
+            raw = Path(td)
+            runtime = raw / "runtime"
+            runtime.mkdir()
+            measured = raw / "gpu-peak.json"
+            original = '{"source":"measured-window","peak_memory_mib":{"0":123}}\n'
+            measured.write_text(original)
+
+            probe = Mock()
+            probe.summary.return_value = {
+                "source": "nvidia-smi sampled during measured request window",
+                "interval_s": 0.5,
+                "peak_memory_mib": {0: 456, 1: 457},
+            }
+
+            saved = runner.save_lifecycle_peak(runtime, probe)
+
+            self.assertEqual(measured.read_text(), original)
+            lifecycle_path = runtime / "gpu-peak-lifecycle.json"
+            self.assertTrue(lifecycle_path.is_file())
+            lifecycle = runner.json.loads(lifecycle_path.read_text())
+            self.assertEqual(
+                lifecycle["source"],
+                "nvidia-smi memory.used sampled during runner lifecycle",
+            )
+            self.assertIn("not the measured-request-window peak", lifecycle["limitation"])
+            self.assertEqual(saved, lifecycle)
+
     def test_llama_lanes_generate_valid_1gpu_plans(self):
         for lane in ("TARGET", "NGRAM", "MTP", "MTP_NGRAM"):
             for c in (1, 2):

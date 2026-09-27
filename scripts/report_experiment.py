@@ -375,6 +375,7 @@ def _report(config, metrics, completion, raw_dir, verdicts=None):
         "runtime/plan.json", "runtime/planned-config.json",
         "runtime/server-0.log", "runtime/server-1.log",
         "runtime/gateway.log", "runtime/measurement.log",
+        "runtime/gpu-peak-lifecycle.json",
         "runtime/cleanup.json", "runtime/exit.json",
         "runtime/progress.json", "runtime/preflight.json",
     ]

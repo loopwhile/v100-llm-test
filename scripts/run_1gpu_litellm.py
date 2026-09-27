@@ -65,6 +65,19 @@ def checkpoint(raw, phase, **extra):
     h.save(path, state | dict(phase=phase, updated_at_utc=h.utc(), **extra))
 
 
+def save_lifecycle_peak(runtime, peak_probe):
+    """Persist lifecycle VRAM evidence without overwriting measured-window gpu-peak.json."""
+    summary = dict(peak_probe.summary())
+    summary["source"] = "nvidia-smi memory.used sampled during runner lifecycle"
+    summary["limitation"] = (
+        "Lifecycle sampling includes startup, routing preflight, measured request, and cleanup; "
+        "it is not the measured-request-window peak. The measured-window probe writes "
+        "results/raw/<experiment-id>/gpu-peak.json."
+    )
+    h.save(runtime / "gpu-peak-lifecycle.json", summary)
+    return summary
+
+
 def measure(raw):
     config = json.loads((raw / "runtime/planned-config.json").read_text())
     manifest_path = Path(config.get("workload_manifest_path", C1_WORKLOAD_MANIFEST if config.get("concurrency") == 1 else C2_WORKLOAD_MANIFEST))
@@ -447,7 +460,7 @@ def run_locked(args):
         error = str(exc)
     finally:
         peak_probe.stop()
-        h.save(raw / "gpu-peak.json", peak_probe.summary())
+        save_lifecycle_peak(runtime, peak_probe)
 
         if not (raw / "completion.json").exists():
             if not (raw / "config.json").exists():
