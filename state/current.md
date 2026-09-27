@@ -151,37 +151,41 @@
   - GPU VRAM Isolation: CPU-only Docker with no GPU devices passed, `GGML_CUDA=OFF`, `--n-gpu-layers 0`; GPU VRAM allocation = 0.0 MiB, Compute Apps = 0. GPU0/GPU1 serving may exist independently.
   - Memory Evidence & Limits: Host Total 62.56 GiB, Available 31.59 GiB at snapshot. SwapTotal 4,194,300 kB, SwapFree 528 kB (~4GB swap in use). Startup gate proved dual server startup, health, and 0B VRAM isolation; it did not measure `pswpin`/`pswpout`/`pgmajfault` deltas, so absence of swap thrash is unproven at gate time. Due to `mmap`, initial MemAvailable does not guarantee physical RAM headroom once working sets fault in; memory pressure and stability will be measured during 32K request execution.
   - Post-gate cleanup: Both containers cleanly removed after verification per contract.
-- Status: WBS 6.1~6.8 [DONE].
+- Status: WBS 6.1~6.7 [DONE]. WBS 6.8 [REOPENED — TRUE 2K SCREENING READY].
   - Gemma 4 26B-A4B 32K Serial Request: **`PASS`** (`EXP-P520-CPU-GEMMA4-26B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001`; TTFT 4,927.28s, Prefill 6.44 tok/s, Decode 2.72 tok/s, Wall 5,189.72s, Peak VRAM 0 MiB, SwapUsed delta +14.5 MiB, pswpin +1,704, pswpout +4,466, pgmajfault +8,844, 지속적 swap thrashing 미관찰, Post-health PASS; smaps_rollup 수집 실패로 개별 프로세스 RSS/PSS는 0으로 기록됨).
   - Ornith 1.5 35B-A3B 32K Serial Request: **`PASS`** (`EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001`; TTFT 4,160.26s, Prefill 7.63 tok/s, Decode 3.15 tok/s, Wall 4,443.18s, Peak VRAM 0 MiB, SwapUsed delta +12.4 MiB, pswpin +113, pswpout +2,101, pgmajfault +1,433, 지속적 swap thrashing 미관찰, Post-health PASS; smaps_rollup 수집 실패로 개별 프로세스 RSS/PSS는 0으로 기록됨).
   - Verdict: Both models awarded **`PASS_CPU_128K_SERVER_32K_REQUEST_DUAL_RESIDENT`**. 64GB RAM / 4-core CPU envelope에서 두 128K 서버 동시 상주 및 32K 실사용 리서치 워크로드 처리 성공(경미한 swap 증분 외 지속적 thrashing 없음 확인), V100 GPU 서빙 자원 100% 보존 확인.
   - Post-cleanup: 두 컨테이너 `p520-cpu-gemma`, `p520-cpu-ornith` 완전 정리 완료.
 
-## WBS 6.8 CPU prefill batch/ubatch 최소 튜닝 결론 (2026-09-27)
+## WBS 6.8 CPU prefill batch/ubatch 정정 및 재실행 준비 (2026-09-27)
 
-- WBS 6.8.1 Ornith 2K `-b/-ub` screening (4회) 완료.
-  - 실험 ID: `EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-2K-20260927-001~004`
-  - 결과 (Ornith 1.5 35B-A3B Q4_K_M, 2K prompt, `-t 4 -tb 4`, cpuset 1,2,3,4, b10775):
+- 최초 6.8.1 `001~004` raw evidence의 실제 prompt는 네 케이스 모두 **922 tokens**였다. 기존 "2K" 라벨은 부정확했다.
+- `001~004`와 `WBS68-SCREENING-SUMMARY.json`, `WBS68-WINNER.json`은 삭제하지 않고 legacy short-prompt diagnostic으로 보존한다.
+- 922-token 결과:
+  - A 1024/256: 34.553 tok/s
+  - B 2048/512: 34.097 tok/s
+  - C 4096/512: 34.472 tok/s
+  - D 4096/1024: 33.915 tok/s
+- 이 결과가 지지하는 결론은 **약 1K short prompt에서 b/ub 확대 효과가 관찰되지 않았다**까지다. 장문 32K에서 b/ub 효과가 없다는 결론이나 WBS 6.6 수치를 prefill ceiling으로 확정하는 결론은 철회한다.
+- runner 수정:
+  - true-2K acceptance = live tokenizer 기준 **2,000~2,048 prompt tokens**.
+  - tokenizer receipt와 measured `usage.prompt_tokens` 일치 강제.
+  - 네 케이스 동일 prompt SHA256 / 동일 prompt token count 강제.
+  - fresh IDs `005~008` 사용.
+  - 새 evidence 파일 `WBS68-TRUE2K-SCREENING-SUMMARY.json`, `WBS68-TRUE2K-WINNER.json`.
+  - winner policy를 실제 코드에도 "peak 대비 ±2% 이내 동률 → 더 작은 b/ub 우선"으로 구현.
+- true-2K에서 baseline 대비 material non-baseline winner가 있을 때만 32K 후속 검증을 검토한다. 32K는 자동 실행하지 않는다.
+- 현재: **true-2K 4-case screening READY / NOT EXECUTED**.
 
-    | Case | `-b` | `-ub` | prompt_tps | TTFT |
-    |------|-----:|------:|----------:|-----:|
-    | A | 1024 | 256 | 34.55 tok/s | 26.7s |
-    | B | 2048 | 512 | 34.10 tok/s | 27.0s |
-    | C | 4096 | 512 | 34.47 tok/s | 26.7s |
-    | D | 4096 | 1024 | 33.91 tok/s | 27.2s |
-
-  - 결론: 4개 조건 모두 ±2% 이내 동률. 유의미한 winner 없음.
-- WBS 6.8.2/6.8.3 (32K 장문 검증) 불필요 — WBS 6.6에서 동일 모델·동일 설정의 32K 실험이 이미 완료됨. 2K screening이 `-b/-ub` 변경의 효과 없음을 확인한 이상 재실행은 중복 증거임.
-- **최종 판정: W-2135 4-core coexistence envelope에서 `-b/-ub` 조정은 장문 prefill 성능에 유의미한 영향을 주지 않는다. WBS 6.6 결과(Ornith 7.63 tok/s, Gemma 6.44 tok/s)가 이 envelope의 장문 prefill 한계값으로 확정된다.**
-- WBS 6 전체 [DONE].
 
 ## Next planned work
 
 - WBS 2: DONE
 - WBS 3: DONE
 - WBS 4: DONE
-- WBS 6: DONE (6.1~6.8 전체 완료)
-- 모든 주요 WBS 항목 완료. 추가 작업은 사용자 지시에 따른다.
+- WBS 6.1~6.7: DONE.
+- WBS 6.8: REOPENED — true-2K (2,000~2,048 live-tokenized prompt tokens) 4-case screening READY.
+- Next = p520-llm에서 `python3 scripts/run_wbs68_batch_tuning.py --run-screening` 실행. 32K 후속은 true-2K 결과를 본 뒤 결정.
 
 
 

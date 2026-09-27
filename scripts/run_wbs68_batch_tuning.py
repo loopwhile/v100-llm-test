@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """WBS 6.8 CPU prefill batch/ubatch 최소 튜닝.
 
-6.8.1: Ornith 35B 2K-class 4가지 b/ub screening (단독 서버, 빠른 비교)
-6.8.2: Winner b/ub로 Ornith 35B 32K 측정 (Gemma peer idle resident)
-6.8.3: 동일 winner b/ub로 Gemma 26B 32K 측정 (Ornith peer idle resident)
+6.8.1: Ornith 35B true-2K 4가지 b/ub screening
+       (live tokenizer 기준 prompt_tokens 2000~2048 강제)
+6.8.2: true-2K에서 material winner가 있을 때 Ornith 35B 32K 측정
+6.8.3: Ornith 32K 개선 확인 후 동일 winner로 Gemma 26B 32K 측정
 
 Safety: --run-screening / --run-ornith-32k / --run-gemma-32k 중 하나를
 명시하지 않으면 즉시 종료.
@@ -59,27 +60,118 @@ ORNITH_MODEL_PATH = "/srv/models/ornith-1.5-35b-a3b-gguf/Ornith-1.5-35B-Q4_K_M.g
 GEMMA_PORT = 8082
 ORNITH_PORT = 8083
 
-# 6.8.1 Screening 실험 ID 목록
+# 6.8.1 true-2K screening 실험 ID 목록
+# NOTE: 20260927-001~004는 "2K"로 라벨링되었지만 live usage가 922 prompt tokens였던
+# legacy short-prompt diagnostic이다. Raw evidence는 불변 보존하고 재사용/덮어쓰기하지 않는다.
 SCREENING_CASES: List[Dict[str, Any]] = [
-    {"case": "A", "b": 1024, "ub": 256,  "exp_id": "EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-2K-20260927-001"},
-    {"case": "B", "b": 2048, "ub": 512,  "exp_id": "EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-2K-20260927-002"},
-    {"case": "C", "b": 4096, "ub": 512,  "exp_id": "EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-2K-20260927-003"},
-    {"case": "D", "b": 4096, "ub": 1024, "exp_id": "EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-2K-20260927-004"},
+    {"case": "A", "b": 1024, "ub": 256,  "exp_id": "EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-2K-20260927-005"},
+    {"case": "B", "b": 2048, "ub": 512,  "exp_id": "EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-2K-20260927-006"},
+    {"case": "C", "b": 4096, "ub": 512,  "exp_id": "EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-2K-20260927-007"},
+    {"case": "D", "b": 4096, "ub": 1024, "exp_id": "EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-2K-20260927-008"},
 ]
 
 # 6.8.2 / 6.8.3 실험 ID
 ORNITH_32K_EXP_ID = "EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260927-001"
 GEMMA_32K_EXP_ID  = "EXP-P520-CPU-GEMMA4-26B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260927-001"
 
-# 2K screening용 inline prompt (~2K prompt tokens)
-SCREENING_PROMPT = (
+# true-2K screening은 "대략 2K"가 아니라 live llama.cpp tokenizer의 chat-template 적용 후
+# 실제 prompt_tokens가 이 범위에 들어와야만 measured request를 허용한다.
+SCREENING_TARGET_MIN = 2000
+SCREENING_TARGET_MAX = 2048
+SCREENING_TIE_TOLERANCE = 0.02
+
+SCREENING_BASE_UNIT = (
     "Summarize the architectural differences between dense Transformers and Mixture-of-Experts (MoE) models. "
     "Describe how MoE routing mechanisms work, the trade-offs between top-k gating and expert capacity, "
     "and the implications for inference throughput on CPU-only hardware with limited memory bandwidth. "
     "Include a discussion of how speculative decoding via n-gram methods can partially mitigate prefill bottlenecks. "
-) * 12  # ~2K prompt tokens
+)
+SCREENING_FINE_PAD_UNIT = " pad"
 
 # ── 헬퍼 ────────────────────────────────────────────────────────────────────
+
+
+def _screening_request_body(content: str) -> Dict[str, Any]:
+    return {
+        "model": "Ornith-1.5-35B-Q4_K_M.gguf",
+        "messages": [{"role": "user", "content": content}],
+        "max_tokens": 256,
+        "temperature": 0.0,
+    }
+
+
+def _screening_prompt_receipt(
+    adapter: h.HTTPAdapter,
+    content: str,
+) -> Tuple[int, Dict[str, Any]]:
+    receipt = adapter.receipt(_screening_request_body(content))
+    prompt_tokens = receipt.get("prompt_tokens")
+    if type(prompt_tokens) is not int or prompt_tokens < 1:
+        raise RuntimeError(f"Invalid live tokenizer receipt: {receipt}")
+    return prompt_tokens, receipt
+
+
+def calibrate_screening_prompt(
+    adapter: h.HTTPAdapter,
+) -> Tuple[str, int, Dict[str, Any]]:
+    """Deterministically materialize a live-tokenized 2000~2048 token prompt."""
+    low = 1
+    high = 1
+
+    while True:
+        content = SCREENING_BASE_UNIT * high
+        prompt_tokens, _ = _screening_prompt_receipt(adapter, content)
+        if prompt_tokens > SCREENING_TARGET_MAX:
+            break
+        low = high
+        high *= 2
+        if high > 256:
+            raise RuntimeError("Unable to bracket true-2K screening prompt")
+
+    best_content = ""
+    best_tokens = 0
+    best_receipt: Dict[str, Any] = {}
+    lo = low
+    hi = high - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        content = SCREENING_BASE_UNIT * mid
+        prompt_tokens, receipt = _screening_prompt_receipt(adapter, content)
+        if prompt_tokens <= SCREENING_TARGET_MAX:
+            best_content = content
+            best_tokens = prompt_tokens
+            best_receipt = receipt
+            lo = mid + 1
+        else:
+            hi = mid - 1
+
+    if not best_content:
+        raise RuntimeError("Failed to materialize a <=2048-token screening prompt")
+
+    if best_tokens < SCREENING_TARGET_MIN:
+        for pad_count in range(1, 257):
+            content = best_content + (SCREENING_FINE_PAD_UNIT * pad_count)
+            prompt_tokens, receipt = _screening_prompt_receipt(adapter, content)
+            if prompt_tokens < SCREENING_TARGET_MIN:
+                continue
+            if prompt_tokens > SCREENING_TARGET_MAX:
+                raise RuntimeError(
+                    "Prompt calibration jumped over the true-2K acceptance window: "
+                    f"{prompt_tokens} tokens"
+                )
+            best_content = content
+            best_tokens = prompt_tokens
+            best_receipt = receipt
+            break
+
+    if not (SCREENING_TARGET_MIN <= best_tokens <= SCREENING_TARGET_MAX):
+        raise RuntimeError(
+            "True-2K prompt calibration failed: "
+            f"prompt_tokens={best_tokens}, "
+            f"required={SCREENING_TARGET_MIN}..{SCREENING_TARGET_MAX}"
+        )
+
+    return best_content, best_tokens, best_receipt
 
 
 def checkpoint(raw: Path, phase: str, **extra: Any) -> None:
@@ -240,14 +332,14 @@ def _stop_all() -> None:
 
 
 def run_screening_case(case_cfg: Dict[str, Any], selected_image: str) -> Dict[str, Any]:
-    """단일 2K screening 케이스 실행. Ornith 단독 서버 (Gemma peer 없음)."""
+    """단일 true-2K screening 케이스 실행. Ornith 단독 서버."""
     exp_id = case_cfg["exp_id"]
     b_size = case_cfg["b"]
     ub_size = case_cfg["ub"]
     case_label = case_cfg["case"]
 
     print("\n" + "=" * 60)
-    print(f" [WBS 6.8.1 Screening] Case {case_label}: b={b_size}, ub={ub_size}")
+    print(f" [WBS 6.8.1 true-2K] Case {case_label}: b={b_size}, ub={ub_size}")
     print(f" EXP_ID: {exp_id}")
     print("=" * 60)
 
@@ -255,130 +347,150 @@ def run_screening_case(case_cfg: Dict[str, Any], selected_image: str) -> Dict[st
     metrics_path = raw / "metrics.json"
     if raw.exists():
         if metrics_path.exists():
-            print(f"[~] Case {case_label}: raw dir already exists with metrics.json — skipping (reusing result).")
+            print(f"[~] Case {case_label}: immutable result already exists — reusing metrics.json.")
             return json.loads(metrics_path.read_text())
         raise RuntimeError(
             f"Immutable raw evidence directory already exists but is incomplete: {raw}. "
             "Refusing to overwrite."
         )
-    raw.mkdir(parents=True, exist_ok=False)
-    runtime_dir = raw / "runtime"
-    runtime_dir.mkdir()
 
-    # 이전 ornith 컨테이너 정리
     _stop_ornith_only()
     time.sleep(1)
 
-    # Ornith 단독 서버 기동
     server_cmd = _build_ornith_server_cmd(b_size, ub_size, selected_image)
     print(f"[*] Starting Ornith server (b={b_size}, ub={ub_size})...")
     subprocess.run(server_cmd, check=True)
 
-    # 건강 확인
     try:
         _wait_for_server(ORNITH_PORT, timeout_s=300, label=f"Ornith-b{b_size}-ub{ub_size}")
-    except Exception as exc:
+        adapter = h.HTTPAdapter(f"http://127.0.0.1:{ORNITH_PORT}", "llama.cpp", timeout_s=600)
+
+        screening_prompt, calibrated_tokens, tokenizer_receipt = calibrate_screening_prompt(adapter)
+        raw_prompt_sha256 = h.sha(screening_prompt.encode())
+        print(
+            f"[*] Live-tokenized screening prompt: {calibrated_tokens} tokens "
+            f"(required {SCREENING_TARGET_MIN}..{SCREENING_TARGET_MAX})"
+        )
+
+        raw.mkdir(parents=True, exist_ok=False)
+        runtime_dir = raw / "runtime"
+        runtime_dir.mkdir()
+
+        req_body = _screening_request_body(screening_prompt)
+        h.save(raw / "prompt-evidence.json", {
+            "experiment_id": exp_id,
+            "target_min_prompt_tokens": SCREENING_TARGET_MIN,
+            "target_max_prompt_tokens": SCREENING_TARGET_MAX,
+            "calibrated_prompt_tokens": calibrated_tokens,
+            "raw_prompt_sha256": raw_prompt_sha256,
+            "tokenizer_receipt": tokenizer_receipt,
+        })
+
+        print("[*] Sending true-2K screening request...")
+        t0 = time.time()
+        try:
+            res = adapter.call("/v1/chat/completions", body=req_body)
+        except Exception as exc:
+            h.save(runtime_dir / "progress.json", {
+                "phase": "failed",
+                "case": case_label,
+                "error": repr(exc),
+                "updated_at_utc": h.utc(),
+            })
+            raise RuntimeError(f"Case {case_label}: inference request failed: {exc}") from exc
+        wall_s = time.time() - t0
+
+        timings = res.get("timings", {})
+        usage = res.get("usage", {})
+        prompt_n = usage.get("prompt_tokens", timings.get("prompt_n", 0))
+        predicted_n = usage.get("completion_tokens", timings.get("predicted_n", 0))
+
+        if type(prompt_n) is not int or not (SCREENING_TARGET_MIN <= prompt_n <= SCREENING_TARGET_MAX):
+            raise RuntimeError(
+                f"Case {case_label}: measured request is not true-2K: prompt_tokens={prompt_n}"
+            )
+        if prompt_n != calibrated_tokens:
+            raise RuntimeError(
+                f"Case {case_label}: tokenizer drift between receipt and measured request: "
+                f"receipt={calibrated_tokens}, measured={prompt_n}"
+            )
+
+        prompt_ms = timings.get("prompt_ms", 0)
+        predicted_ms = timings.get("predicted_ms", 0)
+
+        prompt_tps = timings.get("prompt_per_second")
+        if not prompt_tps and prompt_n and prompt_ms:
+            prompt_tps = prompt_n / (prompt_ms / 1000.0)
+
+        decode_tps = timings.get("predicted_per_second")
+        if not decode_tps and predicted_n and predicted_ms:
+            decode_tps = predicted_n / (predicted_ms / 1000.0)
+
+        ttft_ms = prompt_ms if prompt_ms else (wall_s * 1000.0)
+
+        metrics = {
+            "experiment_id": exp_id,
+            "case": case_label,
+            "b": b_size,
+            "ub": ub_size,
+            "prompt_tokens": prompt_n,
+            "completion_tokens": predicted_n,
+            "prompt_ms": prompt_ms,
+            "predicted_ms": predicted_ms,
+            "ttft_ms": ttft_ms,
+            "prompt_eval_tps": prompt_tps,
+            "decode_tps": decode_tps,
+            "wall_s": wall_s,
+            "cache_n": timings.get("cache_n"),
+            "raw_prompt_sha256": raw_prompt_sha256,
+            "tokenizer_receipt": tokenizer_receipt,
+            "timings": timings,
+            "measured_at_utc": h.utc(),
+        }
+
+        h.save(raw / "metrics.json", metrics)
+        h.save(raw / "completion.json", {
+            "experiment_id": exp_id,
+            "case": case_label,
+            "b": b_size,
+            "ub": ub_size,
+            "verdict": "PASS",
+            "completed_at_utc": h.utc(),
+            "response": res,
+        })
+        h.save(runtime_dir / "progress.json", {
+            "phase": "done",
+            "case": case_label,
+            "updated_at_utc": h.utc(),
+        })
+
+        decode_tps_str = f"{decode_tps:.2f}" if decode_tps else "N/A"
+        prompt_tps_str = f"{prompt_tps:.2f}" if prompt_tps else "N/A"
+        print(
+            f"[+] Case {case_label} done: prompt_tokens={prompt_n}, "
+            f"prompt_tps={prompt_tps_str}, decode_tps={decode_tps_str}, "
+            f"TTFT={ttft_ms:.0f}ms"
+        )
+        return metrics
+
+    finally:
         _stop_ornith_only()
-        raise RuntimeError(f"Case {case_label}: Ornith server failed to become healthy: {exc}") from exc
-
-    adapter = h.HTTPAdapter(f"http://127.0.0.1:{ORNITH_PORT}", "llama.cpp", timeout_s=600)
-
-    # Screening request
-    req_body = {
-        "model": "Ornith-1.5-35B-Q4_K_M.gguf",
-        "messages": [{"role": "user", "content": SCREENING_PROMPT}],
-        "max_tokens": 256,
-        "temperature": 0.0,
-    }
-
-    print("[*] Sending 2K screening request...")
-    t0 = time.time()
-    try:
-        res = adapter.call("/v1/chat/completions", body=req_body)
-    except Exception as exc:
-        _stop_ornith_only()
-        raise RuntimeError(f"Case {case_label}: inference request failed: {exc}") from exc
-    wall_s = time.time() - t0
-
-    timings = res.get("timings", {})
-    usage = res.get("usage", {})
-    prompt_n = usage.get("prompt_tokens", timings.get("prompt_n", 0))
-    predicted_n = usage.get("completion_tokens", timings.get("predicted_n", 0))
-
-    prompt_ms = timings.get("prompt_ms", 0)
-    predicted_ms = timings.get("predicted_ms", 0)
-
-    prompt_tps = timings.get("prompt_per_second")
-    if not prompt_tps and prompt_n and prompt_ms:
-        prompt_tps = prompt_n / (prompt_ms / 1000.0)
-
-    decode_tps = timings.get("predicted_per_second")
-    if not decode_tps and predicted_n and predicted_ms:
-        decode_tps = predicted_n / (predicted_ms / 1000.0)
-
-    ttft_ms = prompt_ms if prompt_ms else (wall_s * 1000.0)
-
-    metrics = {
-        "experiment_id": exp_id,
-        "case": case_label,
-        "b": b_size,
-        "ub": ub_size,
-        "prompt_tokens": prompt_n,
-        "completion_tokens": predicted_n,
-        "prompt_ms": prompt_ms,
-        "predicted_ms": predicted_ms,
-        "ttft_ms": ttft_ms,
-        "prompt_eval_tps": prompt_tps,
-        "decode_tps": decode_tps,
-        "wall_s": wall_s,
-        "timings": timings,
-        "measured_at_utc": h.utc(),
-    }
-
-    h.save(raw / "metrics.json", metrics)
-    h.save(raw / "completion.json", {
-        "experiment_id": exp_id,
-        "case": case_label,
-        "b": b_size,
-        "ub": ub_size,
-        "verdict": "PASS" if prompt_n > 0 else "FAIL_OUTPUT",
-        "completed_at_utc": h.utc(),
-        "response": res,
-    })
-    h.save(runtime_dir / "progress.json", {
-        "phase": "done",
-        "case": case_label,
-        "updated_at_utc": h.utc(),
-    })
-
-    decode_tps_str = f"{decode_tps:.2f}" if decode_tps else "N/A"
-    prompt_tps_str = f"{prompt_tps:.2f}" if prompt_tps else "N/A"
-    print(
-        f"[+] Case {case_label} done: prompt_tps={prompt_tps_str}, "
-        f"decode_tps={decode_tps_str}, "
-        f"TTFT={ttft_ms:.0f}ms"
-    )
-
-    _stop_ornith_only()
-    time.sleep(2)
-
-    return metrics
+        time.sleep(2)
 
 
 def select_winner(screening_results: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """prompt_eval_tps 기준 winner 선택. 동률이면 b 더 작은 것 우선."""
-    best = None
-    for r in screening_results:
-        tps = r.get("prompt_eval_tps") or 0.0
-        if best is None:
-            best = r
-            continue
-        best_tps = best.get("prompt_eval_tps") or 0.0
-        if tps > best_tps:
-            best = r
-        elif tps == best_tps and r["b"] < best["b"]:
-            best = r
-    return best
+    """±2% 이내는 동률로 보고 그중 더 작은 b/ub 조합을 우선한다."""
+    valid = [
+        r for r in screening_results
+        if isinstance(r.get("prompt_eval_tps"), (int, float)) and r["prompt_eval_tps"] > 0
+    ]
+    if not valid:
+        raise RuntimeError("No valid screening result with prompt_eval_tps")
+
+    peak_tps = max(r["prompt_eval_tps"] for r in valid)
+    tie_floor = peak_tps * (1.0 - SCREENING_TIE_TOLERANCE)
+    tied = [r for r in valid if r["prompt_eval_tps"] >= tie_floor]
+    return min(tied, key=lambda r: (r["b"], r["ub"]))
 
 
 # ── 6.8.2 / 6.8.3 Dual-resident 32K 측정 ────────────────────────────────────
@@ -607,7 +719,7 @@ def main() -> None:
     parser.add_argument(
         "--run-screening",
         action="store_true",
-        help="6.8.1: 4가지 b/ub 조건 Ornith 2K screening 실행",
+        help="6.8.1: live-tokenized true-2K (2000~2048 tokens) Ornith 4-case screening 실행",
     )
     parser.add_argument(
         "--run-ornith-32k",
@@ -645,7 +757,7 @@ def main() -> None:
         print(" [-] Safety Stop: No explicit execution action specified.")
         print("=" * 60)
         print("  Available actions:")
-        print("    --run-screening       : 6.8.1 Ornith 2K 4-case b/ub screening")
+        print("    --run-screening       : 6.8.1 Ornith true-2K (2000~2048) 4-case b/ub screening")
         print("    --run-ornith-32k      : 6.8.2 Ornith 35B 32K measured (--winner-b / --winner-ub 필요)")
         print("    --run-gemma-32k       : 6.8.3 Gemma 26B 32K measured (--winner-b / --winner-ub 필요)")
         print()
@@ -674,36 +786,84 @@ def _run_locked(args: argparse.Namespace, selected_image: str) -> None:
     # ── 6.8.1 Screening ──────────────────────────────────────────────────────
     if args.run_screening:
         print("\n" + "=" * 60)
-        print(" [WBS 6.8.1] Ornith 2K b/ub Screening (4 cases)")
+        print(" [WBS 6.8.1] Ornith true-2K b/ub Screening (4 cases)")
         print("=" * 60)
+
+        summary_path = ROOT / "results/raw/WBS68-TRUE2K-SCREENING-SUMMARY.json"
+        winner_path = ROOT / "results/raw/WBS68-TRUE2K-WINNER.json"
+        if summary_path.exists() or winner_path.exists():
+            raise RuntimeError(
+                "True-2K summary/winner evidence already exists. Refusing to overwrite: "
+                f"{summary_path}, {winner_path}"
+            )
 
         screening_results: List[Dict[str, Any]] = []
         for case_cfg in SCREENING_CASES:
             result = run_screening_case(case_cfg, selected_image)
             screening_results.append(result)
 
-        # screening 요약 저장
-        summary_path = ROOT / "results/raw/WBS68-SCREENING-SUMMARY.json"
+        prompt_counts = {r.get("prompt_tokens") for r in screening_results}
+        prompt_hashes = {r.get("raw_prompt_sha256") for r in screening_results}
+        if len(prompt_counts) != 1 or not all(
+            isinstance(x, int) and SCREENING_TARGET_MIN <= x <= SCREENING_TARGET_MAX
+            for x in prompt_counts
+        ):
+            raise RuntimeError(
+                f"Screening cases did not use one identical true-2K token count: {prompt_counts}"
+            )
+        if len(prompt_hashes) != 1 or None in prompt_hashes:
+            raise RuntimeError(
+                f"Screening cases did not use one identical prompt payload: {prompt_hashes}"
+            )
+
         h.save(summary_path, {
             "wbs": "6.8.1",
+            "screening_revision": "true-2k-v2",
+            "target_prompt_tokens": {
+                "min": SCREENING_TARGET_MIN,
+                "max": SCREENING_TARGET_MAX,
+            },
+            "identical_prompt_tokens": next(iter(prompt_counts)),
+            "identical_raw_prompt_sha256": next(iter(prompt_hashes)),
             "completed_at_utc": h.utc(),
             "cases": screening_results,
         })
 
         winner = select_winner(screening_results)
+        peak_tps = max(r["prompt_eval_tps"] for r in screening_results)
+        tie_floor = peak_tps * (1.0 - SCREENING_TIE_TOLERANCE)
+        tied_cases = [
+            r["case"] for r in screening_results
+            if r["prompt_eval_tps"] >= tie_floor
+        ]
+
         print("\n" + "=" * 60)
-        print(" [WBS 6.8.1] Screening Results")
+        print(" [WBS 6.8.1] True-2K Screening Results")
         print("=" * 60)
-        print(f"{'Case':<6} {'b':>6} {'ub':>6} {'prompt_tps':>12} {'TTFT(ms)':>10}")
-        print("-" * 44)
+        print(f"{'Case':<6} {'b':>6} {'ub':>6} {'tokens':>8} {'prompt_tps':>12} {'TTFT(ms)':>10}")
+        print("-" * 54)
         for r in screening_results:
             tps = r.get("prompt_eval_tps")
             tps_str = f"{tps:.2f}" if tps else "N/A"
-            print(f"{r['case']:<6} {r['b']:>6} {r['ub']:>6} {tps_str:>12} {r['ttft_ms']:>10.0f}")
+            print(
+                f"{r['case']:<6} {r['b']:>6} {r['ub']:>6} "
+                f"{r['prompt_tokens']:>8} {tps_str:>12} {r['ttft_ms']:>10.0f}"
+            )
         print()
-        print(f"Winner: Case {winner['case']} (b={winner['b']}, ub={winner['ub']}, prompt_tps={winner.get('prompt_eval_tps', 0):.2f})")
-        h.save(ROOT / "results/raw/WBS68-WINNER.json", {
+        print(
+            f"Winner by ±{SCREENING_TIE_TOLERANCE * 100:.0f}% tie policy: "
+            f"Case {winner['case']} (b={winner['b']}, ub={winner['ub']}, "
+            f"prompt_tps={winner.get('prompt_eval_tps', 0):.2f}); tied={tied_cases}"
+        )
+
+        h.save(winner_path, {
             "wbs": "6.8.1",
+            "screening_revision": "true-2k-v2",
+            "selection_policy": "within_2pct_of_peak_then_smallest_b_ub",
+            "tie_tolerance": SCREENING_TIE_TOLERANCE,
+            "peak_prompt_eval_tps": peak_tps,
+            "tie_floor_prompt_eval_tps": tie_floor,
+            "tied_cases": tied_cases,
             "winner_case": winner["case"],
             "winner_b": winner["b"],
             "winner_ub": winner["ub"],

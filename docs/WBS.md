@@ -902,7 +902,7 @@ recipe 상태는 다음처럼 구분한다.
 WBS 5 완료 후 사용자가 필요에 따라 recipe를 직접 선택한다.
 이 저장소에서는 별도의 배포/production selection phase를 수행하지 않는다.
 
-## 6. CPU+RAM 전용 dual-resident 128K 서버 + 32K measured request 검증 [DONE]
+## 6. CPU+RAM 전용 dual-resident 128K 서버 + 32K measured request 검증 [IN PROGRESS — 6.1~6.7 DONE, 6.8 TRUE-2K READY]
 
 P520의 CPU+RAM만 사용하는 두 개의 llama.cpp server를 **128K context capacity(`--ctx-size 131072`)로 동시에 기동/resident** 상태로 유지한 뒤, 실제 measured request는 **실사용에 가까운 32K class 요청**을 **한 번에 하나씩 직렬 실행**한다.
 
@@ -1065,75 +1065,61 @@ llama.cpp의 draft-model-free `ngram-mod` 경로를 활성화한다.
 결론: P520 호스트에서 64GB RAM과 CPU 4코어만으로 두 거대 MoE 모델(가중치 합산 약 45GB)을 128K context capacity로 동시 상주시키면서 32K 실사용급 문서 리서치 요청을 오류 및 지속적 스왑 스래싱 없이 처리했고, CPU inference lane의 GPU VRAM 사용량이 0 MiB임을 확인했다. WBS 6.1~6.7의 dual-resident feasibility/correctness 검증은 완료되었으며, 후속 성능 최적화는 6.8에서 `-b/-ub`만 제한적으로 조정해 검증한다.
 
 
-### 6.8 CPU prefill batch / ubatch 최소 튜닝 [DONE]
+### 6.8 CPU prefill batch / ubatch 최소 튜닝 [REOPENED — TRUE 2K SCREENING READY]
 
-목적:
-- WBS 6.6의 32K fresh-prompt 측정에서 Ornith 1.5 35B-A3B는 prefill 7.63 tok/s, Gemma 4 26B-A4B는 6.44 tok/s였으나, 실행 중 사용자가 초반 구간에서 약 30 tok/s대의 prompt processing 속도를 관찰했다.
-- 따라서 CPU 자체의 절대 처리 한계로 단정하지 않고, 기존의 보수적인 `-b 1024 -ub 256` 설정이 장문 prefill 저하에 기여했는지 최소한의 추가 실험으로 확인한다.
-- 이 단계는 CPU 최대 성능 경쟁이 아니라 기존 GPU-serving coexistence envelope 안에서 prefill 성능을 개선할 수 있는지 확인하는 후속 최적화다.
+정정 사항:
+- 2026-09-27 최초 6.8.1 실행 `EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-2K-20260927-001~004`는 experiment ID와 문서상 "2K"로 표기되었지만, raw `usage.prompt_tokens` 및 `metrics.json`의 실제 prompt는 네 케이스 모두 **922 tokens**였다.
+- 해당 raw evidence는 삭제/수정하지 않고 **legacy short-prompt (~1K) diagnostic**으로 불변 보존한다.
+- 따라서 이 922-token 결과가 증명하는 범위는 "약 1K short prompt에서 `-b/-ub` 확대 효과가 관찰되지 않았다"까지다.
+- 이전 문서의 "장문 prefill에 유의미한 영향이 없다", "WBS 6.6의 7.63/6.44 tok/s가 prefill ceiling으로 확정된다"는 결론은 증거 범위를 초과하므로 **철회**한다.
 
 고정 조건:
-- CPU: Xeon W-2135의 물리 코어 4개만 사용. `-t 4 -tb 4`, cpuset logical CPU IDs `1,2,3,4`를 유지한다.
-- 나머지 물리 코어 2개 및 SMT siblings는 OS / telemetry / Docker / GPU-serving CPU-side work용으로 계속 예약한다.
-- llama.cpp: `b10775` / commit `67a17c17caa95742186f8b1ecadd1b5abd6d5ebb`.
-- image: `p520-cpu-llama:b10775` / digest `sha256:8ee3818eee9df3690a64177b976692cffd509972cb31c0907f7136b567a4729b`.
-- build: 기존 WBS 6 baseline과 동일한 `GGML_NATIVE=ON`, `GGML_CUDA=OFF`, `GGML_BLAS=OFF`. OpenBLAS/MKL은 이 튜닝에 섞지 않는다.
-- GPU offload: `--n-gpu-layers 0`.
-- server context: 128K (`--ctx-size 131072`).
-- KV: K/V 모두 `Q8_0`.
-- attention: `-fa auto`.
-- speculative: `ngram-mod` 24/48/64.
-- `--load-mode mmap`, `--cache-ram 0`, `--no-cache-prompt`, `--no-context-shift` 유지.
-- 모델, weight quant, KV, threads, affinity, context, speculative method는 변경하지 않고 **오직 `-b/-ub`만 변수로 둔다**.
-- 기존 WBS 6.6 raw evidence는 immutable로 유지하며 재사용/덮어쓰지 않는다.
+- Ornith 1.5 35B-A3B `Q4_K_M`.
+- llama.cpp `b10775` / commit `67a17c17caa95742186f8b1ecadd1b5abd6d5ebb`.
+- `-t 4 -tb 4`, cpuset logical CPU IDs `1,2,3,4`.
+- server context `--ctx-size 131072`, KV `Q8_0`, `-fa auto`.
+- `GGML_NATIVE=ON`, `GGML_CUDA=OFF`, `GGML_BLAS=OFF`, `--n-gpu-layers 0`.
+- `ngram-mod` 24/48/64, `--load-mode mmap`, `--cache-ram 0`, `--no-cache-prompt`, `--no-context-shift`.
+- 모델/quant/KV/threads/affinity/context/speculative 설정은 고정하고 **오직 `-b/-ub`만 변경**한다.
 
-#### 6.8.1 Ornith 2K 후보 탐색 — 4회
+#### 6.8.1 true-2K Ornith screening — 신규 4회 [READY]
 
-Ornith 1.5 35B-A3B `Q4_K_M` 하나만 사용해 2K-class prompt prefill을 다음 네 조건으로 1회씩 측정한다.
+이번에는 "대략 2K 문자열"이 아니라 **live llama.cpp tokenizer + 실제 chat template 적용 후 prompt token 수**를 실행 전에 검증한다.
 
-| Case | `-b` | `-ub` | 비고 |
-|---|---:|---:|---|
-| A | 1024 | 256 | WBS 6.6 baseline 설정 |
-| B | 2048 | 512 | 확대 후보 |
-| C | 4096 | 512 | logical batch 확대 |
-| D | 4096 | 1024 | logical + physical micro-batch 확대 |
+Acceptance:
+- measured request의 실제 `prompt_tokens`가 **2,000~2,048** 범위에 있어야 한다.
+- tokenizer receipt와 measured response의 `usage.prompt_tokens`가 정확히 일치해야 한다.
+- 네 케이스 모두 동일한 raw prompt SHA256 및 동일 prompt token count를 사용해야 한다.
+- 위 조건을 만족하지 않으면 measured screening 결과로 인정하지 않고 실패 처리한다.
 
-- 동일 prompt/token budget 및 동일 output 조건을 사용하여 prompt eval tok/s, TTFT, wall time을 비교한다.
-- 이 2K 결과는 32K 성능을 직접 증명하는 것이 아니라 **32K 검증에 올릴 단일 후보를 저비용으로 고르는 screening**이다.
-- 2K에서 prompt eval tok/s가 가장 높은 조합을 32K 후보로 선택한다. 수치가 사실상 동률이면 더 작은 `b/ub` 조합을 우선한다.
+신규 experiment IDs:
+- Case A: `EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-2K-20260927-005` — `-b 1024 -ub 256`.
+- Case B: `...-006` — `-b 2048 -ub 512`.
+- Case C: `...-007` — `-b 4096 -ub 512`.
+- Case D: `...-008` — `-b 4096 -ub 1024`.
 
-#### 6.8.2 Ornith 32K 장문 검증 — 1회
+새 summary/winner evidence:
+- `results/raw/WBS68-TRUE2K-SCREENING-SUMMARY.json`.
+- `results/raw/WBS68-TRUE2K-WINNER.json`.
+- 기존 `WBS68-SCREENING-SUMMARY.json`, `WBS68-WINNER.json`은 922-token legacy evidence로 그대로 보존한다.
 
-- 6.8.1에서 선택한 단일 `b/ub` 조합으로 Ornith 35B 32K measured request를 **1회만** 실행한다.
-- 서버 context는 계속 128K이며, Gemma 128K server를 peer idle-resident 상태로 유지한다.
-- 기존 WBS 6.6 baseline을 재실행하지 않고 아래 기존 결과와 직접 비교한다:
-  - baseline: `-b 1024 -ub 256`
-  - prompt tokens: 31,743
-  - prefill: 7.6303 tok/s
-  - TTFT: 4,160.26s
-  - batch wall: 4,443.18s
-- OOM/crash/context overflow/output failure/post-health failure가 발생하면 해당 후보는 실패로 기록하고 자동으로 설정을 바꿔 재시도하지 않는다.
+Winner policy:
+- prompt eval tok/s 최고값 대비 **2% 이내는 동률**로 취급한다.
+- 동률 그룹 안에서는 더 작은 `b`, 그다음 더 작은 `ub`를 우선한다.
+- 이 ±2% 규칙을 문서뿐 아니라 runner `select_winner()`에도 동일하게 구현한다.
 
-#### 6.8.3 Gemma 32K 적용 검증 — 1회
+#### 6.8.2 / 6.8.3 32K 후속 검증 조건
 
-- Ornith 2K screening에서 선택한 **동일 `b/ub` 조합**을 Gemma 4 26B-A4B `UD-Q6_K_XL`에도 적용하여 32K measured request를 **1회만** 실행한다.
-- Ornith 128K server를 peer idle-resident 상태로 유지한다.
-- 기존 WBS 6.6 baseline을 재실행하지 않고 아래 기존 결과와 직접 비교한다:
-  - baseline: `-b 1024 -ub 256`
-  - prompt tokens: 31,742
-  - prefill: 6.4423 tok/s
-  - TTFT: 4,927.28s
-  - batch wall: 5,189.72s
+- true-2K screening에서도 Case A(`1024/256`)가 선택되거나 네 조건이 ±2% 이내로 사실상 동률이면, 기존 WBS 6.6과 동일한 baseline을 32K로 재실행하지 않고 6.8을 종료한다.
+- true-2K에서 **baseline 대비 2%를 초과하는 non-baseline winner**가 나올 때만 Ornith 32K 검증 후보로 승격한다.
+- 32K 실행은 자동으로 이어서 수행하지 않는다. 기존 `--run-ornith-32k` / `--run-gemma-32k`는 명시적 실행 플래그로 유지한다.
+- Ornith 32K에서 실제 개선이 확인된 경우에만 동일 `b/ub`의 Gemma 32K 적용 검증을 의미 있는 후속 단계로 본다.
 
-#### 6.8.4 실행 예산 및 예외 규칙
-
-- 기본 신규 실행 예산은 **총 6회**다:
-  - Ornith 2K × 4개 `b/ub` 조건 = 4회.
-  - Ornith 32K × 1회 = 1회.
-  - Gemma 32K × 1회 = 1회.
-- 2K winner가 Ornith 32K에서 기존 7.63 tok/s 대비 개선이 사실상 없거나 더 느린 경우에만 **2K 차순위 후보의 Ornith 32K 1회 추가**를 선택 가능한 diagnostic으로 남긴다. 자동 실행하지 않으며 필요 시 사용자 지시에 따라 수행한다. 이 경우 최대 7회가 된다.
-- `threads=6`, SMT 확대, OpenBLAS/MKL, 모델/quant/KV 변경 등 다른 최적화 변수를 이 실험에 혼합하지 않는다.
-- 목적은 `b/ub` 효과의 인과성을 보존하는 것이며, 효과가 없으면 W-2135 4-core coexistence envelope의 장문 prefill 한계로 기록한다.
+현재 상태:
+- WBS 6.1~6.7: 기존 PASS 유지.
+- 922-token legacy screening: 완료 및 보존.
+- **true-2K 4-case screening: READY / NOT EXECUTED.**
+- WBS 6.8 및 WBS 6 전체 종결 판정은 true-2K screening 결과 이후 갱신한다.
 
 
 ## 실행 규칙
