@@ -2,12 +2,20 @@
 
 검토 기준: 작업 체크아웃 `main`의 `f6715e729ea676d6684314760f0b2cb181273661` 및 기존 source/config/plan-only 산출물. 이 리뷰에서는 추론 요청, 서버 기동, 측정 실행, source/config/WBS 작업 문서 변경을 하지 않았다. 후보 계획은 이미 있던 `results/plans/wbs5/`의 plan-only 산출물을 읽어 대조했다.
 
-동결 invariant 대조: model `/srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf`, SHA256 `79a9925bb7771dea3530d57b185e97b9713a73a7c06bdb9804f7d019aa42f480`, Q6_K weights / FP16 KV; llama.cpp build 10775 / commit `67a17c17caa95742186f8b1ecadd1b5abd6d5ebb`; V100 SXM2 16GB 두 장 독립 backend; backend별 context 131072 / parallel 1 / unified KV per-slot 131072; FA on, Jinja, reasoning off. plan은 cold-independent 및 `--no-warmup`이며 C2 전 짧은 routing preflight만 둔다. 이 항목들은 source/config/계획 값 대조이며 현재 P520에서 재검증한 결과가 아니다.
+동결 invariant 대조: model `/srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf`, SHA256 `79a9925bb7771dea3530d57b185e97b9713a73a7c06bdb9804f7d019aa42f480`, Q6_K weights / FP16 KV; llama.cpp build 10775 / commit `67a17c17caa95742186f8b1ecadd1b5abd6d5ebb`; V100 SXM2 16GB 두 장 독립 backend; backend별 context 131072 / parallel 1 / unified KV per-slot 131072; FA on, Jinja, reasoning off. plan은 cold-independent 및 `--no-warmup`이며 C2 전 짧은 routing preflight만 둔다. model/runtime/CLI는 P520에서 읽기 전용으로 재검증했고, topology/config는 source/config/기존 plan을 대조했다.
 
 ## A. 현재 main HEAD
 
-- 로컬 체크아웃: `main` @ `f6715e729ea676d6684314760f0b2cb181273661`.
-- GitHub `main` HEAD는 확인 불가. `git ls-remote origin refs/heads/main`은 DNS 오류(`Could not resolve host: github.com`)로 끝났고 GitHub 페이지 열기도 cache miss였다. 따라서 위 커밋이 원격 최신 HEAD라고 단정하지 않는다.
+- 검토한 소스 체크아웃: `main` @ `f6715e729ea676d6684314760f0b2cb181273661`. 첫 보고서 push 응답은 원격 ref가 이 commit에서 시작했음을 보여줬다.
+- 후속 원격 확인: `git ls-remote origin refs/heads/main`에서 현재 GitHub `main`은 `775f9a2f1bce8286d5bdd745349ed5d5504fd0a0`으로 확인했다. 첫 보고서 작성 당시의 DNS 실패는 원격 최신 여부를 불확정으로 남겼지만, push 후 현재 ref는 확인됐다.
+
+### P520 재검증 추가
+
+- SSH alias `p520`으로 접속한 host는 `p520-llm`. pinned Docker image inspect가 지정 digest와 일치했다. `llama-server --version`은 `0.3.0-dev (build 10775, commit 67a17c17c)`를 반환했다.
+- 정확한 model path가 존재하고 원격 `sha256sum`은 `79a9925bb7771dea3530d57b185e97b9713a73a7c06bdb9804f7d019aa42f480`으로 invariant와 일치했다.
+- P520 `nvidia-smi`는 Tesla V100-SXM2-16GB 2장, GPU당 16384 MiB를 보였고 조회 시점 compute process는 없었다.
+- pinned `--help`에 `--batch-size`, `--ubatch-size`, `--spec-type ngram-simple`, `--kv-unified`, `--kv-unified-per-slot`, `--flash-attn`, `--jinja`, `--reasoning`, `--metrics`, `--slots`, `--no-warmup`가 있다. `ngram-simple` defaults는 `size_n=12`, `size_m=48`, `min_hits=1`; `--spec-draft-n-max`도 지원된다. R1의 256은 integer 옵션으로 표현 가능하다.
+- 첫 help 호출은 Docker에 GPU device를 노출하지 않아 `libcuda.so.1` 로딩 오류를 냈다. `--gpus all`을 붙인 help/version 재확인은 성공했다. 둘 다 CLI만 표시했으며 모델 경로를 인자로 주지 않아 model load/inference는 일어나지 않았다.
 
 ## B. R0 실행 가능성 — `TARGET_BASELINE`
 
@@ -20,7 +28,7 @@
 - 별도 gateway는 LiteLLM `v1.101.0` pinned image, 단일 endpoint `:18079`, least-busy, backend별 `max_parallel_requests=1`, `num_retries=0`으로 생성된다.
 - 기존 계획이 기대한 정확한 성능 workload는 `workloads/performance/v1.json` (SHA256 `e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca`)이다. runner의 `--wbs5-candidate R0 --concurrency 2` 경로가 C2 기본 `concurrency/v2.json` 대신 이를 선택한다.
 - 각 후보는 별도 experiment ID의 새 계획 디렉터리에 기록되어 있다. executor는 raw 경로를 `exist_ok=False`로 만들고 harness도 비어 있지 않은 실험 경로를 거부하도록 작성되어 있어 기존 raw 덮어쓰기를 막는다.
-- 문제/증거 한계: pinned image의 `--help`와 `--version`은 이번 리뷰에서 재실행하지 않았다. plan 자료에는 build 10775 / commit `67a17c17caa95742186f8b1ecadd1b5abd6d5ebb`가 기록되어 있으나, 현재 호스트에서의 image 존재와 실행 증거는 미확인이다.
+- 남은 증거 한계: help/version는 정확한 pinned image와 `--gpus all`을 사용해 확인했지만 model server 기동이나 추론은 하지 않았다. 그래서 실제 workload에서의 serving 결과는 이 리뷰 범위 밖이다.
 
 ## C. R1 실행 가능성 — `TARGET_UB256`
 
@@ -30,7 +38,7 @@
 - R0와 exact backend command diff는 `--ubatch-size 128` → `--ubatch-size 256` 한 곳이다. batch 512, TARGET/spec none, backend GPU/port/context/KV, gateway/workload가 유지된다. 두 backend 모두 같은 단일 값 변경을 갖는다.
 - exact generated commands: [candidate-plan.json](../results/plans/wbs5/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260927-002/runtime/candidate-plan.json) (`exact_launch_commands`).
 - launcher 자체는 `runtime_launcher.py`에서 batch/ubatch를 512/128로 고정하지만 WBS5 runner가 frozen candidate에 따라 값을 덮어쓴다. `prepare_wbs5_plan.py`는 별도로 exact one-variable diff를 검사한다. ID와 최종 command는 plan 산출물에 보존된다.
-- pinned image가 `--ubatch-size`를 받는다는 것은 계획 자료의 help evidence에 기재되어 있다. 이번 세션에서 binary help를 독립 실행해 확인하지 못했으므로 measured 전 host preflight 결과를 받아야 한다.
+- pinned image의 P520 `--help`에 `--ubatch-size`가 있고 batch option과 함께 유효한 integer argument로 표시된다. 실행 후보 256은 실제 measured 전에 최종 생성 command에서도 다시 대조해야 한다.
 
 ## D. R2 실행 가능성 — `NGRAM_DEFAULT`
 
@@ -39,15 +47,14 @@
 - 기존 fresh plan: `results/plans/wbs5/EXP-V100-ORN15-9B-LLAMA-NGRAM-B512-UB128-1GPU2-C2-PERF-20260927-003/runtime/`.
 - R0와 exact backend command diff는 `--spec-type none` → `--spec-type ngram-simple` 한 곳이다. batch/ubatch 512/128, topology, KV/context, gateway, workload는 유지된다.
 - exact generated commands: [candidate-plan.json](../results/plans/wbs5/EXP-V100-ORN15-9B-LLAMA-NGRAM-B512-UB128-1GPU2-C2-PERF-20260927-003/runtime/candidate-plan.json) (`exact_launch_commands`).
-- command에 NGRAM size 옵션을 추가하지 않는다. pinned default `size_n=12`, `size_m=48`, `min_hits=1`은 기존 plan의 help/source evidence 필드에 기록되어 있다. 이번 리뷰에서 upstream pinned source 또는 pinned image를 네트워크/실행으로 독립 재검증하지 못했다. 기본값 검증 전에는 R2 measured 진입을 보류해야 한다.
+- command에 NGRAM size 옵션을 추가하지 않는다. P520 pinned `--help`에서 defaults `size_n=12`, `size_m=48`, `min_hits=1`을 직접 확인했다.
 - `runtime_launcher.py`의 NGRAM lane profile은 `--spec-type ngram-simple`만 추가하며 파라미터 override를 하지 않는다. draft/generated/accepted evidence는 benchmark harness가 pre/post backend metric delta에서 수집하도록 되어 있다.
 
 ## E. WBS5 runner gap
 
 ### 반드시 보강할 사항
 
-1. **pinned CLI 증거의 실제 검증 경로가 약하다.** `runtime_launcher.py:preflight`는 `--help` 텍스트에서 옵션 문자열과 `ngram-simple`의 존재만 확인한다. `--ubatch-size 256` 허용 범위/값 및 NGRAM default `size_n/size_m/min_hits`를 비교하지 않는다. `prepare_wbs5_plan.py`의 `runtime_cli_evidence` 값은 현재 코드상 고정 기재이며 해당 실행에서 help/source를 읽어 자동 생성하지 않는다. measured 전에 exact pinned image help와 commit source를 확인하고 결과를 새 plan/preflight evidence에 보존하는 것이 필요하다.
-2. **remote HEAD 미확인.** GitHub DNS가 회복되면 `main` HEAD와 검토 커밋을 확인해야 한다. 이는 코드 변경이 아니라 리뷰 provenance의 미완료 항목이다.
+- 이 source/plan-only 검토에서 measured 전에 필요한 runner 변경은 발견하지 못했다. 현재 runner는 frozen candidate, performance workload, 정확한 command/config를 남기는 WBS5 경로를 제공한다. 측정 전에 해야 할 host preflight의 image/model/CLI 증거는 위 P520 재검증에서 확인했다.
 
 ### 선택적으로 보강할 사항
 
@@ -65,9 +72,9 @@
 
 ## F. measured inference 전 체크리스트
 
-- [ ] GitHub 원격 `main` HEAD 확인 및 로컬 검토 커밋과 차이 확인.
-- [ ] P520에서 정확한 model path/SHA, pinned llama.cpp image digest/build/commit, LiteLLM image/version 확인.
-- [ ] pinned `llama-server --help`에서 `--ubatch-size 256`, `ngram-simple`, 기본 NGRAM 12/48/1을 확인하고 evidence로 보존.
+- [x] GitHub 원격 `main` HEAD 확인: 현재 ref는 `775f9a2f1bce8286d5bdd745349ed5d5504fd0a0`.
+- [x] P520에서 정확한 model path/SHA 및 pinned llama.cpp image digest/build/commit 확인. LiteLLM image/version는 기존 plan에 기록되어 있고 gateway container 자체의 실행 preflight는 별도 측정 시점에 확인한다.
+- [x] pinned `llama-server --help`에서 `--ubatch-size`, `ngram-simple`, 기본 NGRAM 12/48/1 확인.
 - [ ] R0 → R1 → R2 순서로 fresh experiment ID/디렉터리를 쓰고 exact command/workload SHA/후보 ID를 계획 결과와 대조. 기존 raw artifact 경로가 없음을 확인.
 - [ ] backend GPU0/GPU1 배정, ctx 131072, parallel 1, unified KV/per-slot 131072, FA/Jinja/reasoning/no-warmup 및 LiteLLM 단일 gateway, least-busy, max-parallel=1, retries=0 확인.
 - [ ] C2 직전 max_tokens=16의 짧은 routing preflight만 수행하고 routing-settled admission으로 backend 분배를 증명. full-size warmup 금지.
@@ -80,4 +87,4 @@ VRAM peak는 `nvidia-smi memory.used`를 0.5초 간격으로 샘플링한다. �
 
 ## G. 최종 판정
 
-**BLOCKED** — source와 기존 plan-only 산출물은 세 frozen command delta 및 workload/identity를 충족한다. 그러나 원격 GitHub `main` HEAD와 pinned binary의 현재 help/default evidence를 이번 실행 환경에서 확인하지 못했다. 위 F의 remote provenance 및 pinned CLI 항목을 완료한 뒤 measured run 전 local validation을 마쳐야 한다. 이 판정은 추론 또는 benchmark를 실행했다는 뜻이 아니다.
+**READY_FOR_IMPLEMENTATION** — R0/R1/R2의 기존 plan-only 산출물, one-variable command delta, workload/identity, telemetry/warmup 계약과 pinned image/CLI evidence를 확인했다. 추가 runner/source 수정은 현재 필수로 보이지 않는다. 이 판정은 GPU benchmark 실행 승인이 아니며, 실제 measured run 전 checklist에 남은 계획별 freshness/routing/health 확인은 별도로 해야 한다.
