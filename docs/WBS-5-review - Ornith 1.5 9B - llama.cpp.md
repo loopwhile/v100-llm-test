@@ -7,7 +7,7 @@
 ## A. 현재 main HEAD
 
 - 검토한 소스 체크아웃: `main` @ `f6715e729ea676d6684314760f0b2cb181273661`. 첫 보고서 push 응답은 원격 ref가 이 commit에서 시작했음을 보여줬다.
-- 후속 원격 확인: `git ls-remote origin refs/heads/main`에서 현재 GitHub `main`은 `775f9a2f1bce8286d5bdd745349ed5d5504fd0a0`으로 확인했다. 첫 보고서 작성 당시의 DNS 실패는 원격 최신 여부를 불확정으로 남겼지만, push 후 현재 ref는 확인됐다.
+- 후속 원격 확인: `git ls-remote origin refs/heads/main`에서 이 정정 commit 직전 GitHub `main`은 `775f9a2f1bce8286d5bdd745349ed5d5504fd0a0`으로 확인했다. 아래 정정은 `e504c1c`에 반영되었으며, push 완료 후 ref는 이 commit으로 이동한다.
 
 ### P520 재검증 추가
 
@@ -72,7 +72,7 @@
 
 ## F. measured inference 전 체크리스트
 
-- [x] GitHub 원격 `main` HEAD 확인: 현재 ref는 `775f9a2f1bce8286d5bdd745349ed5d5504fd0a0`.
+- [x] GitHub 원격 `main` HEAD 확인: 정정 전 parent ref는 `775f9a2f1bce8286d5bdd745349ed5d5504fd0a0`.
 - [x] P520에서 정확한 model path/SHA 및 pinned llama.cpp image digest/build/commit 확인. LiteLLM image/version는 기존 plan에 기록되어 있고 gateway container 자체의 실행 preflight는 별도 측정 시점에 확인한다.
 - [x] pinned `llama-server --help`에서 `--ubatch-size`, `ngram-simple`, 기본 NGRAM 12/48/1 확인.
 - [ ] R0 → R1 → R2 순서로 fresh experiment ID/디렉터리를 쓰고 exact command/workload SHA/후보 ID를 계획 결과와 대조. 기존 raw artifact 경로가 없음을 확인.
