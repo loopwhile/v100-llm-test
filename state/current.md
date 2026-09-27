@@ -177,7 +177,7 @@
     - ±2% 동률 시 최소 b/ub 우선 정책에 따라 **Case A (`-b 1024 -ub 256`)가 최종 Winner**로 선정됨 (`results/raw/WBS68-TRUE2K-WINNER.json`).
   - 32K 후속 규칙 적용:
     - 사전 정의된 contract에 따라, baseline 대비 2%를 초과 개선하는 non-baseline winner가 부재하므로 불필요한 32K 재실행을 생략하고 6.8을 종결함.
-    - Xeon W-2135 4-core envelope에서 batch/ubatch 크기 확대는 prefill 성능 개선 효과가 없으며, 기존 WBS 6.6 수치(Ornith 7.63 tok/s, Gemma 6.44 tok/s)가 이 CPU envelope의 장문 prefill 한계값으로 확정됨.
+    - 증명된 범위: Xeon W-2135 4-core 조건에서 2,000-token prompt 기준 b/ub를 1024/256 → 2048/512 → 4096/512 → 4096/1024로 확대해도 prefill 개선이 발생하지 않음(±2% 이내 동률). 따라서 "b/ub 확대가 장문 prefill 저하의 해결책이 아니다"는 결론이 확인됨. 단, 다른 변수(스레드, BLAS, ISA 커널 등)를 모두 소진한 것이 아니므로 WBS 6.6 수치를 CPU의 절대적인 32K prefill ceiling으로 과도하게 단정하지 않는다.
 - WBS 6 (6.1~6.8) 전체 **[DONE]**.
 
 ## Next planned work
