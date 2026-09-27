@@ -89,5 +89,6 @@ ENV LD_LIBRARY_PATH=/app
 ENV GGML_OPENVINO_DEVICE=CPU
 
 WORKDIR /app
-HEALTHCHECK CMD ["curl", "-f", "http://127.0.0.1:8080/health"]
+# Health is verified by the WBS 6.9 runner on the configured host port.
+# Do not bake a fixed-port Docker HEALTHCHECK into this reusable image.
 ENTRYPOINT ["/app/llama-server"]
