@@ -234,6 +234,14 @@ class FrozenContractTests(unittest.TestCase):
             self.assertFalse(b["run_identity"]["automatic_retry"])
         with self.assertRaises(ValueError):
             plan("ornith35-llama", label="confirm-1")
+        mismatches = [
+            ("ornith35-llama", "R0", 2, "screening-1"),
+            ("qwen-llama", "R0", 2, "repetition-1"),
+            ("qwen-llama", "R1", 1, "confirm-1"),
+        ]
+        for track, candidate, sequence, label in mismatches:
+            with self.assertRaisesRegex(ValueError, "sequence"):
+                plan(track, candidate, sequence=sequence, label=label)
 
     def test_default_dry_plan_has_no_host_gpu_http_or_raw_side_effect(self):
         with tempfile.TemporaryDirectory() as td:
@@ -270,27 +278,56 @@ class FrozenContractTests(unittest.TestCase):
                     runner.dispatch(p, execute_measured=True)
         c.assert_admission(plan("qwen-onecat", "R0"))
 
-    def test_g0_and_gate_b_require_hashed_separate_evidence(self):
-        for track, candidate in (("ornith9-onecat", "R0"), ("gemma-llama", "R3")):
-            p = plan(track, candidate)
-            with tempfile.TemporaryDirectory() as td:
-                root = Path(td); raw = root / "results/raw/EXP-GATE"
-                raw.mkdir(parents=True); evidence = raw / "audit.json"
-                evidence.write_text('{"verdict":"PASS"}')
-                receipt = {"gate": p["admission_gate"], "verdict": "PASS", "track": track,
-                    "baseline_configuration_sha256": plan(track)["configuration_sha256"],
-                    "experiment_id": "EXP-GATE", "semantic_audit": "PASS", "project_a": "PASS", "project_b": "PASS",
-                    "graph_support": "PASS", "trigger": "R0_GRAPH_INSTABILITY",
-                    "file_sha256": c.verify_inputs()["sha256"],
-                    "evidence": [{"path": str(evidence), "sha256": h.sha(evidence.read_bytes())}]}
-                with patch.object(c, "ROOT", root), patch.object(c, "verify_inputs", return_value=c.verify_inputs()):
+    def test_g0_requires_hashed_separate_evidence(self):
+        p = plan("ornith9-onecat", "R0")
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td); raw = root / "results/raw/EXP-GATE"
+            raw.mkdir(parents=True); evidence = raw / "audit.json"
+            evidence.write_text('{"verdict":"PASS"}')
+            receipt = {"gate": p["admission_gate"], "verdict": "PASS", "track": p["track"],
+                "baseline_configuration_sha256": plan(p["track"])["configuration_sha256"],
+                "experiment_id": "EXP-GATE", "semantic_audit": "PASS", "project_a": "PASS", "project_b": "PASS",
+                "file_sha256": c.verify_inputs()["sha256"],
+                "evidence": [{"path": str(evidence), "sha256": h.sha(evidence.read_bytes())}]}
+            with patch.object(c, "ROOT", root), patch.object(c, "verify_inputs", return_value=c.verify_inputs()):
+                c.assert_admission(p, receipt)
+                with self.assertRaises(ValueError):
+                    c.assert_admission(p, dict(receipt, baseline_configuration_sha256="wrong"))
+                evidence.write_text("changed")
+                with self.assertRaises(ValueError):
                     c.assert_admission(p, receipt)
-                    changed = dict(receipt, baseline_configuration_sha256="wrong")
-                    with self.assertRaises(ValueError):
-                        c.assert_admission(p, changed)
-                    evidence.write_text("changed")
-                    with self.assertRaises(ValueError):
-                        c.assert_admission(p, receipt)
+
+    def test_gate_b_requires_hash_bound_r0_measured_evidence(self):
+        p = plan("gemma-llama", "R3")
+        r0 = plan("gemma-llama", "R0")
+        with patch.dict("os.environ", {}, clear=True):
+            config = runner.build_config(r0, c.effective_environments(r0["launch_plan"], {}))
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td); raw = root / "results/raw" / r0["experiment_id"]
+            raw.mkdir(parents=True)
+            h.save(raw / "config.json", config)
+            h.save(raw / "identity.json", {"config_sha256": h.sha(h.canon(config))})
+            h.save(raw / "metrics.json", {"verdict": "PASS_C2_ACTIVE"})
+            h.save(raw / "completion.json", {"experiment_id": r0["experiment_id"], "verdict": "PASS_C2_ACTIVE"})
+            evidence = [{"path": str(raw / name), "sha256": h.sha((raw / name).read_bytes())}
+                        for name in ("config.json", "identity.json", "metrics.json", "completion.json")]
+            receipt = {"gate": "GEMMA_GATE_B", "verdict": "PASS", "track": "gemma-llama",
+                       "baseline_configuration_sha256": r0["configuration_sha256"],
+                       "experiment_id": r0["experiment_id"], "graph_support": "PASS",
+                       "trigger": "R0_GRAPH_INSTABILITY", "evidence": evidence}
+            with patch.object(c, "ROOT", root):
+                c.assert_admission(p, receipt)
+                only_audit = raw / "audit.json"; only_audit.write_text('{"verdict":"PASS"}')
+                weak = dict(receipt, evidence=[{"path": str(only_audit), "sha256": h.sha(only_audit.read_bytes())}])
+                with self.assertRaisesRegex(ValueError, "R0 measured evidence"):
+                    c.assert_admission(p, weak)
+                changed = copy.deepcopy(config); changed["candidate_key"] = "R1"
+                h.save(raw / "config.json", changed)
+                h.save(raw / "identity.json", {"config_sha256": h.sha(h.canon(changed))})
+                bad = [{"path": str(raw / name), "sha256": h.sha((raw / name).read_bytes())}
+                       for name in ("config.json", "identity.json", "metrics.json", "completion.json")]
+                with self.assertRaisesRegex(ValueError, "not the frozen R0"):
+                    c.assert_admission(p, dict(receipt, evidence=bad))
 
 
 class EvidenceTests(unittest.TestCase):

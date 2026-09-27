@@ -223,7 +223,7 @@
     "scripts/skinny_gate.py": "a372c564281b6afdbd8425df783daf2a4c1c116a53c0466beff9a7a6b30eddf6",
     "scripts/validate_repo.py": "9dc24930f93bb6c5f3a292c3eb0241d3dc72f98d0f0848a18857e89701f91c94",
     "scripts/validate_wbs5_plans.py": "7d7986022d8972a5fe664df5ab6b62579ae1680cba5d9ac2467f3b222de17cd2",
-    "scripts/wbs5_contract.py": "ebca9fa7a98535971645ba615902bb6ed1febf72f5efe773abcdd833a047f025",
+    "scripts/wbs5_contract.py": "5b1a2b46d1d6dcd2209c15e196c2319f3217933c01162eaaae64ff0abb5fa7de",
     "scripts/wbs5_evidence.py": "4ee81bb7df4d563c78ae202a27b4b9c47ecaae7d99b152c35693dbb9fae3de36"
   },
   "raw_destination": "/home/loopwhile/Data/Workspace_VSCode/v100-llm-test/results/raw/EXP-V100-WBS5-QWEN-ONECAT-R0-PERF-20260928-001",

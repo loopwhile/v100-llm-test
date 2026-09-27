@@ -280,6 +280,9 @@ def build_plan(track, candidate, exp, label, root=ROOT, port=18080, gateway_port
     match = re.search(r"-(\d{8})-(\d{3})$", exp)
     if not match or exp != experiment_id(track, candidate, match[1], int(match[2])):
         raise ValueError("experiment ID does not match frozen candidate")
+    expected_sequence = {"repetition-1": 1, "repetition-2": 2, "screening-1": 1, "confirm-1": 2}[label]
+    if int(match[2]) != expected_sequence:
+        raise ValueError("experiment sequence does not match frozen run label")
     launch = launch_plan(track, candidate, root, port, gateway_port)
     delta = assert_launch(track, candidate, launch, root, port, gateway_port)
     status = "STATIC_READY"
@@ -340,7 +343,10 @@ def assert_admission(plan, receipt=None):
     evidence = receipt.get("evidence", [])
     if not evidence:
         raise ValueError("gate raw evidence missing")
+    verified = {}
     for row in evidence:
+        if not isinstance(row, dict) or not row.get("path") or not row.get("sha256"):
+            raise ValueError("gate evidence row invalid")
         path = Path(row["path"])
         try:
             relative = path.resolve().relative_to((ROOT / "results/raw" / receipt["experiment_id"]).resolve())
@@ -350,7 +356,35 @@ def assert_admission(plan, receipt=None):
             raise ValueError("gate evidence path invalid")
         if not path.is_file() or h.sha(path.read_bytes()) != row["sha256"]:
             raise ValueError("gate raw evidence hash mismatch")
-
+        verified[relative.as_posix()] = path
+    if gate == "GEMMA_GATE_B":
+        required_paths = ("config.json", "identity.json", "metrics.json", "completion.json")
+        if any(name not in verified for name in required_paths):
+            raise ValueError("Gate B requires hash-bound R0 measured evidence")
+        try:
+            measured_config = json.loads(verified["config.json"].read_text())
+            identity = json.loads(verified["identity.json"].read_text())
+            metrics = json.loads(verified["metrics.json"].read_text())
+            completion = json.loads(verified["completion.json"].read_text())
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError("Gate B measured evidence invalid") from exc
+        measured_plan = measured_config.get("wbs5_plan") or {}
+        expected_candidate = candidate_id(plan["track"], "R0")
+        baseline = receipt["baseline_configuration_sha256"]
+        if (measured_config.get("phase") != "WBS5" or measured_config.get("track") != plan["track"]
+                or measured_config.get("candidate_key") != "R0" or measured_config.get("candidate_id") != expected_candidate
+                or measured_config.get("configuration_sha256") != baseline
+                or measured_config.get("experiment_id") != receipt["experiment_id"]
+                or measured_plan.get("track") != plan["track"] or measured_plan.get("candidate_key") != "R0"
+                or measured_plan.get("candidate_id") != expected_candidate
+                or measured_plan.get("configuration_sha256") != baseline
+                or measured_plan.get("experiment_id") != receipt["experiment_id"]
+                or (measured_plan.get("run_identity") or {}).get("label") != "screening-1"):
+            raise ValueError("Gate B evidence is not the frozen R0 measured run")
+        if identity.get("config_sha256") != h.sha(h.canon(measured_config)):
+            raise ValueError("Gate B config identity mismatch")
+        if completion.get("experiment_id") != receipt["experiment_id"] or not isinstance(metrics.get("verdict"), str):
+            raise ValueError("Gate B measured completion evidence invalid")
 
 def materialize_commands(plan, raw):
     commands = copy.deepcopy(plan["launch_plan"]["commands"])
