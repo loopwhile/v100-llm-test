@@ -1200,6 +1200,7 @@ Winner policy:
   - 2% tie floor: 24.20 tok/s. Case A (18.48), Case B (21.62), Case C (22.27) 모두 2% floor 미달로 동률 케이스 없음 (`tied_cases: ["D"]`).
   - Baseline(Case A, 18.48 tok/s) 대비 Case D는 **+33.6% prompt throughput 향상** 달성.
   - 최종 Winner: **Case D (`-b 4096 -ub 1024`)** (`results/raw/WBS69-OPTBLAS-4K-WINNER.json`, `results/raw/WBS69-OPTBLAS-4K-SCREENING-SUMMARY.json`).
+- 상세 실행 보고서: [docs/WBS-6.9-execution-report.md](WBS-6.9-execution-report.md)
 - WBS 6.9 전체 [DONE].
 
 ## 실행 규칙
