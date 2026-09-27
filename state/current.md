@@ -151,7 +151,7 @@
   - GPU VRAM Isolation: CPU-only Docker with no GPU devices passed, `GGML_CUDA=OFF`, `--n-gpu-layers 0`; GPU VRAM allocation = 0.0 MiB, Compute Apps = 0. GPU0/GPU1 serving may exist independently.
   - Memory Evidence & Limits: Host Total 62.56 GiB, Available 31.59 GiB at snapshot. SwapTotal 4,194,300 kB, SwapFree 528 kB (~4GB swap in use). Startup gate proved dual server startup, health, and 0B VRAM isolation; it did not measure `pswpin`/`pswpout`/`pgmajfault` deltas, so absence of swap thrash is unproven at gate time. Due to `mmap`, initial MemAvailable does not guarantee physical RAM headroom once working sets fault in; memory pressure and stability will be measured during 32K request execution.
   - Post-gate cleanup: Both containers cleanly removed after verification per contract.
-- Status: WBS 6.1~6.8 [DONE].
+- Status: WBS 6.1~6.8 [DONE]. WBS 6.9 combined optimized CPU true-4K [READY — NOT EXECUTED].
   - Gemma 4 26B-A4B 32K Serial Request: **`PASS`** (`EXP-P520-CPU-GEMMA4-26B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001`; TTFT 4,927.28s, Prefill 6.44 tok/s, Decode 2.72 tok/s, Wall 5,189.72s, Peak VRAM 0 MiB, SwapUsed delta +14.5 MiB, pswpin +1,704, pswpout +4,466, pgmajfault +8,844, 지속적 swap thrashing 미관찰, Post-health PASS; smaps_rollup 수집 실패로 개별 프로세스 RSS/PSS는 0으로 기록됨).
   - Ornith 1.5 35B-A3B 32K Serial Request: **`PASS`** (`EXP-P520-CPU-ORN15-35B-LLAMA-Q80-NGRAM-MOD-C1-32K-20260926-001`; TTFT 4,160.26s, Prefill 7.63 tok/s, Decode 3.15 tok/s, Wall 4,443.18s, Peak VRAM 0 MiB, SwapUsed delta +12.4 MiB, pswpin +113, pswpout +2,101, pgmajfault +1,433, 지속적 swap thrashing 미관찰, Post-health PASS; smaps_rollup 수집 실패로 개별 프로세스 RSS/PSS는 0으로 기록됨).
   - Verdict: Both models awarded **`PASS_CPU_128K_SERVER_32K_REQUEST_DUAL_RESIDENT`**. 64GB RAM / 4-core CPU envelope에서 두 128K 서버 동시 상주 및 32K 실사용 리서치 워크로드 처리 성공(경미한 swap 증분 외 지속적 thrashing 없음 확인), V100 GPU 서빙 자원 100% 보존 확인.
@@ -180,13 +180,35 @@
     - 증명된 범위: Xeon W-2135 4-core 조건에서 2,000-token prompt 기준 b/ub를 1024/256 → 2048/512 → 4096/512 → 4096/1024로 확대해도 prefill 개선이 발생하지 않음(±2% 이내 동률). 따라서 "b/ub 확대가 장문 prefill 저하의 해결책이 아니다"는 결론이 확인됨. 단, 다른 변수(스레드, BLAS, ISA 커널 등)를 모두 소진한 것이 아니므로 WBS 6.6 수치를 CPU의 절대적인 32K prefill ceiling으로 과도하게 단정하지 않는다.
 - WBS 6 (6.1~6.8) 전체 **[DONE]**.
 
+
+## WBS 6.9 combined optimized CPU true-4K plan (2026-09-27)
+
+- Goal: weight/KV quantization은 그대로 두고 serving-side 최적화들을 한 optimized stack으로 묶어 Ornith 35B Q4_K_M true-4K 성능을 측정한다.
+- measured test는 **정확히 4개**:
+  - A \`b1024/ub256\`
+  - B \`b2048/ub512\`
+  - C \`b4096/ub512\`
+  - D \`b4096/ub1024\`
+- fixed: 4 physical cores (\`-t/-tb 4\`, cpuset \`1,2,3,4\`), Q8_0 KV, 128K server context, ngram-mod, no GPU offload.
+- optimized image: \`docker/cpu-optimized/Dockerfile\`, tag \`p520-cpu-llama-opt:b10775\`.
+- build stack: b10775 + \`GGML_NATIVE=ON\` + \`GGML_LTO=ON\` + OpenVINO CPU + OpenBLAS-enabled build + CUDA OFF.
+- runtime stack: FA ON, mmap, lazy-mode off, warmup, prompt cache/reuse, repack, strict batch affinity, medium priority, polling.
+- per-case setup (unmeasured): unrelated 4K compile warmup 1회 + ~1K common-prefix cache prime 1회.
+- measured prompt: live tokenizer true-4K (4,000~4,096), A~D 동일 prompt/prefix hash, \`cache_n >= 512\` 요구.
+- OpenVINO가 \`--list-devices\` 및 runtime log에서 확인되지 않으면 native fallback을 인정하지 않고 중단.
+- runner: \`scripts/run_wbs69_cpu_optimized_4k.py --run\`.
+- aggregate evidence 예정: \`WBS69-OPT4K-SCREENING-SUMMARY.json\`, \`WBS69-OPT4K-WINNER.json\`.
+- Status: **READY / NOT EXECUTED**.
+
+
 ## Next planned work
 
 - WBS 2: DONE
 - WBS 3: DONE
 - WBS 4: DONE
-- WBS 6: DONE (6.1~6.8 전체 완료)
-- 모든 주요 WBS 항목 완료. 후속 작업은 사용자 요청에 따른다.
+- WBS 6.1~6.8: DONE.
+- WBS 6.9: READY — optimized CPU true-4K A/B/C/D, measured exactly 4 requests.
+- Next = optimized image build → preflight → `python3 scripts/run_wbs69_cpu_optimized_4k.py --run`.
 
 
 

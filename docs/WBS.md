@@ -902,7 +902,7 @@ recipe 상태는 다음처럼 구분한다.
 WBS 5 완료 후 사용자가 필요에 따라 recipe를 직접 선택한다.
 이 저장소에서는 별도의 배포/production selection phase를 수행하지 않는다.
 
-## 6. CPU+RAM 전용 dual-resident 128K 서버 + 32K measured request 검증 [DONE]
+## 6. CPU+RAM 전용 dual-resident 128K 서버 + 32K measured request 검증 [IN PROGRESS — 6.1~6.8 DONE, 6.9 READY]
 
 P520의 CPU+RAM만 사용하는 두 개의 llama.cpp server를 **128K context capacity(`--ctx-size 131072`)로 동시에 기동/resident** 상태로 유지한 뒤, 실제 measured request는 **실사용에 가까운 32K class 요청**을 **한 번에 하나씩 직렬 실행**한다.
 
@@ -1128,6 +1128,113 @@ Winner policy:
   - baseline 대비 2%를 초과하는 non-baseline winner가 부재하므로, 사전 합의된 정책에 따라 32K 재실행을 생략하고 WBS 6.8 및 WBS 6 전체를 **[DONE]**으로 최종 종결한다.
 - **WBS 6 전체 [DONE]**.
 
+
+
+### 6.9 Combined optimized CPU serving stack — true-4K A/B/C/D [READY — EXACTLY 4 MEASURED TESTS]
+
+목적:
+- WBS 6.8에서 \`-b/-ub\` 확대만으로는 2K prefill 개선이 없음을 확인했다.
+- 이번 단계는 weight/KV quantization을 바꾸지 않고, 남아 있는 serving-side 최적화들을 **하나의 combined optimized stack**으로 적용한 상태에서 true-4K prompt의 실사용형 성능을 측정한다.
+- 개별 최적화의 기여도를 분해하는 A/B test가 아니다. OpenVINO/OpenBLAS/LTO/cache/FA/warm-resident/priority 등의 **합성된 recipe 전체**를 평가하고, 그 stack 내부에서 \`-b/-ub\`만 A~D로 바꾼다.
+- measured request는 **정확히 4회**다. backend gate, compile-shape warmup, cache priming은 setup evidence이며 measured benchmark request로 세지 않는다.
+
+제외/고정:
+- KV quant 변경 제외: K/V 모두 기존 \`Q8_0\`.
+- weight quant 변경 제외: Ornith 1.5 35B-A3B \`Q4_K_M\` 그대로.
+- CPU coexistence envelope 유지: \`-t 4 -tb 4\`, Docker cpuset logical CPU IDs \`1,2,3,4\`.
+- GPU offload 없음: \`--n-gpu-layers 0\`, CUDA build OFF.
+- server capacity: \`--ctx-size 131072\`.
+- speculative: \`ngram-mod\` 24/48/64.
+
+#### 6.9.1 optimized image [READY]
+
+새 파일: \`docker/cpu-optimized/Dockerfile\`.
+
+Pinned llama.cpp:
+- b10775 / commit \`67a17c17caa95742186f8b1ecadd1b5abd6d5ebb\`.
+
+Build stack:
+- \`CMAKE_BUILD_TYPE=Release\`.
+- \`GGML_NATIVE=ON\`.
+- \`GGML_LTO=ON\`.
+- \`GGML_CUDA=OFF\`.
+- \`GGML_OPENVINO=ON\`.
+- \`GGML_BLAS=ON\`, \`GGML_BLAS_VENDOR=OpenBLAS\`.
+- \`GGML_BACKEND_DL=ON\`, \`GGML_CPU_ALL_VARIANTS=OFF\`.
+- OpenVINO runtime pinned to 2026.3.1.
+
+Build command:
+\`\`\`bash
+docker build -f docker/cpu-optimized/Dockerfile \
+  -t p520-cpu-llama-opt:b10775 .
+\`\`\`
+
+해석 제한:
+- OpenVINO는 표준 GGML graph execution을 대체하는 backend이므로 BLAS가 모든 hot path에 실제로 관여한다고 가정하지 않는다.
+- 따라서 결과는 “OpenVINO + OpenBLAS-enabled build + LTO를 포함한 combined stack” 성능으로만 해석하며 OpenBLAS 단독 배율을 주장하지 않는다.
+- runner는 \`--list-devices\` 및 server runtime log에서 OpenVINO를 확인해야 하며, OpenVINO가 보이지 않으면 native GGML fallback 결과를 PASS로 받아들이지 않는다.
+
+#### 6.9.2 runtime optimized recipe [READY]
+
+모든 A~D에 공통:
+- \`-fa on\` — Flash Attention 강제.
+- \`--load-mode mmap --lazy-mode off --warmup\`.
+- \`--cache-prompt --cache-reuse 256 --cache-ram 4096\`.
+- \`--repack\`.
+- \`--cpu-strict 1 --cpu-strict-batch 1\`.
+- \`--prio 1 --prio-batch 1\`.
+- \`--poll 50 --poll-batch 1\`.
+- \`--threads-http 1 --no-webui --no-context-shift\`.
+- OpenVINO CPU device와 on-disk OpenVINO cache directory를 명시한다.
+
+Prompt/cache contract:
+1. 먼저 unrelated true-4K setup request를 1회 보내 OpenVINO 4K graph/shape와 resident pages를 warm한다. **unmeasured**.
+2. 동일 project용 약 1K common prefix를 1회 보내 prompt cache를 prime한다. **unmeasured**.
+3. measured request는 같은 common prefix + fresh document material로 구성하며 전체 prompt를 live tokenizer 기준 **4,000~4,096 tokens**로 맞춘다.
+4. A~D 모두 동일 measured prompt SHA256, 동일 prefix SHA256, 동일 prompt token count여야 한다.
+5. measured response의 \`cache_n >= 512\`를 요구하여 prompt-cache 최적화가 실제 hit했다는 evidence를 남긴다.
+6. setup request는 measured test 수에 포함하지 않으며 각 case의 measured request는 1회뿐이다.
+
+#### 6.9.3 measured matrix — 총 4회
+
+| Case | \`-b\` | \`-ub\` | Measured prompt | Measured repetitions |
+|---|---:|---:|---:|---:|
+| A | 1024 | 256 | true-4K | 1 |
+| B | 2048 | 512 | true-4K | 1 |
+| C | 4096 | 512 | true-4K | 1 |
+| D | 4096 | 1024 | true-4K | 1 |
+
+Experiment IDs:
+- A: \`EXP-P520-CPU-ORN15-35B-OPTSTACK-C1-4K-20260927-001\`.
+- B: \`...-002\`.
+- C: \`...-003\`.
+- D: \`...-004\`.
+
+Evidence:
+- 각 experiment 아래 \`config.json\`, setup evidence, \`metrics.json\`, \`completion.json\`, runtime backend log/progress를 저장한다.
+- aggregate: \`results/raw/WBS69-OPT4K-SCREENING-SUMMARY.json\`.
+- winner: \`results/raw/WBS69-OPT4K-WINNER.json\`.
+- preflight: \`results/raw/WBS69-OPT4K-PREFLIGHT.json\`.
+
+Winner policy:
+- prompt eval tok/s peak 대비 2% 이내는 동률.
+- 동률 그룹에서는 작은 \`b\`, 그다음 작은 \`ub\` 우선.
+- 이 결과는 combined optimized stack 내부의 \`b/ub\` 선택에만 사용한다.
+- 기존 WBS 6.8 native/cold 2K 결과와 직접 비교하여 “어느 단일 최적화가 몇 % 빨라졌다”고 주장하지 않는다.
+
+실행:
+\`\`\`bash
+python3 scripts/run_wbs69_cpu_optimized_4k.py --run
+\`\`\`
+
+Safety:
+- host는 \`p520-llm\`만 허용.
+- OpenVINO device/runtime evidence가 없으면 measured PASS 금지.
+- 기존 WBS 6.6/6.8 raw evidence는 변경하지 않는다.
+- 기존 baseline Dockerfile \`docker/cpu/Dockerfile\`도 변경하지 않는다.
+- A~D 외 추가 measured case를 자동 생성하지 않는다.
+
+현재 상태: **READY / NOT EXECUTED**.
 
 ## 실행 규칙
 - 별도 승인이 없는 한 선언된 configuration당 measured execution은 1회만 수행한다.
