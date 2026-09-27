@@ -109,3 +109,14 @@ VRAM 샘플 사이 순간 peak, 실제 graph/cache/MTP routes, output semantics�
 - No measured experiment verdict or historical metric rewritten. No package/system/driver/clock/governor change, new optimization candidate, automatic tuning/retry or model download/replacement.
 
 다음 단계는 **ChatGPT 10번 pre-run final validation**이다. 이 작업은 commit/push 이후 중단하며 measured test를 자동 시작하지 않는다.
+
+
+## Post-validation handoff — 2026-09-28
+
+이 문서는 8B ~ 8D preparation 결과의 snapshot을 보존한다. 이후 ChatGPT pre-run final validation이 완료되었고, 실제 measured 실행은 `docs/WBS.md`의 번호가 부여된 execution WBS로 인계되었다.
+
+- authoritative measured 작업 단위: `WBS 5.3.x.y` / `WBS 5.4.x.y`.
+- 첫 measured 작업: **WBS 5.3.1.1 — Qwen3.8 llama.cpp R0 repetition-1**.
+- 한 WBS 번호당 한 measured experiment 또는 한 gate/review 작업만 수행하고 commit 후 종료한다.
+- 기본 runnable measured invocation은 20회이며, Gemma R3 / Ornith9 1Cat / Qwen 1Cat R2 / optional confirm은 각 gate 또는 blocker 규칙을 따른다.
+- 이 handoff 시점에도 WBS5 GPU measured inference는 아직 시작하지 않았다.

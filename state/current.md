@@ -1,6 +1,6 @@
 # Current execution
 
-## WBS 5 8B~8D preparation — 2026-09-28
+## WBS 5 measured execution handoff — 2026-09-28
 
 - WBS 2: **DONE**.
 - WBS 3: **DONE**.
@@ -8,13 +8,13 @@
 - WBS 5: llama.cpp 4개 + 1Cat-vLLM 3개, 총 **7개 model/runtime track candidate selection 완료**.
 - 7개 frozen candidate plan 문서화 완료.
 - `docs/WBS.md`에 7개 frozen plan을 공식 실행계획으로 반영 완료.
-- 현재 단계: **READY_FOR_PRE_RUN_VALIDATION — 8A~8D 완료; runner/harness integration, exact-delta guard, evidence 경로 및 25 candidates/28 dry-plans 검증 완료**.
-- 다음 단계: **ChatGPT pre-run final validation (10번)**. 자동 measured 실행 금지.
+- 현재 단계: **READY_FOR_MEASURED_EXECUTION — 8A~8D와 ChatGPT pre-run final validation 완료; runner/harness integration, exact-delta guard, evidence 경로 및 25 candidates/28 dry-plans 검증 완료**.
+- 다음 단계: **Codex CLI measured execution WBS 5.3.1.1 — Qwen3.8 llama.cpp R0 repetition-1**. 이후에도 `docs/WBS.md`의 `5.3.x.y` / `5.4.x.y`를 한 항목씩 지시하며 자동 연속 실행 금지.
 - Qwen 1Cat R2: **BLOCKED_BY_HOST_TOOLCHAIN** (nvcc/개발 toolkit 없음; isolated CUDA12.8 development toolkit host change 승인 대기).
 - Ornith9 1Cat R0~R3: **CONDITIONAL_PENDING_GATE — G0**; Gemma llama R3: **CONDITIONAL_PENDING_GATE — Gate B**.
 - Harness blocker 없음. 전체 pytest **146 PASS + 25 subtests**, validate_repo **PASS**.
 - 준비 결과: `docs/WBS-5-preparation-readiness.md`; plans: `results/plans/wbs5-preparation-20260928/manifest.json`.
-- WBS 5 GPU measured run은 **아직 시작하지 않음**.
+- WBS 5 GPU measured run은 **아직 시작하지 않음**. 기본 runnable measured queue는 20회이며 conditional/toolchain/optional 항목은 별도 WBS gate에 따라 진행한다.
 - WBS 6 관련 기존 상태/결과는 아래 기록을 그대로 유지한다.
 
 ## WBS 3 authoritative workload reset — 2026-09-25

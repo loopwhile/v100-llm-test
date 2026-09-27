@@ -704,13 +704,13 @@ Shared TP2와 다음 항목을 비교한다.
   - 다른 KV quantization (e.g. FP8), 다른 speculative configuration, 다른 runtime에서의 결과까지 물리적으로 불가능하다고 일반화하지 않는다.
   - 프로젝트 불변 규칙에 따라 설정을 임의 변경하는 자동 재시도는 수행하지 않고 closed 처리함.
 
-## 5. 성능 최적화 및 모델별 최종 레시피 확정 [PLANNED — FROZEN / READY_FOR_PRE_RUN_VALIDATION]
+## 5. 성능 최적화 및 모델별 최종 레시피 확정 [PLANNED — FROZEN / READY_FOR_MEASURED_EXECUTION]
 
 WBS 2/3/4에서 확보한 capacity/correctness/topology evidence와 WBS 5의 performance evidence를 분리한다.
 WBS 5는 아래 7개 model/runtime track에 대해 이미 연구·선정이 끝난 frozen candidate만 실행하며,
 새 candidate 자동 생성, exhaustive grid, 임의 tuning을 수행하지 않는다.
 
-현재 단계는 **8A 및 8B~8D runner/harness 구현·dry-plan·static/unit validation 완료 / READY_FOR_PRE_RUN_VALIDATION**이다.
+현재 단계는 **8A 및 8B~8D runner/harness 구현·dry-plan·static/unit validation + ChatGPT pre-run final validation 완료 / READY_FOR_MEASURED_EXECUTION**이다.
 25개 frozen candidate의 28개 dry-plan을 저장했다. Qwen 1Cat R2는 host toolchain BLOCKED, Ornith9 1Cat G0 및 Gemma R3 Gate B는 pending이다. Harness blocker는 없다. [준비 결과](WBS-5-preparation-readiness.md).
 아직 WBS 5 GPU measured run은 시작하지 않았다.
 
@@ -735,12 +735,14 @@ WBS 5 단계 흐름:
 2. 7개 frozen plan 문서화 완료.
 3. `docs/WBS.md` 공식 반영 완료.
 4. Codex CLI local validation / test preparation 완료 (8A~8D; measured inference 없음).
-5. ChatGPT pre-run final validation.
-6. Codex CLI measured runs.
-7. 결과 분석.
+5. ChatGPT pre-run final validation 완료.
+6. **현재 단계: 아래 번호가 부여된 Codex CLI measured execution WBS를 한 항목씩 수행.**
+7. 각 track measured 결과 분석 및 track review WBS 수행.
 8. 필요 시 Claude independent review.
 9. 모델별 final recipe 확정.
 10. WBS 5 final publication / DONE.
+
+5번까지는 준비/검증 lifecycle이고, 6번부터의 실제 작업 단위는 아래 `5.3.x.y` / `5.4.x.y` 번호를 authoritative execution WBS로 사용한다. 따라서 Codex CLI에는 다시 기존 프로젝트 방식대로 **“WBS 5.3.1.1 진행해.”**처럼 한 번호씩 지시한다.
 
 ### 5.2 공통 실행 계약
 
@@ -788,6 +790,44 @@ WBS 5 단계 흐름:
 - speculative candidate의 draft / accepted / acceptance ratio.
 - graph candidate에서 가능한 경우 graph eligibility와 실제 reuse/hit evidence를 분리 기록.
 
+
+#### 5.2.1 Codex CLI measured execution 운영 방식
+
+WBS 5 measured phase는 준비 단계의 28개 dry-plan을 한 번에 sweep하는 작업이 아니다. 기존 프로젝트 운영 방식과 동일하게 **한 WBS 번호 = 한 명확한 실행 또는 한 명확한 판정 작업**으로 수행한다. Codex CLI에서 Luna 모델을 사용하더라도 이 문서만 읽고 범위를 오해하지 않도록 아래 절차를 공통 계약으로 고정한다.
+
+**Codex 호출 방식**
+
+- 사용자는 `WBS 5.3.1.1 진행해.`처럼 아래 세부 번호 하나를 지정한다.
+- Codex는 지정된 WBS 하나만 수행하고, 다음 번호를 자동으로 이어서 실행하지 않는다.
+- 각 measured WBS의 exact experiment ID와 candidate identity는 아래 항목 및 `results/plans/wbs5-preparation-20260928/manifest.json` / 해당 `candidate-plan.json`을 함께 대조한다.
+- 명령은 `scripts/run_wbs5.py ... --execute-measured`를 authoritative entry point로 사용한다. 별도 임시 runner, 직접 server command 복사, config 재작성은 금지한다.
+- conditional/gated item은 gate가 실제 PASS하기 전에는 실행하지 않는다. blocker 해소를 위해 package/system/driver/toolchain을 임의 설치하거나 수정하지 않는다.
+
+**각 measured WBS의 공통 workflow**
+
+1. **Scope 확인**: 지정된 WBS 번호, track, candidate, run-label, experiment ID를 이 문서와 manifest에서 대조한다. 다른 candidate를 함께 실행하지 않는다.
+2. **Repository guard**: `git status --short`와 현재 `main`을 확인한다. 이전 WBS의 미커밋 변경이 있거나 frozen input/source가 예상과 다르면 measured inference 전에 중단한다.
+3. **Preflight**: 최초 measured WBS 시작 시, 그리고 source/config가 변경된 뒤에는 `python3 scripts/validate_repo.py`와 `python3 scripts/validate_wbs5_plans.py --output /tmp/wbs5-review-plans --date 20260928`을 다시 실행한다. 실패 시 GPU 작업을 시작하지 않는다.
+4. **Single execution**: 해당 항목에 적힌 exact `run_wbs5.py --execute-measured` 명령을 **한 번만** 실행한다. automatic retry, automatic confirm, fallback, 다른 option 추가를 하지 않는다.
+5. **Evidence 확인**: 종료 후 해당 `results/raw/<experiment-id>/`의 `completion.json`, `metrics.json`, `wbs5-evidence.json`, `runtime/exit.json`, `runtime/cleanup.json`, server log 및 생성 가능한 graph/slot/spec/telemetry evidence를 확인한다. startup 단계 실패라면 존재할 수 없는 measured artifact를 만들지 않는다.
+6. **판정 분리**: infra/workload/artifact/runtime/frozen-delta 문제는 hard stop으로 취급한다. 단순 성능 열세, OOM, output failure, queue-only 같은 measured 결과는 설정을 바꾸지 말고 그대로 evidence로 보존한다.
+7. **Progress 기록**: `state/current.md`에 완료한 WBS 번호, experiment ID, raw verdict, 핵심 metric 또는 failure stage를 짧게 기록한다. frozen candidate 정의나 과거 raw 결과는 수정하지 않는다.
+8. **Commit 후 종료**: 새 raw evidence와 해당 progress 기록만 검토해 commit한다. 성공/실패 모두 evidence를 commit 대상으로 취급한다. commit 후 **다음 WBS를 실행하지 말고** 사용자에게 SHA와 결과를 보고하고 종료한다.
+
+권장 commit message는 성공 여부와 관계없이 작업 번호가 드러나게 작성한다. 예: `test(wbs5): run 5.3.1.1 qwen llama r0 rep1`, 실패 evidence라면 `test(wbs5): record 5.3.1.1 failure`.
+
+**현재 measured execution 수량**
+
+- frozen candidate: **25개**.
+- dry-plan/run identity: **28개**. Qwen llama R0의 사전 등록 repetition 1회와 R1/R2 optional confirm 2개가 추가되어 candidate 수보다 3개 많다.
+- 현재 gate/toolchain을 건드리지 않고 진행 가능한 기본 measured invocation: **20회**.
+- conditional: Gemma llama R3 1회, Ornith9 1Cat R0 ~ R3 4회.
+- toolchain blocked: Qwen 1Cat R2 1회.
+- optional confirm: Qwen llama R1/R2 각 1회.
+- Ornith9 1Cat의 **G0 semantic requalification은 WBS5 performance candidate 25개와 별도의 prerequisite measured experiment 1회**다.
+
+기본 20회도 한 프롬프트로 연속 실행하지 않는다. 아래 번호 순서대로 사용자 승인/지시를 받아 한 항목씩 수행한다.
+
 ### 5.3 llama.cpp frozen tracks
 
 #### 5.3.1 Qwen3.8-27B / llama.cpp [FROZEN — READY_FOR_PRE_RUN_VALIDATION]
@@ -822,6 +862,61 @@ LOCAL_VERIFY_REQUIRED:
 - exact command가 frozen delta 외의 변수를 바꾸거나 artifact/runtime/workload가 불일치하면 hard stop.
 - 최종 recipe 승격에는 frozen configuration identity, valid `performance/v1.json` measured evidence, output integrity, telemetry/provenance가 모두 필요하다.
 
+
+##### 5.3.1.1 Qwen3.8 llama.cpp — R0 repetition-1 measured
+
+목적: frozen baseline `Q38-LLAMA-WBS5-R0-TARGET-B512-UB128`의 첫 번째 사전 등록 repetition을 수행한다.
+
+```bash
+python3 scripts/run_wbs5.py --track qwen-llama --candidate R0 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-001 --run-label repetition-1 --execute-measured
+```
+
+완료 조건: 한 measured batch의 raw evidence와 cleanup까지 보존. 실패해도 자동 재시도하지 않는다.
+
+##### 5.3.1.2 Qwen3.8 llama.cpp — R0 repetition-2 measured
+
+목적: R0와 **동일 configuration**으로 두 번째 사전 등록 repetition을 fresh ID에서 수행한다. 5.3.1.1 실패 retry가 아니라 원래 계획된 독립 repetition이다.
+
+```bash
+python3 scripts/run_wbs5.py --track qwen-llama --candidate R0 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-002 --run-label repetition-2 --execute-measured
+```
+
+##### 5.3.1.3 Qwen3.8 llama.cpp — R1 NGRAM screening
+
+R0 대비 `--spec-type none -> ngram-simple`만 바뀌는지 runner guard를 통과한 뒤 1회 수행한다.
+
+```bash
+python3 scripts/run_wbs5.py --track qwen-llama --candidate R1 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-001 --run-label screening-1 --execute-measured
+```
+
+##### 5.3.1.4 Qwen3.8 llama.cpp — R2 UB256 screening
+
+R0 대비 `--ubatch-size 128 -> 256`만 바뀌는지 확인하고 1회 수행한다.
+
+```bash
+python3 scripts/run_wbs5.py --track qwen-llama --candidate R2 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001 --run-label screening-1 --execute-measured
+```
+
+##### 5.3.1.5 Qwen3.8 llama.cpp — R1 optional confirm [CONDITIONAL]
+
+자동 실행 금지. 5.3.1.3 결과를 검토한 뒤 동일 configuration의 confirm이 실제로 필요하다고 결정된 경우에만 fresh ID로 수행한다.
+
+```bash
+python3 scripts/run_wbs5.py --track qwen-llama --candidate R1 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-002 --run-label confirm-1 --execute-measured
+```
+
+##### 5.3.1.6 Qwen3.8 llama.cpp — R2 optional confirm [CONDITIONAL]
+
+자동 실행 금지. 5.3.1.4 결과 검토 후 confirm 필요성이 확인된 경우에만 수행한다.
+
+```bash
+python3 scripts/run_wbs5.py --track qwen-llama --candidate R2 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-002 --run-label confirm-1 --execute-measured
+```
+
+##### 5.3.1.7 Qwen3.8 llama.cpp — track result review
+
+GPU inference 없음. 완료된 R0 repetition과 R1/R2 screening/confirm evidence를 비교한다. TTFT, prefill, mean request decode, aggregate decode, end-to-end TPS, batch wall, VRAM, output integrity, NGRAM counter를 정리하되 이 단계에서 새로운 tuning candidate를 만들지 않는다. 필요한 confirm이 아직 수행되지 않았다면 그 필요성만 명시하고 자동 실행하지 않는다.
+
 #### 5.3.2 Ornith 1.5 9B / llama.cpp [FROZEN — READY_FOR_PRE_RUN_VALIDATION]
 
 Frozen candidates:
@@ -850,6 +945,37 @@ LOCAL_VERIFY_REQUIRED:
 - measured 실행 전 gateway와 두 backend의 frozen topology가 exact해야 한다.
 - 다른 topology/KV/context/routing delta가 섞이면 hard stop.
 - final recipe 승격은 1GPU×2 + LiteLLM 배포 topology에서 `performance/v1.json` valid run과 output integrity를 요구한다.
+
+
+##### 5.3.2.1 Ornith 1.5 9B llama.cpp — R0 TARGET baseline
+
+1GPU×2 + LiteLLM frozen topology를 유지하고 R0를 1회 수행한다. 두 backend와 단일 LiteLLM endpoint, least-busy, backend max_parallel_requests=1, num_retries=0이 바뀌면 hard stop이다.
+
+```bash
+python3 scripts/run_wbs5.py --track ornith9-llama --candidate R0 --experiment-id EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260928-001 --run-label screening-1 --execute-measured
+```
+
+##### 5.3.2.2 Ornith 1.5 9B llama.cpp — R1 UB256
+
+R0 대비 두 backend 모두 ubatch 128 -> 256만 변경된 frozen plan을 1회 수행한다.
+
+```bash
+python3 scripts/run_wbs5.py --track ornith9-llama --candidate R1 --experiment-id EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001 --run-label screening-1 --execute-measured
+```
+
+##### 5.3.2.3 Ornith 1.5 9B llama.cpp — R2 NGRAM
+
+R0 대비 두 backend의 `--spec-type none -> ngram-simple`만 변경한다.
+
+```bash
+python3 scripts/run_wbs5.py --track ornith9-llama --candidate R2 --experiment-id EXP-V100-ORN15-9B-LLAMA-NGRAM-B512-UB128-1GPU2-C2-PERF-20260928-001 --run-label screening-1 --execute-measured
+```
+
+완료 후 distinct backend routing, common decode-window active overlap/queue-only, post-health, backend별 speculative counter evidence를 확인한다.
+
+##### 5.3.2.4 Ornith 1.5 9B llama.cpp — track result review
+
+GPU inference 없음. R0/R1/R2의 1GPU×2 배포 topology가 실제로 유지됐는지 먼저 확인하고 성능을 비교한다. routing/active-overlap evidence가 불완전하면 성능 숫자만으로 topology PASS를 선언하지 않는다.
 
 #### 5.3.3 Ornith 1.5 35B-A3B / llama.cpp [FROZEN — READY_FOR_PRE_RUN_VALIDATION]
 
@@ -884,6 +1010,41 @@ LOCAL_VERIFY_REQUIRED:
 - one-variable diff 실패 또는 measured validity failure는 hard stop/invalid로 처리하고 candidate를 재설계하지 않는다.
 - recipe 승격은 frozen candidate exactness + valid performance evidence + output integrity를 요구한다.
 
+
+##### 5.3.3.1 Ornith 1.5 35B llama.cpp — R0 TARGET
+
+```bash
+python3 scripts/run_wbs5.py --track ornith35-llama --candidate R0 --experiment-id EXP-V100-WBS5-ORNITH35-LLAMA-R0-PERF-20260928-001 --run-label screening-1 --execute-measured
+```
+
+##### 5.3.3.2 Ornith 1.5 35B llama.cpp — R1 native MTP1
+
+R0 대비 embedded native MTP1만 활성화한다. companion GGUF 또는 MTP n=2를 넣지 않는다.
+
+```bash
+python3 scripts/run_wbs5.py --track ornith35-llama --candidate R1 --experiment-id EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-001 --run-label screening-1 --execute-measured
+```
+
+draft/accepted/acceptance ratio가 unavailable이면 UNKNOWN으로 남긴다.
+
+##### 5.3.3.3 Ornith 1.5 35B llama.cpp — R2 UB256
+
+```bash
+python3 scripts/run_wbs5.py --track ornith35-llama --candidate R2 --experiment-id EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001 --run-label screening-1 --execute-measured
+```
+
+##### 5.3.3.4 Ornith 1.5 35B llama.cpp — R3 CUDA_SCALE_LAUNCH_QUEUES=4x
+
+R0 대비 container environment의 `CUDA_SCALE_LAUNCH_QUEUES=4x`만 추가된 plan을 사용한다.
+
+```bash
+python3 scripts/run_wbs5.py --track ornith35-llama --candidate R3 --experiment-id EXP-V100-WBS5-ORNITH35-LLAMA-R3-PERF-20260928-001 --run-label screening-1 --execute-measured
+```
+
+##### 5.3.3.5 Ornith 1.5 35B llama.cpp — track result review
+
+GPU inference 없음. R0/R1/R2/R3의 frozen one-variable delta를 다시 확인한 뒤 성능/VRAM/output/overlap/spec evidence를 비교한다. 기존 WBS3에서 관찰된 사실상 직렬 prefill behavior를 수정하기 위한 새 candidate를 추가하지 않는다.
+
 #### 5.3.4 Gemma4 26B-A4B / llama.cpp [FROZEN — READY_FOR_PRE_RUN_VALIDATION]
 
 Frozen candidates:
@@ -912,6 +1073,53 @@ LOCAL_VERIFY_REQUIRED:
 - R3 gate가 충족되지 않아도 대체 candidate를 추가하지 않는다.
 - artifact/runtime/binary/workload mismatch 또는 OFAT diff 위반은 hard stop.
 - final recipe 승격은 valid measured evidence와 output integrity를 요구하며, R3는 conditional status를 그대로 보존한다.
+
+
+##### 5.3.4.1 Gemma4 llama.cpp — R0 TARGET baseline
+
+R3 Gate B의 근거가 되는 baseline이므로 성능뿐 아니라 graph support/instability와 VRAM telemetry를 반드시 보존한다.
+
+```bash
+python3 scripts/run_wbs5.py --track gemma-llama --candidate R0 --experiment-id EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001 --run-label screening-1 --execute-measured
+```
+
+##### 5.3.4.2 Gemma4 llama.cpp — R1 NGRAM
+
+```bash
+python3 scripts/run_wbs5.py --track gemma-llama --candidate R1 --experiment-id EXP-V100-WBS5-GEMMA-LLAMA-R1-PERF-20260928-001 --run-label screening-1 --execute-measured
+```
+
+##### 5.3.4.3 Gemma4 llama.cpp — R2 batch1024
+
+R0 대비 batch-size 512 -> 1024만 변경한다. VRAM fit은 runtime 결과로 판정한다.
+
+```bash
+python3 scripts/run_wbs5.py --track gemma-llama --candidate R2 --experiment-id EXP-V100-WBS5-GEMMA-LLAMA-R2-PERF-20260928-001 --run-label screening-1 --execute-measured
+```
+
+##### 5.3.4.4 Gemma4 llama.cpp — Gate B evaluation
+
+GPU inference 없음. 5.3.4.1 R0의 실제 raw evidence만 사용한다.
+
+- `R0_VRAM_UPWARD_DRIFT` 또는 `R0_GRAPH_INSTABILITY` 중 실제 관찰된 frozen trigger가 있어야 한다.
+- graph support evidence가 PASS여야 한다.
+- trigger가 없으면 `NOT_TRIGGERED`로 기록하고 5.3.4.5를 **SKIP**한다. R3를 돌리기 위해 trigger를 임의 해석하지 않는다.
+- PASS인 경우 `results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/gate-b-receipt.json`을 작성한다.
+- receipt는 실제 R0 `config.json`, `identity.json`, `metrics.json`, `completion.json`을 evidence로 포함하고 각각 현재 SHA256을 기록한다. baseline configuration SHA는 R0 candidate-plan의 값과 일치해야 한다.
+
+##### 5.3.4.5 Gemma4 llama.cpp — R3 GRAPH-OFF [CONDITIONAL]
+
+5.3.4.4 Gate B PASS receipt가 있을 때만 수행한다.
+
+```bash
+python3 scripts/run_wbs5.py --track gemma-llama --candidate R3 --experiment-id EXP-V100-WBS5-GEMMA-LLAMA-R3-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/gate-b-receipt.json --execute-measured
+```
+
+Gate B 미충족은 R3 failure가 아니라 conditional candidate의 정상 SKIP이다.
+
+##### 5.3.4.6 Gemma4 llama.cpp — track result review
+
+GPU inference 없음. R0/R1/R2와 실행된 경우에만 R3를 비교한다. R3 미실행 시 Gate B가 왜 미충족됐는지 그대로 기록하며 대체 candidate를 만들지 않는다.
 
 ### 5.4 1Cat-vLLM frozen tracks
 
@@ -956,6 +1164,47 @@ LOCAL_VERIFY_REQUIRED:
 - C2 performance claim에는 `performance/v1.json`에서 active-overlap 여부를 새 evidence로 기록해야 하며 기존 `QUEUE_ONLY`를 ACTIVE로 재해석하지 않는다.
 - unsupported/unknown local route는 해당 candidate를 local blocker로 남기고 대체 tuning을 추가하지 않는다.
 
+
+##### 5.4.1.1 Qwen3.8 1Cat-vLLM — R0 E4M3 semantic baseline
+
+공통 invariant인 `VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL=0`, `VLLM_FLASH_V100_DECODE_PARTITION_SIZE=256`, `VLLM_SM70_GDN_DECODE_FLASHQLA=0`을 유지한다.
+
+```bash
+python3 scripts/run_wbs5.py --track qwen-onecat --candidate R0 --experiment-id EXP-V100-WBS5-QWEN-ONECAT-R0-PERF-20260928-001 --run-label screening-1 --execute-measured
+```
+
+기존 QUEUE_ONLY 결과를 ACTIVE로 재해석하지 말고 이번 performance run의 실제 overlap evidence를 기록한다.
+
+##### 5.4.1.2 Qwen3.8 1Cat-vLLM — R1 CUDA Graph C1 axis
+
+R0 대비 eager 제거 + frozen capture config `{"cudagraph_capture_sizes":[1]}` 축만 적용한다. 실제 capture/replay는 runtime evidence로만 판정한다.
+
+```bash
+python3 scripts/run_wbs5.py --track qwen-onecat --candidate R1 --experiment-id EXP-V100-WBS5-QWEN-ONECAT-R1-PERF-20260928-001 --run-label screening-1 --execute-measured
+```
+
+##### 5.4.1.3 Qwen3.8 1Cat-vLLM — R3 E5M2
+
+현재 기본 실행 queue에서는 toolchain-blocked R2보다 먼저 수행한다. R0 대비 KV dtype E4M3 -> E5M2만 변경하고 GDN decode/prefill 공통 invariant는 유지한다.
+
+```bash
+python3 scripts/run_wbs5.py --track qwen-onecat --candidate R3 --experiment-id EXP-V100-WBS5-QWEN-ONECAT-R3-PERF-20260928-001 --run-label screening-1 --execute-measured
+```
+
+##### 5.4.1.4 Qwen3.8 1Cat-vLLM — R2 Original FlashQLA [BLOCKED_BY_HOST_TOOLCHAIN]
+
+현재는 **실행 금지**다. 이 WBS를 지시받아도 Codex/Luna는 CUDA toolkit, driver, package, PATH, CUDA_HOME을 임의 설치/변경하지 않는다. 먼저 current toolchain receipt에서 nvcc와 승인된 isolated CUDA development toolkit이 실제로 제공되고 compile-only discovery가 PASS했는지 확인한다. 미충족이면 blocker를 보고하고 종료한다.
+
+승인된 host change와 새 operational toolchain receipt까지 완료된 경우에만 아래 measured command를 사용할 수 있다.
+
+```bash
+python3 scripts/run_wbs5.py --track qwen-onecat --candidate R2 --experiment-id EXP-V100-WBS5-QWEN-ONECAT-R2-PERF-20260928-001 --run-label screening-1 --execute-measured
+```
+
+##### 5.4.1.5 Qwen3.8 1Cat-vLLM — track result review
+
+GPU inference 없음. R0/R1/R3 및 나중에 unblock되어 실제 실행된 경우에만 R2를 포함한다. R1 graph hit, R3 E5M2 exact route/scales, active-overlap/queue-only, output integrity를 evidence 범위까지만 기록한다.
+
 #### 5.4.2 Ornith 1.5 9B / 1Cat-vLLM [FROZEN — READY_FOR_PRE_RUN_VALIDATION]
 
 Frozen candidates:
@@ -994,6 +1243,60 @@ Admission gate:
 - frozen delta 이외 hidden effective change가 발견되면 해당 candidate는 measured admission 전에 stop/block.
 - final recipe 승격에는 G0 admission, valid `performance/v1.json` evidence, output integrity, active-overlap/telemetry provenance가 필요하다.
 
+
+##### 5.4.2.1 Ornith 1.5 9B 1Cat-vLLM — G0 semantic requalification
+
+이 항목은 WBS5 performance candidate가 아니라 **R0 ~ R3 공통 admission prerequisite**다. pre-registered WBS3 `concurrency/v2.json`과 `v2-ground-truth.json`을 사용한 별도 measured experiment를 수행한다.
+
+```bash
+python3 scripts/run_c2_onecat.py --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001 --model ornith-1.5-9b
+```
+
+실행 후 Project A/B 응답을 ground-truth oracle에 대해 semantic audit한다. 두 project 모두 PASS하고 raw measured evidence가 유효할 때만 `results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001/g0-receipt.json`을 작성한다.
+
+G0 receipt 필수 의미:
+
+- `gate=ORNITH9_G0`, `verdict=PASS`, `track=ornith9-onecat`.
+- `baseline_configuration_sha256`은 frozen WBS5 R0 candidate-plan의 configuration SHA.
+- `experiment_id`는 위 별도 G0 experiment ID.
+- `semantic_audit=PASS`, `project_a=PASS`, `project_b=PASS`.
+- `file_sha256`에 현재 input lock의 `workloads/concurrency/v2.json` 및 `workloads/concurrency/v2-ground-truth.json` SHA를 기록.
+- `evidence`에는 위 G0 raw directory 내부의 실제 semantic/requests/metrics/completion evidence 경로와 SHA256을 기록.
+
+semantic audit가 불명확하거나 한 project라도 FAIL이면 PASS receipt를 만들지 않고 R0 ~ R3를 모두 차단한다.
+
+##### 5.4.2.2 Ornith 1.5 9B 1Cat-vLLM — R0 baseline [REQUIRES G0]
+
+```bash
+python3 scripts/run_wbs5.py --track ornith9-onecat --candidate R0 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R0-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001/g0-receipt.json --execute-measured
+```
+
+##### 5.4.2.3 Ornith 1.5 9B 1Cat-vLLM — R1 MBT8192 [REQUIRES G0]
+
+```bash
+python3 scripts/run_wbs5.py --track ornith9-onecat --candidate R1 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R1-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001/g0-receipt.json --execute-measured
+```
+
+##### 5.4.2.4 Ornith 1.5 9B 1Cat-vLLM — R2 TARGET-GRAPH [REQUIRES G0]
+
+```bash
+python3 scripts/run_wbs5.py --track ornith9-onecat --candidate R2 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R2-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001/g0-receipt.json --execute-measured
+```
+
+실제 graph capture/replay가 확인되지 않으면 UNKNOWN으로 남긴다.
+
+##### 5.4.2.5 Ornith 1.5 9B 1Cat-vLLM — R3 MTP2 [REQUIRES G0]
+
+```bash
+python3 scripts/run_wbs5.py --track ornith9-onecat --candidate R3 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R3-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001/g0-receipt.json --execute-measured
+```
+
+resolved n_predict, actual MTP2 acceptance와 output integrity를 runtime evidence로 기록한다.
+
+##### 5.4.2.6 Ornith 1.5 9B 1Cat-vLLM — track result review
+
+GPU inference 없음. G0 receipt identity부터 재검증한 후 R0 ~ R3를 비교한다. G0 FAIL이면 이 review는 “track blocked by G0”로 종료하며 performance 후보를 임의 실행/대체하지 않는다.
+
 #### 5.4.3 Ornith 1.5 35B-A3B / 1Cat-vLLM [FROZEN — READY_FOR_PRE_RUN_VALIDATION]
 
 Frozen candidates:
@@ -1024,6 +1327,33 @@ LOCAL_VERIFY_REQUIRED:
 - R2는 static validity와 runtime VRAM fit을 구분하며 GPU model-load 전에는 VRAM fit을 확정하지 않는다.
 - frozen-delta violation, runtime/artifact mismatch, invalid workload는 hard stop.
 - final recipe 승격에는 valid measured performance evidence와 output integrity가 필요하다.
+
+
+##### 5.4.3.1 Ornith 1.5 35B 1Cat-vLLM — R0 eager MBT4096
+
+```bash
+python3 scripts/run_wbs5.py --track ornith35-onecat --candidate R0 --experiment-id EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001 --run-label screening-1 --execute-measured
+```
+
+##### 5.4.3.2 Ornith 1.5 35B 1Cat-vLLM — R1 graph-auto
+
+R0 대비 target eager 제거만 변경한다. 실제 graph route/capture/replay는 runtime evidence로 판정한다.
+
+```bash
+python3 scripts/run_wbs5.py --track ornith35-onecat --candidate R1 --experiment-id EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260928-001 --run-label screening-1 --execute-measured
+```
+
+##### 5.4.3.3 Ornith 1.5 35B 1Cat-vLLM — R2 MBT8192
+
+```bash
+python3 scripts/run_wbs5.py --track ornith35-onecat --candidate R2 --experiment-id EXP-V100-WBS5-ORNITH35-ONECAT-R2-PERF-20260928-001 --run-label screening-1 --execute-measured
+```
+
+VRAM fit 실패는 setting을 바꾸지 말고 candidate measured result로 보존한다.
+
+##### 5.4.3.4 Ornith 1.5 35B 1Cat-vLLM — track result review
+
+GPU inference 없음. R0/R1/R2의 exact config identity와 성능, graph evidence, output integrity, active overlap/queue state를 비교한다. 새로운 MBT/graph candidate를 만들지 않는다.
 
 ### 5.5 final recipe 승격 및 publication
 
