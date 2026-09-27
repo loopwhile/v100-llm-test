@@ -1,0 +1,11 @@
+{
+  "source": "llama.cpp server metrics/slots sampler",
+  "resident": null,
+  "active_overlap": null,
+  "queue_only": false,
+  "peak_processing": null,
+  "peak_waiting": null,
+  "peak_resident_slots": null,
+  "sample_count": 0,
+  "samples": []
+}

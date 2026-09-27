@@ -1,0 +1,9 @@
+{
+  "experiment_id": "EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-32K-20260927-003",
+  "verdict": "PASS",
+  "completed_at_utc": "2026-09-27T11:35:53.611222+00:00",
+  "post_health": {
+    "healthy": true,
+    "at_utc": "2026-09-27T11:35:53.582243+00:00"
+  }
+}

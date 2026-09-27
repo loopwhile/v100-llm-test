@@ -1,0 +1,43 @@
+{
+  "experiment_id": "EXP-P520-CPU-ORN15-35B-OPTBLAS-C1-32K-20260927-001",
+  "measured_repetitions": 1,
+  "warmup_count": 0,
+  "model": "Ornith-1.5-35B-Q4_K_M.gguf",
+  "model_key": "ornith-1.5-35b-a3b",
+  "model_identity": {
+    "path": "/srv/models/ornith-1.5-35b-a3b-gguf/Ornith-1.5-35B-Q4_K_M.gguf"
+  },
+  "runtime": "llama.cpp",
+  "runtime_flavor": "cpu-only-openblas-lto",
+  "runtime_image": "p520-cpu-llama-opt:b10775-blas",
+  "runtime_image_digest": "p520-cpu-llama-opt@sha256:5f4f7d9d7bc5c0539eef15d88c43051f23c3bc696acbbd7ab96da041eb29e3e9",
+  "backend_variant": "CPU-ONLY-W2135-OPTBLAS",
+  "topology": "cpu-standalone-4core",
+  "topology_detail": "logical CPU IDs 1,2,3,4 mapped to four distinct physical cores",
+  "concurrency": 1,
+  "server_ctx_size": 131072,
+  "measured_request_class": "32K",
+  "context_tokens": 32768,
+  "weight_quant": "Q4_K_M",
+  "kv_cache": "Q8_0",
+  "speculative": "ngram-mod",
+  "ngram": "ngram-mod-24-48-64",
+  "prefix_cache_lane": "cold-independent",
+  "b": 4096,
+  "ub": 512,
+  "optimization_stack": [
+    "OpenBLAS build",
+    "GGML_LTO=ON",
+    "GGML_CPU_ALL_VARIANTS=ON",
+    "Flash Attention forced on",
+    "mmap + lazy-mode off + server warmup",
+    "weight repack",
+    "strict batch affinity",
+    "medium priority",
+    "polling"
+  ],
+  "workload_manifest": "/home/loopwhile/v100-llm-test-wbs6-20260926/workloads/capacity/v1-32k.json",
+  "notes": "WBS 6.10 32K C-vs-D comparison. Prompt cache intentionally disabled so both cases evaluate the same full materialized prompt.",
+  "measurement_policy": "v100-c1-c2-single-execution-v1",
+  "repetition_count": 1
+}

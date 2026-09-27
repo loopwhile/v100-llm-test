@@ -1,0 +1,9 @@
+{
+  "workload_sha256": "8bd5b2dd864daf88d1b6395c1fe48fdf9420f6b251f490e4dde72d7cb739ce97",
+  "request_id": "research-synthesis-a",
+  "prompt_tokens": 31743,
+  "total_budget_used": 32767,
+  "utilization": 0.999969482421875,
+  "raw_prompt_sha256": "75f3de663d9196805b399c70da3f1dd048629c9fca71b7337f0893b6b4527147",
+  "output_reserve": 1024
+}
