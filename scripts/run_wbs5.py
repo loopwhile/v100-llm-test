@@ -120,8 +120,13 @@ def identity_check(plan, runtime):
         if actual != model["sha256"]:
             raise ValueError("ARTIFACT_IDENTITY_MISMATCH")
         image = plan["runtime_identity"]["image"]
-        version = command(["docker", "run", "--rm", "--pull=never", "--gpus", "all",
-                           "--entrypoint", "llama-server", image, "--version"], 60)
+        version_proc = subprocess.run(
+            ["docker", "run", "--rm", "--pull=never", "--gpus", "all",
+             "--entrypoint", "llama-server", image, "--version"],
+            capture_output=True, text=True, timeout=60, check=True,
+        )
+        # llama-server writes --version to stderr in the pinned V100 image.
+        version = version_proc.stdout + version_proc.stderr
         if "10775" not in version or "67a17c17" not in version:
             raise ValueError("RUNTIME_IDENTITY_MISMATCH")
     else:
