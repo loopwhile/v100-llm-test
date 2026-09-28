@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "candidate_id": "Q38-LLAMA-WBS5-R0-TARGET-B512-UB128",
+  "run_identity": {
+    "label": "repetition-2",
+    "kind": "repetition",
+    "index": 2,
+    "automatic_retry": false,
+    "automatic_confirm": false,
+    "batches_in_this_invocation": 1
+  },
+  "workload_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+  "launch_command": "docker run --cidfile /home/loopwhile/v100-llm-test-wbs5-manual-45ee01cb2d9e/results/raw/EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-002/runtime/container-0.cid --label experiment=EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-002 --rm --pull=never --name exp-v100-wbs5-qwen-llama-r0-perf-20260928-002-backend-0 --label project=v100-llm-test --gpus '\"device=0,1\"' -p 127.0.0.1:18080:8080 -v /srv/models/qwen3.8-unsloth/Qwen3.8-27B-UD-Q4_K_M.gguf:/model/target.gguf:ro --entrypoint llama-server kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149 -m /model/target.gguf --host 0.0.0.0 --port 8080 -ngl all --split-mode layer --tensor-split 1,1 --ctx-size 262144 --parallel 2 --kv-unified --kv-unified-per-slot 131072 --batch-size 512 --ubatch-size 128 --cache-type-k q8_0 --cache-type-v q8_0 --flash-attn on --spec-type none --jinja --reasoning off --metrics --slots --no-warmup",
+  "effective_environment": [
+    {
+      "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "LANG": "C.UTF-8",
+      "HOME": "/home/loopwhile"
+    }
+  ],
+  "container_environment_overrides": [
+    {}
+  ],
+  "resolved_environment_receipt": "runtime/effective-environment.json",
+  "normalized_delta_from_r0": [],
+  "ttft_ms": 904118.8030390004,
+  "prefill_tps": 178.2297101865325,
+  "mean_request_decode_tps": 5.3847668118595395,
+  "aggregate_decode_tps": 3.9580385293631517,
+  "end_to_end_output_tps": 2.7323120833581394,
+  "batch_wall_s": 1580.3465593479996,
+  "peak_vram_gpu0_mib": 13159.0,
+  "peak_vram_gpu1_mib": 14245.0,
+  "c2_active": true,
+  "queue_only": false,
+  "mechanical_output_verdict": "PASS",
+  "total_output_tokens": 4318,
+  "metric_status": {
+    "ttft_ms": "OBSERVED",
+    "prefill_tps": "OBSERVED",
+    "mean_request_decode_tps": "OBSERVED",
+    "aggregate_decode_tps": "OBSERVED",
+    "end_to_end_output_tps": "OBSERVED",
+    "batch_wall_s": "OBSERVED",
+    "peak_vram_gpu0_mib": "OBSERVED",
+    "peak_vram_gpu1_mib": "OBSERVED",
+    "c2_active": "OBSERVED",
+    "queue_only": "OBSERVED",
+    "mechanical_output_verdict": "OBSERVED"
+  },
+  "requests": [
+    {
+      "request_id": "project-a",
+      "actual_output_tokens": 2310,
+      "ttft_ms": 1318906.6885080002,
+      "prefill_tps": 96.28205934952165,
+      "decode_tps": 8.83460282443668,
+      "verdict": "PASS"
+    },
+    {
+      "request_id": "project-b",
+      "actual_output_tokens": 2008,
+      "ttft_ms": 489330.9175700006,
+      "prefill_tps": 260.1773610235433,
+      "decode_tps": 1.9349307992824003,
+      "verdict": "PASS"
+    }
+  ],
+  "post_health": {
+    "healthy": true,
+    "at_utc": "2026-09-28T09:40:21.037675+00:00"
+  },
+  "telemetry": "runtime/gpu-telemetry.jsonl",
+  "telemetry_fields": [
+    "power.draw",
+    "temperature.gpu",
+    "clocks.sm",
+    "clocks.mem",
+    "utilization.gpu"
+  ],
+  "limitation": "VRAM peak sampled every 0.5s; power/temp/clocks sampled every 2s. TPS definitions unchanged.",
+  "graph_evidence": "graph-evidence.json",
+  "log_overlap_evidence": "log-overlap-evidence.json",
+  "slot_progress": "slot-progress.json",
+  "speculative_evidence": "speculative-evidence.json",
+  "gpu_telemetry_summary": {
+    "0": {
+      "power.draw": {
+        "status": "OBSERVED",
+        "min": 26.04,
+        "max": 212.87,
+        "samples": 774
+      },
+      "temperature.gpu": {
+        "status": "OBSERVED",
+        "min": 42.0,
+        "max": 71.0,
+        "samples": 774
+      },
+      "clocks.sm": {
+        "status": "OBSERVED",
+        "min": 135.0,
+        "max": 1200.0,
+        "samples": 774
+      },
+      "clocks.mem": {
+        "status": "OBSERVED",
+        "min": 877.0,
+        "max": 877.0,
+        "samples": 774
+      },
+      "utilization.gpu": {
+        "status": "OBSERVED",
+        "min": 0.0,
+        "max": 100.0,
+        "samples": 774
+      }
+    },
+    "1": {
+      "power.draw": {
+        "status": "OBSERVED",
+        "min": 26.52,
+        "max": 200.49,
+        "samples": 774
+      },
+      "temperature.gpu": {
+        "status": "OBSERVED",
+        "min": 40.0,
+        "max": 63.0,
+        "samples": 774
+      },
+      "clocks.sm": {
+        "status": "OBSERVED",
+        "min": 135.0,
+        "max": 1200.0,
+        "samples": 774
+      },
+      "clocks.mem": {
+        "status": "OBSERVED",
+        "min": 877.0,
+        "max": 877.0,
+        "samples": 774
+      },
+      "utilization.gpu": {
+        "status": "OBSERVED",
+        "min": 0.0,
+        "max": 100.0,
+        "samples": 774
+      }
+    }
+  }
+}

@@ -704,15 +704,15 @@ Shared TP2와 다음 항목을 비교한다.
   - 다른 KV quantization (e.g. FP8), 다른 speculative configuration, 다른 runtime에서의 결과까지 물리적으로 불가능하다고 일반화하지 않는다.
   - 프로젝트 불변 규칙에 따라 설정을 임의 변경하는 자동 재시도는 수행하지 않고 closed 처리함.
 
-## 5. 성능 최적화 및 모델별 최종 레시피 확정 [PLANNED — FROZEN / READY_FOR_MEASURED_EXECUTION]
+## 5. 성능 최적화 및 모델별 최종 레시피 확정 [IN_PROGRESS — FROZEN / PARTIAL_MEASURED_RESULTS_PUBLISHED]
 
 WBS 2/3/4에서 확보한 capacity/correctness/topology evidence와 WBS 5의 performance evidence를 분리한다.
 WBS 5는 아래 7개 model/runtime track에 대해 이미 연구·선정이 끝난 frozen candidate만 실행하며,
 새 candidate 자동 생성, exhaustive grid, 임의 tuning을 수행하지 않는다.
 
-현재 단계는 **8A 및 8B~8D runner/harness 구현·dry-plan·static/unit validation + ChatGPT pre-run final validation 완료 / READY_FOR_MEASURED_EXECUTION**이다.
-25개 frozen candidate의 28개 dry-plan을 저장했다. Qwen 1Cat R2는 host toolchain BLOCKED, Ornith9 1Cat G0 및 Gemma R3 Gate B는 pending이다. Harness blocker는 없다. [준비 결과](WBS-5-preparation-readiness.md).
-아직 WBS 5 GPU measured run은 시작하지 않았다.
+현재 단계는 **PARTIAL_MEASURED_RESULTS_PUBLISHED — 회수된 WBS5 raw 4건의 공식 report/CSV 반영 완료**이다. 8A 및 8B~8D runner/harness 구현·dry-plan·static/unit validation + ChatGPT pre-run final validation은 완료된 준비 이력이다.
+25개 frozen candidate의 28개 dry-plan을 저장했다. Qwen 1Cat R2는 host toolchain BLOCKED, Ornith9 1Cat G0 및 Gemma R3 Gate B는 pending이다. 준비 당시 harness validation은 통과했으며, 회수 raw의 sampler 오류와 evidence 한계는 5.3.1에 기록했다. [준비 결과](WBS-5-preparation-readiness.md).
+2026-09-28 로컬 `results/raw/` 전체 inventory와 WBS experiment ID 대조 결과, 완료 raw는 Qwen llama.cpp `5.3.1.1`~`5.3.1.4`의 4건뿐이다. 모두 저장된 최종 verdict `PASS_C2_ACTIVE`로 publication했다. 그 밖의 measured child와 optional confirm은 로컬 raw가 없어 완료 처리하지 않는다. 이번 작업에서는 GPU inference, retry, confirm, tuning을 실행하지 않았으며 track review/final recipe 승격은 미완료다.
 
 ### 5.1 authoritative planning input 및 진행 단계
 
@@ -736,7 +736,7 @@ WBS 5 단계 흐름:
 3. `docs/WBS.md` 공식 반영 완료.
 4. Codex CLI local validation / test preparation 완료 (8A~8D; measured inference 없음).
 5. ChatGPT pre-run final validation 완료.
-6. **현재 단계: 아래 번호가 부여된 Codex CLI measured execution WBS를 한 항목씩 수행.**
+6. **현재 단계: 완료된 measured child 4건의 raw/report publication 완료; 나머지는 raw 미확인. 현재 사용자 지시로 추가 measured execution 금지.**
 7. 각 track measured 결과 분석 및 track review WBS 수행.
 8. 필요 시 Claude independent review.
 9. 모델별 final recipe 확정.
@@ -885,7 +885,20 @@ LOCAL_VERIFY_REQUIRED:
 - 최종 recipe 승격에는 frozen configuration identity, valid `performance/v1.json` measured evidence, output integrity, telemetry/provenance가 모두 필요하다.
 
 
-##### 5.3.1.1 Qwen3.8 llama.cpp — R0 repetition-1 measured
+2026-09-28 publication evidence 주의사항:
+
+- 아래 4건의 `completion.json`, `metrics.json`, `runtime/exit.json`은 모두 `PASS_C2_ACTIVE`이며, 이미 저장된 `overlap_reconciled_from: log-overlap-evidence.json`을 근거로 한다. 이번 publication에서 verdict를 재판정하거나 raw를 수정하지 않았다.
+- 4건 모두 `runtime/measurement.log`에 slot sampler의 `AttributeError: 'list' object has no attribute 'get'`가 있다. live sampler는 2 samples / peak processing 0만 기록했으므로, active overlap 근거는 `runtime/server-0.log`의 decode interleaving과 `log-overlap-evidence.json`이다.
+- R0 repetition-1의 `wbs5-evidence.json`에는 보정 전 `c2_active: null` / `UNKNOWN`이 남아 있다. 공식 reporter는 보정된 `completion.json`/`metrics.json`을 사용하며 이 snapshot 차이는 그대로 보존한다.
+- Requests의 PASS와 `mechanical_output_verdict: PASS`는 raw에 기록된 판정이다. 별도 `acceptance-review.json`은 없으며, 새 semantic audit나 winner 선정은 수행하지 않았다.
+- 5.3.1.5/5.3.1.6 optional confirm은 raw 없음 / 미실행 상태로 유지한다. 5.3.1.7 track review와 final recipe 승격은 완료 처리하지 않는다.
+
+##### 5.3.1.1 Qwen3.8 llama.cpp — R0 repetition-1 measured [DONE — PASS_C2_ACTIVE]
+
+- 상태: **DONE — PASS_C2_ACTIVE** (measured child 실행/회수 완료; final recipe 승격 아님).
+- Experiment: `EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-001`; 완료 UTC: `2026-09-28T08:49:27.088086+00:00`.
+- [Raw](../results/raw/EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-001/) / [Report](../reports/qwen3-8-27b/EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-001.md); `results/summary.csv`, `reports/comparison.csv` 반영 완료.
+- Requests: project-a 2184 tokens / `PASS`, project-b 1711 tokens / `PASS`; post-health healthy.
 
 목적: frozen baseline `Q38-LLAMA-WBS5-R0-TARGET-B512-UB128`의 첫 번째 사전 등록 repetition을 수행한다.
 
@@ -895,7 +908,12 @@ python3 scripts/run_wbs5_remote.py --track qwen-llama --candidate R0 --experimen
 
 완료 조건: wrapper가 해당 experiment raw를 ThinkPad `results/raw/`로 회수하면 종료한다. 실패 verdict여도 자동 재시도하지 않는다.
 
-##### 5.3.1.2 Qwen3.8 llama.cpp — R0 repetition-2 measured
+##### 5.3.1.2 Qwen3.8 llama.cpp — R0 repetition-2 measured [DONE — PASS_C2_ACTIVE]
+
+- 상태: **DONE — PASS_C2_ACTIVE** (measured child 실행/회수 완료; final recipe 승격 아님).
+- Experiment: `EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-002`; 완료 UTC: `2026-09-28T09:40:21.082469+00:00`.
+- [Raw](../results/raw/EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-002/) / [Report](../reports/qwen3-8-27b/EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-002.md); `results/summary.csv`, `reports/comparison.csv` 반영 완료.
+- Requests: project-a 2310 tokens / `PASS`, project-b 2008 tokens / `PASS`; post-health healthy.
 
 목적: R0와 **동일 configuration**으로 두 번째 사전 등록 repetition을 fresh ID에서 수행한다. 5.3.1.1 실패 retry가 아니라 원래 계획된 독립 repetition이다.
 
@@ -903,7 +921,12 @@ python3 scripts/run_wbs5_remote.py --track qwen-llama --candidate R0 --experimen
 python3 scripts/run_wbs5_remote.py --track qwen-llama --candidate R0 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-002 --run-label repetition-2 --execute-measured
 ```
 
-##### 5.3.1.3 Qwen3.8 llama.cpp — R1 NGRAM screening
+##### 5.3.1.3 Qwen3.8 llama.cpp — R1 NGRAM screening [DONE — PASS_C2_ACTIVE]
+
+- 상태: **DONE — PASS_C2_ACTIVE** (measured child 실행/회수 완료; final recipe 승격 아님).
+- Experiment: `EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-001`; 완료 UTC: `2026-09-28T10:14:45.183800+00:00`.
+- [Raw](../results/raw/EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-001/) / [Report](../reports/qwen3-8-27b/EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-001.md); `results/summary.csv`, `reports/comparison.csv` 반영 완료.
+- Requests: project-a 2214 tokens / `PASS`, project-b 2069 tokens / `PASS`; post-health healthy.
 
 R0 대비 `--spec-type none -> ngram-simple`만 바뀌는지 runner guard를 통과한 뒤 1회 수행한다.
 
@@ -911,7 +934,12 @@ R0 대비 `--spec-type none -> ngram-simple`만 바뀌는지 runner guard를 통
 python3 scripts/run_wbs5_remote.py --track qwen-llama --candidate R1 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
-##### 5.3.1.4 Qwen3.8 llama.cpp — R2 UB256 screening
+##### 5.3.1.4 Qwen3.8 llama.cpp — R2 UB256 screening [DONE — PASS_C2_ACTIVE]
+
+- 상태: **DONE — PASS_C2_ACTIVE** (measured child 실행/회수 완료; final recipe 승격 아님).
+- Experiment: `EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001`; 완료 UTC: `2026-09-28T10:43:47.163436+00:00`.
+- [Raw](../results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/) / [Report](../reports/qwen3-8-27b/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001.md); `results/summary.csv`, `reports/comparison.csv` 반영 완료.
+- Requests: project-a 2653 tokens / `PASS`, project-b 1970 tokens / `PASS`; post-health healthy.
 
 R0 대비 `--ubatch-size 128 -> 256`만 바뀌는지 확인하고 1회 수행한다.
 

@@ -1,0 +1,6 @@
+{
+  "exit_code": 0,
+  "verdict": "PASS_C2_ACTIVE",
+  "error": null,
+  "overlap_reconciled_from": "log-overlap-evidence.json"
+}

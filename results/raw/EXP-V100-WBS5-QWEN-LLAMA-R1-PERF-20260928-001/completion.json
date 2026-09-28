@@ -1,0 +1,10 @@
+{
+  "experiment_id": "EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-001",
+  "verdict": "PASS_C2_ACTIVE",
+  "completed_at_utc": "2026-09-28T10:14:45.183800+00:00",
+  "post_health": {
+    "healthy": true,
+    "at_utc": "2026-09-28T10:14:45.138146+00:00"
+  },
+  "overlap_reconciled_from": "log-overlap-evidence.json"
+}

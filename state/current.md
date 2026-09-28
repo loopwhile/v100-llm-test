@@ -1,6 +1,6 @@
 # Current execution
 
-## WBS 5 measured execution handoff — 2026-09-28
+## WBS 5 recovered measured results publication — 2026-09-28
 
 - WBS 2: **DONE**.
 - WBS 3: **DONE**.
@@ -8,13 +8,14 @@
 - WBS 5: llama.cpp 4개 + 1Cat-vLLM 3개, 총 **7개 model/runtime track candidate selection 완료**.
 - 7개 frozen candidate plan 문서화 완료.
 - `docs/WBS.md`에 7개 frozen plan을 공식 실행계획으로 반영 완료.
-- 현재 단계: **READY_FOR_MEASURED_EXECUTION — 8A~8D와 ChatGPT pre-run final validation 완료; runner/harness integration, exact-delta guard, evidence 경로 및 25 candidates/28 dry-plans 검증 완료**.
-- 다음 단계: **Codex CLI measured execution WBS 5.3.1.1 — Qwen3.8 llama.cpp R0 repetition-1**. measured child는 `scripts/run_wbs5_remote.py`로 P520에서 1회 실행하고 raw를 ThinkPad로 회수한 뒤 종료한다. 이후에도 `docs/WBS.md`의 `5.3.x.y` / `5.4.x.y`를 한 항목씩 지시하며 자동 연속 실행 금지.
+- 현재 단계: **PARTIAL_MEASURED_RESULTS_PUBLISHED — 로컬 raw/WBS 대조로 확인된 Qwen llama.cpp 5.3.1.1~5.3.1.4의 4건을 공식 reporter로 publication 완료**.
+- 현재 사용자 지시: **GPU measured inference 및 새 benchmark/retry/confirm/tuning 금지**. 미확인 child를 추정 실행하지 않는다. Track review/final recipe 승격은 미완료다.
 - Qwen 1Cat R2: **BLOCKED_BY_HOST_TOOLCHAIN** (nvcc/개발 toolkit 없음; isolated CUDA12.8 development toolkit host change 승인 대기).
 - Ornith9 1Cat R0~R3: **CONDITIONAL_PENDING_GATE — G0**; Gemma llama R3: **CONDITIONAL_PENDING_GATE — Gate B**.
-- Harness blocker 없음. 전체 pytest **146 PASS + 25 subtests**, validate_repo **PASS**.
+- 준비 당시 검증: 전체 pytest **146 PASS + 25 subtests**, validate_repo **PASS**. 회수 raw의 slot sampler 오류/로그 overlap 보정 및 첫 R0 evidence snapshot 차이는 `docs/WBS.md` 5.3.1에 기록했다.
 - 준비 결과: `docs/WBS-5-preparation-readiness.md`; plans: `results/plans/wbs5-preparation-20260928/manifest.json`.
-- WBS 5 GPU measured run은 **아직 시작하지 않음**. 기본 runnable measured queue는 20회이며 conditional/toolchain/optional 항목은 별도 WBS gate에 따라 진행한다.
+- 이번 publication 검증: `validate_repo.py` PASS; reporter/harness/WBS5/measurement-policy 관련 pytest **74 PASS + 25 subtests** (격리된 `/tmp` 저장소에서 확인). 원본 checkout에서는 dry-plan 테스트 1개가 이미 회수된 raw 경로의 부재를 가정해 실패했으며, raw나 테스트 코드는 변경하지 않았다. Report/CSV 값 대조 및 raw 144개 파일 SHA256 보존 확인 완료.
+- 확인된 완료 experiment: `EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-001`, `EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-002`, `EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-001`, `EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001`. 모두 raw 최종 verdict **PASS_C2_ACTIVE**; report 4개와 summary/comparison 반영 완료. 그 밖의 WBS5 measured child 및 optional confirm은 로컬 raw가 없어 완료 처리하지 않았다.
 - WBS 6 관련 기존 상태/결과는 아래 기록을 그대로 유지한다.
 
 ## WBS 3 authoritative workload reset — 2026-09-25

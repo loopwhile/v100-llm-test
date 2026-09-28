@@ -1,0 +1,46 @@
+{
+  "status": "UNKNOWN",
+  "samples": [
+    {
+      "monotonic_s": 9839.497891582,
+      "source": "server-0",
+      "slot_id": 0,
+      "task_id": null,
+      "n_prompt_tokens_processed": null,
+      "n_past": null,
+      "n_decoded": null,
+      "is_processing": false
+    },
+    {
+      "monotonic_s": 9839.497891582,
+      "source": "server-0",
+      "slot_id": 1,
+      "task_id": null,
+      "n_prompt_tokens_processed": null,
+      "n_past": null,
+      "n_decoded": null,
+      "is_processing": false
+    },
+    {
+      "monotonic_s": 9839.614050252,
+      "source": "server-0",
+      "slot_id": 0,
+      "task_id": null,
+      "n_prompt_tokens_processed": null,
+      "n_past": null,
+      "n_decoded": null,
+      "is_processing": false
+    },
+    {
+      "monotonic_s": 9839.614050252,
+      "source": "server-0",
+      "slot_id": 1,
+      "task_id": null,
+      "n_prompt_tokens_processed": null,
+      "n_past": null,
+      "n_decoded": null,
+      "is_processing": false
+    }
+  ],
+  "limitation": "Fields unavailable from /slots remain null; resident count does not replace prompt progress."
+}

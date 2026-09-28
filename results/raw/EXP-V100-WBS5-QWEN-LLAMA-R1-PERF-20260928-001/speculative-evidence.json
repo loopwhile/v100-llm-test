@@ -1,0 +1,17 @@
+{
+  "aggregate": {
+    "draft_tokens": 985.0,
+    "accepted_tokens": 323.0,
+    "draft_count": 21.0,
+    "acceptance_ratio": 0.32791878172588834
+  },
+  "backends": {
+    "root": {
+      "draft_tokens": 985.0,
+      "accepted_tokens": 323.0,
+      "draft_count": 21.0
+    }
+  },
+  "source": "llama.cpp /metrics before/after measured window",
+  "status": "OBSERVED"
+}

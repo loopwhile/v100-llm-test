@@ -1,0 +1,65 @@
+{
+  "host_process_environments": [
+    {
+      "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "LANG": "C.UTF-8",
+      "HOME": "/home/loopwhile"
+    }
+  ],
+  "containers": [
+    {
+      "image": "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149",
+      "image_id": "sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149",
+      "image_defaults": {
+        "PATH": "/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "NVARCH": "x86_64",
+        "NVIDIA_REQUIRE_CUDA": "cuda>=12.6 brand=unknown,driver>=470,driver<471 brand=grid,driver>=470,driver<471 brand=tesla,driver>=470,driver<471 brand=nvidia,driver>=470,driver<471 brand=quadro,driver>=470,driver<471 brand=quadrortx,driver>=470,driver<471 brand=nvidiartx,driver>=470,driver<471 brand=vapps,driver>=470,driver<471 brand=vpc,driver>=470,driver<471 brand=vcs,driver>=470,driver<471 brand=vws,driver>=470,driver<471 brand=cloudgaming,driver>=470,driver<471 brand=unknown,driver>=535,driver<536 brand=grid,driver>=535,driver<536 brand=tesla,driver>=535,driver<536 brand=nvidia,driver>=535,driver<536 brand=quadro,driver>=535,driver<536 brand=quadrortx,driver>=535,driver<536 brand=nvidiartx,driver>=535,driver<536 brand=vapps,driver>=535,driver<536 brand=vpc,driver>=535,driver<536 brand=vcs,driver>=535,driver<536 brand=vws,driver>=535,driver<536 brand=cloudgaming,driver>=535,driver<536 brand=unknown,driver>=550,driver<551 brand=grid,driver>=550,driver<551 brand=tesla,driver>=550,driver<551 brand=nvidia,driver>=550,driver<551 brand=quadro,driver>=550,driver<551 brand=quadrortx,driver>=550,driver<551 brand=nvidiartx,driver>=550,driver<551 brand=vapps,driver>=550,driver<551 brand=vpc,driver>=550,driver<551 brand=vcs,driver>=550,driver<551 brand=vws,driver>=550,driver<551 brand=cloudgaming,driver>=550,driver<551",
+        "NV_CUDA_CUDART_VERSION": "12.6.77-1",
+        "CUDA_VERSION": "12.6.3",
+        "LD_LIBRARY_PATH": "/usr/local/nvidia/lib:/usr/local/nvidia/lib64",
+        "NVIDIA_VISIBLE_DEVICES": "all",
+        "NVIDIA_DRIVER_CAPABILITIES": "compute,utility",
+        "NV_CUDA_LIB_VERSION": "12.6.3-1",
+        "NV_NVTX_VERSION": "12.6.77-1",
+        "NV_LIBNPP_VERSION": "12.3.1.54-1",
+        "NV_LIBNPP_PACKAGE": "libnpp-12-6=12.3.1.54-1",
+        "NV_LIBCUSPARSE_VERSION": "12.5.4.2-1",
+        "NV_LIBCUBLAS_PACKAGE_NAME": "libcublas-12-6",
+        "NV_LIBCUBLAS_VERSION": "12.6.4.1-1",
+        "NV_LIBCUBLAS_PACKAGE": "libcublas-12-6=12.6.4.1-1",
+        "NV_LIBNCCL_PACKAGE_NAME": "libnccl2",
+        "NV_LIBNCCL_PACKAGE_VERSION": "2.23.4-1",
+        "NCCL_VERSION": "2.23.4-1",
+        "NV_LIBNCCL_PACKAGE": "libnccl2=2.23.4-1+cuda12.6",
+        "NVIDIA_PRODUCT_NAME": "CUDA",
+        "DEBIAN_FRONTEND": "noninteractive"
+      },
+      "overrides": {},
+      "effective_environment": {
+        "PATH": "/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "NVARCH": "x86_64",
+        "NVIDIA_REQUIRE_CUDA": "cuda>=12.6 brand=unknown,driver>=470,driver<471 brand=grid,driver>=470,driver<471 brand=tesla,driver>=470,driver<471 brand=nvidia,driver>=470,driver<471 brand=quadro,driver>=470,driver<471 brand=quadrortx,driver>=470,driver<471 brand=nvidiartx,driver>=470,driver<471 brand=vapps,driver>=470,driver<471 brand=vpc,driver>=470,driver<471 brand=vcs,driver>=470,driver<471 brand=vws,driver>=470,driver<471 brand=cloudgaming,driver>=470,driver<471 brand=unknown,driver>=535,driver<536 brand=grid,driver>=535,driver<536 brand=tesla,driver>=535,driver<536 brand=nvidia,driver>=535,driver<536 brand=quadro,driver>=535,driver<536 brand=quadrortx,driver>=535,driver<536 brand=nvidiartx,driver>=535,driver<536 brand=vapps,driver>=535,driver<536 brand=vpc,driver>=535,driver<536 brand=vcs,driver>=535,driver<536 brand=vws,driver>=535,driver<536 brand=cloudgaming,driver>=535,driver<536 brand=unknown,driver>=550,driver<551 brand=grid,driver>=550,driver<551 brand=tesla,driver>=550,driver<551 brand=nvidia,driver>=550,driver<551 brand=quadro,driver>=550,driver<551 brand=quadrortx,driver>=550,driver<551 brand=nvidiartx,driver>=550,driver<551 brand=vapps,driver>=550,driver<551 brand=vpc,driver>=550,driver<551 brand=vcs,driver>=550,driver<551 brand=vws,driver>=550,driver<551 brand=cloudgaming,driver>=550,driver<551",
+        "NV_CUDA_CUDART_VERSION": "12.6.77-1",
+        "CUDA_VERSION": "12.6.3",
+        "LD_LIBRARY_PATH": "/usr/local/nvidia/lib:/usr/local/nvidia/lib64",
+        "NVIDIA_VISIBLE_DEVICES": "all",
+        "NVIDIA_DRIVER_CAPABILITIES": "compute,utility",
+        "NV_CUDA_LIB_VERSION": "12.6.3-1",
+        "NV_NVTX_VERSION": "12.6.77-1",
+        "NV_LIBNPP_VERSION": "12.3.1.54-1",
+        "NV_LIBNPP_PACKAGE": "libnpp-12-6=12.3.1.54-1",
+        "NV_LIBCUSPARSE_VERSION": "12.5.4.2-1",
+        "NV_LIBCUBLAS_PACKAGE_NAME": "libcublas-12-6",
+        "NV_LIBCUBLAS_VERSION": "12.6.4.1-1",
+        "NV_LIBCUBLAS_PACKAGE": "libcublas-12-6=12.6.4.1-1",
+        "NV_LIBNCCL_PACKAGE_NAME": "libnccl2",
+        "NV_LIBNCCL_PACKAGE_VERSION": "2.23.4-1",
+        "NCCL_VERSION": "2.23.4-1",
+        "NV_LIBNCCL_PACKAGE": "libnccl2=2.23.4-1+cuda12.6",
+        "NVIDIA_PRODUCT_NAME": "CUDA",
+        "DEBIAN_FRONTEND": "noninteractive"
+      }
+    }
+  ],
+  "scope": "exact subprocess env plus pinned image defaults and Docker overrides before launch"
+}

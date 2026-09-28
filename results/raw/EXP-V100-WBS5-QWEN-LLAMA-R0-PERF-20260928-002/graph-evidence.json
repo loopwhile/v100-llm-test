@@ -1,0 +1,29 @@
+{
+  "status": "OBSERVED",
+  "reuse_count": 5521,
+  "items": [
+    {
+      "source": "runtime/server-0.log",
+      "slot_id": 0,
+      "task_id": 10,
+      "lines": [
+        815
+      ],
+      "reuse_count": 2487,
+      "status": "OBSERVED"
+    },
+    {
+      "source": "runtime/server-0.log",
+      "slot_id": 1,
+      "task_id": 8,
+      "lines": [
+        838
+      ],
+      "reuse_count": 3034,
+      "status": "OBSERVED"
+    }
+  ],
+  "ambiguous_lines": [],
+  "scope": "server lifetime, includes startup/routing preflight if present; not necessarily measured-window hits",
+  "raw_logs_preserved": true
+}

@@ -1,0 +1,125 @@
+{
+  "context_tokens": 131072,
+  "concurrency": 2,
+  "intended_requests": 2,
+  "completed_requests": 2,
+  "output_passed_requests": 2,
+  "batch_wall_s": 1541.2757260059998,
+  "submission_skew_s": 0.005188064999856579,
+  "ttft_ms": 901971.1609735,
+  "prefill_tps": 206.11761898990648,
+  "mean_request_decode_tps": 5.269096225323214,
+  "aggregate_decode_tps": 3.6930263968036208,
+  "end_to_end_output_tps": 2.5271273233461913,
+  "server_overlap": {
+    "source": "llama.cpp server metrics/slots sampler + llama.cpp server-log decode interleaving fallback",
+    "resident": true,
+    "active_overlap": true,
+    "queue_only": false,
+    "peak_processing": 0,
+    "peak_waiting": 0.0,
+    "peak_resident_slots": null,
+    "sample_count": 2,
+    "samples": [
+      {
+        "monotonic_s": 4740.86191485,
+        "processing": 0,
+        "waiting": 0.0,
+        "resident_slots": null,
+        "kv_usage": null,
+        "error": null,
+        "slots": [
+          {
+            "id": 0,
+            "n_ctx": 131072,
+            "speculative": false,
+            "is_processing": false
+          },
+          {
+            "id": 1,
+            "n_ctx": 131072,
+            "speculative": false,
+            "is_processing": false
+          }
+        ]
+      },
+      {
+        "monotonic_s": 4740.978117409,
+        "processing": 0,
+        "waiting": 0.0,
+        "resident_slots": null,
+        "kv_usage": null,
+        "error": null,
+        "slots": [
+          {
+            "id": 0,
+            "n_ctx": 131072,
+            "speculative": false,
+            "is_processing": false
+          },
+          {
+            "id": 1,
+            "n_ctx": 131072,
+            "speculative": false,
+            "is_processing": false
+          }
+        ]
+      }
+    ],
+    "log_fallback": {
+      "status": "OBSERVED",
+      "active_overlap": true,
+      "resident": true,
+      "queue_only": false,
+      "source": "runtime/server-0.log",
+      "method": "interleaved llama.cpp slot print_timing n_gen events",
+      "tasks": [
+        {
+          "slot_id": 0,
+          "task_id": 8,
+          "first_line": 383,
+          "last_line": 820,
+          "event_count": 221
+        },
+        {
+          "slot_id": 1,
+          "task_id": 9,
+          "first_line": 685,
+          "last_line": 807,
+          "event_count": 62
+        }
+      ],
+      "event_count": 283,
+      "limitation": "Positive proof only; absence of interleaving is UNKNOWN, not QUEUE_ONLY."
+    }
+  },
+  "c1_128k": false,
+  "c2_resident": true,
+  "c2_active": true,
+  "queue_only": false,
+  "peak_vram_gpu0_mib": 13159.0,
+  "peak_vram_gpu1_mib": 14247.0,
+  "gpu_peak_probe": {
+    "source": "nvidia-smi sampled during measured request window",
+    "interval_s": 0.5,
+    "samples": 2795,
+    "peak_memory_mib": {
+      "0": 13159.0,
+      "1": 14247.0
+    },
+    "error": null,
+    "limitation": "sampled peaks may miss between-sample transients"
+  },
+  "verdict": "PASS_C2_ACTIVE",
+  "concurrency_verdict": "PASS_C2_ACTIVE",
+  "mechanical_output_verdict": "PASS",
+  "speculative_evidence": {
+    "draft_tokens": 0.0,
+    "accepted_tokens": 0.0,
+    "draft_count": 0.0,
+    "acceptance_ratio": null
+  },
+  "total_output_tokens": 3895,
+  "candidate_id": "Q38-LLAMA-WBS5-R0-TARGET-B512-UB128",
+  "workload_manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca"
+}
