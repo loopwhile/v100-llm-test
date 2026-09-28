@@ -1,5 +1,14 @@
 # Current execution
 
+## WBS 5 Ornith 1.5 9B llama.cpp track result review — 2026-09-29
+
+- **5.3.2.4 DONE — REVIEW_COMPLETE / RECIPE_PENDING**. GPU inference 없이 publication된 R0/R1/R2 `performance/v1.json` evidence만 비교했다.
+- 세 run 모두 `PASS_C2_ACTIVE`, two-request output PASS, distinct backend routing, active overlap, `queue_only=false`, post-health healthy를 유지했다. performance workload에는 WBS3 semantic oracle이 없으므로 새 semantic PASS는 선언하지 않는다.
+- R1 `TARGET_UB256`은 R0 대비 TTFT **-23.52%**, Prefill **+30.73%**, Aggregate Decode **+4.08%**, End-to-End **+24.28%**, Batch Wall **-19.71%**이며 Mean Decode는 +0.40%, Peak VRAM은 GPU당 +52 MiB(+0.48%)였다. 의도한 prefill-side 효과가 확인되어 **final recipe 후보로 유지**한다.
+- R2 `NGRAM_DEFAULT`은 measured-window draft/accepted/draft_count가 모두 0이고 R0 대비 주요 차이가 3% 미만이다. NGRAM intended effect가 관측되지 않아 **branch 종료**하며 N/M tuning으로 확장하지 않는다.
+- R0는 reference/control로 유지한다. 이 review에서 새 candidate를 추가하지 않았고 추가 measured inference를 자동 실행하지 않는다.
+- 아직 `VALIDATED_RECIPE` 승격은 하지 않았다. 다음 Ornith 9B llama.cpp 작업은 R1 exact command/provenance/known limitations를 WBS5 final recipe recording contract에 맞춰 정리하는 단계다.
+
 ## WBS 5 Qwen3.8-27B llama.cpp 5.3.1.7 track result review — 2026-09-29
 
 - 상태: **DONE — TRACK REVIEW**. 추가 GPU inference 없이 publication된 4건(R0 repetition 2건, R1 NGRAM screening 1건, R2 UB256 screening 1건)의 raw artifact만 비교했다.
@@ -24,7 +33,7 @@
 - Ornith 35B `5.3.3.1` R0, `5.3.3.2` R1 재실행, `5.3.3.3` R2, `5.3.3.4` R3의 유효한 measured raw 4건을 공식 reporter로 report 4개와 `results/summary.csv` / `reports/comparison.csv`에 반영했다. 네 건 모두 두 요청 output PASS, `active_overlap=true`, `queue_only=false`, post-health healthy다.
 - R1 첫 시도 `EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-001`은 측정 전 18080 포트 충돌로 `INCONCLUSIVE`; raw만 보존하고 성능 report/CSV에서 제외했다. 사용자 지시로 동일 frozen configuration의 `EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002`를 실행했고 raw의 `runtime/retry-receipt.json` 및 report/CSV에 재실행 출처를 기록했다.
 - Ornith 35B R1 MTP counter는 `OBSERVED`: draft 2,426, accepted 1,838, acceptance ratio 0.7576. R0/R1/R2/R3의 성능 비교, 증거 해석 및 final recipe 승격은 **아직 수행하지 않았다**. `5.3.3.5` track result review는 **PENDING**이다.
-- Qwen llama.cpp `5.3.1.7` track review는 **DONE**이며 R2 UB256을 final recipe candidate로 유지한다. Ornith 9B llama.cpp `5.3.2.4` track review는 아직 미완료다. 다음 measured child를 자동 실행하지 않는다.
+- Qwen llama.cpp `5.3.1.7` track review는 **DONE**이며 R2 UB256을 final recipe candidate로 유지한다. Ornith 9B llama.cpp `5.3.2.4`도 **DONE — REVIEW_COMPLETE / RECIPE_PENDING**이다. 다음 measured child를 자동 실행하지 않는다.
 
 ## WBS 5 recovered measured results publication — 2026-09-28 (historical snapshot)
 
