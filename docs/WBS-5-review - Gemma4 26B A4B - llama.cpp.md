@@ -109,3 +109,22 @@ GPU MEASURED INFERENCE EXECUTED: NO
 | `G4-LCPP-WBS5-R3-TARGET-B512-UB128-GRAPHOFF` | `screening-1` | `CONDITIONAL_PENDING_GATE` | [JSON](../results/plans/wbs5-preparation-20260928/EXP-V100-WBS5-GEMMA-LLAMA-R3-PERF-20260928-001/candidate-plan.json) |
 
 공통 구현/guard/evidence 및 8D receipt 설명: [WBS5 preparation report](WBS-5-preparation-readiness.md). 다음 단계는 ChatGPT의 pre-run final validation이며 자동 measured 실행으로 이어지지 않는다.
+
+## 5.3.4.6 Measured track result review — 2026-09-29
+
+이 섹션은 위 pre-inference/static review 이후 실제 publication된 WBS5 raw를 대상으로 한 non-executable track review다. 새로운 GPU inference나 candidate 생성은 수행하지 않았다.
+
+| Candidate | TTFT | Prefill | Mean decode | Aggregate decode | E2E output | Batch wall | Peak VRAM GPU0/GPU1 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| R0 TARGET b512/ub128 | 439.10 s | 359.09 tok/s | 22.54 tok/s | 7.54 tok/s | 4.78 tok/s | 671.54 s | 10,039 / 10,537 MiB |
+| R1 NGRAM default | 448.49 s | 353.18 tok/s | 21.48 tok/s | 7.10 tok/s | 4.52 tok/s | 685.38 s | 10,039 / 10,607 MiB |
+| R2 TARGET b1024/ub128 | 440.10 s | 355.46 tok/s | 22.28 tok/s | 7.60 tok/s | 4.77 tok/s | 670.94 s | 10,039 / 10,537 MiB |
+
+- 세 measured run 모두 `PASS_C2_ACTIVE`, active overlap true, queue-only false, output minimum 충족, post-health healthy.
+- R1은 NGRAM draft 144 / accepted 54 / acceptance 37.5%였지만 R0 대비 mean decode -4.69%, aggregate -5.92%, E2E -5.56%, wall +2.06%로 실효 성능이 악화됐다. **R1 branch 종료**.
+- R2는 R0 대비 TTFT +0.23%, prefill -1.01%, mean decode -1.15%, aggregate +0.72%, E2E -0.22%, wall -0.09%다. intended TTFT/prefill improvement가 없고 차이는 3%보다 훨씬 작아 noise 가능성을 명시한다. 자동 confirm/repetition은 요구하지 않는다. **R2 branch 종료**.
+- R0 graph reuse 4,425회에도 VRAM upward drift나 graph-related instability가 없어 Gate B는 `NOT_TRIGGERED`; **R3 GRAPH-OFF는 정상 SKIP**.
+- Power/temp/clock envelope는 세 run이 유사했다. R0/R1/R2 GPU0 max power 169.00/169.35/168.88 W, GPU1 161.46/159.58/161.93 W; max temp는 각각 GPU0 61/60/61 C, GPU1 58/58/58 C; max SM clock 1,200 MHz, memory clock 877 MHz.
+- 요청별 decode 비대칭은 R0 약 41.26/3.82 tok/s, R2 약 40.81/3.75 tok/s로 유지되어 b1024가 기존 layer-split C2 topology behavior를 바꾼 evidence는 없다.
+- **Final recipe 승격 대상으로 남는 configuration은 R0 `G4-LCPP-WBS5-R0-TARGET-B512-UB128` 하나다.** 실제 recipe status publication은 WBS 5.5에서 처리하며 이 review 자체에서 `VALIDATED_RECIPE`를 선행 선언하지 않는다.
+
