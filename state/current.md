@@ -7,7 +7,7 @@
 - R2 `ORN35-LLAMA-WBS5-R2-UB256`: **VALIDATED_RECIPE — LONG_PREFILL_LATENCY_ORIENTED**. `b=512` 유지 / `ub=128 -> 256`만 변경해 prefill +20.03%, TTFT -15.33%, batch wall -11.68%; peak VRAM은 +272 MiB/GPU. Decode speedup은 주장하지 않는다.
 - R0는 canonical measured reference baseline으로 유지한다. R3 `CUDA_SCALE_LAUNCH_QUEUES=4x`는 env가 실제 적용됐지만 R0 대비 핵심 metric이 약 ±0.1% 내이고 peak VRAM/output text도 동일해 **CLOSED — NO MEASURABLE BENEFIT**.
 - Aggregate/mean request decode는 serialized prefill/scheduling 영향을 포함하므로 pure decode-kernel metric으로 해석하지 않는다. R1+R2 additivity는 검증되지 않았으며 combined/new candidate를 추가하지 않는다.
-- Qwen `5.3.1.7`과 Ornith 9B `5.3.2.4` review도 완료됐다. 남은 llama.cpp track review는 Gemma4 `5.3.4.6`이며, 다음 measured child를 자동 실행하지 않는다.
+- Qwen `5.3.1.7`, Ornith 9B `5.3.2.4`, Gemma4 `5.3.4.6` review도 완료됐다. llama.cpp 네 track review가 모두 완료됐으며, 다음 measured child를 자동 실행하지 않는다.
 
 ## WBS 5 Ornith 1.5 9B llama.cpp track result review — 2026-09-29
 
@@ -29,12 +29,13 @@
 - 결정: **R2 `Q38-LLAMA-WBS5-R2-TARGET-UB256`을 final recipe candidate로 유지**한다. R1/R2 optional confirm은 기존 사용자 결정대로 SKIP하며, 새 candidate를 추가하지 않는다. Qwen llama.cpp 5.3.1.7 review 완료.
 
 
-## WBS 5 Gemma4 llama.cpp measured results publication and Gate B — 2026-09-29
+## WBS 5 Gemma4 llama.cpp 5.3.4.6 track result review — 2026-09-29
 
-- 현재 단계: **PARTIAL_MEASURED_RESULTS_PUBLISHED**. 공식 WBS5 performance report/CSV는 총 14건(Qwen llama.cpp 4건, Ornith 1.5 9B llama.cpp 3건, Ornith 1.5 35B llama.cpp 4건, Gemma4 llama.cpp 3건)이며 모두 저장된 최종 verdict `PASS_C2_ACTIVE`다.
-- Gemma4 llama.cpp R0/R1/R2 measured raw 3건을 공식 reporter로 report 3개와 `results/summary.csv` / `reports/comparison.csv`에 반영했다. 세 건 모두 두 요청 output PASS, `active_overlap=true`, `queue_only=false`, post-health healthy다. 성능 비교와 final recipe 승격은 아직 수행하지 않았다.
-- R0 raw로 5.3.4.4 Gate B를 평가한 결과 **`NOT_TRIGGERED`**: 모델 로딩 후 VRAM은 약 10분 33초 동안 10,033/10,531 MiB로 일정했고 종료 직전 양쪽 GPU에서 단발성 6 MiB 증가만 있었다. graph reuse 4,425회가 기록됐고 graph-related instability는 관찰되지 않았다.
-- 5.3.4.5 R3 GRAPH-OFF는 **SKIP**. Gate B PASS receipt는 발급하지 않는다. 다음 Gemma 작업은 5.3.4.6 track result review다.
+- Gemma4 llama.cpp R0/R1/R2 measured raw 3건은 모두 `PASS_C2_ACTIVE`, 두 요청 output PASS, `active_overlap=true`, `queue_only=false`, post-health healthy다.
+- **5.3.4.6 review 완료.** R1 NGRAM은 acceptance 37.5%가 관찰됐지만 R0 대비 mean decode -4.69%, aggregate -5.92%, E2E -5.56%, wall +2.06%로 실효 성능이 악화되어 branch 종료한다.
+- R2 b1024는 TTFT +0.23%, prefill -1.01%, mean decode -1.15%, aggregate +0.72%, E2E -0.22%, wall -0.09%로 intended TTFT/prefill improvement가 없었다. 모두 3%보다 작은 차이이므로 noise 가능성을 명시하며 자동 반복 없이 branch 종료한다.
+- R0 raw의 graph reuse 4,425회에도 VRAM upward drift / graph instability가 없어 Gate B는 `NOT_TRIGGERED`; R3 GRAPH-OFF는 정상 SKIP을 유지한다.
+- **R0 `G4-LCPP-WBS5-R0-TARGET-B512-UB128`만 WBS 5.5 final recipe 승격 대상으로 유지한다.** 이 review에서 새 candidate나 추가 GPU inference를 만들지 않는다.
 
 ## WBS 5 Ornith 1.5 35B llama.cpp measured results publication — 2026-09-29
 
@@ -42,7 +43,7 @@
 - Ornith 35B `5.3.3.1` R0, `5.3.3.2` R1 재실행, `5.3.3.3` R2, `5.3.3.4` R3의 유효한 measured raw 4건을 공식 reporter로 report 4개와 `results/summary.csv` / `reports/comparison.csv`에 반영했다. 네 건 모두 두 요청 output PASS, `active_overlap=true`, `queue_only=false`, post-health healthy다.
 - R1 첫 시도 `EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-001`은 측정 전 18080 포트 충돌로 `INCONCLUSIVE`; raw만 보존하고 성능 report/CSV에서 제외했다. 사용자 지시로 동일 frozen configuration의 `EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002`를 실행했고 raw의 `runtime/retry-receipt.json` 및 report/CSV에 재실행 출처를 기록했다.
 - Ornith 35B R1 MTP counter는 `OBSERVED`: draft 2,426, accepted 1,838, acceptance ratio 0.7576. 이후 `5.3.3.5` track result review를 완료해 R1을 decode-oriented, R2를 long-prefill/latency-oriented `VALIDATED_RECIPE`로 승격했다. R0는 reference baseline, R3는 no-benefit branch 종료다.
-- Qwen llama.cpp `5.3.1.7`은 **DONE**(R2 UB256 final recipe candidate), Ornith 9B llama.cpp `5.3.2.4`도 **DONE — REVIEW_COMPLETE / RECIPE_PENDING**, Ornith 35B `5.3.3.5`도 **DONE**(R1/R2 workload-oriented `VALIDATED_RECIPE`)이다. Gemma4 `5.3.4.6` review는 아직 미완료다. 다음 measured child를 자동 실행하지 않는다.
+- Qwen llama.cpp `5.3.1.7`은 **DONE**(R2 UB256 final recipe candidate), Ornith 9B `5.3.2.4`는 **DONE — REVIEW_COMPLETE / RECIPE_PENDING**, Ornith 35B `5.3.3.5`는 **DONE**(R1/R2 workload-oriented `VALIDATED_RECIPE`), Gemma4 `5.3.4.6`도 **DONE — R0 RETAINED**이다. 다음 measured child를 자동 실행하지 않는다.
 
 ## WBS 5 recovered measured results publication — 2026-09-28 (historical snapshot)
 
