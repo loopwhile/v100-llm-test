@@ -352,6 +352,12 @@ class EvidenceTests(unittest.TestCase):
         adapter = Mock(_probe_samples=[{"monotonic_s": 20.5, "slots": [slot]}], spec=["_probe_samples"])
         self.assertEqual(e.slot_progress(adapter)["status"], "OBSERVED")
         self.assertIsNone(e.slot_rows([{"id": 0, "is_processing": True}], 21)[0]["n_prompt_tokens_processed"])
+        list_next_token = {"id": 0, "id_task": 74, "is_processing": True, "next_token": []}
+        list_row = e.slot_rows([list_next_token], 21.5)[0]
+        self.assertEqual((list_row["slot_id"], list_row["task_id"], list_row["is_processing"]), (0, 74, True))
+        self.assertIsNone(list_row["n_prompt_tokens_processed"])
+        self.assertIsNone(list_row["n_past"])
+        self.assertIsNone(list_row["n_decoded"])
         with tempfile.TemporaryDirectory() as td:
             path = Path(td) / "progress.jsonl"
             e.persist_slot_sample(path, adapter._probe_samples[0])
