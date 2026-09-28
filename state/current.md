@@ -1,5 +1,14 @@
 # Current execution
 
+## WBS 5.3.3.5 Ornith 1.5 35B llama.cpp track result review — 2026-09-29
+
+- 상태: **DONE**. 추가 GPU inference 없이 published R0/R1/R2/R3 raw/report와 frozen one-variable delta만 재검토했다. 상세 문서: `docs/WBS-5.3.3.5-result-review.md`.
+- R1 `ORN35-LLAMA-WBS5-R1-MTP1`: **VALIDATED_RECIPE — DECODE_ORIENTED**. Native MTP1 acceptance 75.76% (1,838/2,426), request-A runtime decode +13.70%, mean request decode +12.49%; 대신 prefill -4.51%, TTFT +5.26%, batch wall +5.65%, GPU1 peak +1,428 MiB.
+- R2 `ORN35-LLAMA-WBS5-R2-UB256`: **VALIDATED_RECIPE — LONG_PREFILL_LATENCY_ORIENTED**. `b=512` 유지 / `ub=128 -> 256`만 변경해 prefill +20.03%, TTFT -15.33%, batch wall -11.68%; peak VRAM은 +272 MiB/GPU. Decode speedup은 주장하지 않는다.
+- R0는 canonical measured reference baseline으로 유지한다. R3 `CUDA_SCALE_LAUNCH_QUEUES=4x`는 env가 실제 적용됐지만 R0 대비 핵심 metric이 약 ±0.1% 내이고 peak VRAM/output text도 동일해 **CLOSED — NO MEASURABLE BENEFIT**.
+- Aggregate/mean request decode는 serialized prefill/scheduling 영향을 포함하므로 pure decode-kernel metric으로 해석하지 않는다. R1+R2 additivity는 검증되지 않았으며 combined/new candidate를 추가하지 않는다.
+- 다음 남은 llama.cpp track review는 Qwen `5.3.1.7`, Ornith 9B `5.3.2.4`, Gemma4 `5.3.4.6`이다. 다음 measured child를 자동 실행하지 않는다.
+
 ## WBS 5 Gemma4 llama.cpp measured results publication and Gate B — 2026-09-29
 
 - 현재 단계: **PARTIAL_MEASURED_RESULTS_PUBLISHED**. 공식 WBS5 performance report/CSV는 총 14건(Qwen llama.cpp 4건, Ornith 1.5 9B llama.cpp 3건, Ornith 1.5 35B llama.cpp 4건, Gemma4 llama.cpp 3건)이며 모두 저장된 최종 verdict `PASS_C2_ACTIVE`다.
@@ -12,8 +21,8 @@
 - 현재 단계: **PARTIAL_MEASURED_RESULTS_PUBLISHED**. 공식 WBS5 performance report/CSV는 총 11건(Qwen llama.cpp 4건, Ornith 1.5 9B llama.cpp 3건, Ornith 1.5 35B llama.cpp 4건)이며 11건 모두 저장된 최종 verdict `PASS_C2_ACTIVE`다.
 - Ornith 35B `5.3.3.1` R0, `5.3.3.2` R1 재실행, `5.3.3.3` R2, `5.3.3.4` R3의 유효한 measured raw 4건을 공식 reporter로 report 4개와 `results/summary.csv` / `reports/comparison.csv`에 반영했다. 네 건 모두 두 요청 output PASS, `active_overlap=true`, `queue_only=false`, post-health healthy다.
 - R1 첫 시도 `EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-001`은 측정 전 18080 포트 충돌로 `INCONCLUSIVE`; raw만 보존하고 성능 report/CSV에서 제외했다. 사용자 지시로 동일 frozen configuration의 `EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002`를 실행했고 raw의 `runtime/retry-receipt.json` 및 report/CSV에 재실행 출처를 기록했다.
-- Ornith 35B R1 MTP counter는 `OBSERVED`: draft 2,426, accepted 1,838, acceptance ratio 0.7576. R0/R1/R2/R3의 성능 비교, 증거 해석 및 final recipe 승격은 **아직 수행하지 않았다**. `5.3.3.5` track result review는 **PENDING**이다.
-- Qwen llama.cpp `5.3.1.7`과 Ornith 9B llama.cpp `5.3.2.4` track review도 미완료다. 다음 measured child를 자동 실행하지 않는다.
+- Ornith 35B R1 MTP counter는 `OBSERVED`: draft 2,426, accepted 1,838, acceptance ratio 0.7576. 이후 `5.3.3.5` track result review를 완료해 R1을 decode-oriented, R2를 long-prefill/latency-oriented `VALIDATED_RECIPE`로 승격했다. R0는 reference baseline, R3는 no-benefit branch 종료다.
+- Qwen llama.cpp `5.3.1.7`, Ornith 9B llama.cpp `5.3.2.4`, Gemma4 llama.cpp `5.3.4.6` track review는 미완료다. 다음 measured child를 자동 실행하지 않는다.
 
 ## WBS 5 recovered measured results publication — 2026-09-28 (historical snapshot)
 
