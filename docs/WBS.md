@@ -852,7 +852,7 @@ report/publication/WBS/state/Git closeout은 measured child의 책임이 아니�
 
 ### 5.3 llama.cpp frozen tracks
 
-#### 5.3.1 Qwen3.8-27B / llama.cpp [NON-EXECUTABLE PARENT — FROZEN / READY_FOR_MEASURED_EXECUTION]
+#### 5.3.1 Qwen3.8-27B / llama.cpp [NON-EXECUTABLE PARENT — FROZEN / R0-R2 MEASURED_PUBLISHED / REVIEW_DONE]
 
 Frozen candidates:
 
@@ -891,7 +891,7 @@ LOCAL_VERIFY_REQUIRED:
 - 4건 모두 `runtime/measurement.log`에 slot sampler의 `AttributeError: 'list' object has no attribute 'get'`가 있다. live sampler는 2 samples / peak processing 0만 기록했으므로, active overlap 근거는 `runtime/server-0.log`의 decode interleaving과 `log-overlap-evidence.json`이다.
 - R0 repetition-1의 `wbs5-evidence.json`에는 보정 전 `c2_active: null` / `UNKNOWN`이 남아 있다. 공식 reporter는 보정된 `completion.json`/`metrics.json`을 사용하며 이 snapshot 차이는 그대로 보존한다.
 - Requests의 PASS와 `mechanical_output_verdict: PASS`는 raw에 기록된 판정이다. 별도 `acceptance-review.json`은 없으며, 새 semantic audit나 winner 선정은 수행하지 않았다.
-- 5.3.1.5/5.3.1.6 optional confirm은 2026-09-28 사용자 결정으로 **SKIP**한다. 미실행 / raw 없음이며 measured DONE이나 PASS로 취급하지 않는다. 5.3.1.7 track review와 final recipe 승격은 완료 처리하지 않는다.
+- 5.3.1.5/5.3.1.6 optional confirm은 2026-09-28 사용자 결정으로 **SKIP**한다. 미실행 / raw 없음이며 measured DONE이나 PASS로 취급하지 않는다. 5.3.1.7 track review는 2026-09-29 완료했으며, 추가 confirm이나 새 candidate 없이 R2를 **final recipe candidate**로 유지한다.
 
 ##### 5.3.1.1 Qwen3.8 llama.cpp — R0 repetition-1 measured [DONE — PASS_C2_ACTIVE]
 
@@ -963,9 +963,72 @@ python3 scripts/run_wbs5_remote.py --track qwen-llama --candidate R1 --experimen
 python3 scripts/run_wbs5_remote.py --track qwen-llama --candidate R2 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-002 --run-label confirm-1 --execute-measured
 ```
 
-##### 5.3.1.7 Qwen3.8 llama.cpp — track result review
+##### 5.3.1.7 Qwen3.8 llama.cpp — track result review [DONE — R2 FINAL RECIPE CANDIDATE]
 
-GPU inference 없음. 완료된 R0 repetition 2건과 R1/R2 screening 각 1건의 evidence를 비교한다. TTFT, prefill, mean request decode, aggregate decode, end-to-end TPS, batch wall, VRAM, output integrity, NGRAM counter를 정리하되 이 단계에서 새로운 tuning candidate를 만들지 않는다. R1/R2 optional confirm은 사용자 결정으로 SKIP했으며, 추가 confirm 없이 현재 4건의 evidence 범위와 한계를 명시한다.
+상태: **DONE — TRACK REVIEW** (2026-09-29). 이번 review에서는 GPU inference를 추가 실행하지 않았고, 이미 publication된 R0 repetition 2건과 R1/R2 screening 각 1건의 raw artifact만 사용했다. R1/R2 optional confirm은 5.3.1.5/5.3.1.6의 사용자 결정대로 **SKIP** 상태를 유지하며, frozen candidate 밖의 새 tuning candidate를 추가하지 않는다.
+
+검토 대상:
+- R0 repetition-1: `EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-001`
+- R0 repetition-2: `EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-002`
+- R1 NGRAM screening: `EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-001`
+- R2 UB256 screening: `EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001`
+
+| Metric | R0 rep-1 | R0 rep-2 | R1 NGRAM | R2 UB256 |
+|---|---:|---:|---:|---:|
+| Verdict | `PASS_C2_ACTIVE` | `PASS_C2_ACTIVE` | `PASS_C2_ACTIVE` | `PASS_C2_ACTIVE` |
+| TTFT | 901.97 s | 904.12 s | 904.45 s | **679.05 s** |
+| Prefill | 206.12 tok/s | 178.23 tok/s | 178.17 tok/s | **264.11 tok/s** |
+| Mean request decode | 5.269 tok/s | 5.385 tok/s | 5.559 tok/s | 5.593 tok/s |
+| Aggregate decode | 3.693 tok/s | 3.958 tok/s | 3.998 tok/s | 4.514 tok/s |
+| End-to-end output | 2.527 tok/s | 2.732 tok/s | 2.744 tok/s | 3.457 tok/s |
+| Batch wall | 1541.28 s | 1580.35 s | 1560.73 s | **1337.27 s** |
+| Total output | 3895 | 4318 | 4283 | 4623 |
+| Peak VRAM GPU0 | 13159 MiB | 13159 MiB | 13161 MiB | 13447 MiB |
+| Peak VRAM GPU1 | 14247 MiB | 14245 MiB | 14249 MiB | 14533 MiB |
+| Graph reuse evidence | 5096 | 5521 | 5081 | 4339 |
+| Speculative acceptance | N/A | N/A | **323 / 985 = 32.79%** | N/A |
+
+Capacity / stability:
+- 네 run 모두 `PASS_C2_ACTIVE`, `c2_resident=true`, `c2_active=true`, `queue_only=false`, post-health healthy다.
+- R2는 `--ubatch-size 128 -> 256` 이후에도 OOM, allocator/runtime crash, queue-only 퇴행 없이 완료됐다.
+- R2 peak VRAM은 R0 대비 GPU당 약 **+286~288 MiB** 증가했다. V100 16 GiB에서 GPU1 sampled peak는 14533 MiB였으며, 0.5 s sampler가 transient peak를 놓칠 수 있다는 기존 limitation은 유지한다.
+
+Output integrity:
+- 네 run 모두 두 request가 `minimum_output_tokens=1024`를 넘기고 `finish_reason=stop`, request verdict `PASS`, `mechanical_output_verdict=PASS`를 기록했다.
+- 이 WBS5 performance lane에는 별도 task-level semantic oracle/acceptance review가 없으므로, 이번 review는 mechanical output integrity와 non-truncated completion까지만 확정한다. WBS3 semantic evidence를 WBS5의 새 semantic 판정으로 재사용하지 않는다.
+
+TTFT / prefill:
+- R2 평균 TTFT 679.05 s는 R0 901.97/904.12 s 대비 약 **24.7~24.9% 감소**했다. R0 두 repetition의 TTFT 자체는 약 0.24% 범위로 좁아, R2 TTFT 변화는 3% 수준의 미세 차이로 보지 않는다.
+- R2 request-level llama.cpp prompt timing도 감소했다. 비교가 깨끗한 R0 rep-2 대비 project-a `prompt_ms 1318781.5 -> 1044847.8` (약 -20.8%), project-b `488036.3 -> 312211.5` (약 -36.0%)다.
+- `prefill_tps`는 request별 server `prompt_per_second`의 산술평균이다. 따라서 `prompt_tokens / mean(prefill_tps)`를 평균 TTFT와 직접 비교해 별도 고정 overhead를 역산하지 않는다.
+- R0 rep-1 project-b에는 server `prompt_ms≈839.95 s` 대비 client TTFT `≈1317.42 s`의 추가 지연이 관찰되므로, R0 rep-1의 평균 prefill 값만으로 noise floor를 단정하지 않는다.
+- Intended effect 관점에서는 R2가 두 request의 실제 server prompt processing을 모두 단축했으므로, `ubatch=256`의 long-context prefill/TTFT 개선 신호는 직접 관찰됐다.
+
+Decode / aggregate / end-to-end:
+- R2 mean request decode 5.593 tok/s는 R0 5.269/5.385 tok/s 대비 약 +3.9~6.1%다. 이를 큰 decode optimization으로 해석하지 않고 **decode 유지 + 약한 개선 신호**로 취급한다.
+- `scripts/bench_harness.py`의 `aggregate_decode_tps`는 pure decode-only window가 아니다. 구현은 `total output tokens / (max(end_abs) - min(first_abs))`이므로, 첫 request first-token 이후 다른 request의 prefill/scheduling overlap도 포함한다. 따라서 R2의 aggregate 4.514 tok/s를 GPU decode kernel 자체의 +18% 개선으로 해석하지 않는다.
+- `end_to_end_output_tps = total_output_tokens / batch_wall_s`이며 R2 output length가 R0보다 길다. 관측값 3.457 tok/s의 상승은 유효한 run-level efficiency signal이지만, 전체 상승률을 `ubatch=256`의 순수 causal speedup으로 사용하지 않는다.
+- 반면 R2는 R0보다 더 많은 output tokens(4623)를 생성하면서도 batch wall이 1337.27 s로 R0 1541.28/1580.35 s보다 약 **13.2~15.4% 짧았다**. TTFT/prompt-processing 개선이 batch completion time 개선으로 이어졌다는 근거로 사용한다.
+
+Power / temperature / clocks / graph:
+- raw telemetry에서 R2 power/temperature/clocks가 R0와 다른 성능 상태로 급변했다는 evidence는 없다. R2 sampled max temperature는 GPU0 72 C / GPU1 63 C, max SM clock은 양쪽 1200 MHz였고, post-health는 healthy다.
+- CUDA Graph reuse는 네 run 모두 `OBSERVED`다. 다만 `graph-evidence.json`의 reuse count는 server lifetime 범위이며 startup/routing preflight를 포함할 수 있어 measured-window hit rate나 후보 간 성능 비율로 비교하지 않는다. R2에서 graph path가 깨졌다는 evidence는 없다.
+
+Speculative / R1 판정:
+- R1은 draft 985, accepted 323, draft_count 21, acceptance ratio **32.79%**로 ngram-simple activity가 실제 발생했다.
+- accepted/output coverage는 323 / 4283 ≈ **7.54%**다. 그러나 verify cost, host-side history scan, accepted span을 포함한 speculative 비용은 비선형이므로 이 coverage에서 theoretical speedup upper bound를 계산하지 않는다.
+- R1은 R0 rep-2 대비 TTFT +0.04%, prefill -0.03%, mean request decode +3.23%, aggregate +1.02%, E2E +0.44%, batch wall -1.24%로 대부분 3% 전후 또는 그 이하다. R0 반복 variability와 output-length 차이를 고려하면 **recipe-level 성능 이득이 입증됐다고 보지 않는다**.
+- 결정: **R1 candidate branch 종료**. NGRAM mechanism이 동작했다는 evidence는 보존하지만, frozen plan 밖의 NGRAM parameter tuning으로 확장하지 않는다.
+
+R2 판정:
+- R2의 intended effect는 128K x2 long-context prefill/TTFT 개선이며, request-level server prompt timing, 평균 TTFT, batch wall에서 같은 방향의 큰 변화가 관찰됐다.
+- 비용은 GPU당 약 +0.29 GiB VRAM이며 capacity/stability, mechanical output integrity, C2 active topology, post-health를 유지했다.
+- 결정: **R2를 Qwen3.8-27B / llama.cpp WBS5 final recipe candidate로 유지**한다. 이는 이번 track review의 candidate selection이며, optional confirm을 다시 열거나 새 candidate를 추가하는 결정이 아니다.
+
+한계 / 종료:
+- R2와 R1은 각각 screening 1회(n=1)이며 optional confirm은 사용자 결정으로 SKIP했다. 이 limitation을 그대로 보존하고 추가 반복 실행을 자동 요구하지 않는다.
+- `aggregate_decode_tps`와 end-to-end TPS는 각각 overlap window와 output length 영향을 포함하므로 pure decode speedup 근거로 사용하지 않는다.
+- 추가 GPU inference 없음. 다음 frozen candidate는 없으며, 이 track review에서 새 candidate를 생성하지 않는다.
 
 #### 5.3.2 Ornith 1.5 9B / llama.cpp [NON-EXECUTABLE PARENT — FROZEN / R0-R2 MEASURED_PUBLISHED / REVIEW_COMPLETE / RECIPE_PENDING]
 
