@@ -7,7 +7,27 @@
 - R2 `ORN35-LLAMA-WBS5-R2-UB256`: **VALIDATED_RECIPE — LONG_PREFILL_LATENCY_ORIENTED**. `b=512` 유지 / `ub=128 -> 256`만 변경해 prefill +20.03%, TTFT -15.33%, batch wall -11.68%; peak VRAM은 +272 MiB/GPU. Decode speedup은 주장하지 않는다.
 - R0는 canonical measured reference baseline으로 유지한다. R3 `CUDA_SCALE_LAUNCH_QUEUES=4x`는 env가 실제 적용됐지만 R0 대비 핵심 metric이 약 ±0.1% 내이고 peak VRAM/output text도 동일해 **CLOSED — NO MEASURABLE BENEFIT**.
 - Aggregate/mean request decode는 serialized prefill/scheduling 영향을 포함하므로 pure decode-kernel metric으로 해석하지 않는다. R1+R2 additivity는 검증되지 않았으며 combined/new candidate를 추가하지 않는다.
-- 다음 남은 llama.cpp track review는 Qwen `5.3.1.7`, Ornith 9B `5.3.2.4`, Gemma4 `5.3.4.6`이다. 다음 measured child를 자동 실행하지 않는다.
+- Qwen `5.3.1.7`과 Ornith 9B `5.3.2.4` review도 완료됐다. 남은 llama.cpp track review는 Gemma4 `5.3.4.6`이며, 다음 measured child를 자동 실행하지 않는다.
+
+## WBS 5 Ornith 1.5 9B llama.cpp track result review — 2026-09-29
+
+- **5.3.2.4 DONE — REVIEW_COMPLETE / RECIPE_PENDING**. GPU inference 없이 publication된 R0/R1/R2 `performance/v1.json` evidence만 비교했다.
+- 세 run 모두 `PASS_C2_ACTIVE`, two-request output PASS, distinct backend routing, active overlap, `queue_only=false`, post-health healthy를 유지했다. performance workload에는 WBS3 semantic oracle이 없으므로 새 semantic PASS는 선언하지 않는다.
+- R1 `TARGET_UB256`은 R0 대비 TTFT **-23.52%**, Prefill **+30.73%**, Aggregate Decode **+4.08%**, End-to-End **+24.28%**, Batch Wall **-19.71%**이며 Mean Decode는 +0.40%, Peak VRAM은 GPU당 +52 MiB(+0.48%)였다. 의도한 prefill-side 효과가 확인되어 **final recipe 후보로 유지**한다.
+- R2 `NGRAM_DEFAULT`은 measured-window draft/accepted/draft_count가 모두 0이고 R0 대비 주요 차이가 3% 미만이다. NGRAM intended effect가 관측되지 않아 **branch 종료**하며 N/M tuning으로 확장하지 않는다.
+- R0는 reference/control로 유지한다. 이 review에서 새 candidate를 추가하지 않았고 추가 measured inference를 자동 실행하지 않는다.
+- 아직 `VALIDATED_RECIPE` 승격은 하지 않았다. 다음 Ornith 9B llama.cpp 작업은 R1 exact command/provenance/known limitations를 WBS5 final recipe recording contract에 맞춰 정리하는 단계다.
+
+## WBS 5 Qwen3.8-27B llama.cpp 5.3.1.7 track result review — 2026-09-29
+
+- 상태: **DONE — TRACK REVIEW**. 추가 GPU inference 없이 publication된 4건(R0 repetition 2건, R1 NGRAM screening 1건, R2 UB256 screening 1건)의 raw artifact만 비교했다.
+- 네 run 모두 `PASS_C2_ACTIVE`, 두 request mechanical output PASS, `active_overlap=true`, `queue_only=false`, post-health healthy를 유지했다.
+- R1 NGRAM은 draft 985 / accepted 323 / acceptance 32.79%로 speculative activity가 실제 관찰됐지만, R0 rep-2 대비 TTFT +0.04%, prefill -0.03%, mean request decode +3.23%, aggregate +1.02%, E2E +0.44%, batch wall -1.24%로 recipe-level 성능 이득이 baseline variability를 넘어섰다고 보지 않는다. **R1 branch 종료**.
+- R2 UB256은 R0 대비 `--ubatch-size 128 -> 256`만 변경했다. 평균 TTFT 679.05 s로 R0 901.97/904.12 s 대비 약 24.7~24.9% 감소했고, batch wall 1337.27 s로 R0 대비 약 13.2~15.4% 단축됐다. request-level server prompt timing도 R0 rep-2 대비 project-a 약 -20.8%, project-b 약 -36.0%로 감소했다.
+- R2 mean request decode는 5.593 tok/s로 decode 자체는 **유지 + 약한 개선 신호**로만 해석한다. `aggregate_decode_tps`는 harness상 earliest first-token부터 latest end까지의 overlap window를 포함하고, E2E는 output length 영향을 받으므로 pure decode speedup으로 해석하지 않는다.
+- R2 peak VRAM은 13,447 / 14,533 MiB로 R0 대비 GPU당 약 +286~288 MiB. OOM/allocator/runtime failure 없이 C2 active topology와 post-health를 유지했다.
+- 결정: **R2 `Q38-LLAMA-WBS5-R2-TARGET-UB256`을 final recipe candidate로 유지**한다. R1/R2 optional confirm은 기존 사용자 결정대로 SKIP하며, 새 candidate를 추가하지 않는다. Qwen llama.cpp 5.3.1.7 review 완료.
+
 
 ## WBS 5 Gemma4 llama.cpp measured results publication and Gate B — 2026-09-29
 
@@ -22,7 +42,7 @@
 - Ornith 35B `5.3.3.1` R0, `5.3.3.2` R1 재실행, `5.3.3.3` R2, `5.3.3.4` R3의 유효한 measured raw 4건을 공식 reporter로 report 4개와 `results/summary.csv` / `reports/comparison.csv`에 반영했다. 네 건 모두 두 요청 output PASS, `active_overlap=true`, `queue_only=false`, post-health healthy다.
 - R1 첫 시도 `EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-001`은 측정 전 18080 포트 충돌로 `INCONCLUSIVE`; raw만 보존하고 성능 report/CSV에서 제외했다. 사용자 지시로 동일 frozen configuration의 `EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002`를 실행했고 raw의 `runtime/retry-receipt.json` 및 report/CSV에 재실행 출처를 기록했다.
 - Ornith 35B R1 MTP counter는 `OBSERVED`: draft 2,426, accepted 1,838, acceptance ratio 0.7576. 이후 `5.3.3.5` track result review를 완료해 R1을 decode-oriented, R2를 long-prefill/latency-oriented `VALIDATED_RECIPE`로 승격했다. R0는 reference baseline, R3는 no-benefit branch 종료다.
-- Qwen llama.cpp `5.3.1.7`, Ornith 9B llama.cpp `5.3.2.4`, Gemma4 llama.cpp `5.3.4.6` track review는 미완료다. 다음 measured child를 자동 실행하지 않는다.
+- Qwen llama.cpp `5.3.1.7`은 **DONE**(R2 UB256 final recipe candidate), Ornith 9B llama.cpp `5.3.2.4`도 **DONE — REVIEW_COMPLETE / RECIPE_PENDING**, Ornith 35B `5.3.3.5`도 **DONE**(R1/R2 workload-oriented `VALIDATED_RECIPE`)이다. Gemma4 `5.3.4.6` review는 아직 미완료다. 다음 measured child를 자동 실행하지 않는다.
 
 ## WBS 5 recovered measured results publication — 2026-09-28 (historical snapshot)
 
