@@ -1,0 +1,49 @@
+{
+  "status": "OBSERVED",
+  "reuse_count": 2849,
+  "items": [
+    {
+      "source": "runtime/server-0.log",
+      "slot_id": 0,
+      "task_id": 34,
+      "lines": [
+        35
+      ],
+      "reuse_count": 14,
+      "status": "OBSERVED"
+    },
+    {
+      "source": "runtime/server-0.log",
+      "slot_id": 0,
+      "task_id": 72,
+      "lines": [
+        291
+      ],
+      "reuse_count": 1444,
+      "status": "OBSERVED"
+    },
+    {
+      "source": "runtime/server-1.log",
+      "slot_id": 0,
+      "task_id": 34,
+      "lines": [
+        35
+      ],
+      "reuse_count": 14,
+      "status": "OBSERVED"
+    },
+    {
+      "source": "runtime/server-1.log",
+      "slot_id": 0,
+      "task_id": 79,
+      "lines": [
+        291
+      ],
+      "reuse_count": 1377,
+      "status": "OBSERVED"
+    }
+  ],
+  "ambiguous_lines": [],
+  "scope": "server lifetime, includes startup/routing preflight if present; not necessarily measured-window hits",
+  "raw_logs_preserved": true
+}

@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "candidate_id": "TARGET_BASELINE",
+  "run_identity": {
+    "label": "screening-1",
+    "kind": "screening",
+    "index": 1,
+    "automatic_retry": false,
+    "automatic_confirm": false,
+    "batches_in_this_invocation": 1
+  },
+  "workload_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+  "launch_command": "docker run --cidfile /home/loopwhile/v100-llm-test-wbs5-manual/416817e5f2a8-ornith9-llama-20260928/results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260928-001/runtime/container-0.cid --label experiment=EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260928-001 --rm --pull=never --name exp-v100-orn15-9b-llama-target-b512-ub128-1gpu2-c2-perf-20260928-001-backend-0 --label project=v100-llm-test --gpus device=0 -p 127.0.0.1:18080:8080 -v /srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf:/model/target.gguf:ro --entrypoint llama-server kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149 -m /model/target.gguf --host 0.0.0.0 --port 8080 -ngl all --ctx-size 131072 --parallel 1 --kv-unified --kv-unified-per-slot 131072 --batch-size 512 --ubatch-size 128 --cache-type-k f16 --cache-type-v f16 --flash-attn on --spec-type none --jinja --reasoning off --metrics --slots --no-warmup\ndocker run --cidfile /home/loopwhile/v100-llm-test-wbs5-manual/416817e5f2a8-ornith9-llama-20260928/results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260928-001/runtime/container-1.cid --label experiment=EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260928-001 --rm --pull=never --name exp-v100-orn15-9b-llama-target-b512-ub128-1gpu2-c2-perf-20260928-001-backend-1 --label project=v100-llm-test --gpus device=1 -p 127.0.0.1:18081:8080 -v /srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf:/model/target.gguf:ro --entrypoint llama-server kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149 -m /model/target.gguf --host 0.0.0.0 --port 8080 -ngl all --ctx-size 131072 --parallel 1 --kv-unified --kv-unified-per-slot 131072 --batch-size 512 --ubatch-size 128 --cache-type-k f16 --cache-type-v f16 --flash-attn on --spec-type none --jinja --reasoning off --metrics --slots --no-warmup\ndocker run --cidfile /home/loopwhile/v100-llm-test-wbs5-manual/416817e5f2a8-ornith9-llama-20260928/results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260928-001/runtime/container-gateway.cid --label experiment=EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260928-001 --rm --pull=never --name exp-v100-orn15-9b-llama-target-b512-ub128-1gpu2-c2-perf-20260928-001-gateway --label project=v100-llm-test --network host -v /home/loopwhile/v100-llm-test-wbs5-manual/416817e5f2a8-ornith9-llama-20260928/results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260928-001/runtime/litellm-config.yaml:/app/config.yaml:ro ghcr.io/berriai/litellm:v1.101.0 --config /app/config.yaml --host 127.0.0.1 --port 18079",
+  "effective_environment": [
+    {
+      "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "LANG": "C.UTF-8",
+      "HOME": "/home/loopwhile"
+    },
+    {
+      "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "LANG": "C.UTF-8",
+      "HOME": "/home/loopwhile"
+    },
+    {
+      "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "LANG": "C.UTF-8",
+      "HOME": "/home/loopwhile"
+    }
+  ],
+  "container_environment_overrides": [
+    {},
+    {}
+  ],
+  "resolved_environment_receipt": "runtime/effective-environment.json",
+  "normalized_delta_from_r0": [],
+  "ttft_ms": 182019.74704450002,
+  "prefill_tps": 697.742014063411,
+  "mean_request_decode_tps": 43.81319166249719,
+  "aggregate_decode_tps": 77.72594281484913,
+  "end_to_end_output_tps": 13.034080743329922,
+  "batch_wall_s": 215.89554763499837,
+  "peak_vram_gpu0_mib": 10893.0,
+  "peak_vram_gpu1_mib": 10893.0,
+  "c2_active": true,
+  "queue_only": false,
+  "mechanical_output_verdict": "PASS",
+  "total_output_tokens": 2814,
+  "metric_status": {
+    "ttft_ms": "OBSERVED",
+    "prefill_tps": "OBSERVED",
+    "mean_request_decode_tps": "OBSERVED",
+    "aggregate_decode_tps": "OBSERVED",
+    "end_to_end_output_tps": "OBSERVED",
+    "batch_wall_s": "OBSERVED",
+    "peak_vram_gpu0_mib": "OBSERVED",
+    "peak_vram_gpu1_mib": "OBSERVED",
+    "c2_active": "OBSERVED",
+    "queue_only": "OBSERVED",
+    "mechanical_output_verdict": "OBSERVED"
+  },
+  "requests": [
+    {
+      "request_id": "project-a",
+      "actual_output_tokens": 1204,
+      "ttft_ms": 184689.2649679976,
+      "prefill_tps": 687.5061201960052,
+      "decode_tps": 43.15631654037921,
+      "verdict": "PASS"
+    },
+    {
+      "request_id": "project-b",
+      "actual_output_tokens": 1610,
+      "ttft_ms": 179350.22912100249,
+      "prefill_tps": 707.9779079308169,
+      "decode_tps": 44.47006678461517,
+      "verdict": "PASS"
+    }
+  ],
+  "post_health": {
+    "healthy": true,
+    "gateway": {
+      "healthy": true,
+      "at_utc": "2026-09-28T12:48:36.995802+00:00",
+      "route": "/health/liveliness"
+    },
+    "backends": [
+      {
+        "healthy": true,
+        "at_utc": "2026-09-28T12:48:36.997395+00:00"
+      },
+      {
+        "healthy": true,
+        "at_utc": "2026-09-28T12:48:36.998947+00:00"
+      }
+    ],
+    "at_utc": "2026-09-28T12:48:36.998979+00:00"
+  },
+  "telemetry": "runtime/gpu-telemetry.jsonl",
+  "telemetry_fields": [
+    "power.draw",
+    "temperature.gpu",
+    "clocks.sm",
+    "clocks.mem",
+    "utilization.gpu"
+  ],
+  "limitation": "VRAM peak sampled every 0.5s; power/temp/clocks sampled every 2s. TPS definitions unchanged.",
+  "graph_evidence": "graph-evidence.json",
+  "slot_progress": "slot-progress.json",
+  "speculative_evidence": "speculative-evidence.json",
+  "gpu_telemetry_summary": {
+    "0": {
+      "power.draw": {
+        "status": "OBSERVED",
+        "min": 26.04,
+        "max": 165.96,
+        "samples": 154
+      },
+      "temperature.gpu": {
+        "status": "OBSERVED",
+        "min": 42.0,
+        "max": 72.0,
+        "samples": 154
+      },
+      "clocks.sm": {
+        "status": "OBSERVED",
+        "min": 135.0,
+        "max": 1200.0,
+        "samples": 154
+      },
+      "clocks.mem": {
+        "status": "OBSERVED",
+        "min": 877.0,
+        "max": 877.0,
+        "samples": 154
+      },
+      "utilization.gpu": {
+        "status": "OBSERVED",
+        "min": 0.0,
+        "max": 100.0,
+        "samples": 154
+      }
+    },
+    "1": {
+      "power.draw": {
+        "status": "OBSERVED",
+        "min": 26.52,
+        "max": 162.29,
+        "samples": 154
+      },
+      "temperature.gpu": {
+        "status": "OBSERVED",
+        "min": 40.0,
+        "max": 66.0,
+        "samples": 154
+      },
+      "clocks.sm": {
+        "status": "OBSERVED",
+        "min": 135.0,
+        "max": 1200.0,
+        "samples": 154
+      },
+      "clocks.mem": {
+        "status": "OBSERVED",
+        "min": 877.0,
+        "max": 877.0,
+        "samples": 154
+      },
+      "utilization.gpu": {
+        "status": "OBSERVED",
+        "min": 0.0,
+        "max": 100.0,
+        "samples": 154
+      }
+    }
+  }
+}

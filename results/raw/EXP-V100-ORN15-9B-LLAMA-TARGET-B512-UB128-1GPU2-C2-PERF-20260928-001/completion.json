@@ -1,0 +1,24 @@
+{
+  "experiment_id": "EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260928-001",
+  "verdict": "PASS_C2_ACTIVE",
+  "completed_at_utc": "2026-09-28T12:48:37.150851+00:00",
+  "post_health": {
+    "healthy": true,
+    "gateway": {
+      "healthy": true,
+      "at_utc": "2026-09-28T12:48:36.995802+00:00",
+      "route": "/health/liveliness"
+    },
+    "backends": [
+      {
+        "healthy": true,
+        "at_utc": "2026-09-28T12:48:36.997395+00:00"
+      },
+      {
+        "healthy": true,
+        "at_utc": "2026-09-28T12:48:36.998947+00:00"
+      }
+    ],
+    "at_utc": "2026-09-28T12:48:36.998979+00:00"
+  }
+}

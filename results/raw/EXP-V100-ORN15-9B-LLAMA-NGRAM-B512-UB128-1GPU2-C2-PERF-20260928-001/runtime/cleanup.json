@@ -1,0 +1,7 @@
+{
+  "gateway_stopped": true,
+  "backends_stopped": [
+    "5748e7a925bdac07f1ff3c5942f6f8c9cc3885fe83c7907744d31d6b57f3e463",
+    "2ff084e62d6a4987d3070a16fa7c5ad9e723eef2bb30bbf1358863599937e096"
+  ]
+}

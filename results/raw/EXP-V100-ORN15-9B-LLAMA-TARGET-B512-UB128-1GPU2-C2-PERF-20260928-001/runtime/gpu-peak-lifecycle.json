@@ -1,0 +1,11 @@
+{
+  "source": "nvidia-smi memory.used sampled during runner lifecycle",
+  "interval_s": 0.5,
+  "samples": 571,
+  "peak_memory_mib": {
+    "0": 10893.0,
+    "1": 10893.0
+  },
+  "error": null,
+  "limitation": "Lifecycle sampling includes startup, routing preflight, measured request, and cleanup; it is not the measured-request-window peak. The measured-window probe writes results/raw/<experiment-id>/gpu-peak.json."
+}
