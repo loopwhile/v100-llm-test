@@ -117,9 +117,10 @@ class HTTPAdapter:
  def __init__(self,base_url,runtime,timeout_s=1800):
   self.base=base_url.rstrip("/");self.runtime=runtime;self.timeout=timeout_s;self._probe_samples=[];self._probe_stop=None;self._probe_thread=None
  def request_adapter(self,index):return self
- def call(self,route,body=None,raw=False):
+ def call(self,route,body=None,raw=False,timeout_s=None):
   req=urllib.request.Request(self.base+route,data=None if body is None else canon(body),headers={"Content-Type":"application/json"})
-  with urllib.request.urlopen(req,timeout=self.timeout) as r:data=r.read(8*1024*1024+1)
+  timeout=self.timeout if timeout_s is None else timeout_s
+  with urllib.request.urlopen(req,timeout=timeout) as r:data=r.read(8*1024*1024+1)
   if len(data)>8*1024*1024:raise ValueError("response evidence too large")
   return data.decode() if raw else json.loads(data)
  def health(self):
@@ -166,11 +167,16 @@ class HTTPAdapter:
  def _probe_once(self):
   sample={"monotonic_s":time.monotonic(),"processing":None,"waiting":None,"resident_slots":None,"kv_usage":None,"error":None}
   try:
-   metrics=self.call("/metrics",raw=True)
+   # Probe endpoints must never inherit the 30-60 minute measured-request timeout.
+   # A busy llama.cpp server may delay /metrics or /slots while a 128K batch is
+   # running; keeping these calls bounded prevents the sampler thread from
+   # blocking for the entire benchmark.
+   probe_timeout=min(float(self.timeout),5.0)
+   metrics=self.call("/metrics",raw=True,timeout_s=probe_timeout)
    if self.runtime=="llama.cpp":
     sample["processing"]=metric_value(metrics,"llamacpp:requests_processing");sample["waiting"]=metric_value(metrics,"llamacpp:requests_deferred")
     try:
-     slots=self.call("/slots")
+     slots=self.call("/slots",timeout_s=probe_timeout)
      if isinstance(slots,list):
       if getattr(self,"_wbs5_slot_sink",None):sample["slots"]=slots
       active=sum(1 for slot in slots if isinstance(slot,dict) and slot.get("is_processing"))

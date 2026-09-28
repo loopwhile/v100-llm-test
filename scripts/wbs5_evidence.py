@@ -141,6 +141,167 @@ def slot_progress(adapter):
             "limitation": "Fields unavailable from /slots remain null; resident count does not replace prompt progress."}
 
 
+
+def llama_log_overlap(logs):
+    """Prove concurrent llama.cpp decode from interleaved slot n_gen log lines.
+
+    This is intentionally a positive-evidence fallback: it can prove active
+    overlap, but lack of interleaving remains UNKNOWN rather than QUEUE_ONLY.
+    """
+    pattern = re.compile(
+        r"slot\s+print_timing:\s*id\s+(\d+)\s*\|\s*task\s+(\d+)"
+        r"\s*\|\s*n_gen\s*=\s*(\d+)",
+        re.I,
+    )
+    events = []
+    for source, text in logs.items():
+        for line_no, line in enumerate(text.splitlines(), 1):
+            match = pattern.search(line)
+            if match:
+                slot_id, task_id, n_gen = map(int, match.groups())
+                events.append({
+                    "source": source,
+                    "line": line_no,
+                    "slot_id": slot_id,
+                    "task_id": task_id,
+                    "n_gen": n_gen,
+                })
+
+    by_source = {}
+    for event in events:
+        by_source.setdefault(event["source"], []).append(event)
+
+    for source, rows in by_source.items():
+        keys = []
+        for row in rows:
+            key = (row["slot_id"], row["task_id"])
+            if key not in keys:
+                keys.append(key)
+        for left_index, left in enumerate(keys):
+            left_rows = [x for x in rows if (x["slot_id"], x["task_id"]) == left]
+            for right in keys[left_index + 1:]:
+                right_rows = [x for x in rows if (x["slot_id"], x["task_id"]) == right]
+                # Line-order proof: one request emits decode progress, the other
+                # emits decode progress, then the first emits progress again.
+                # Sequential non-overlapping decodes cannot produce this.
+                left_first, left_last = left_rows[0]["line"], left_rows[-1]["line"]
+                right_first, right_last = right_rows[0]["line"], right_rows[-1]["line"]
+                interleaved = (
+                    left_first < right_first < left_last
+                    or right_first < left_first < right_last
+                )
+                if interleaved:
+                    return {
+                        "status": "OBSERVED",
+                        "active_overlap": True,
+                        "resident": True,
+                        "queue_only": False,
+                        "source": source,
+                        "method": "interleaved llama.cpp slot print_timing n_gen events",
+                        "tasks": [
+                            {
+                                "slot_id": left[0],
+                                "task_id": left[1],
+                                "first_line": left_first,
+                                "last_line": left_last,
+                                "event_count": len(left_rows),
+                            },
+                            {
+                                "slot_id": right[0],
+                                "task_id": right[1],
+                                "first_line": right_first,
+                                "last_line": right_last,
+                                "event_count": len(right_rows),
+                            },
+                        ],
+                        "event_count": len(rows),
+                        "limitation": "Positive proof only; absence of interleaving is UNKNOWN, not QUEUE_ONLY.",
+                    }
+
+    return {
+        "status": UNKNOWN,
+        "active_overlap": None,
+        "resident": None,
+        "queue_only": None,
+        "method": "interleaved llama.cpp slot print_timing n_gen events",
+        "event_count": len(events),
+        "limitation": "No positive decode-interleaving proof found.",
+    }
+
+
+def reconcile_overlap_from_logs(raw, logs=None):
+    """Use preserved llama.cpp logs when live /metrics-/slots sampling was blind."""
+    raw = Path(raw)
+    config_path = raw / "runtime/planned-config.json"
+    if not config_path.exists():
+        return None
+    config = json.loads(config_path.read_text())
+    if not (
+        config.get("runtime") == "llama.cpp"
+        and config.get("topology") == "tp2-shared"
+        and config.get("concurrency") == 2
+    ):
+        return None
+
+    if logs is None:
+        logs = {
+            str(p.relative_to(raw)): p.read_text(errors="replace")
+            for p in sorted((raw / "runtime").glob("server-*.log"))
+        }
+    log_evidence = llama_log_overlap(logs)
+    h.save(raw / "log-overlap-evidence.json", log_evidence)
+    if log_evidence.get("active_overlap") is not True:
+        return log_evidence
+
+    overlap_path = raw / "overlap-evidence.json"
+    overlap = json.loads(overlap_path.read_text()) if overlap_path.exists() else {}
+    if overlap.get("active_overlap") is not True:
+        overlap["source"] = (
+            str(overlap.get("source") or "live sampler")
+            + " + llama.cpp server-log decode interleaving fallback"
+        )
+        overlap["active_overlap"] = True
+        overlap["resident"] = True
+        overlap["queue_only"] = False
+        overlap["log_fallback"] = log_evidence
+        h.save(overlap_path, overlap)
+
+    metrics_path = raw / "metrics.json"
+    requests_path = raw / "requests.json"
+    metrics = json.loads(metrics_path.read_text()) if metrics_path.exists() else {}
+    records = json.loads(requests_path.read_text()) if requests_path.exists() else []
+    request_pass = bool(records) and all(x.get("verdict") == h.PASS for x in records)
+    mechanical_pass = metrics.get("mechanical_output_verdict") == h.PASS
+
+    metrics["server_overlap"] = overlap
+    metrics["c2_resident"] = True
+    metrics["c2_active"] = True
+    metrics["queue_only"] = False
+    metrics["concurrency_verdict"] = "PASS_C2_ACTIVE"
+    if metrics.get("verdict") == "INCONCLUSIVE" and request_pass and mechanical_pass:
+        metrics["verdict"] = "PASS_C2_ACTIVE"
+    if metrics:
+        h.save(metrics_path, metrics)
+
+    completion_path = raw / "completion.json"
+    if completion_path.exists():
+        completion = json.loads(completion_path.read_text())
+        if completion.get("verdict") == "INCONCLUSIVE" and request_pass and mechanical_pass:
+            completion["verdict"] = "PASS_C2_ACTIVE"
+            completion["overlap_reconciled_from"] = "log-overlap-evidence.json"
+            h.save(completion_path, completion)
+
+    exit_path = raw / "runtime/exit.json"
+    if exit_path.exists():
+        exit_receipt = json.loads(exit_path.read_text())
+        if exit_receipt.get("verdict") == "INCONCLUSIVE" and request_pass and mechanical_pass:
+            exit_receipt["verdict"] = "PASS_C2_ACTIVE"
+            exit_receipt["overlap_reconciled_from"] = "log-overlap-evidence.json"
+            h.save(exit_path, exit_receipt)
+
+    return log_evidence
+
+
 def metric_delta(before, after, runtime):
     prefix = "llamacpp" if runtime == "llama.cpp" else "vllm"
     names = {"draft_tokens": prefix + ":spec_decode_num_draft_tokens_total",
@@ -229,12 +390,15 @@ def finalize(raw):
         return
     logs = {str(p.relative_to(raw)): p.read_text(errors="replace") for p in sorted((raw / "runtime").glob("server-*.log"))}
     h.save(raw / "graph-evidence.json", graph_evidence(logs))
+    reconcile_overlap_from_logs(raw, logs)
     metrics = json.loads((raw / "metrics.json").read_text()) if (raw / "metrics.json").exists() else {}
     records = json.loads((raw / "requests.json").read_text()) if (raw / "requests.json").exists() else []
     receipt = metric_receipt(config, metrics, records)
     if (raw / "health-after.json").exists():
         receipt["post_health"] = json.loads((raw / "health-after.json").read_text())
     receipt["graph_evidence"] = "graph-evidence.json"
+    if (raw / "log-overlap-evidence.json").exists():
+        receipt["log_overlap_evidence"] = "log-overlap-evidence.json"
     receipt["slot_progress"] = "slot-progress.json"
     receipt["speculative_evidence"] = "speculative-evidence.json"
     receipt["gpu_telemetry_summary"] = telemetry_summary(raw / "runtime/gpu-telemetry.jsonl")
