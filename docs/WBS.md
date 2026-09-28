@@ -2042,6 +2042,161 @@ D32:
 최종 상태:
 - **CLOSED — C32 PASS / C32 DID NOT OUTPERFORM PRIOR 32K OBSERVATION / D32 NOT RUN**.
 
+## 7. Qwen3.8 llama.cpp post-WBS5 SM70 optimization validation [PLANNED]
+
+목적:
+- WBS 5의 Qwen3.8 llama.cpp 결과와 final candidate는 historical/frozen evidence로 그대로 보존한다.
+- 후속 WBS 7에서는 새로 확인된 두 최적화만 독립적으로 검증한다.
+  1. GGUF에 이미 포함된 Qwen3.8 native MTP head를 llama.cpp `draft-mtp`로 활성화.
+  2. SM70 Flash Attention GQA×2 patch를 현재 pinned llama.cpp b10775에 forward-port.
+- 두 후보 모두 **C2 / 128K per slot / 2 slots** 최종 serving 조건에서 각각 **measured execution 1회만** 수행한다.
+- WBS 5 R2를 control로 재사용하며 baseline을 다시 실행하지 않는다.
+- MTP와 GQA×2를 동시에 적용한 combined candidate는 WBS 7 범위에서 만들지 않는다.
+
+### 7.0 Frozen baseline / provenance / no-inference preflight [PLANNED]
+
+Authoritative control:
+- Candidate: WBS 5 `Q38-LLAMA-WBS5-R2-TARGET-UB256`.
+- Experiment: `EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001`.
+- Verdict: `PASS_C2_ACTIVE`.
+- Model: `/srv/models/qwen3.8-unsloth/Qwen3.8-27B-UD-Q4_K_M.gguf`.
+- Model SHA256: `322e194ff79741c7baa497c240f677f54b201b0efab44ca8e50f122b39123482`.
+- Runtime: llama.cpp b10775 / commit `67a17c17caa95742186f8b1ecadd1b5abd6d5ebb`.
+- OCI: `kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149`.
+- Topology: project label `tp2-shared`; actual llama.cpp launch is `--split-mode layer --tensor-split 1,1` and must not be described as llama.cpp tensor-parallel mode.
+- Context/concurrency: `--ctx-size 262144 --parallel 2 --kv-unified --kv-unified-per-slot 131072`.
+- Batch: `--batch-size 512 --ubatch-size 256`.
+- KV: K/V `q8_0`.
+- Flash Attention: on.
+- Common runtime flags: `-ngl all --jinja --reasoning off --metrics --slots --no-warmup`.
+- R2 speculative mode: `--spec-type none`.
+
+R2 measured reference:
+- TTFT: 679.053 s.
+- Prefill: 264.11 tok/s.
+- Mean request decode: 5.593 tok/s.
+- Aggregate decode: 4.514 tok/s.
+- End-to-end output: 3.457 tok/s.
+- Batch wall: 1337.27 s.
+- Peak VRAM: GPU0 13,447 MiB / GPU1 14,533 MiB.
+- Both measured requests and post-health passed.
+
+External provenance:
+- Qwen3.8 native-MTP serving reference: `jackinthebox52/qwen38-v100-serve@7080181335f660cbb801c9ccb68e1a74697b5604`.
+  - This is supporting evidence only; WBS 7 continues to use the project's pinned b10775 runtime.
+  - The external reference documents an embedded `blk.64` MTP module and uses stock llama.cpp for MTP.
+- SM70 GQA×2 reference: `123123213weqw/dual-v100-llama.cpp@5edfd28c56ef10d21f32fdcfcb12361bb6db1c55`.
+  - Source patch: `patches/sm70-tuning.patch`, Git blob `7074ba8d0a48142823f7f4befff271ff1879633d`.
+  - WBS 7 imports only the GQA×2 Flash Attention change controlled by `GGML_CUDA_FATTN_VEC_GQA_HEADS=2`. Other patches/tuning from that repository are out of scope.
+
+7.0 is a **no-generation preflight** and does not count as either measured test:
+- Do not submit a short, 128K, warmup, or benchmark generation request.
+- Confirm from the exact GGUF/server-load evidence that the current artifact contains the embedded `blk.64` / `blk.64.nextn.*` MTP tensors that target-only execution currently ignores.
+- Confirm the pinned b10775 binary/source accepts `--spec-type draft-mtp` and `--spec-draft-n-max 1`.
+- Forward-port the GQA×2 change onto exactly b10775 and preserve a reviewable patch/diff.
+- Record base commit, external source commit/blob, resulting patch SHA256, build command, build flags and resulting binary/image identity.
+- Reject unrelated changes to GDN, ARGMAX, MTP subvocabulary, tensor-split behavior, KV type, batch/ubatch, graph policy, clocks or host settings.
+- No C1 128K measured screening is scheduled. The first and only measured execution for each candidate is C2 128K × 2 slots.
+
+### 7.1 Qwen3.8 native MTP1 — C2 128K × 2 slots [PLANNED — EXACTLY 1 MEASURED RUN]
+
+Candidate ID:
+- `Q38-LLAMA-WBS7-MTP1-C2-128K`.
+
+Planned experiment:
+- `EXP-V100-WBS7-QWEN-LLAMA-MTP1-C2-128K-20260929-001`.
+
+Exact delta from frozen WBS 5 R2:
+- Replace `--spec-type none` with `--spec-type draft-mtp --spec-draft-n-max 1`.
+- No companion draft GGUF.
+- All other model/runtime/topology/context/batch/KV/FA/workload settings remain byte-for-byte or semantically identical to R2.
+
+Why MTP1:
+- The goal of this single run is first to establish native-MTP feasibility under the project's constrained 2× V100 16GB, C2, 128K-per-slot memory envelope.
+- External Qwen3.8 deployments use deeper draft lengths, but they are not evidence that MTP3/MTP7 fits this exact 2×16GB C2 configuration.
+- WBS 7 therefore does not claim MTP1 is the throughput-optimal draft depth.
+
+Required evidence:
+- server/load logs proving the embedded MTP path is actually used rather than ignored;
+- C2 residency and active-overlap evidence;
+- both 128K requests' output/mechanical integrity;
+- post-health;
+- TTFT, prefill, per-request decode, mean request decode, aggregate decode, end-to-end throughput and batch wall;
+- GPU0/GPU1 lifecycle and measured-window peak VRAM;
+- speculative counters: draft tokens, accepted tokens, draft count and acceptance ratio.
+
+Pass/stop policy:
+- `PASS_C2_ACTIVE` requires both 128K slots resident/active, both outputs valid, post-health healthy, and non-zero native-MTP draft activity.
+- OOM/startup/capacity/crash/output failure is a valid terminal result for this candidate; do not reduce context, concurrency, KV precision, batch/ubatch, or MTP depth and retry under the same WBS 7 candidate.
+- Only one measured execution is authorized. Harness-invalid/no-request-admitted infrastructure failures must be preserved as inconclusive evidence and require explicit user authorization before any rerun.
+- No automatic MTP2/MTP3/MTP7, MTP+NGRAM or MTP+GQA×2 follow-up is authorized.
+
+### 7.2 SM70 GQA×2 + Q8_0 KV — C2 128K × 2 slots [PLANNED — EXACTLY 1 MEASURED RUN]
+
+Candidate ID:
+- `Q38-LLAMA-WBS7-SM70-GQA2-Q80-C2-128K`.
+
+Planned experiment:
+- `EXP-V100-WBS7-QWEN-LLAMA-GQA2-Q80-C2-128K-20260929-001`.
+
+Exact delta from frozen WBS 5 R2:
+- Keep TARGET mode: `--spec-type none`.
+- Keep K/V `q8_0`.
+- Keep the exact R2 model, workload, layer split, context, parallelism, unified KV, batch 512, ubatch 256, Flash Attention and serving flags.
+- Change only the llama.cpp binary/build by forward-porting the isolated SM70 GQA×2 Flash Attention path and compiling it with `GGML_CUDA_FATTN_VEC_GQA_HEADS=2`.
+
+Explicit exclusions:
+- no `safe.patch`, `operator.patch`, `mtp-subvocab.patch` or unrelated SM70/GDN tuning;
+- no `--split-mode tensor` topology experiment;
+- no F16/Q4 KV substitution;
+- no MTP/NGRAM;
+- no clock/power-limit change;
+- no batch/ubatch/context/workload change.
+
+Required correctness/provenance evidence:
+- exact b10775 base commit;
+- forward-port patch SHA256 and source provenance;
+- build command, CMake/build flags, binary/image hash;
+- proof that the candidate build has GQA×2 enabled and the control build does not;
+- server/load health, C2 residency/active overlap, both outputs' integrity and post-health;
+- peak VRAM and the same performance fields used by R2.
+
+Primary interpretation:
+1. Capacity/correctness and `PASS_C2_ACTIVE`.
+2. Per-request runtime decode and mean request decode TPS.
+3. Peak VRAM.
+4. TTFT/prefill.
+5. Batch wall/end-to-end throughput.
+- `aggregate_decode_tps` remains a mixed overlap/output-window metric and must not be presented as a pure decode-kernel measurement.
+- A small positive delta is not automatically a validated optimization because this candidate has only one measured run. Report the exact observed delta and retain measurement-noise caveat.
+
+Stop policy:
+- Exactly one measured C2 128K × 2 run is authorized.
+- Failure is terminal for this frozen candidate; do not silently add other patches, change KV type or switch topology.
+- Harness-invalid/no-request-admitted infrastructure failure is preserved as inconclusive and is not automatically rerun.
+
+### 7.3 Result review / closeout [PLANNED — NO GPU INFERENCE]
+
+Use only:
+- frozen WBS 5 R2 control;
+- the single valid WBS 7.1 MTP1 measured result, if reached;
+- the single valid WBS 7.2 GQA×2 measured result, if reached.
+
+Review separately:
+- MTP1: C2 128K feasibility, VRAM cost, speculative activity/acceptance, decode effect and any prefill/wall trade-off.
+- GQA×2: correctness, VRAM neutrality/regression, and long-context decode delta with TARGET/Q8_0 unchanged.
+- Do not rank by aggregate decode alone.
+- Do not infer that MTP1 is the optimal MTP depth.
+- Do not infer that MTP and GQA×2 effects are additive.
+- Do not create a combined candidate during review.
+- WBS 5 historical/frozen results are never rewritten to include WBS 7 outcomes.
+
+WBS 7 completion condition:
+- 7.0 provenance/static checks recorded;
+- at most one measured execution for 7.1 and at most one for 7.2;
+- terminal PASS/FAIL/INCONCLUSIVE evidence preserved without silent fallback;
+- 7.3 review records whether either candidate is worth retaining as a separate post-WBS5 recipe.
+
 ## 실행 규칙
 - 별도 승인이 없는 한 선언된 configuration당 measured execution은 1회만 수행한다.
 - 실패 후 context, quantization, KV, speculative method, topology를 조용히 변경해서는 안 된다.
