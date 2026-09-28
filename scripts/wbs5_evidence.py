@@ -121,7 +121,9 @@ def slot_rows(slots, monotonic_s, source="server-0"):
     for slot in slots:
         if not isinstance(slot, dict):
             continue
-        progress = slot.get("next_token") or {}
+        progress = slot.get("next_token")
+        if not isinstance(progress, dict):
+            progress = {}
         rows.append({"monotonic_s": monotonic_s, "source": source,
                      "slot_id": slot.get("id", slot.get("slot_id")),
                      "task_id": slot.get("id_task", slot.get("task_id")),
