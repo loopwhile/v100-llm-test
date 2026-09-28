@@ -1,0 +1,9 @@
+{
+  "experiment_id": "EXP-V100-WBS5-GEMMA-LLAMA-R1-PERF-20260928-001",
+  "verdict": "PASS_C2_ACTIVE",
+  "completed_at_utc": "2026-09-28T16:10:03.752064+00:00",
+  "post_health": {
+    "healthy": true,
+    "at_utc": "2026-09-28T16:10:02.882640+00:00"
+  }
+}

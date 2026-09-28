@@ -1,0 +1,26 @@
+{
+  "status": "OBSERVED",
+  "active_overlap": true,
+  "resident": true,
+  "queue_only": false,
+  "source": "runtime/server-0.log",
+  "method": "interleaved llama.cpp slot print_timing n_gen events",
+  "tasks": [
+    {
+      "slot_id": 0,
+      "task_id": 10,
+      "first_line": 249,
+      "last_line": 318,
+      "event_count": 35
+    },
+    {
+      "slot_id": 1,
+      "task_id": 8,
+      "first_line": 297,
+      "last_line": 325,
+      "event_count": 13
+    }
+  ],
+  "event_count": 48,
+  "limitation": "Positive proof only; absence of interleaving is UNKNOWN, not QUEUE_ONLY."
+}

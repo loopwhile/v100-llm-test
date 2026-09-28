@@ -1,5 +1,12 @@
 # Current execution
 
+## WBS 5 Gemma4 llama.cpp measured results publication and Gate B — 2026-09-29
+
+- 현재 단계: **PARTIAL_MEASURED_RESULTS_PUBLISHED**. 공식 WBS5 performance report/CSV는 총 14건(Qwen llama.cpp 4건, Ornith 1.5 9B llama.cpp 3건, Ornith 1.5 35B llama.cpp 4건, Gemma4 llama.cpp 3건)이며 모두 저장된 최종 verdict `PASS_C2_ACTIVE`다.
+- Gemma4 llama.cpp R0/R1/R2 measured raw 3건을 공식 reporter로 report 3개와 `results/summary.csv` / `reports/comparison.csv`에 반영했다. 세 건 모두 두 요청 output PASS, `active_overlap=true`, `queue_only=false`, post-health healthy다. 성능 비교와 final recipe 승격은 아직 수행하지 않았다.
+- R0 raw로 5.3.4.4 Gate B를 평가한 결과 **`NOT_TRIGGERED`**: 모델 로딩 후 VRAM은 약 10분 33초 동안 10,033/10,531 MiB로 일정했고 종료 직전 양쪽 GPU에서 단발성 6 MiB 증가만 있었다. graph reuse 4,425회가 기록됐고 graph-related instability는 관찰되지 않았다.
+- 5.3.4.5 R3 GRAPH-OFF는 **SKIP**. Gate B PASS receipt는 발급하지 않는다. 다음 Gemma 작업은 5.3.4.6 track result review다.
+
 ## WBS 5 Ornith 1.5 35B llama.cpp measured results publication — 2026-09-29
 
 - 현재 단계: **PARTIAL_MEASURED_RESULTS_PUBLISHED**. 공식 WBS5 performance report/CSV는 총 11건(Qwen llama.cpp 4건, Ornith 1.5 9B llama.cpp 3건, Ornith 1.5 35B llama.cpp 4건)이며 11건 모두 저장된 최종 verdict `PASS_C2_ACTIVE`다.
@@ -269,8 +276,6 @@
 - WBS 5 GPU measured runs: NOT STARTED.
 - WBS 6.1~6.9: DONE (6.9 OpenVINO CLOSED / OpenBLAS+LTO 4K DONE).
 - WBS 6.10: CLOSED — C32 PASS; prior 32K observed result를 상회하지 못했고 D32는 의도적으로 미실행.
-
-
 
 
 
