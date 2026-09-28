@@ -245,19 +245,24 @@ class FrozenContractTests(unittest.TestCase):
 
     def test_default_dry_plan_has_no_host_gpu_http_or_raw_side_effect(self):
         with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
             for track, (_, _, ids) in c.TRACKS.items():
                 for i in range(len(ids)):
-                    p = plan(track, f"R{i}")
-                    self.assertFalse(Path(p["raw_destination"]).exists())
+                    p = copy.deepcopy(plan(track, f"R{i}"))
+                    # Published measured raw may legitimately exist in the repository.
+                    # Give this side-effect test its own guaranteed-fresh raw target.
+                    raw_destination = root / "raw-destinations" / p["experiment_id"]
+                    p["raw_destination"] = str(raw_destination)
+                    self.assertFalse(raw_destination.exists())
                     with patch("subprocess.run", side_effect=AssertionError("process called")), \
                          patch("subprocess.Popen", side_effect=AssertionError("startup called")), \
                          patch.object(h.HTTPAdapter, "call", side_effect=AssertionError("HTTP called")):
-                        dry = runner.dispatch(p, output_root=Path(td))
+                        dry = runner.dispatch(p, output_root=root / "plans")
                     self.assertFalse(dry["measured_inference_executed"])
                     self.assertTrue(dry["exact_launch_commands"])
-                    self.assertFalse(Path(p["raw_destination"]).exists())
+                    self.assertFalse(raw_destination.exists())
                     with self.assertRaises(FileExistsError):
-                        runner.dispatch(p, output_root=Path(td))
+                        runner.dispatch(p, output_root=root / "plans")
 
     def test_raw_overwrite_refused_before_any_process(self):
         with tempfile.TemporaryDirectory() as td:
