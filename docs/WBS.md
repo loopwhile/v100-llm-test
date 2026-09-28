@@ -710,9 +710,9 @@ WBS 2/3/4에서 확보한 capacity/correctness/topology evidence와 WBS 5의 per
 WBS 5는 아래 7개 model/runtime track에 대해 이미 연구·선정이 끝난 frozen candidate만 실행하며,
 새 candidate 자동 생성, exhaustive grid, 임의 tuning을 수행하지 않는다.
 
-현재 단계는 **PARTIAL_MEASURED_RESULTS_PUBLISHED — 회수된 WBS5 raw 4건의 공식 report/CSV 반영 완료**이다. 8A 및 8B~8D runner/harness 구현·dry-plan·static/unit validation + ChatGPT pre-run final validation은 완료된 준비 이력이다.
+현재 단계는 **PARTIAL_MEASURED_RESULTS_PUBLISHED — 회수된 WBS5 raw 7건(Qwen llama.cpp 4건 + Ornith 1.5 9B llama.cpp 3건)의 공식 report/CSV 반영 완료**이다. 8A 및 8B~8D runner/harness 구현·dry-plan·static/unit validation + ChatGPT pre-run final validation은 완료된 준비 이력이다.
 25개 frozen candidate의 28개 dry-plan을 저장했다. Qwen 1Cat R2는 host toolchain BLOCKED, Ornith9 1Cat G0 및 Gemma R3 Gate B는 pending이다. 준비 당시 harness validation은 통과했으며, 회수 raw의 sampler 오류와 evidence 한계는 5.3.1에 기록했다. [준비 결과](WBS-5-preparation-readiness.md).
-2026-09-28 로컬 `results/raw/` 전체 inventory와 WBS experiment ID 대조 결과, 완료 raw는 Qwen llama.cpp `5.3.1.1`~`5.3.1.4`의 4건뿐이다. 모두 저장된 최종 verdict `PASS_C2_ACTIVE`로 publication했다. 그 밖의 measured child와 optional confirm은 로컬 raw가 없어 완료 처리하지 않는다. 이번 작업에서는 GPU inference, retry, confirm, tuning을 실행하지 않았으며 track review/final recipe 승격은 미완료다.
+2026-09-28 canonical `results/raw/`와 WBS experiment ID 대조 결과, 공식 publication 완료 raw는 Qwen llama.cpp `5.3.1.1`~`5.3.1.4` 4건과 Ornith 1.5 9B llama.cpp `5.3.2.1`~`5.3.2.3` 3건, 총 7건이다. 7건 모두 저장된 최종 verdict `PASS_C2_ACTIVE`로 publication했다. Ornith R0의 최초 시도는 구 HEAD에서 slot evidence parser가 llama.cpp `/slots`의 `next_token: []` payload를 dict로 가정해 중단된 harness-invalid attempt였으며 공식 performance evidence로 사용하지 않았다. 수정된 harness로 fresh snapshot에서 R0/R1/R2를 다시 수행했고 각 measured raw/report/CSV를 publication했다. Ornith R2는 `ngram-simple` configuration으로 실행됐지만 `speculative-evidence.json`은 `OBSERVED`이면서 `draft_tokens=0`, `accepted_tokens=0`, `draft_count=0`, `acceptance_ratio=None`이므로 이 workload에서 NGRAM draft activity는 관측되지 않았다. 그 밖의 measured child와 optional confirm은 완료 처리하지 않으며 track review/final recipe 승격은 미완료다.
 
 ### 5.1 authoritative planning input 및 진행 단계
 
@@ -736,7 +736,7 @@ WBS 5 단계 흐름:
 3. `docs/WBS.md` 공식 반영 완료.
 4. Codex CLI local validation / test preparation 완료 (8A~8D; measured inference 없음).
 5. ChatGPT pre-run final validation 완료.
-6. **현재 단계: 완료된 measured child 4건의 raw/report publication 완료; 나머지는 raw 미확인. 현재 사용자 지시로 추가 measured execution 금지.**
+6. **현재 단계: 완료된 measured child 7건의 raw/report publication 완료. Qwen llama.cpp `5.3.1.7` 및 Ornith 1.5 9B llama.cpp `5.3.2.4` track review와 final recipe 승격은 아직 미완료이며, 다음 measured child를 자동 실행하지 않는다.**
 7. 각 track measured 결과 분석 및 track review WBS 수행.
 8. 필요 시 Claude independent review.
 9. 모델별 final recipe 확정.
@@ -967,7 +967,7 @@ python3 scripts/run_wbs5_remote.py --track qwen-llama --candidate R2 --experimen
 
 GPU inference 없음. 완료된 R0 repetition 2건과 R1/R2 screening 각 1건의 evidence를 비교한다. TTFT, prefill, mean request decode, aggregate decode, end-to-end TPS, batch wall, VRAM, output integrity, NGRAM counter를 정리하되 이 단계에서 새로운 tuning candidate를 만들지 않는다. R1/R2 optional confirm은 사용자 결정으로 SKIP했으며, 추가 confirm 없이 현재 4건의 evidence 범위와 한계를 명시한다.
 
-#### 5.3.2 Ornith 1.5 9B / llama.cpp [NON-EXECUTABLE PARENT — FROZEN / READY_FOR_MEASURED_EXECUTION]
+#### 5.3.2 Ornith 1.5 9B / llama.cpp [NON-EXECUTABLE PARENT — FROZEN / R0-R2 MEASURED_PUBLISHED / REVIEW_PENDING]
 
 Frozen candidates:
 
@@ -997,7 +997,15 @@ LOCAL_VERIFY_REQUIRED:
 - final recipe 승격은 1GPU×2 + LiteLLM 배포 topology에서 `performance/v1.json` valid run과 output integrity를 요구한다.
 
 
-##### 5.3.2.1 Ornith 1.5 9B llama.cpp — R0 TARGET baseline
+##### 5.3.2.1 Ornith 1.5 9B llama.cpp — R0 TARGET baseline [DONE — PASS_C2_ACTIVE]
+
+- 상태: **DONE — PASS_C2_ACTIVE** (measured child 실행/회수 및 공식 publication 완료; final recipe 승격 아님).
+- Experiment: `EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260928-001`; 완료 UTC: `2026-09-28T12:48:37.150851+00:00`.
+- [Raw](../results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260928-001/) / [Report](../reports/ornith-1.5-9b/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260928-001.md); `results/summary.csv`, `reports/comparison.csv` 반영 완료.
+- Routing/overlap: project-a → backend-0 (`:18080`), project-b → backend-1 (`:18081`); distinct base/deployment true, `active_overlap: true`, `backend_active_in_common_decode_window: true`, `queue_only: false`, post-health healthy.
+- Requests: project-a 1,204 tokens / `PASS`, project-b 1,610 tokens / `PASS`.
+- Performance: TTFT 182,019.75 ms, Prefill 697.74 tok/s, Mean Decode 43.81 tok/s, Aggregate Decode 77.73 tok/s, End-to-End 13.03 tok/s, Batch Wall 215.90s.
+- Peak VRAM: GPU0 10,893 MiB / GPU1 10,893 MiB.
 
 1GPU×2 + LiteLLM frozen topology를 유지하고 R0를 1회 수행한다. 두 backend와 단일 LiteLLM endpoint, least-busy, backend max_parallel_requests=1, num_retries=0이 바뀌면 hard stop이다.
 
@@ -1005,7 +1013,15 @@ LOCAL_VERIFY_REQUIRED:
 python3 scripts/run_wbs5_remote.py --track ornith9-llama --candidate R0 --experiment-id EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
-##### 5.3.2.2 Ornith 1.5 9B llama.cpp — R1 UB256
+##### 5.3.2.2 Ornith 1.5 9B llama.cpp — R1 UB256 [DONE — PASS_C2_ACTIVE]
+
+- 상태: **DONE — PASS_C2_ACTIVE** (measured child 실행/회수 및 공식 publication 완료; final recipe 승격 아님).
+- Experiment: `EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001`; 완료 UTC: `2026-09-28T13:01:31.199186+00:00`.
+- [Raw](../results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/) / [Report](../reports/ornith-1.5-9b/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001.md); `results/summary.csv`, `reports/comparison.csv` 반영 완료.
+- Routing/overlap: project-a → backend-0 (`:18080`), project-b → backend-1 (`:18081`); distinct base/deployment true, `active_overlap: true`, `backend_active_in_common_decode_window: true`, `queue_only: false`, post-health healthy.
+- Requests: project-a 1,438 tokens / `PASS`, project-b 1,370 tokens / `PASS`.
+- Performance: TTFT 139,204.08 ms, Prefill 912.19 tok/s, Mean Decode 43.99 tok/s, Aggregate Decode 80.90 tok/s, End-to-End 16.20 tok/s, Batch Wall 173.34s.
+- Peak VRAM: GPU0 10,945 MiB / GPU1 10,945 MiB.
 
 R0 대비 두 backend 모두 ubatch 128 -> 256만 변경된 frozen plan을 1회 수행한다.
 
@@ -1013,7 +1029,16 @@ R0 대비 두 backend 모두 ubatch 128 -> 256만 변경된 frozen plan을 1회 
 python3 scripts/run_wbs5_remote.py --track ornith9-llama --candidate R1 --experiment-id EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
-##### 5.3.2.3 Ornith 1.5 9B llama.cpp — R2 NGRAM
+##### 5.3.2.3 Ornith 1.5 9B llama.cpp — R2 NGRAM [DONE — PASS_C2_ACTIVE]
+
+- 상태: **DONE — PASS_C2_ACTIVE** (measured child 실행/회수 및 공식 publication 완료; final recipe 승격 아님).
+- Experiment: `EXP-V100-ORN15-9B-LLAMA-NGRAM-B512-UB128-1GPU2-C2-PERF-20260928-001`; 완료 UTC: `2026-09-28T13:21:39.114398+00:00`.
+- [Raw](../results/raw/EXP-V100-ORN15-9B-LLAMA-NGRAM-B512-UB128-1GPU2-C2-PERF-20260928-001/) / [Report](../reports/ornith-1.5-9b/EXP-V100-ORN15-9B-LLAMA-NGRAM-B512-UB128-1GPU2-C2-PERF-20260928-001.md); `results/summary.csv`, `reports/comparison.csv` 반영 완료.
+- Routing/overlap: project-a → backend-0 (`:18080`), project-b → backend-1 (`:18081`); distinct base/deployment true, `active_overlap: true`, `backend_active_in_common_decode_window: true`, `queue_only: false`, post-health healthy.
+- Requests: project-a 1,204 tokens / `PASS`, project-b 1,610 tokens / `PASS`.
+- Performance: TTFT 182,040.10 ms, Prefill 697.67 tok/s, Mean Decode 43.21 tok/s, Aggregate Decode 76.57 tok/s, End-to-End 13.00 tok/s, Batch Wall 216.41s.
+- Peak VRAM: GPU0 10,893 MiB / GPU1 10,893 MiB.
+- Speculative evidence: `status=OBSERVED`, `draft_tokens=0`, `accepted_tokens=0`, `draft_count=0`, `acceptance_ratio=None`. 즉 `ngram-simple` configuration은 실행됐지만 이 measured workload에서 NGRAM draft activity는 관측되지 않았다.
 
 R0 대비 두 backend의 `--spec-type none -> ngram-simple`만 변경한다.
 
@@ -1023,9 +1048,9 @@ python3 scripts/run_wbs5_remote.py --track ornith9-llama --candidate R2 --experi
 
 완료 후 distinct backend routing, common decode-window active overlap/queue-only, post-health, backend별 speculative counter evidence를 확인한다.
 
-##### 5.3.2.4 Ornith 1.5 9B llama.cpp — track result review
+##### 5.3.2.4 Ornith 1.5 9B llama.cpp — track result review [PENDING]
 
-GPU inference 없음. R0/R1/R2의 1GPU×2 배포 topology가 실제로 유지됐는지 먼저 확인하고 성능을 비교한다. routing/active-overlap evidence가 불완전하면 성능 숫자만으로 topology PASS를 선언하지 않는다.
+GPU inference 없음. R0/R1/R2의 1GPU×2 배포 topology가 실제로 유지됐는지 먼저 확인하고 성능을 비교한다. routing/active-overlap evidence가 불완전하면 성능 숫자만으로 topology PASS를 선언하지 않는다. R2의 zero-draft NGRAM evidence를 성능 향상 근거로 해석하지 않으며, 이 단계가 완료되기 전에는 final recipe를 승격하지 않는다.
 
 #### 5.3.3 Ornith 1.5 35B-A3B / llama.cpp [NON-EXECUTABLE PARENT — FROZEN / READY_FOR_MEASURED_EXECUTION]
 

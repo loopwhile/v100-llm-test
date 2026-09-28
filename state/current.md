@@ -8,15 +8,18 @@
 - WBS 5: llama.cpp 4개 + 1Cat-vLLM 3개, 총 **7개 model/runtime track candidate selection 완료**.
 - 7개 frozen candidate plan 문서화 완료.
 - `docs/WBS.md`에 7개 frozen plan을 공식 실행계획으로 반영 완료.
-- 현재 단계: **PARTIAL_MEASURED_RESULTS_PUBLISHED — 로컬 raw/WBS 대조로 확인된 Qwen llama.cpp 5.3.1.1~5.3.1.4의 4건을 공식 reporter로 publication 완료**.
-- 현재 사용자 지시: **GPU measured inference 및 새 benchmark/retry/confirm/tuning 금지**. 미확인 child를 추정 실행하지 않는다. Track review/final recipe 승격은 미완료다.
+- 현재 단계: **PARTIAL_MEASURED_RESULTS_PUBLISHED — Qwen llama.cpp 5.3.1.1~5.3.1.4 4건 + Ornith 1.5 9B llama.cpp 5.3.2.1~5.3.2.3 3건, 총 7건을 공식 reporter로 publication 완료**.
+- 현재 상태: Ornith 1.5 9B llama.cpp R0/R1/R2 measured publication까지 완료. 다음 measured child를 자동 실행하지 않으며, Qwen `5.3.1.7`과 Ornith `5.3.2.4` track review/final recipe 승격은 미완료다.
 - Qwen 1Cat R2: **BLOCKED_BY_HOST_TOOLCHAIN** (nvcc/개발 toolkit 없음; isolated CUDA12.8 development toolkit host change 승인 대기).
 - Ornith9 1Cat R0~R3: **CONDITIONAL_PENDING_GATE — G0**; Gemma llama R3: **CONDITIONAL_PENDING_GATE — Gate B**.
 - 준비 당시 검증: 전체 pytest **146 PASS + 25 subtests**, validate_repo **PASS**. 회수 raw의 slot sampler 오류/로그 overlap 보정 및 첫 R0 evidence snapshot 차이는 `docs/WBS.md` 5.3.1에 기록했다.
 - 준비 결과: `docs/WBS-5-preparation-readiness.md`; plans: `results/plans/wbs5-preparation-20260928/manifest.json`.
-- 이번 publication 검증: `validate_repo.py` PASS; reporter/harness/WBS5/measurement-policy 관련 pytest **74 PASS + 25 subtests** (격리된 `/tmp` 저장소에서 확인). 원본 checkout에서는 dry-plan 테스트 1개가 이미 회수된 raw 경로의 부재를 가정해 실패했으며, raw나 테스트 코드는 변경하지 않았다. Report/CSV 값 대조 및 raw 144개 파일 SHA256 보존 확인 완료.
-- 확인된 완료 experiment: `EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-001`, `EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-002`, `EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-001`, `EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001`. 모두 raw 최종 verdict **PASS_C2_ACTIVE**; report 4개와 summary/comparison 반영 완료. 그 밖의 WBS5 measured child 및 optional confirm은 로컬 raw가 없어 완료 처리하지 않았다.
+- 이전 Qwen publication 검증: `validate_repo.py` PASS; reporter/harness/WBS5/measurement-policy 관련 pytest **74 PASS + 25 subtests** (격리된 `/tmp` 저장소에서 확인). 원본 checkout에서는 당시 dry-plan 테스트 1개가 이미 회수된 raw 경로의 부재를 가정해 실패했으며, raw나 테스트 코드는 변경하지 않았다. Report/CSV 값 대조 및 raw 144개 파일 SHA256 보존 확인 완료.
+- 이번 Ornith 1.5 9B publication 검증: 공식 reporter로 raw 3건에서 report 3개와 `results/summary.csv` / `reports/comparison.csv` 행을 생성했고 `python3 scripts/validate_repo.py` **PASS**를 확인했다.
+- 확인된 완료 experiment: Qwen llama.cpp 4건 (`EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-001`, `-002`, `EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-001`, `EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001`) + Ornith 1.5 9B llama.cpp 3건 (`EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260928-001`, `EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001`, `EXP-V100-ORN15-9B-LLAMA-NGRAM-B512-UB128-1GPU2-C2-PERF-20260928-001`). 총 7건 모두 raw 최종 verdict **PASS_C2_ACTIVE**; report와 summary/comparison 반영 완료. 그 밖의 WBS5 measured child 및 optional confirm은 완료 처리하지 않았다.
 - Qwen llama.cpp **5.3.1.5 / 5.3.1.6: SKIP — USER_DECISION** (2026-09-28). R1/R2 optional confirm은 실행하지 않으며, 5.3.1.7 track review는 기존 measured 4건만 대상으로 한다.
+- Ornith 1.5 9B llama.cpp **5.3.2.1 / 5.3.2.2 / 5.3.2.3: DONE — PASS_C2_ACTIVE**. 세 run 모두 project-a → backend-0, project-b → backend-1로 distinct routing이 확인됐고 `active_overlap=true`, `backend_active_in_common_decode_window=true`, `queue_only=false`, post-health healthy다. R1 UB256은 R0 대비 TTFT 182.02s → 139.20s, Prefill 697.74 → 912.19 tok/s, Batch Wall 215.90s → 173.34s로 개선됐다. R2 NGRAM은 R0와 유사한 성능이며 speculative counter가 `OBSERVED`이지만 draft/accepted/draft_count 모두 0이라 NGRAM draft activity는 관측되지 않았다. `5.3.2.4` track review는 **PENDING**.
+- Ornith R0 최초 구 HEAD attempt는 llama.cpp `/slots`의 `next_token: []`를 처리하지 못한 slot evidence parser 예외로 중단된 **HARNESS_INVALID / INCONCLUSIVE** 실행이다. 해당 attempt는 공식 performance evidence나 CSV/report에 포함하지 않았고, 수정된 harness/fresh snapshot으로 얻은 R0 rerun만 publication했다.
 - WBS 6 관련 기존 상태/결과는 아래 기록을 그대로 유지한다.
 
 ## WBS 3 authoritative workload reset — 2026-09-25
