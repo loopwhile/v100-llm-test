@@ -250,6 +250,10 @@ def _report(config, metrics, completion, raw_dir, verdicts=None):
         f"- 런타임: {config['runtime']}",
         f"- Runtime revision: {config['runtime_revision']}",
     ]
+    retry_path = raw_dir / "runtime/retry-receipt.json"
+    if retry_path.is_file():
+        retry = _read(retry_path)
+        lines.append(f"- User-authorized retry of: {retry['retry_of']} ({retry['reason']})")
 
     if verdicts["harness_verdict"] != verdict:
         lines.extend([
@@ -378,6 +382,7 @@ def _report(config, metrics, completion, raw_dir, verdicts=None):
         "runtime/gpu-peak-lifecycle.json",
         "runtime/cleanup.json", "runtime/exit.json",
         "runtime/progress.json", "runtime/preflight.json",
+        "runtime/retry-receipt.json",
     ]
     present_evidence = [f for f in evidence_candidates if (raw_dir / f).exists()]
     present_runtime = [f for f in runtime_candidates if (raw_dir / f).exists()]
@@ -465,6 +470,12 @@ def _normalize_note(note_text, config, verdict, raw_dir):
                     "one measured execution; no warmup.",
                     "one measured 128K batch; no full-size benchmark warmup."
                 )
+    retry_path = raw_dir / "runtime/retry-receipt.json"
+    if retry_path.is_file():
+        retry = _read(retry_path)
+        note_text = note_text.replace("no full-size warmup, fallback, retry or tuning.",
+                                      "no full-size warmup, fallback, automatic retry or tuning.")
+        note_text += f" User-authorized retry of {retry['retry_of']} after {retry['reason']}."
     return note_text
 
 

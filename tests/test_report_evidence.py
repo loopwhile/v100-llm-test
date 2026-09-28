@@ -45,6 +45,22 @@ def _make_raw(td, files, config=None, metrics=None, completion=None):
 
 
 class TestEvidenceListing(unittest.TestCase):
+    def test_retry_provenance_is_visible_in_report_and_csv_note(self):
+        with tempfile.TemporaryDirectory() as td:
+            raw, config, metrics, completion = _make_raw(td, ["runtime/retry-receipt.json"])
+            predecessor = "EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-001"
+            (raw / "runtime/retry-receipt.json").write_text(json.dumps({
+                "retry_of": predecessor, "reason": "infra_invalid_port_conflict"
+            }))
+            md = report._report(config, metrics, completion, raw)
+            note = report._normalize_note(
+                "no full-size warmup, fallback, retry or tuning.", config, "PASS_C2_ACTIVE", raw
+            )
+            self.assertIn(f"User-authorized retry of: {predecessor}", md)
+            self.assertIn("runtime/retry-receipt.json", md)
+            self.assertIn(f"User-authorized retry of {predecessor}", note)
+            self.assertIn("automatic retry", note)
+
     def test_wbs5_report_preserves_candidate_workload_command_and_ngram_counters(self):
         with tempfile.TemporaryDirectory() as td:
             config = {
