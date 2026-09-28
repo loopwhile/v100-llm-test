@@ -1,6 +1,14 @@
 # Current execution
 
-## WBS 5 recovered measured results publication — 2026-09-28
+## WBS 5 Ornith 1.5 35B llama.cpp measured results publication — 2026-09-29
+
+- 현재 단계: **PARTIAL_MEASURED_RESULTS_PUBLISHED**. 공식 WBS5 performance report/CSV는 총 11건(Qwen llama.cpp 4건, Ornith 1.5 9B llama.cpp 3건, Ornith 1.5 35B llama.cpp 4건)이며 11건 모두 저장된 최종 verdict `PASS_C2_ACTIVE`다.
+- Ornith 35B `5.3.3.1` R0, `5.3.3.2` R1 재실행, `5.3.3.3` R2, `5.3.3.4` R3의 유효한 measured raw 4건을 공식 reporter로 report 4개와 `results/summary.csv` / `reports/comparison.csv`에 반영했다. 네 건 모두 두 요청 output PASS, `active_overlap=true`, `queue_only=false`, post-health healthy다.
+- R1 첫 시도 `EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-001`은 측정 전 18080 포트 충돌로 `INCONCLUSIVE`; raw만 보존하고 성능 report/CSV에서 제외했다. 사용자 지시로 동일 frozen configuration의 `EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002`를 실행했고 raw의 `runtime/retry-receipt.json` 및 report/CSV에 재실행 출처를 기록했다.
+- Ornith 35B R1 MTP counter는 `OBSERVED`: draft 2,426, accepted 1,838, acceptance ratio 0.7576. R0/R1/R2/R3의 성능 비교, 증거 해석 및 final recipe 승격은 **아직 수행하지 않았다**. `5.3.3.5` track result review는 **PENDING**이다.
+- Qwen llama.cpp `5.3.1.7`과 Ornith 9B llama.cpp `5.3.2.4` track review도 미완료다. 다음 measured child를 자동 실행하지 않는다.
+
+## WBS 5 recovered measured results publication — 2026-09-28 (historical snapshot)
 
 - WBS 2: **DONE**.
 - WBS 3: **DONE**.
@@ -261,7 +269,6 @@
 - WBS 5 GPU measured runs: NOT STARTED.
 - WBS 6.1~6.9: DONE (6.9 OpenVINO CLOSED / OpenBLAS+LTO 4K DONE).
 - WBS 6.10: CLOSED — C32 PASS; prior 32K observed result를 상회하지 못했고 D32는 의도적으로 미실행.
-
 
 
 

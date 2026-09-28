@@ -710,9 +710,9 @@ WBS 2/3/4에서 확보한 capacity/correctness/topology evidence와 WBS 5의 per
 WBS 5는 아래 7개 model/runtime track에 대해 이미 연구·선정이 끝난 frozen candidate만 실행하며,
 새 candidate 자동 생성, exhaustive grid, 임의 tuning을 수행하지 않는다.
 
-현재 단계는 **PARTIAL_MEASURED_RESULTS_PUBLISHED — 회수된 WBS5 raw 7건(Qwen llama.cpp 4건 + Ornith 1.5 9B llama.cpp 3건)의 공식 report/CSV 반영 완료**이다. 8A 및 8B~8D runner/harness 구현·dry-plan·static/unit validation + ChatGPT pre-run final validation은 완료된 준비 이력이다.
+현재 단계는 **PARTIAL_MEASURED_RESULTS_PUBLISHED — 유효한 WBS5 measured raw 11건(Qwen llama.cpp 4건 + Ornith 1.5 9B llama.cpp 3건 + Ornith 1.5 35B llama.cpp 4건)의 공식 report/CSV 반영 완료**이다. 8A 및 8B~8D runner/harness 구현·dry-plan·static/unit validation + ChatGPT pre-run final validation은 완료된 준비 이력이다.
 25개 frozen candidate의 28개 dry-plan을 저장했다. Qwen 1Cat R2는 host toolchain BLOCKED, Ornith9 1Cat G0 및 Gemma R3 Gate B는 pending이다. 준비 당시 harness validation은 통과했으며, 회수 raw의 sampler 오류와 evidence 한계는 5.3.1에 기록했다. [준비 결과](WBS-5-preparation-readiness.md).
-2026-09-28 canonical `results/raw/`와 WBS experiment ID 대조 결과, 공식 publication 완료 raw는 Qwen llama.cpp `5.3.1.1`~`5.3.1.4` 4건과 Ornith 1.5 9B llama.cpp `5.3.2.1`~`5.3.2.3` 3건, 총 7건이다. 7건 모두 저장된 최종 verdict `PASS_C2_ACTIVE`로 publication했다. Ornith R0의 최초 시도는 구 HEAD에서 slot evidence parser가 llama.cpp `/slots`의 `next_token: []` payload를 dict로 가정해 중단된 harness-invalid attempt였으며 공식 performance evidence로 사용하지 않았다. 수정된 harness로 fresh snapshot에서 R0/R1/R2를 다시 수행했고 각 measured raw/report/CSV를 publication했다. Ornith R2는 `ngram-simple` configuration으로 실행됐지만 `speculative-evidence.json`은 `OBSERVED`이면서 `draft_tokens=0`, `accepted_tokens=0`, `draft_count=0`, `acceptance_ratio=None`이므로 이 workload에서 NGRAM draft activity는 관측되지 않았다. 그 밖의 measured child와 optional confirm은 완료 처리하지 않으며 track review/final recipe 승격은 미완료다.
+2026-09-28~29 canonical `results/raw/`와 WBS experiment ID 대조 결과, 공식 publication 완료 raw는 Qwen llama.cpp `5.3.1.1`~`5.3.1.4` 4건, Ornith 1.5 9B llama.cpp `5.3.2.1`~`5.3.2.3` 3건, Ornith 1.5 35B llama.cpp `5.3.3.1`~`5.3.3.4` 4건, 총 11건이다. 11건 모두 저장된 최종 verdict `PASS_C2_ACTIVE`로 publication했다. Ornith 9B R0의 최초 시도는 구 HEAD의 slot evidence parser 예외로 중단된 harness-invalid attempt였고 공식 performance evidence로 사용하지 않았다. Ornith 9B R2는 `ngram-simple` configuration이지만 이 workload에서 NGRAM draft activity가 관측되지 않았다. Ornith 35B R1의 최초 `-001` raw는 측정 전 포트 충돌로 `INCONCLUSIVE`; 보존하되 공식 performance report/CSV에서 제외하고, 사용자 지정 동일 설정 재실행 `-002`만 publication했다. 각 track review와 final recipe 승격은 미완료다.
 
 ### 5.1 authoritative planning input 및 진행 단계
 
@@ -736,7 +736,7 @@ WBS 5 단계 흐름:
 3. `docs/WBS.md` 공식 반영 완료.
 4. Codex CLI local validation / test preparation 완료 (8A~8D; measured inference 없음).
 5. ChatGPT pre-run final validation 완료.
-6. **현재 단계: 완료된 measured child 7건의 raw/report publication 완료. Qwen llama.cpp `5.3.1.7` 및 Ornith 1.5 9B llama.cpp `5.3.2.4` track review와 final recipe 승격은 아직 미완료이며, 다음 measured child를 자동 실행하지 않는다.**
+6. **현재 단계: 유효한 measured child 11건의 raw/report publication 완료. Qwen llama.cpp `5.3.1.7`, Ornith 1.5 9B llama.cpp `5.3.2.4`, Ornith 1.5 35B llama.cpp `5.3.3.5` track review와 final recipe 승격은 아직 미완료이며, 다음 measured child를 자동 실행하지 않는다.**
 7. 각 track measured 결과 분석 및 track review WBS 수행.
 8. 필요 시 Claude independent review.
 9. 모델별 final recipe 확정.
@@ -1052,7 +1052,9 @@ python3 scripts/run_wbs5_remote.py --track ornith9-llama --candidate R2 --experi
 
 GPU inference 없음. R0/R1/R2의 1GPU×2 배포 topology가 실제로 유지됐는지 먼저 확인하고 성능을 비교한다. routing/active-overlap evidence가 불완전하면 성능 숫자만으로 topology PASS를 선언하지 않는다. R2의 zero-draft NGRAM evidence를 성능 향상 근거로 해석하지 않으며, 이 단계가 완료되기 전에는 final recipe를 승격하지 않는다.
 
-#### 5.3.3 Ornith 1.5 35B-A3B / llama.cpp [NON-EXECUTABLE PARENT — FROZEN / READY_FOR_MEASURED_EXECUTION]
+#### 5.3.3 Ornith 1.5 35B-A3B / llama.cpp [NON-EXECUTABLE PARENT — FROZEN / MEASURED_RESULTS_PUBLISHED / REVIEW_PENDING]
+
+R0/R1/R2/R3의 유효한 measured raw 4건을 공식 report/CSV에 반영했다. R1의 첫 `-001` 시도는 포트 점유로 서버 기동 전에 중단된 `INCONCLUSIVE` raw로 보존하며 성능 근거에서 제외한다. `5.3.3.5` 후보 비교 및 final recipe 승격은 수행하지 않았다.
 
 Frozen candidates:
 
@@ -1088,6 +1090,11 @@ LOCAL_VERIFY_REQUIRED:
 
 ##### 5.3.3.1 Ornith 1.5 35B llama.cpp — R0 TARGET
 
+- 상태: **DONE — PASS_C2_ACTIVE** (measured raw 회수 및 공식 publication 완료; final recipe 승격 아님).
+- Experiment: `EXP-V100-WBS5-ORNITH35-LLAMA-R0-PERF-20260928-001`; 완료 UTC: `2026-09-28T14:08:19.500480+00:00`.
+- [Raw](../results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R0-PERF-20260928-001/) / [Report](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-LLAMA-R0-PERF-20260928-001.md); summary/comparison CSV 반영 완료.
+- 두 요청 1,930/1,856 output tokens 모두 PASS; resident/active overlap true, queue-only false, post-health healthy. TTFT 791.44s, prefill 191.42 tok/s, aggregate decode 5.40 tok/s, batch wall 1176.33s, peak VRAM 12,831/12,309 MiB.
+
 ```bash
 python3 scripts/run_wbs5_remote.py --track ornith35-llama --candidate R0 --experiment-id EXP-V100-WBS5-ORNITH35-LLAMA-R0-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
@@ -1095,6 +1102,12 @@ python3 scripts/run_wbs5_remote.py --track ornith35-llama --candidate R0 --exper
 ##### 5.3.3.2 Ornith 1.5 35B llama.cpp — R1 native MTP1
 
 R0 대비 embedded native MTP1만 활성화한다. companion GGUF 또는 MTP n=2를 넣지 않는다.
+
+- 최초 시도 `EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-001`: 측정 전 18080 포트 `Address already in use`로 `INCONCLUSIVE`. [Raw](../results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-001/) 보존; 공식 performance report/CSV에는 포함하지 않는다.
+- 상태: **DONE — PASS_C2_ACTIVE** (사용자 지정 동일 설정 재실행의 measured raw 회수 및 공식 publication 완료; final recipe 승격 아님).
+- 유효한 Experiment: `EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002`; 완료 UTC: `2026-09-28T14:39:25.455617+00:00`. [Raw](../results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/) / [Report](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002.md); summary/comparison CSV 반영 완료.
+- 두 요청 2,313/1,952 output tokens 모두 PASS; resident/active overlap true, queue-only false, post-health healthy. TTFT 833.07s, prefill 182.78 tok/s, aggregate decode 5.71 tok/s, batch wall 1242.84s, peak VRAM 12,897/13,737 MiB.
+- MTP counter `OBSERVED`: draft 2,426, accepted 1,838, acceptance ratio 0.7576. 이 값과 성능 비교의 해석은 `5.3.3.5`에서 수행한다.
 
 ```bash
 python3 scripts/run_wbs5_remote.py --track ornith35-llama --candidate R1 --experiment-id EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-001 --run-label screening-1 --execute-measured
@@ -1104,6 +1117,11 @@ draft/accepted/acceptance ratio가 unavailable이면 UNKNOWN으로 남긴다.
 
 ##### 5.3.3.3 Ornith 1.5 35B llama.cpp — R2 UB256
 
+- 상태: **DONE — PASS_C2_ACTIVE** (measured raw 회수 및 공식 publication 완료; final recipe 승격 아님).
+- Experiment: `EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001`; 완료 UTC: `2026-09-28T15:02:03.734261+00:00`.
+- [Raw](../results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/) / [Report](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001.md); summary/comparison CSV 반영 완료.
+- 두 요청 1,832/2,849 output tokens 모두 PASS; resident/active overlap true, queue-only false, post-health healthy. TTFT 670.09s, prefill 229.75 tok/s, aggregate decode 7.23 tok/s, batch wall 1038.99s, peak VRAM 13,103/12,581 MiB.
+
 ```bash
 python3 scripts/run_wbs5_remote.py --track ornith35-llama --candidate R2 --experiment-id EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
@@ -1111,6 +1129,11 @@ python3 scripts/run_wbs5_remote.py --track ornith35-llama --candidate R2 --exper
 ##### 5.3.3.4 Ornith 1.5 35B llama.cpp — R3 CUDA_SCALE_LAUNCH_QUEUES=4x
 
 R0 대비 container environment의 `CUDA_SCALE_LAUNCH_QUEUES=4x`만 추가된 plan을 사용한다.
+
+- 상태: **DONE — PASS_C2_ACTIVE** (measured raw 회수 및 공식 publication 완료; final recipe 승격 아님).
+- Experiment: `EXP-V100-WBS5-ORNITH35-LLAMA-R3-PERF-20260928-001`; 완료 UTC: `2026-09-28T15:26:54.539768+00:00`.
+- [Raw](../results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R3-PERF-20260928-001/) / [Report](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-LLAMA-R3-PERF-20260928-001.md); summary/comparison CSV 반영 완료.
+- 두 요청 1,930/1,856 output tokens 모두 PASS; resident/active overlap true, queue-only false, post-health healthy. TTFT 791.61s, prefill 191.38 tok/s, aggregate decode 5.40 tok/s, batch wall 1176.66s, peak VRAM 12,831/12,309 MiB. `CUDA_SCALE_LAUNCH_QUEUES=4x`는 effective environment에 기록됨.
 
 ```bash
 python3 scripts/run_wbs5_remote.py --track ornith35-llama --candidate R3 --experiment-id EXP-V100-WBS5-ORNITH35-LLAMA-R3-PERF-20260928-001 --run-label screening-1 --execute-measured
@@ -1852,4 +1875,3 @@ D32:
 - diagnostic 96K/64K 재실행은 새로운 experiment ID를 사용한다.
 - UNSUPPORTED는 유효한 최종 결과다.
 - 과거 qwen3.8-bench 결과는 이 저장소에서 PASS로 인정하지 않는다.
-
