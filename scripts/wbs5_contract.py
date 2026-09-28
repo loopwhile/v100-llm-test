@@ -79,6 +79,8 @@ def run_identity(track, candidate, label):
         allowed = {"repetition-1", "repetition-2"}
     if track == "qwen-llama" and candidate in ("R1", "R2"):
         allowed.add("confirm-1")
+    if track == "ornith35-llama" and candidate == "R1":
+        allowed.add("retry-1")
     if label not in allowed:
         raise ValueError("run label outside frozen repetition/confirm policy")
     return {"label": label, "kind": label.rsplit("-", 1)[0],
@@ -280,7 +282,7 @@ def build_plan(track, candidate, exp, label, root=ROOT, port=18080, gateway_port
     match = re.search(r"-(\d{8})-(\d{3})$", exp)
     if not match or exp != experiment_id(track, candidate, match[1], int(match[2])):
         raise ValueError("experiment ID does not match frozen candidate")
-    expected_sequence = {"repetition-1": 1, "repetition-2": 2, "screening-1": 1, "confirm-1": 2}[label]
+    expected_sequence = {"repetition-1": 1, "repetition-2": 2, "screening-1": 1, "confirm-1": 2, "retry-1": 2}[label]
     if int(match[2]) != expected_sequence:
         raise ValueError("experiment sequence does not match frozen run label")
     launch = launch_plan(track, candidate, root, port, gateway_port)

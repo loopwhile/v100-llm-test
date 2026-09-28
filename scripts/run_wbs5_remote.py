@@ -124,6 +124,7 @@ def main():
     parser.add_argument("--experiment-id", required=True)
     parser.add_argument("--run-label")
     parser.add_argument("--gate-receipt", type=Path)
+    parser.add_argument("--retry-evidence", type=Path)
     parser.add_argument("--execute-measured", action="store_true")
     parser.add_argument(
         "--ornith9-g0",
@@ -138,6 +139,18 @@ def main():
                 "normal WBS5 run requires --track, --candidate, --run-label, "
                 "and --execute-measured"
             )
+    if args.run_label == "retry-1":
+        predecessor = args.experiment_id[:-3] + "001"
+        expected = ROOT / "results/raw" / predecessor / "completion.json"
+        if args.retry_evidence != expected.relative_to(ROOT):
+            parser.error(f"retry-1 requires --retry-evidence {expected.relative_to(ROOT)}")
+        completion = json.loads(expected.read_text())
+        if (completion.get("experiment_id") != predecessor
+                or completion.get("verdict") != "INCONCLUSIVE"
+                or completion.get("error") != "[Errno 98] Address already in use"):
+            parser.error("retry evidence does not match the R1 port-conflict failure")
+    elif args.retry_evidence:
+        parser.error("--retry-evidence requires --run-label retry-1")
 
     head = tracked_tree_guard()
     remote_root = f"{REMOTE_BASE}/{head[:12]}"
@@ -162,6 +175,11 @@ def main():
     if args.gate_receipt:
         remote_gate = copy_gate_receipt(
             args.gate_receipt, remote_root, args.experiment_id
+        )
+    remote_retry_evidence = None
+    if args.retry_evidence:
+        remote_retry_evidence = copy_gate_receipt(
+            args.retry_evidence, remote_root, args.experiment_id
         )
 
     if args.ornith9_g0:
@@ -189,6 +207,8 @@ def main():
         ]
         if remote_gate:
             remote_argv += ["--gate-receipt", remote_gate]
+        if remote_retry_evidence:
+            remote_argv += ["--retry-evidence", remote_retry_evidence]
 
     command = (
         f"cd {shlex.quote(remote_root)} && "

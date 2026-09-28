@@ -172,11 +172,13 @@ def identity_check(plan, runtime):
     (runtime / "runtime-version.txt").write_text(version)
 
 
-def execute_shared(plan, gate_receipt):
+def execute_shared(plan, gate_receipt, retry_evidence=None):
     raw = Path(plan["raw_destination"])
     raw.mkdir(parents=True, exist_ok=False)
     runtime = raw / "runtime"
     runtime.mkdir()
+    if retry_evidence is not None:
+        h.save(runtime / "retry-receipt.json", retry_evidence)
     envs = contract.effective_environments(plan["launch_plan"])
     config = build_config(plan, envs) | {"gate_receipt": gate_receipt}
     validate_worker_config(config)
@@ -279,7 +281,7 @@ def execute_shared(plan, gate_receipt):
     return rc
 
 
-def dispatch(plan, *, execute_measured=False, gate_receipt=None, output_root=None):
+def dispatch(plan, *, execute_measured=False, gate_receipt=None, retry_evidence=None, output_root=None):
     if not execute_measured:
         return contract.dry_plan(plan, output_root)
     contract.assert_admission(plan, gate_receipt)
@@ -302,7 +304,7 @@ def dispatch(plan, *, execute_measured=False, gate_receipt=None, output_root=Non
         old = os.environ.get("V100_1CAT_PYTHON")
         os.environ["V100_1CAT_PYTHON"] = contract.PYTHON
         try:
-            return execute_shared(plan, gate_receipt)
+            return execute_shared(plan, gate_receipt, retry_evidence)
         finally:
             if old is None:
                 os.environ.pop("V100_1CAT_PYTHON", None)
@@ -318,6 +320,7 @@ def main():
     parser.add_argument("--run-label")
     parser.add_argument("--output-root", type=Path)
     parser.add_argument("--gate-receipt", type=Path)
+    parser.add_argument("--retry-evidence", type=Path)
     parser.add_argument("--execute-measured", action="store_true")
     parser.add_argument("--worker", type=Path)
     args = parser.parse_args()
@@ -327,8 +330,23 @@ def main():
     if not all((args.track, args.candidate, args.experiment_id, args.run_label)):
         parser.error("--track, --candidate, --experiment-id and --run-label are required")
     plan = contract.build_plan(args.track, args.candidate, args.experiment_id, args.run_label)
+    retry_evidence = None
+    if args.run_label == "retry-1":
+        if not args.execute_measured or args.retry_evidence is None:
+            parser.error("retry-1 requires --execute-measured and --retry-evidence")
+        predecessor = args.experiment_id[:-3] + "001"
+        previous = json.loads(args.retry_evidence.read_text())
+        if (previous.get("experiment_id") != predecessor
+                or previous.get("verdict") != "INCONCLUSIVE"
+                or previous.get("error") != "[Errno 98] Address already in use"):
+            parser.error("retry evidence does not match the R1 port-conflict failure")
+        retry_evidence = {"retry_of": predecessor, "reason": "infra_invalid_port_conflict",
+                          "user_authorized": True, "predecessor_completion": previous}
+    elif args.retry_evidence:
+        parser.error("--retry-evidence requires --run-label retry-1")
     receipt = json.loads(args.gate_receipt.read_text()) if args.gate_receipt else None
-    result = dispatch(plan, execute_measured=args.execute_measured, gate_receipt=receipt, output_root=args.output_root)
+    result = dispatch(plan, execute_measured=args.execute_measured, gate_receipt=receipt,
+                      retry_evidence=retry_evidence, output_root=args.output_root)
     if isinstance(result, int):
         return result
     print(json.dumps(result, ensure_ascii=False, indent=2))

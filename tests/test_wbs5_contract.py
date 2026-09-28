@@ -21,6 +21,18 @@ def plan(track="qwen-llama", candidate="R0", sequence=1, label=None):
 
 
 class FrozenContractTests(unittest.TestCase):
+    def test_user_authorized_ornith35_r1_retry_keeps_frozen_serving_config(self):
+        first = plan("ornith35-llama", "R1")
+        retry = plan("ornith35-llama", "R1", sequence=2, label="retry-1")
+        self.assertEqual(retry["run_identity"]["kind"], "retry")
+        self.assertFalse(retry["run_identity"]["automatic_retry"])
+        self.assertEqual(retry["configuration_sha256"], first["configuration_sha256"])
+        self.assertEqual(retry["normalized_effective"], first["normalized_effective"])
+        with self.assertRaisesRegex(ValueError, "sequence"):
+            plan("ornith35-llama", "R1", sequence=2, label="screening-1")
+        with self.assertRaisesRegex(ValueError, "run label"):
+            plan("ornith35-llama", "R2", sequence=2, label="retry-1")
+
     def test_qwen_known_serving_decode_invariant_is_common_and_not_an_ofat_axis(self):
         raw = ROOT / "results/raw/EXP-V100-Q38-1CAT-FP8E4M3-TARGET-RECIPE-B200-C1-128K-20260925-001"
         old = json.loads((raw / "config.json").read_text())
