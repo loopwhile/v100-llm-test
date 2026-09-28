@@ -712,7 +712,7 @@ WBS 5는 아래 7개 model/runtime track에 대해 이미 연구·선정이 끝�
 
 현재 단계는 **PARTIAL_MEASURED_RESULTS_PUBLISHED — 유효한 WBS5 measured raw 14건(Qwen llama.cpp 4건 + Ornith 1.5 9B llama.cpp 3건 + Ornith 1.5 35B llama.cpp 4건 + Gemma4 llama.cpp 3건)의 공식 report/CSV 반영 완료**이다. 8A 및 8B~8D runner/harness 구현·dry-plan·static/unit validation + ChatGPT pre-run final validation은 완료된 준비 이력이다.
 25개 frozen candidate의 28개 dry-plan을 저장했다. Qwen 1Cat R2는 host toolchain BLOCKED, Ornith9 1Cat G0는 pending이며 Gemma R3 Gate B는 `NOT_TRIGGERED`로 판정해 R3를 SKIP했다. 준비 당시 harness validation은 통과했으며, 회수 raw의 sampler 오류와 evidence 한계는 5.3.1에 기록했다. [준비 결과](WBS-5-preparation-readiness.md).
-2026-09-28~29 canonical `results/raw/`와 WBS experiment ID 대조 결과, 공식 publication 완료 raw는 Qwen llama.cpp `5.3.1.1`~`5.3.1.4` 4건, Ornith 1.5 9B llama.cpp `5.3.2.1`~`5.3.2.3` 3건, Ornith 1.5 35B llama.cpp `5.3.3.1`~`5.3.3.4` 4건, Gemma4 llama.cpp `5.3.4.1`~`5.3.4.3` 3건, 총 14건이다. 14건 모두 저장된 최종 verdict `PASS_C2_ACTIVE`로 publication했다. Ornith 9B R0의 최초 시도는 구 HEAD의 slot evidence parser 예외로 중단된 harness-invalid attempt였고 공식 performance evidence로 사용하지 않았다. Ornith 9B R2는 `ngram-simple` configuration이지만 이 workload에서 NGRAM draft activity가 관측되지 않았다. Ornith 35B R1의 최초 `-001` raw는 측정 전 포트 충돌로 `INCONCLUSIVE`; 보존하되 공식 performance report/CSV에서 제외하고, 사용자 지정 동일 설정 재실행 `-002`만 publication했다. 각 track review와 final recipe 승격은 미완료다.
+2026-09-28~29 canonical `results/raw/`와 WBS experiment ID 대조 결과, 공식 publication 완료 raw는 Qwen llama.cpp `5.3.1.1`~`5.3.1.4` 4건, Ornith 1.5 9B llama.cpp `5.3.2.1`~`5.3.2.3` 3건, Ornith 1.5 35B llama.cpp `5.3.3.1`~`5.3.3.4` 4건, Gemma4 llama.cpp `5.3.4.1`~`5.3.4.3` 3건, 총 14건이다. 14건 모두 저장된 최종 verdict `PASS_C2_ACTIVE`로 publication했다. Ornith 9B R0의 최초 시도는 구 HEAD의 slot evidence parser 예외로 중단된 harness-invalid attempt였고 공식 performance evidence로 사용하지 않았다. Ornith 9B R2는 `ngram-simple` configuration이지만 이 workload에서 NGRAM draft activity가 관측되지 않았다. Ornith 35B R1의 최초 `-001` raw는 측정 전 포트 충돌로 `INCONCLUSIVE`; 보존하되 공식 performance report/CSV에서 제외하고, 사용자 지정 동일 설정 재실행 `-002`만 publication했다. Ornith 35B `5.3.3.5` track review는 DONE이며 R1/R2를 workload-oriented `VALIDATED_RECIPE`로 승격했다. 다른 track review는 계속 미완료다.
 
 ### 5.1 authoritative planning input 및 진행 단계
 
@@ -736,7 +736,7 @@ WBS 5 단계 흐름:
 3. `docs/WBS.md` 공식 반영 완료.
 4. Codex CLI local validation / test preparation 완료 (8A~8D; measured inference 없음).
 5. ChatGPT pre-run final validation 완료.
-6. **현재 단계: 유효한 measured child 11건의 raw/report publication 완료. Qwen llama.cpp `5.3.1.7`, Ornith 1.5 9B llama.cpp `5.3.2.4`, Ornith 1.5 35B llama.cpp `5.3.3.5` track review와 final recipe 승격은 아직 미완료이며, 다음 measured child를 자동 실행하지 않는다.**
+6. **현재 단계: 유효한 measured child 14건의 raw/report publication 완료. Ornith 1.5 35B llama.cpp `5.3.3.5` track review는 DONE이며 R1/R2가 각각 decode-oriented / long-prefill-latency-oriented `VALIDATED_RECIPE`로 승격됐다. Qwen llama.cpp `5.3.1.7`, Ornith 1.5 9B llama.cpp `5.3.2.4`, Gemma4 llama.cpp `5.3.4.6` track review는 아직 미완료이며, 다음 measured child를 자동 실행하지 않는다.**
 7. 각 track measured 결과 분석 및 track review WBS 수행.
 8. 필요 시 Claude independent review.
 9. 모델별 final recipe 확정.
@@ -1052,9 +1052,9 @@ python3 scripts/run_wbs5_remote.py --track ornith9-llama --candidate R2 --experi
 
 GPU inference 없음. R0/R1/R2의 1GPU×2 배포 topology가 실제로 유지됐는지 먼저 확인하고 성능을 비교한다. routing/active-overlap evidence가 불완전하면 성능 숫자만으로 topology PASS를 선언하지 않는다. R2의 zero-draft NGRAM evidence를 성능 향상 근거로 해석하지 않으며, 이 단계가 완료되기 전에는 final recipe를 승격하지 않는다.
 
-#### 5.3.3 Ornith 1.5 35B-A3B / llama.cpp [NON-EXECUTABLE PARENT — FROZEN / MEASURED_RESULTS_PUBLISHED / REVIEW_PENDING]
+#### 5.3.3 Ornith 1.5 35B-A3B / llama.cpp [NON-EXECUTABLE PARENT — FROZEN / MEASURED_RESULTS_PUBLISHED / REVIEW_DONE / R1+R2 VALIDATED_RECIPE]
 
-R0/R1/R2/R3의 유효한 measured raw 4건을 공식 report/CSV에 반영했다. R1의 첫 `-001` 시도는 포트 점유로 서버 기동 전에 중단된 `INCONCLUSIVE` raw로 보존하며 성능 근거에서 제외한다. `5.3.3.5` 후보 비교 및 final recipe 승격은 수행하지 않았다.
+R0/R1/R2/R3의 유효한 measured raw 4건을 공식 report/CSV에 반영했고 `5.3.3.5` track review를 완료했다. R1의 첫 `-001` 시도는 포트 점유로 서버 기동 전에 중단된 `INCONCLUSIVE` raw로 보존하며 성능 근거에서 제외한다. 최종적으로 R1 native MTP1을 decode-oriented `VALIDATED_RECIPE`, R2 UB256을 long-prefill/latency-oriented `VALIDATED_RECIPE`로 승격했다. R0는 canonical reference baseline으로 유지하고 R3 QUEUE4X는 measurable benefit이 없어 branch 종료했다. 상세: [WBS 5.3.3.5 result review](WBS-5.3.3.5-result-review.md).
 
 Frozen candidates:
 
@@ -1139,9 +1139,19 @@ R0 대비 container environment의 `CUDA_SCALE_LAUNCH_QUEUES=4x`만 추가된 pl
 python3 scripts/run_wbs5_remote.py --track ornith35-llama --candidate R3 --experiment-id EXP-V100-WBS5-ORNITH35-LLAMA-R3-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
-##### 5.3.3.5 Ornith 1.5 35B llama.cpp — track result review
+##### 5.3.3.5 Ornith 1.5 35B llama.cpp — track result review [DONE]
 
-GPU inference 없음. R0/R1/R2/R3의 frozen one-variable delta를 다시 확인한 뒤 성능/VRAM/output/overlap/spec evidence를 비교한다. 기존 WBS3에서 관찰된 사실상 직렬 prefill behavior를 수정하기 위한 새 candidate를 추가하지 않는다.
+GPU inference 없이 published raw/report만 사용해 R0/R1/R2/R3의 frozen one-variable delta, 성능, VRAM, output integrity, overlap, telemetry, speculative evidence를 비교했다. 기존 WBS3/WBS5에서 관찰된 사실상 직렬 128K prefill behavior를 수정하기 위한 새 candidate는 추가하지 않았다.
+
+- R0 TARGET: canonical measured reference baseline. 두 요청 PASS / active overlap true / queue-only false / post-health healthy.
+- R1 native MTP1: **VALIDATED_RECIPE — DECODE_ORIENTED**. MTP 2,426 draft / 1,838 accepted = 75.76%; request-A runtime decode 28.13 -> 31.98 tok/s (+13.70%), mean request decode +12.49%. 반면 prefill -4.51%, TTFT +5.26%, batch wall +5.65%, GPU1 peak +1,428 MiB이므로 128K prefill latency winner로 해석하지 않는다.
+- R2 UB256: **VALIDATED_RECIPE — LONG_PREFILL_LATENCY_ORIENTED**. R0의 `b=512`를 유지하고 `ub=128 -> 256`만 변경해 prefill +20.03%, TTFT -15.33%, batch wall -11.68%를 관찰했다. Peak VRAM은 +272 MiB/GPU. Request-level decode 변화는 serialized prefill/scheduling 영향을 포함하므로 decode speedup으로 주장하지 않는다.
+- R3 QUEUE4X: **CLOSED — NO MEASURABLE BENEFIT**. `CUDA_SCALE_LAUNCH_QUEUES=4x`가 container effective environment에 실제 적용됐지만 R0 대비 핵심 metric이 약 ±0.1% 내이고 peak VRAM 및 실제 generated text도 R0와 동일했다.
+- `aggregate_decode_tps`는 total output / (latest end - earliest first content)의 mixed system-throughput metric이며 pure decode-kernel metric이 아니다. per-request prefill/decode는 llama.cpp runtime timings를 사용한다.
+- R1+R2 효과가 additive라는 evidence는 없다. combined recipe나 MTP n=2 등 새 candidate를 추가하지 않는다.
+- WBS5 performance workload에는 WBS3 semantic oracle가 없으므로 이 승격은 serving/performance/mechanical output-integrity 범위다.
+
+상세 metric semantics, candidate별 분석, exact measured launch command, telemetry 및 limitation: [docs/WBS-5.3.3.5-result-review.md](WBS-5.3.3.5-result-review.md).
 
 #### 5.3.4 Gemma4 26B-A4B / llama.cpp [NON-EXECUTABLE PARENT — R0/R1/R2 PUBLISHED / R3 SKIP / REVIEW PENDING]
 
