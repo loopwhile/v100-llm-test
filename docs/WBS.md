@@ -1143,7 +1143,7 @@ python3 scripts/run_wbs5_remote.py --track ornith35-llama --candidate R3 --exper
 
 GPU inference 없음. R0/R1/R2/R3의 frozen one-variable delta를 다시 확인한 뒤 성능/VRAM/output/overlap/spec evidence를 비교한다. 기존 WBS3에서 관찰된 사실상 직렬 prefill behavior를 수정하기 위한 새 candidate를 추가하지 않는다.
 
-#### 5.3.4 Gemma4 26B-A4B / llama.cpp [NON-EXECUTABLE PARENT — R0/R1/R2 PUBLISHED / R3 SKIP / REVIEW PENDING]
+#### 5.3.4 Gemma4 26B-A4B / llama.cpp [NON-EXECUTABLE PARENT — R0/R1/R2 PUBLISHED / R3 SKIP / REVIEW DONE — R0 RETAINED]
 
 Frozen candidates:
 
@@ -1234,9 +1234,59 @@ python3 scripts/run_wbs5_remote.py --track gemma-llama --candidate R3 --experime
 
 Gate B 미충족은 R3 failure가 아니라 conditional candidate의 정상 SKIP이다.
 
-##### 5.3.4.6 Gemma4 llama.cpp — track result review
+##### 5.3.4.6 Gemma4 llama.cpp — track result review [DONE — R0 RETAINED]
 
-GPU inference 없음. R0/R1/R2와 실행된 경우에만 R3를 비교한다. R3 미실행 시 Gate B가 왜 미충족됐는지 그대로 기록하며 대체 candidate를 만들지 않는다.
+GPU inference 없음. 이미 publication된 R0/R1/R2 raw만 사용해 frozen one-variable delta를 비교했다. R3는 5.3.4.4 Gate B가 `NOT_TRIGGERED`이므로 미실행 상태를 그대로 보존하며 대체 candidate를 추가하지 않는다.
+
+Evidence scope:
+- R0: `EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001` — TARGET, b512/ub128.
+- R1: `EXP-V100-WBS5-GEMMA-LLAMA-R1-PERF-20260928-001` — R0 대비 `--spec-type none -> ngram-simple`만 변경.
+- R2: `EXP-V100-WBS5-GEMMA-LLAMA-R2-PERF-20260928-001` — R0 대비 `--batch-size 512 -> 1024`만 변경, ub128 유지.
+- 세 run 모두 `PASS_C2_ACTIVE`, resident/active overlap true, queue-only false, 두 요청 output minimum 1,024 tokens 충족, normal stop, post-health healthy다.
+
+| Metric | R0 TARGET b512 | R1 NGRAM | R1 vs R0 | R2 TARGET b1024 | R2 vs R0 |
+|---|---:|---:|---:|---:|---:|
+| TTFT | 439.10 s | 448.49 s | +2.14% | 440.10 s | +0.23% |
+| Prefill | 359.09 tok/s | 353.18 tok/s | -1.64% | 355.46 tok/s | -1.01% |
+| Mean request decode | 22.54 tok/s | 21.48 tok/s | -4.69% | 22.28 tok/s | -1.15% |
+| Aggregate decode | 7.54 tok/s | 7.10 tok/s | -5.92% | 7.60 tok/s | +0.72% |
+| End-to-end output | 4.78 tok/s | 4.52 tok/s | -5.56% | 4.77 tok/s | -0.22% |
+| Batch wall | 671.54 s | 685.38 s | +2.06% | 670.94 s | -0.09% |
+| Peak VRAM GPU0/GPU1 | 10,039 / 10,537 MiB | 10,039 / 10,607 MiB | 0 / +70 MiB | 10,039 / 10,537 MiB | no change |
+
+Capacity / stability:
+- R0/R1/R2 모두 C2 active overlap을 유지했고 OOM/crash/server-health failure가 없다.
+- R2의 b1024는 capacity/VRAM penalty를 만들지 않았지만 R0 대비 성능 이득도 만들지 않았다.
+
+Output integrity:
+- R0 outputs: 1,603 / 1,610 tokens, 둘 다 PASS / `finish_reason=stop`.
+- R1 outputs: 1,462 / 1,635 tokens, 둘 다 PASS / `finish_reason=stop`.
+- R2 outputs: 1,633 / 1,570 tokens, 둘 다 PASS / `finish_reason=stop`.
+- 이 performance workload의 PASS를 별도 semantic superiority로 확대 해석하지 않는다.
+
+Power / temperature / clocks:
+- R0 max power GPU0/GPU1 169.00 / 161.46 W, max temp 61 / 58 C.
+- R1 max power 169.35 / 159.58 W, max temp 60 / 58 C.
+- R2 max power 168.88 / 161.93 W, max temp 61 / 58 C.
+- 세 run 모두 observed max SM clock 1,200 MHz, memory clock 877 MHz. R1/R2에서 유의미한 thermal/clock advantage 또는 penalty는 관찰되지 않았다.
+
+Speculative / topology behavior:
+- R1 NGRAM counter는 draft 144, accepted 54, acceptance 37.5%로 실제 speculative activity가 있었다. 그러나 acceptance가 aggregate/E2E 개선으로 연결되지 않았다.
+- R0/R1/R2 모두 동일한 2-GPU layer-split shared topology에서 active overlap을 유지했다.
+- 요청별 decode 비대칭은 R0 약 41.26 / 3.82 tok/s, R2 약 40.81 / 3.75 tok/s로 유지됐다. R2의 larger logical batch가 topology behavior를 실질적으로 바꿨다는 evidence는 없다.
+
+Candidate decision:
+- **R1 NGRAM branch 종료.** R0 대비 mean decode -4.69%, aggregate decode -5.92%, E2E -5.56%, wall +2.06%이고 GPU1 peak VRAM도 70 MiB 증가했다. NGRAM acceptance 37.5%만으로 유지하지 않으며 N/M/hits 또는 다른 NGRAM variant를 추가하지 않는다.
+- **R2 batch1024 branch 종료.** intended effect였던 TTFT/prefill 개선이 나타나지 않았다. 모든 주요 delta가 약 ±1.2% 이내이며 aggregate +0.72%도 E2E/wall 개선으로 이어지지 않았다. 이는 single-run measurement noise 가능성을 포함하는 미세 차이로 취급하고 자동 반복 측정을 요구하지 않는다. b2048/ubatch grid도 추가하지 않는다.
+- **R3 GRAPH-OFF는 SKIP 유지.** R0에서 graph reuse 4,425회가 관찰됐지만 약 10분 33초 동안 VRAM이 안정적이었고 graph-related error/instability가 없어서 Gate B가 `NOT_TRIGGERED`였다. 미실행은 candidate failure가 아니다.
+- **R0 TARGET b512/ub128만 final recipe 후보로 유지한다.** 이 단계에서는 5.5 publication 이전이므로 `VALIDATED_RECIPE`로 최종 승격하지 않고, track review 결과로서 승격 대상 configuration을 고정한다.
+
+Track result review 결론:
+- candidate branch 종료: R1, R2.
+- conditional skip: R3.
+- final recipe 승격 대상으로 유지: `G4-LCPP-WBS5-R0-TARGET-B512-UB128`.
+- 새 candidate 추가 없음, 추가 GPU inference 없음.
+
 
 ### 5.4 1Cat-vLLM frozen tracks
 
