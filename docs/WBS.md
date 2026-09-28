@@ -891,7 +891,7 @@ LOCAL_VERIFY_REQUIRED:
 - 4건 모두 `runtime/measurement.log`에 slot sampler의 `AttributeError: 'list' object has no attribute 'get'`가 있다. live sampler는 2 samples / peak processing 0만 기록했으므로, active overlap 근거는 `runtime/server-0.log`의 decode interleaving과 `log-overlap-evidence.json`이다.
 - R0 repetition-1의 `wbs5-evidence.json`에는 보정 전 `c2_active: null` / `UNKNOWN`이 남아 있다. 공식 reporter는 보정된 `completion.json`/`metrics.json`을 사용하며 이 snapshot 차이는 그대로 보존한다.
 - Requests의 PASS와 `mechanical_output_verdict: PASS`는 raw에 기록된 판정이다. 별도 `acceptance-review.json`은 없으며, 새 semantic audit나 winner 선정은 수행하지 않았다.
-- 5.3.1.5/5.3.1.6 optional confirm은 raw 없음 / 미실행 상태로 유지한다. 5.3.1.7 track review와 final recipe 승격은 완료 처리하지 않는다.
+- 5.3.1.5/5.3.1.6 optional confirm은 2026-09-28 사용자 결정으로 **SKIP**한다. 미실행 / raw 없음이며 measured DONE이나 PASS로 취급하지 않는다. 5.3.1.7 track review와 final recipe 승격은 완료 처리하지 않는다.
 
 ##### 5.3.1.1 Qwen3.8 llama.cpp — R0 repetition-1 measured [DONE — PASS_C2_ACTIVE]
 
@@ -947,17 +947,17 @@ R0 대비 `--ubatch-size 128 -> 256`만 바뀌는지 확인하고 1회 수행한
 python3 scripts/run_wbs5_remote.py --track qwen-llama --candidate R2 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
-##### 5.3.1.5 Qwen3.8 llama.cpp — R1 optional confirm [CONDITIONAL]
+##### 5.3.1.5 Qwen3.8 llama.cpp — R1 optional confirm [SKIP — USER_DECISION]
 
-자동 실행 금지. 5.3.1.3 결과를 검토한 뒤 동일 configuration의 confirm이 실제로 필요하다고 결정된 경우에만 fresh ID로 수행한다.
+상태: **SKIP — USER_DECISION** (2026-09-28). 사용자 지시로 R1 optional confirm을 실행하지 않는다. Raw/report 없음; 아래 명령은 frozen plan 이력으로만 보존한다.
 
 ```bash
 python3 scripts/run_wbs5_remote.py --track qwen-llama --candidate R1 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-002 --run-label confirm-1 --execute-measured
 ```
 
-##### 5.3.1.6 Qwen3.8 llama.cpp — R2 optional confirm [CONDITIONAL]
+##### 5.3.1.6 Qwen3.8 llama.cpp — R2 optional confirm [SKIP — USER_DECISION]
 
-자동 실행 금지. 5.3.1.4 결과 검토 후 confirm 필요성이 확인된 경우에만 수행한다.
+상태: **SKIP — USER_DECISION** (2026-09-28). 사용자 지시로 R2 optional confirm을 실행하지 않는다. Raw/report 없음; 아래 명령은 frozen plan 이력으로만 보존한다.
 
 ```bash
 python3 scripts/run_wbs5_remote.py --track qwen-llama --candidate R2 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-002 --run-label confirm-1 --execute-measured
@@ -965,7 +965,7 @@ python3 scripts/run_wbs5_remote.py --track qwen-llama --candidate R2 --experimen
 
 ##### 5.3.1.7 Qwen3.8 llama.cpp — track result review
 
-GPU inference 없음. 완료된 R0 repetition과 R1/R2 screening/confirm evidence를 비교한다. TTFT, prefill, mean request decode, aggregate decode, end-to-end TPS, batch wall, VRAM, output integrity, NGRAM counter를 정리하되 이 단계에서 새로운 tuning candidate를 만들지 않는다. 필요한 confirm이 아직 수행되지 않았다면 그 필요성만 명시하고 자동 실행하지 않는다.
+GPU inference 없음. 완료된 R0 repetition 2건과 R1/R2 screening 각 1건의 evidence를 비교한다. TTFT, prefill, mean request decode, aggregate decode, end-to-end TPS, batch wall, VRAM, output integrity, NGRAM counter를 정리하되 이 단계에서 새로운 tuning candidate를 만들지 않는다. R1/R2 optional confirm은 사용자 결정으로 SKIP했으며, 추가 confirm 없이 현재 4건의 evidence 범위와 한계를 명시한다.
 
 #### 5.3.2 Ornith 1.5 9B / llama.cpp [NON-EXECUTABLE PARENT — FROZEN / READY_FOR_MEASURED_EXECUTION]
 

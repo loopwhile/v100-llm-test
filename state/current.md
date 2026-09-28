@@ -16,6 +16,7 @@
 - 준비 결과: `docs/WBS-5-preparation-readiness.md`; plans: `results/plans/wbs5-preparation-20260928/manifest.json`.
 - 이번 publication 검증: `validate_repo.py` PASS; reporter/harness/WBS5/measurement-policy 관련 pytest **74 PASS + 25 subtests** (격리된 `/tmp` 저장소에서 확인). 원본 checkout에서는 dry-plan 테스트 1개가 이미 회수된 raw 경로의 부재를 가정해 실패했으며, raw나 테스트 코드는 변경하지 않았다. Report/CSV 값 대조 및 raw 144개 파일 SHA256 보존 확인 완료.
 - 확인된 완료 experiment: `EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-001`, `EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-002`, `EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-001`, `EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001`. 모두 raw 최종 verdict **PASS_C2_ACTIVE**; report 4개와 summary/comparison 반영 완료. 그 밖의 WBS5 measured child 및 optional confirm은 로컬 raw가 없어 완료 처리하지 않았다.
+- Qwen llama.cpp **5.3.1.5 / 5.3.1.6: SKIP — USER_DECISION** (2026-09-28). R1/R2 optional confirm은 실행하지 않으며, 5.3.1.7 track review는 기존 measured 4건만 대상으로 한다.
 - WBS 6 관련 기존 상태/결과는 아래 기록을 그대로 유지한다.
 
 ## WBS 3 authoritative workload reset — 2026-09-25
