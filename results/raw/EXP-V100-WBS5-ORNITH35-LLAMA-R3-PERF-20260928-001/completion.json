@@ -1,0 +1,9 @@
+{
+  "experiment_id": "EXP-V100-WBS5-ORNITH35-LLAMA-R3-PERF-20260928-001",
+  "verdict": "PASS_C2_ACTIVE",
+  "completed_at_utc": "2026-09-28T15:26:54.539768+00:00",
+  "post_health": {
+    "healthy": true,
+    "at_utc": "2026-09-28T15:26:53.127854+00:00"
+  }
+}

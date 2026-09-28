@@ -1,0 +1,5 @@
+{
+  "experiment_id": "EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-001",
+  "verdict": "INCONCLUSIVE",
+  "error": "[Errno 98] Address already in use"
+}

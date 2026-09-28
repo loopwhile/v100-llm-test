@@ -1,0 +1,9 @@
+{
+  "status": "UNKNOWN",
+  "aggregate": {
+    "draft_tokens": null,
+    "accepted_tokens": null,
+    "draft_count": null,
+    "acceptance_ratio": null
+  }
+}

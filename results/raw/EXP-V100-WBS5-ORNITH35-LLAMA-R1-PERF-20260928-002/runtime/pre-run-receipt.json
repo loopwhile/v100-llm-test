@@ -1,0 +1,77 @@
+{
+  "at_utc": "2026-09-28T14:14:56.911177+00:00",
+  "monotonic_s": 25812.036655352,
+  "gpu_fields": [
+    "index",
+    "uuid",
+    "name",
+    "memory.total",
+    "memory.free",
+    "memory.used",
+    "temperature.gpu",
+    "power.draw",
+    "clocks.sm",
+    "clocks.mem",
+    "utilization.gpu"
+  ],
+  "gpus": {
+    "status": "OBSERVED",
+    "value": "0, GPU-bb94e2a3-e900-d9e5-b580-194e4a36fb3a, Tesla V100-SXM2-16GB, 16384, 16145, 0, 44, 26.54, 135, 877, 0\n1, GPU-ef3074d2-f4f9-3f23-56d2-2ae6fe90694f, Tesla V100-SXM2-16GB, 16384, 16145, 0, 41, 27.02, 135, 877, 0\n"
+  },
+  "gpu_processes": {
+    "status": "OBSERVED",
+    "value": ""
+  },
+  "host_ram_swap": {
+    "status": "OBSERVED",
+    "value": "MemTotal:       64060300 kB\nMemFree:        15037680 kB\nMemAvailable:   62552024 kB\nBuffers:          194000 kB\nCached:         47796456 kB\nSwapCached:            0 kB\nActive:           954360 kB\nInactive:       47231212 kB\nActive(anon):     204840 kB\nInactive(anon):        0 kB\nActive(file):     749520 kB\nInactive(file): 47231212 kB\nUnevictable:        9612 kB\nMlocked:            9612 kB\nSwapTotal:       4194300 kB\nSwapFree:        4194300 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:            181688 kB\nWriteback:             0 kB\nAnonPages:        205452 kB\nMapped:           270768 kB\nShmem:              2288 kB\nKReclaimable:     241708 kB\nSlab:             393280 kB\nSReclaimable:     241708 kB\nSUnreclaim:       151572 kB\nKernelStack:        5824 kB\nPageTables:         6816 kB\nSecPageTables:         0 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    36224448 kB\nCommitted_AS:    1425748 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:      181624 kB\nVmallocChunk:          0 kB\nPercpu:             9552 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:         0 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:    167936 kB\nFilePmdMapped:         0 kB\nCmaTotal:              0 kB\nCmaFree:               0 kB\nUnaccepted:            0 kB\nBalloon:               0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:     1021484 kB\nDirectMap2M:     8990720 kB\nDirectMap1G:    58720256 kB\n"
+  },
+  "runtime_identity": {
+    "family": "kyuz0/nvidia-v100-ai-toolboxes",
+    "image": "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149",
+    "build": 10775,
+    "commit": "67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
+    "cuda_cudart": "12.6.77-1",
+    "cuda_cublas": "12.6.4.1-1",
+    "status": "bootstrap_pin_requires_fresh_verification"
+  },
+  "model_identity": {
+    "status": "verified_local_artifact",
+    "path": "/srv/models/ornith-1.5-35b-a3b-gguf/Ornith-1.5-35B-Q4_K_M.gguf",
+    "sha256": "42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f",
+    "weight_quant": "Q4_K_M",
+    "kv_candidates": [
+      "Q8_0"
+    ],
+    "required_spec_lanes": [
+      "target-only",
+      "ngram",
+      "native-mtp",
+      "mtp+ngram"
+    ],
+    "repository": "ornith-ai/Ornith-1.5-35B-A3B-GGUF",
+    "revision": "12393612fd4f730ff5aadc23e9b8f9648aa49ceb",
+    "filename": "Ornith-1.5-35B-Q4_K_M.gguf",
+    "mtp_companion": {
+      "status": "verified_local_artifact_repository_unresolved",
+      "repository": null,
+      "revision": "04eb5f9915607c840716ae817717431f0ba6df07",
+      "path": "/srv/models/ornith-1.5-35b-a3b-gguf/mtp-Ornith-1.5-35B-A3B-Abliterated-MTPv2-Q8_0.gguf",
+      "sha256": "7d58b16ecab1a30884f76f1372680405a52a30547d94fb6b61cef802a7311ab6"
+    },
+    "mtp_draft_n_max": 1
+  },
+  "expected_artifact_hash": "42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f",
+  "candidate_id": "ORN35-LLAMA-WBS5-R1-MTP1",
+  "workload": {
+    "path": "workloads/performance/v1.json",
+    "sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+    "context_per_request": 131072,
+    "requests": [
+      "project-a",
+      "project-b"
+    ],
+    "output_reserve": 4096,
+    "min_output": 1024
+  }
+}

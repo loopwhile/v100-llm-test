@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "candidate_id": "ORN35-LLAMA-WBS5-R1-MTP1",
+  "run_identity": {
+    "label": "screening-1",
+    "kind": "screening",
+    "index": 1,
+    "automatic_retry": false,
+    "automatic_confirm": false,
+    "batches_in_this_invocation": 1
+  },
+  "workload_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+  "launch_command": "docker run --cidfile /home/loopwhile/v100-llm-test-wbs5/51c2c54456ae/results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-001/runtime/container-0.cid --label experiment=EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-001 --rm --pull=never --name exp-v100-wbs5-ornith35-llama-r1-perf-20260928-001-backend-0 --label project=v100-llm-test --gpus '\"device=0,1\"' -p 127.0.0.1:18080:8080 -v /srv/models/ornith-1.5-35b-a3b-gguf/Ornith-1.5-35B-Q4_K_M.gguf:/model/target.gguf:ro --entrypoint llama-server kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149 -m /model/target.gguf --host 0.0.0.0 --port 8080 -ngl all --split-mode layer --tensor-split 1,1 --ctx-size 262144 --parallel 2 --kv-unified --kv-unified-per-slot 131072 --batch-size 512 --ubatch-size 128 --cache-type-k q8_0 --cache-type-v q8_0 --flash-attn on --spec-type draft-mtp --spec-draft-n-max 1 --jinja --reasoning off --metrics --slots --no-warmup",
+  "effective_environment": [
+    {
+      "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "LANG": "C.UTF-8",
+      "HOME": "/home/loopwhile"
+    }
+  ],
+  "container_environment_overrides": [
+    {}
+  ],
+  "resolved_environment_receipt": "runtime/effective-environment.json",
+  "normalized_delta_from_r0": [
+    {
+      "path": "/servers/0/argv/--spec-draft-n-max",
+      "r0": null,
+      "candidate": [
+        "1"
+      ]
+    },
+    {
+      "path": "/servers/0/argv/--spec-type/0",
+      "r0": "none",
+      "candidate": "draft-mtp"
+    }
+  ],
+  "ttft_ms": null,
+  "prefill_tps": null,
+  "mean_request_decode_tps": null,
+  "aggregate_decode_tps": null,
+  "end_to_end_output_tps": null,
+  "batch_wall_s": null,
+  "peak_vram_gpu0_mib": null,
+  "peak_vram_gpu1_mib": null,
+  "c2_active": null,
+  "queue_only": null,
+  "mechanical_output_verdict": null,
+  "total_output_tokens": null,
+  "metric_status": {
+    "ttft_ms": "UNKNOWN",
+    "prefill_tps": "UNKNOWN",
+    "mean_request_decode_tps": "UNKNOWN",
+    "aggregate_decode_tps": "UNKNOWN",
+    "end_to_end_output_tps": "UNKNOWN",
+    "batch_wall_s": "UNKNOWN",
+    "peak_vram_gpu0_mib": "UNKNOWN",
+    "peak_vram_gpu1_mib": "UNKNOWN",
+    "c2_active": "UNKNOWN",
+    "queue_only": "UNKNOWN",
+    "mechanical_output_verdict": "UNKNOWN"
+  },
+  "requests": [],
+  "post_health": null,
+  "telemetry": "runtime/gpu-telemetry.jsonl",
+  "telemetry_fields": [
+    "power.draw",
+    "temperature.gpu",
+    "clocks.sm",
+    "clocks.mem",
+    "utilization.gpu"
+  ],
+  "limitation": "VRAM peak sampled every 0.5s; power/temp/clocks sampled every 2s. TPS definitions unchanged.",
+  "graph_evidence": "graph-evidence.json",
+  "log_overlap_evidence": "log-overlap-evidence.json",
+  "slot_progress": "slot-progress.json",
+  "speculative_evidence": "speculative-evidence.json",
+  "gpu_telemetry_summary": {
+    "0": {
+      "power.draw": {
+        "status": "UNKNOWN",
+        "min": null,
+        "max": null,
+        "samples": 0
+      },
+      "temperature.gpu": {
+        "status": "UNKNOWN",
+        "min": null,
+        "max": null,
+        "samples": 0
+      },
+      "clocks.sm": {
+        "status": "UNKNOWN",
+        "min": null,
+        "max": null,
+        "samples": 0
+      },
+      "clocks.mem": {
+        "status": "UNKNOWN",
+        "min": null,
+        "max": null,
+        "samples": 0
+      },
+      "utilization.gpu": {
+        "status": "UNKNOWN",
+        "min": null,
+        "max": null,
+        "samples": 0
+      }
+    },
+    "1": {
+      "power.draw": {
+        "status": "UNKNOWN",
+        "min": null,
+        "max": null,
+        "samples": 0
+      },
+      "temperature.gpu": {
+        "status": "UNKNOWN",
+        "min": null,
+        "max": null,
+        "samples": 0
+      },
+      "clocks.sm": {
+        "status": "UNKNOWN",
+        "min": null,
+        "max": null,
+        "samples": 0
+      },
+      "clocks.mem": {
+        "status": "UNKNOWN",
+        "min": null,
+        "max": null,
+        "samples": 0
+      },
+      "utilization.gpu": {
+        "status": "UNKNOWN",
+        "min": null,
+        "max": null,
+        "samples": 0
+      }
+    }
+  }
+}

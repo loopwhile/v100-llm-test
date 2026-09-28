@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "verdict": "INCONCLUSIVE",
+  "error": "[Errno 98] Address already in use"
+}
