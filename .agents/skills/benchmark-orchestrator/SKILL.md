@@ -10,6 +10,17 @@ description: >-
 
 # V100 LLM Benchmark Orchestrator
 
+## WBS 5 measured child hard override
+
+사용자가 `WBS 5.3.x.y` 또는 `WBS 5.4.x.y`의 **measured child**를 지시한 경우, 아래 일반 subagent lifecycle보다 `docs/WBS.md`의 WBS5 contract가 우선한다.
+
+- subagent를 정의하거나 호출하지 않는다.
+- SSH/rsync/staging 절차를 스스로 조립하지 않는다.
+- child 항목에 적힌 `python3 scripts/run_wbs5_remote.py ...` 명령 **한 개만 실행**한다.
+- wrapper가 P520 benchmark 실행과 raw 회수를 담당한다.
+- raw 회수 후 report/WBS/state/CSV/commit/push를 하지 않고 사용자에게 experiment ID와 raw verdict만 보고하고 종료한다.
+- 다음 WBS를 자동 실행하지 않는다.
+
 이 스킬은 벤치마크 테스트를 **오케스트레이터 + 서브에이전트** 패턴으로 실행한다.
 
 ## 역할 분리

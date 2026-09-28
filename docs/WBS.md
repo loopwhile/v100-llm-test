@@ -793,156 +793,62 @@ WBS 5 단계 흐름:
 
 #### 5.2.1 WBS 번호 dispatch 규칙 — Luna/Codex CLI
 
-WBS 5 measured phase는 준비 단계의 28개 dry-plan을 한 번에 sweep하는 작업이 아니다. 기존 프로젝트 운영 방식과 동일하게 **한 WBS 번호 = 한 명확한 실행 또는 한 명확한 gate/review 작업**으로 수행한다. Codex CLI에서 Luna 모델을 사용하더라도 번호를 임의 해석하지 않도록 다음 dispatch 규칙을 authoritative contract로 사용한다.
+WBS 5 measured child는 **한 번호 = 한 benchmark run**이다.
 
-- 실행 가능한 번호는 아래에 실제 child 항목으로 정의된 **4단계 번호**(`5.3.x.y`, `5.4.x.y`)뿐이다.
-- `5.3.1`, `5.3.2`, `5.4.1` 같은 3단계 번호는 **NON-EXECUTABLE PARENT SECTION**이다.
-- 사용자가 parent 번호만 지시하면 child를 추론하거나 `state/current.md`의 next item을 자동 선택하지 않는다. 실행 가능한 child 목록만 보고하고 measured inference 없이 종료한다.
-- 사용자가 `WBS 5.3.1.1 진행해.`처럼 정확한 child 번호를 지시하면 **그 child 하나만** 수행한다. 다음 child를 자동 실행하지 않는다.
-- exact experiment ID, candidate, run-label은 이 문서와 `results/plans/wbs5-preparation-20260928/manifest.json` 및 해당 `candidate-plan.json`을 대조한다.
-- measured candidate의 authoritative entry point는 `scripts/run_wbs5.py ... --execute-measured`다. child 항목에 적힌 SSH command를 그대로 사용하며 임시 runner/direct server command/config 재작성을 하지 않는다.
-- conditional/gated item은 gate가 실제 PASS하기 전에는 실행하지 않는다. blocker 해소를 위해 package/system/driver/toolchain을 임의 설치하거나 수정하지 않는다.
-- **WBS 5에서는 generic benchmark-orchestrator skill의 WBS 2.2 전용 snapshot/subagent 절차를 재사용하지 않는다.** main Codex/Luna 세션이 아래 ThinkPad ↔ P520 workflow를 직접 수행한다. `benchmark-runner` subagent를 새로 만들거나 호출하지 않는다.
+- 실행 가능한 measured 번호는 아래 실제 child 항목으로 정의된 `5.3.x.y`, `5.4.x.y`다.
+- `5.3.1`, `5.3.2`, `5.4.1` 같은 3단계 번호는 **NON-EXECUTABLE PARENT SECTION**이다. parent만 지시받으면 child를 추론해 실행하지 않는다.
+- 사용자가 `WBS 5.3.1.1 진행해.`라고 하면 **5.3.1.1의 benchmark 한 건만 실행하고 raw 결과를 ThinkPad로 회수한 뒤 종료**한다.
+- 다음 WBS를 자동 실행하지 않는다.
+- measured child 실행 중 report 생성, `docs/WBS.md` 수정, `state/current.md` 수정, summary/comparison CSV 수정, commit/push를 하지 않는다. 이런 분석/정리 작업은 별도 review WBS 또는 별도 사용자 지시에서 수행한다.
+- automatic retry, automatic confirm, fallback, tuning, candidate 변경을 하지 않는다.
 
-#### 5.2.2 WBS5 execution host / repository / rsync flow [AUTHORITATIVE]
+#### 5.2.2 WBS5 measured execution entry point [AUTHORITATIVE]
 
-WBS5 measured execution은 **ThinkPad를 control/Git host**, **P520을 measurement host**로 분리한다. 이 절차는 모든 measured child WBS에 공통이며, Codex/Luna가 과거 WBS에서 다른 snapshot 경로를 검색하거나 새 staging 경로를 임의 생성해서는 안 된다.
+ThinkPad Codex/Luna는 remote orchestration을 직접 재구성하지 않는다. 모든 measured child는 **`scripts/run_wbs5_remote.py` 한 명령만 실행**한다.
 
-고정 위치:
+이 wrapper가 내부에서 정확히 다음만 수행한다.
 
-- ThinkPad Git checkout: `~/Data/Workspace_VSCode/v100-llm-test`
-- P520 SSH alias: `p520`
-- SSH 후 기대 hostname: `p520-llm`
-- **WBS5 canonical P520 snapshot: `/home/loopwhile/v100-llm-test-wbs5-20260928-a`**
-- Git commit/pull/report/WBS/state closeout: **ThinkPad에서만 수행**
-- server/model load/measured inference/GPU telemetry: **P520 snapshot에서만 수행**
-- P520 snapshot에는 `.git`을 보내지 않는다. P520에서 `git pull`, commit, branch 변경을 하지 않는다.
+1. 현재 committed `HEAD`의 tracked source를 `git archive`로 P520의 commit-isolated snapshot에 전송.
+2. P520에서 해당 benchmark runner를 **정확히 한 번** 실행.
+3. 해당 `results/raw/<EXP_ID>/` 디렉터리만 ThinkPad의 `results/raw/<EXP_ID>/`로 회수.
+4. raw의 verdict/error를 stdout에 요약하고 종료.
 
-새 measured child를 시작할 때 ThinkPad checkout에서 다음 순서를 지킨다.
+고정 contract:
 
-**A. ThinkPad repository guard**
+- control host / Git checkout: ThinkPad `~/Data/Workspace_VSCode/v100-llm-test`
+- measurement host SSH alias: `p520`; expected hostname: `p520-llm`
+- remote snapshot: `/home/loopwhile/v100-llm-test-wbs5/<HEAD12>`
+- source sync는 `git archive HEAD`를 사용한다. **`rsync --delete`를 사용하지 않는다.**
+- wrapper는 tracked working-tree/index 변경이 있으면 benchmark를 시작하지 않는다. untracked 이전 raw 결과는 허용한다.
+- 같은 HEAD snapshot에 같은 experiment ID의 remote raw가 이미 있으면 benchmark를 중복 실행하지 않고 그 raw만 회수한다.
+- ThinkPad에 같은 experiment ID의 local raw가 이미 있으면 overwrite하지 않고 중단한다.
+- benchmark process가 non-zero여도 raw가 생성되었다면 raw를 회수하고 wrapper 자체는 orchestration 성공으로 종료한다. benchmark PASS/FAIL은 `completion.json`의 verdict로 판단한다.
+- 예전 `/home/loopwhile/v100-llm-test-wbs5-20260928-a` snapshot과 그 안의 pre-measurement residue는 **legacy/abandoned**다. 이 commit 이후 WBS5 measured execution에는 사용하지 않는다.
+- generic benchmark-orchestrator의 subagent 방식은 WBS5 measured child에 사용하지 않는다.
 
-```bash
-cd ~/Data/Workspace_VSCode/v100-llm-test
-test -z "$(git status --short)"
-test "$(git branch --show-current)" = "main"
-git pull --ff-only
-python3 scripts/validate_repo.py
-python3 scripts/validate_wbs5_plans.py --output /tmp/wbs5-review-plans --date 20260928
+따라서 measured child의 완료 조건은 단순하다.
+
+```text
+P520에서 지정 benchmark 1회 실행
+        ↓
+ThinkPad results/raw/<EXP_ID>/ 회수
+        ↓
+STOP
 ```
 
-하나라도 실패하면 P520 sync/measured inference로 진행하지 않는다. 현재 child의 experiment ID가 ThinkPad `results/raw/<EXP_ID>`에 이미 존재해도 재실행하지 않는다.
+report/publication/WBS/state/Git closeout은 measured child의 책임이 아니다.
 
-**B. 고정 P520 snapshot refresh**
-
-canonical snapshot만 사용한다. 새 `...-a2`, `...-b`, 날짜가 다른 임시 snapshot 등은 만들지 않는다.
-
-```bash
-ssh p520 'test "$(hostname)" = "p520-llm" && mkdir -p /home/loopwhile/v100-llm-test-wbs5-20260928-a'
-
-rsync -a --delete   --exclude='.git/'   --exclude='results/raw/'   --exclude='results/*.nohup.log'   ./ p520:/home/loopwhile/v100-llm-test-wbs5-20260928-a/
-```
-
-`results/raw/`는 outbound sync에서 제외하며 `--delete-excluded`는 사용하지 않는다. 따라서 P520에 생성된 immutable raw evidence를 source refresh가 삭제해서는 안 된다.
-
-**C. P520 preflight / exact-plan regeneration**
-
-```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a &&   test "$(hostname)" = "p520-llm" &&   python3 scripts/validate_repo.py &&   python3 scripts/validate_wbs5_plans.py --output /tmp/wbs5-review-plans --date 20260928'
-```
-
-이 검증은 inference가 아니다. P520에서 재생성한 candidate-plan이 ThinkPad에서 승인된 frozen plan과 일치해야 한다. GPU compute process/port/source/config/runtime/artifact guard는 runner의 pre-run contract까지 통과해야 한다.
-
-**D. existing remote raw check — 재실행 금지**
-
-각 child의 exact `<EXP_ID>`를 실행하기 전에 P520 canonical snapshot의 raw destination을 검사한다.
-
-```bash
-ssh p520 'test ! -e /home/loopwhile/v100-llm-test-wbs5-20260928-a/results/raw/<EXP_ID>'
-```
-
-이미 존재하면 **삭제/overwrite/rerun하지 않는다**. 이전 SSH 중단이나 실패가 남긴 raw일 수 있으므로 아래 recovery flow로 바로 회수한다. evidence가 infra-invalid여도 동일 experiment ID를 재사용하지 않는다. 새 retry ID가 필요하면 별도 계획 변경과 사용자 승인이 필요하다.
-
-**E. single measured execution**
-
-각 child WBS의 bash block은 **ThinkPad Codex가 실행하는 실제 SSH command**다. 한 번만 실행한다. SSH command가 non-zero로 끝나도 즉시 다음 WBS로 넘어가거나 retry하지 않는다.
-
-특히 shell/agent가 non-zero exit에서 작업 전체를 중단해 raw 회수를 건너뛰면 안 된다. measured command의 exit code를 기록한 뒤 반드시 recovery/closeout 단계로 이동한다.
-
-```bash
-set +e
-# 아래 child WBS에 적힌 exact ssh p520 '... run_wbs5.py ... --execute-measured' 명령 1개 실행
-# 예: WBS 5.3.1.1의 command
-MEASURE_RC=$?
-set -e
-printf 'measured ssh exit code: %s\n' "$MEASURE_RC"
-```
-
-automatic retry, automatic confirm, fallback, candidate 변경, 임의 option 추가는 금지한다.
-
-**F. P520 raw → ThinkPad 회수**
-
-measured command가 PASS든 non-zero든, P520에 `results/raw/<EXP_ID>`가 생겼다면 **그 디렉터리 하나만** ThinkPad로 회수한다.
-
-```bash
-cd ~/Data/Workspace_VSCode/v100-llm-test
-test ! -e results/raw/<EXP_ID>
-rsync -a   p520:/home/loopwhile/v100-llm-test-wbs5-20260928-a/results/raw/<EXP_ID>   results/raw/
-```
-
-remote raw가 존재하지 않으면 만들어내지 않는다. runner가 raw 생성 전 차단된 원인을 보고하고 해당 WBS를 BLOCKED/NOT_EXECUTED로 남긴다. remote raw가 존재하면 실패 evidence도 반드시 회수하며 P520 원본을 삭제하지 않는다.
-
-**G. ThinkPad evidence verification / publication**
-
-회수 후 최소한 다음을 직접 확인한다.
-
-- `completion.json`
-- `metrics.json`
-- `wbs5-evidence.json`
-- `runtime/exit.json`
-- `runtime/cleanup.json`
-- `runtime/server-*.log`
-- 존재하는 경우 `graph-evidence.json`, `slot-progress.json`, `speculative-evidence.json`, `runtime/gpu-telemetry.jsonl`
-
-startup/preflight 단계에서 끝난 실패라면 존재할 수 없는 measured artifact를 합성하지 않는다. report 생성에 필요한 raw contract가 유효하면 ThinkPad에서만 다음을 실행한다.
-
-```bash
-python3 scripts/report_experiment.py results/raw/<EXP_ID>
-```
-
-**H. WBS/state/Git closeout**
-
-- `docs/WBS.md`의 실행한 child 항목에 실제 experiment ID와 raw verdict를 반영한다.
-- `state/current.md`에 완료/blocked WBS 번호, experiment ID, 핵심 metric 또는 failure stage, 다음 **사용자 지시 대기** 상태를 기록한다.
-- frozen candidate 정의와 과거 raw verdict는 수정하지 않는다.
-- 새 raw/report/summary/WBS/state 변경을 검토한 뒤 ThinkPad에서 commit하고 `origin/main`에 push한다.
-- 권장 commit message: `test(wbs5): run 5.3.1.1 qwen llama r0 rep1`; measured 이전 blocker면 `test(wbs5): record 5.3.1.1 blocker`.
-- commit/push 후 **다음 child를 자동 실행하지 말고 종료**한다.
-
-다음 WBS를 사용자가 지시하면 다시 A부터 시작한다. tracked source/WBS/state가 이전 closeout commit으로 바뀌었으므로 동일 canonical P520 snapshot에 B의 rsync를 다시 수행한다.
-
-#### 5.2.3 Failure / disconnect / recovery 규칙
-
-- SSH 또는 Codex UI 연결이 끊겼다고 같은 command를 다시 실행하지 않는다.
-- 먼저 P520 canonical snapshot에서 process와 `results/raw/<EXP_ID>/runtime/progress.json`, server log, completion/exit를 확인한다.
-- 실행 중인 process가 있으면 중복 실행하지 않고 기존 process의 종료를 관찰한다.
-- process가 종료됐고 raw가 있으면 F 단계로 회수하여 그 evidence를 authoritative result로 사용한다.
-- `FAIL_STARTUP`, `FAIL_OOM`, `FAIL_TIMEOUT`, `FAIL_OUTPUT`, queue-only, 성능 열세는 설정을 임의 변경할 이유가 아니다. raw verdict를 그대로 보존한다.
-- `FROZEN_DELTA_MISMATCH`, artifact/runtime/workload identity mismatch, wrong host, raw overwrite refusal 등 infra-invalid는 hard stop이다. 해당 experiment ID를 삭제하거나 재사용하지 않는다.
-- P520 cleanup 이후 GPU/server process가 남아 있으면 다음 WBS로 진행하지 않고 cleanup evidence와 함께 보고한다.
-- Gemma Gate B, Ornith9 1Cat G0, Qwen 1Cat R2 toolchain blocker 및 optional confirm 규칙은 각 child 항목의 조건을 그대로 따른다.
-
-**현재 measured execution 수량**
+#### 5.2.3 현재 measured execution 수량
 
 - frozen candidate: **25개**.
-- dry-plan/run identity: **28개**. Qwen llama R0의 사전 등록 repetition 1회와 R1/R2 optional confirm 2개가 추가되어 candidate 수보다 3개 많다.
+- dry-plan/run identity: **28개**. Qwen llama R0 repetition 1회와 R1/R2 optional confirm 2개가 추가되어 candidate 수보다 3개 많다.
 - 현재 gate/toolchain을 건드리지 않고 진행 가능한 기본 measured invocation: **20회**.
 - conditional: Gemma llama R3 1회, Ornith9 1Cat R0 ~ R3 4회.
 - toolchain blocked: Qwen 1Cat R2 1회.
 - optional confirm: Qwen llama R1/R2 각 1회.
-- Ornith9 1Cat의 **G0 semantic requalification은 WBS5 performance candidate 25개와 별도의 prerequisite measured experiment 1회**다.
+- Ornith9 1Cat의 G0 semantic requalification은 WBS5 performance candidate와 별도 prerequisite measured experiment 1회다.
 
-기본 20회도 한 프롬프트로 연속 실행하지 않는다. 아래 번호 순서대로 사용자 승인/지시를 받아 한 항목씩 수행한다.
+기본 20회도 한 프롬프트로 연속 실행하지 않는다. 아래 번호 하나씩 사용자 지시를 받아 실행한다.
 
 ### 5.3 llama.cpp frozen tracks
 
@@ -984,19 +890,17 @@ LOCAL_VERIFY_REQUIRED:
 목적: frozen baseline `Q38-LLAMA-WBS5-R0-TARGET-B512-UB128`의 첫 번째 사전 등록 repetition을 수행한다.
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track qwen-llama --candidate R0 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-001 --run-label repetition-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track qwen-llama --candidate R0 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-001 --run-label repetition-1 --execute-measured
 ```
 
-완료 조건: 한 measured batch의 raw evidence와 cleanup까지 보존. 실패해도 자동 재시도하지 않는다.
+완료 조건: wrapper가 해당 experiment raw를 ThinkPad `results/raw/`로 회수하면 종료한다. 실패 verdict여도 자동 재시도하지 않는다.
 
 ##### 5.3.1.2 Qwen3.8 llama.cpp — R0 repetition-2 measured
 
 목적: R0와 **동일 configuration**으로 두 번째 사전 등록 repetition을 fresh ID에서 수행한다. 5.3.1.1 실패 retry가 아니라 원래 계획된 독립 repetition이다.
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track qwen-llama --candidate R0 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-002 --run-label repetition-2 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track qwen-llama --candidate R0 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-002 --run-label repetition-2 --execute-measured
 ```
 
 ##### 5.3.1.3 Qwen3.8 llama.cpp — R1 NGRAM screening
@@ -1004,8 +908,7 @@ ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
 R0 대비 `--spec-type none -> ngram-simple`만 바뀌는지 runner guard를 통과한 뒤 1회 수행한다.
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track qwen-llama --candidate R1 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-001 --run-label screening-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track qwen-llama --candidate R1 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
 ##### 5.3.1.4 Qwen3.8 llama.cpp — R2 UB256 screening
@@ -1013,8 +916,7 @@ ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
 R0 대비 `--ubatch-size 128 -> 256`만 바뀌는지 확인하고 1회 수행한다.
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track qwen-llama --candidate R2 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001 --run-label screening-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track qwen-llama --candidate R2 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
 ##### 5.3.1.5 Qwen3.8 llama.cpp — R1 optional confirm [CONDITIONAL]
@@ -1022,8 +924,7 @@ ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
 자동 실행 금지. 5.3.1.3 결과를 검토한 뒤 동일 configuration의 confirm이 실제로 필요하다고 결정된 경우에만 fresh ID로 수행한다.
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track qwen-llama --candidate R1 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-002 --run-label confirm-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track qwen-llama --candidate R1 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-002 --run-label confirm-1 --execute-measured
 ```
 
 ##### 5.3.1.6 Qwen3.8 llama.cpp — R2 optional confirm [CONDITIONAL]
@@ -1031,8 +932,7 @@ ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
 자동 실행 금지. 5.3.1.4 결과 검토 후 confirm 필요성이 확인된 경우에만 수행한다.
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track qwen-llama --candidate R2 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-002 --run-label confirm-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track qwen-llama --candidate R2 --experiment-id EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-002 --run-label confirm-1 --execute-measured
 ```
 
 ##### 5.3.1.7 Qwen3.8 llama.cpp — track result review
@@ -1074,8 +974,7 @@ LOCAL_VERIFY_REQUIRED:
 1GPU×2 + LiteLLM frozen topology를 유지하고 R0를 1회 수행한다. 두 backend와 단일 LiteLLM endpoint, least-busy, backend max_parallel_requests=1, num_retries=0이 바뀌면 hard stop이다.
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track ornith9-llama --candidate R0 --experiment-id EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260928-001 --run-label screening-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track ornith9-llama --candidate R0 --experiment-id EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
 ##### 5.3.2.2 Ornith 1.5 9B llama.cpp — R1 UB256
@@ -1083,8 +982,7 @@ ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
 R0 대비 두 backend 모두 ubatch 128 -> 256만 변경된 frozen plan을 1회 수행한다.
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track ornith9-llama --candidate R1 --experiment-id EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001 --run-label screening-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track ornith9-llama --candidate R1 --experiment-id EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
 ##### 5.3.2.3 Ornith 1.5 9B llama.cpp — R2 NGRAM
@@ -1092,8 +990,7 @@ ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
 R0 대비 두 backend의 `--spec-type none -> ngram-simple`만 변경한다.
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track ornith9-llama --candidate R2 --experiment-id EXP-V100-ORN15-9B-LLAMA-NGRAM-B512-UB128-1GPU2-C2-PERF-20260928-001 --run-label screening-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track ornith9-llama --candidate R2 --experiment-id EXP-V100-ORN15-9B-LLAMA-NGRAM-B512-UB128-1GPU2-C2-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
 완료 후 distinct backend routing, common decode-window active overlap/queue-only, post-health, backend별 speculative counter evidence를 확인한다.
@@ -1139,8 +1036,7 @@ LOCAL_VERIFY_REQUIRED:
 ##### 5.3.3.1 Ornith 1.5 35B llama.cpp — R0 TARGET
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track ornith35-llama --candidate R0 --experiment-id EXP-V100-WBS5-ORNITH35-LLAMA-R0-PERF-20260928-001 --run-label screening-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track ornith35-llama --candidate R0 --experiment-id EXP-V100-WBS5-ORNITH35-LLAMA-R0-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
 ##### 5.3.3.2 Ornith 1.5 35B llama.cpp — R1 native MTP1
@@ -1148,8 +1044,7 @@ ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
 R0 대비 embedded native MTP1만 활성화한다. companion GGUF 또는 MTP n=2를 넣지 않는다.
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track ornith35-llama --candidate R1 --experiment-id EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-001 --run-label screening-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track ornith35-llama --candidate R1 --experiment-id EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
 draft/accepted/acceptance ratio가 unavailable이면 UNKNOWN으로 남긴다.
@@ -1157,8 +1052,7 @@ draft/accepted/acceptance ratio가 unavailable이면 UNKNOWN으로 남긴다.
 ##### 5.3.3.3 Ornith 1.5 35B llama.cpp — R2 UB256
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track ornith35-llama --candidate R2 --experiment-id EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001 --run-label screening-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track ornith35-llama --candidate R2 --experiment-id EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
 ##### 5.3.3.4 Ornith 1.5 35B llama.cpp — R3 CUDA_SCALE_LAUNCH_QUEUES=4x
@@ -1166,8 +1060,7 @@ ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
 R0 대비 container environment의 `CUDA_SCALE_LAUNCH_QUEUES=4x`만 추가된 plan을 사용한다.
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track ornith35-llama --candidate R3 --experiment-id EXP-V100-WBS5-ORNITH35-LLAMA-R3-PERF-20260928-001 --run-label screening-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track ornith35-llama --candidate R3 --experiment-id EXP-V100-WBS5-ORNITH35-LLAMA-R3-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
 ##### 5.3.3.5 Ornith 1.5 35B llama.cpp — track result review
@@ -1209,15 +1102,13 @@ LOCAL_VERIFY_REQUIRED:
 R3 Gate B의 근거가 되는 baseline이므로 성능뿐 아니라 graph support/instability와 VRAM telemetry를 반드시 보존한다.
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track gemma-llama --candidate R0 --experiment-id EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001 --run-label screening-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track gemma-llama --candidate R0 --experiment-id EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
 ##### 5.3.4.2 Gemma4 llama.cpp — R1 NGRAM
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track gemma-llama --candidate R1 --experiment-id EXP-V100-WBS5-GEMMA-LLAMA-R1-PERF-20260928-001 --run-label screening-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track gemma-llama --candidate R1 --experiment-id EXP-V100-WBS5-GEMMA-LLAMA-R1-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
 ##### 5.3.4.3 Gemma4 llama.cpp — R2 batch1024
@@ -1225,8 +1116,7 @@ ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
 R0 대비 batch-size 512 -> 1024만 변경한다. VRAM fit은 runtime 결과로 판정한다.
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track gemma-llama --candidate R2 --experiment-id EXP-V100-WBS5-GEMMA-LLAMA-R2-PERF-20260928-001 --run-label screening-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track gemma-llama --candidate R2 --experiment-id EXP-V100-WBS5-GEMMA-LLAMA-R2-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
 ##### 5.3.4.4 Gemma4 llama.cpp — Gate B evaluation
@@ -1244,8 +1134,7 @@ GPU inference 없음. 5.3.4.1 R0의 실제 raw evidence만 사용한다.
 5.3.4.4 Gate B PASS receipt가 있을 때만 수행한다.
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track gemma-llama --candidate R3 --experiment-id EXP-V100-WBS5-GEMMA-LLAMA-R3-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/gate-b-receipt.json --execute-measured'
+python3 scripts/run_wbs5_remote.py --track gemma-llama --candidate R3 --experiment-id EXP-V100-WBS5-GEMMA-LLAMA-R3-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/gate-b-receipt.json --execute-measured
 ```
 
 Gate B 미충족은 R3 failure가 아니라 conditional candidate의 정상 SKIP이다.
@@ -1303,8 +1192,7 @@ LOCAL_VERIFY_REQUIRED:
 공통 invariant인 `VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL=0`, `VLLM_FLASH_V100_DECODE_PARTITION_SIZE=256`, `VLLM_SM70_GDN_DECODE_FLASHQLA=0`을 유지한다.
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track qwen-onecat --candidate R0 --experiment-id EXP-V100-WBS5-QWEN-ONECAT-R0-PERF-20260928-001 --run-label screening-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track qwen-onecat --candidate R0 --experiment-id EXP-V100-WBS5-QWEN-ONECAT-R0-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
 기존 QUEUE_ONLY 결과를 ACTIVE로 재해석하지 말고 이번 performance run의 실제 overlap evidence를 기록한다.
@@ -1314,8 +1202,7 @@ ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
 R0 대비 eager 제거 + frozen capture config `{"cudagraph_capture_sizes":[1]}` 축만 적용한다. 실제 capture/replay는 runtime evidence로만 판정한다.
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track qwen-onecat --candidate R1 --experiment-id EXP-V100-WBS5-QWEN-ONECAT-R1-PERF-20260928-001 --run-label screening-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track qwen-onecat --candidate R1 --experiment-id EXP-V100-WBS5-QWEN-ONECAT-R1-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
 ##### 5.4.1.3 Qwen3.8 1Cat-vLLM — R3 E5M2
@@ -1323,8 +1210,7 @@ ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
 현재 기본 실행 queue에서는 toolchain-blocked R2보다 먼저 수행한다. R0 대비 KV dtype E4M3 -> E5M2만 변경하고 GDN decode/prefill 공통 invariant는 유지한다.
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track qwen-onecat --candidate R3 --experiment-id EXP-V100-WBS5-QWEN-ONECAT-R3-PERF-20260928-001 --run-label screening-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track qwen-onecat --candidate R3 --experiment-id EXP-V100-WBS5-QWEN-ONECAT-R3-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
 ##### 5.4.1.4 Qwen3.8 1Cat-vLLM — R2 Original FlashQLA [BLOCKED_BY_HOST_TOOLCHAIN]
@@ -1334,8 +1220,7 @@ ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
 승인된 host change와 새 operational toolchain receipt까지 완료된 경우에만 아래 measured command를 사용할 수 있다.
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track qwen-onecat --candidate R2 --experiment-id EXP-V100-WBS5-QWEN-ONECAT-R2-PERF-20260928-001 --run-label screening-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track qwen-onecat --candidate R2 --experiment-id EXP-V100-WBS5-QWEN-ONECAT-R2-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
 ##### 5.4.1.5 Qwen3.8 1Cat-vLLM — track result review
@@ -1386,8 +1271,7 @@ Admission gate:
 이 항목은 WBS5 performance candidate가 아니라 **R0 ~ R3 공통 admission prerequisite**다. pre-registered WBS3 `concurrency/v2.json`과 `v2-ground-truth.json`을 사용한 별도 measured experiment를 수행한다.
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_c2_onecat.py --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001 --model ornith-1.5-9b'
+python3 scripts/run_wbs5_remote.py --ornith9-g0 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001
 ```
 
 실행 후 Project A/B 응답을 ground-truth oracle에 대해 semantic audit한다. 두 project 모두 PASS하고 raw measured evidence가 유효할 때만 `results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001/g0-receipt.json`을 작성한다.
@@ -1406,22 +1290,19 @@ semantic audit가 불명확하거나 한 project라도 FAIL이면 PASS receipt�
 ##### 5.4.2.2 Ornith 1.5 9B 1Cat-vLLM — R0 baseline [REQUIRES G0]
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track ornith9-onecat --candidate R0 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R0-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001/g0-receipt.json --execute-measured'
+python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R0 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R0-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001/g0-receipt.json --execute-measured
 ```
 
 ##### 5.4.2.3 Ornith 1.5 9B 1Cat-vLLM — R1 MBT8192 [REQUIRES G0]
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track ornith9-onecat --candidate R1 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R1-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001/g0-receipt.json --execute-measured'
+python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R1 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R1-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001/g0-receipt.json --execute-measured
 ```
 
 ##### 5.4.2.4 Ornith 1.5 9B 1Cat-vLLM — R2 TARGET-GRAPH [REQUIRES G0]
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track ornith9-onecat --candidate R2 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R2-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001/g0-receipt.json --execute-measured'
+python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R2 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R2-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001/g0-receipt.json --execute-measured
 ```
 
 실제 graph capture/replay가 확인되지 않으면 UNKNOWN으로 남긴다.
@@ -1429,8 +1310,7 @@ ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
 ##### 5.4.2.5 Ornith 1.5 9B 1Cat-vLLM — R3 MTP2 [REQUIRES G0]
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track ornith9-onecat --candidate R3 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R3-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001/g0-receipt.json --execute-measured'
+python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R3 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R3-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001/g0-receipt.json --execute-measured
 ```
 
 resolved n_predict, actual MTP2 acceptance와 output integrity를 runtime evidence로 기록한다.
@@ -1474,8 +1354,7 @@ LOCAL_VERIFY_REQUIRED:
 ##### 5.4.3.1 Ornith 1.5 35B 1Cat-vLLM — R0 eager MBT4096
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track ornith35-onecat --candidate R0 --experiment-id EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001 --run-label screening-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track ornith35-onecat --candidate R0 --experiment-id EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
 ##### 5.4.3.2 Ornith 1.5 35B 1Cat-vLLM — R1 graph-auto
@@ -1483,15 +1362,13 @@ ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
 R0 대비 target eager 제거만 변경한다. 실제 graph route/capture/replay는 runtime evidence로 판정한다.
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track ornith35-onecat --candidate R1 --experiment-id EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260928-001 --run-label screening-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track ornith35-onecat --candidate R1 --experiment-id EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
 ##### 5.4.3.3 Ornith 1.5 35B 1Cat-vLLM — R2 MBT8192
 
 ```bash
-ssh p520 'cd /home/loopwhile/v100-llm-test-wbs5-20260928-a && \\
-  python3 scripts/run_wbs5.py --track ornith35-onecat --candidate R2 --experiment-id EXP-V100-WBS5-ORNITH35-ONECAT-R2-PERF-20260928-001 --run-label screening-1 --execute-measured'
+python3 scripts/run_wbs5_remote.py --track ornith35-onecat --candidate R2 --experiment-id EXP-V100-WBS5-ORNITH35-ONECAT-R2-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
 VRAM fit 실패는 setting을 바꾸지 말고 candidate measured result로 보존한다.

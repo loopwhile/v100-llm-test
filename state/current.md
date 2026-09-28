@@ -9,7 +9,7 @@
 - 7개 frozen candidate plan 문서화 완료.
 - `docs/WBS.md`에 7개 frozen plan을 공식 실행계획으로 반영 완료.
 - 현재 단계: **READY_FOR_MEASURED_EXECUTION — 8A~8D와 ChatGPT pre-run final validation 완료; runner/harness integration, exact-delta guard, evidence 경로 및 25 candidates/28 dry-plans 검증 완료**.
-- 다음 단계: **Codex CLI measured execution WBS 5.3.1.1 — Qwen3.8 llama.cpp R0 repetition-1**. 이후에도 `docs/WBS.md`의 `5.3.x.y` / `5.4.x.y`를 한 항목씩 지시하며 자동 연속 실행 금지.
+- 다음 단계: **Codex CLI measured execution WBS 5.3.1.1 — Qwen3.8 llama.cpp R0 repetition-1**. measured child는 `scripts/run_wbs5_remote.py`로 P520에서 1회 실행하고 raw를 ThinkPad로 회수한 뒤 종료한다. 이후에도 `docs/WBS.md`의 `5.3.x.y` / `5.4.x.y`를 한 항목씩 지시하며 자동 연속 실행 금지.
 - Qwen 1Cat R2: **BLOCKED_BY_HOST_TOOLCHAIN** (nvcc/개발 toolkit 없음; isolated CUDA12.8 development toolkit host change 승인 대기).
 - Ornith9 1Cat R0~R3: **CONDITIONAL_PENDING_GATE — G0**; Gemma llama R3: **CONDITIONAL_PENDING_GATE — Gate B**.
 - Harness blocker 없음. 전체 pytest **146 PASS + 25 subtests**, validate_repo **PASS**.
