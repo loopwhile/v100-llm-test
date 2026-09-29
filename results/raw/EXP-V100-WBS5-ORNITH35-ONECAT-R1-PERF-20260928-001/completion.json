@@ -1,0 +1,9 @@
+{
+  "experiment_id": "EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260928-001",
+  "verdict": "FAIL_OUTPUT",
+  "completed_at_utc": "2026-09-29T10:00:38.255034+00:00",
+  "post_health": {
+    "healthy": true,
+    "at_utc": "2026-09-29T10:00:38.175797+00:00"
+  }
+}

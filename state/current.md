@@ -1,5 +1,13 @@
 # Current execution
 
+## WBS 5.4 Ornith 1Cat-vLLM measured results publication — 2026-09-29
+
+- 공식 reporter로 새 raw 10건(G0 3건, Ornith 9B performance diagnostic 4건, Ornith 35B performance 3건)의 개별 report와 `results/summary.csv` / `reports/comparison.csv` 행을 발행했다. 세부 수치와 report 링크는 `docs/WBS.md` 5.4.2 / 5.4.3에 기록했다.
+- Ornith 9B G0 `-001`은 `INCONCLUSIVE`; `-002`/`-003`은 raw C2 ACTIVE·mechanical PASS였으나 Project B semantic audit 실패로 최종 publication verdict `FAIL_OUTPUT`이다. G0 PASS admission은 없고 R0~R3는 `performance_diagnostic=true`만 허용됐다.
+- Ornith 9B R0~R3는 모두 C2 active/queue=false였지만 Project B `FAIL_OUTPUT`으로 최종 `FAIL_OUTPUT`이다. R2 target graph의 capture/replay는 `UNKNOWN`, R3 MTP2 acceptance는 1,462/2,580(56.67%)이다. 진단 수치를 validated recipe 성능으로 사용하지 않는다.
+- Ornith 35B R0·R2는 `PASS_C2_ACTIVE`와 두 요청 output PASS, R1은 C2 active이나 Project B `FAIL_OUTPUT`이다. R1 graph capture/replay는 `UNKNOWN`; R2 MBT8192는 R0 대비 prefill 약 21.6% 감소, TTFT 약 1.6% 증가했다. 출력 길이가 달라 batch wall/aggregate decode 순위로 recipe를 결정하지 않는다.
+- 5.4.2.6 / 5.4.3.4 track result review 및 final recipe 판단은 **PENDING**. 이번 publication에서 추가 GPU inference는 하지 않았다.
+
 ## WBS 5.3.3.5 Ornith 1.5 35B llama.cpp track result review — 2026-09-29
 
 - 상태: **DONE**. 추가 GPU inference 없이 published R0/R1/R2/R3 raw/report와 frozen one-variable delta만 재검토했다. 상세 문서: `docs/WBS-5.3.3.5-result-review.md`.
@@ -306,6 +314,5 @@
 - WBS 5 GPU measured runs: NOT STARTED.
 - WBS 6.1~6.9: DONE (6.9 OpenVINO CLOSED / OpenBLAS+LTO 4K DONE).
 - WBS 6.10: CLOSED — C32 PASS; prior 32K observed result를 상회하지 못했고 D32는 의도적으로 미실행.
-
 
 

@@ -1,0 +1,17 @@
+{
+  "aggregate": {
+    "draft_tokens": 1288.0,
+    "accepted_tokens": 896.0,
+    "draft_count": 1288.0,
+    "acceptance_ratio": 0.6956521739130435
+  },
+  "backends": {
+    "root": {
+      "draft_tokens": 1288.0,
+      "accepted_tokens": 896.0,
+      "draft_count": 1288.0
+    }
+  },
+  "source": "1Cat-vLLM /metrics before/after measured window",
+  "status": "OBSERVED"
+}

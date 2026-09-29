@@ -1,0 +1,8 @@
+{
+  "status": "UNKNOWN",
+  "reuse_count": null,
+  "items": [],
+  "ambiguous_lines": [],
+  "scope": "server lifetime, includes startup/routing preflight if present; not necessarily measured-window hits",
+  "raw_logs_preserved": true
+}

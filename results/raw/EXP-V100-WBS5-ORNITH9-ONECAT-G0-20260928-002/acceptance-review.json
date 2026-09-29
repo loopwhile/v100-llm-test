@@ -1,0 +1,8 @@
+{
+  "verdict": "FAIL_OUTPUT",
+  "integrity_verdict": "FAIL_OUTPUT",
+  "verdict_display": "**FAIL_OUTPUT** (raw C2 ACTIVE / mechanical PASS; G0 semantic FAIL)",
+  "key_note": "G0 semantic FAIL: Project B attributes the defect to _sequence rather than the pre-registered JobQueue.pop check/await/heappop race; raw C2 ACTIVE and mechanical PASS are preserved. No G0 PASS admission.",
+  "integrity_summary": "Project A PASS; Project B FAIL against the pre-registered concurrency/v2 ground-truth oracle. Mechanical output PASS does not establish semantic correctness.",
+  "diagnostic_summary": "Project B identifies _sequence/push instead of the seeded JobQueue.pop nonempty-check -> await -> heappop race."
+}

@@ -1,0 +1,7 @@
+{
+  "verdict": "INCONCLUSIVE",
+  "c2_resident": false,
+  "c2_active": false,
+  "queue_only": false,
+  "error": "runtime preflight failed"
+}

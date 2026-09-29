@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "gate": "ORNITH9_G0",
+  "verdict": "FAIL",
+  "use": "PERFORMANCE_DIAGNOSTIC_ONLY",
+  "track": "ornith9-onecat",
+  "baseline_configuration_sha256": "7fb8b78f8b18332ae059af5ae5be64d530d353dbd5f49ce44746c5a53bcc6ae9",
+  "experiment_id": "EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-003",
+  "semantic_audit": "FAIL",
+  "project_a": "PASS",
+  "project_b": "FAIL",
+  "file_sha256": {
+    "workloads/concurrency/v2.json": "ab6ac578301c8f48700d5a50c808e1bfb42538f186c50a82168509215dc9e479",
+    "workloads/concurrency/v2-ground-truth.json": "221d0606a19b08e223d3eecac59ff99da151441dace3f5937ebed29a275ed7bb"
+  },
+  "evidence": [
+    {
+      "path": "results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-003/semantic-audit.json",
+      "sha256": "8a93cdd93040877f6f6459ae3159493ed651070a7e3d086900efbc4697b7af78"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-003/requests.json",
+      "sha256": "d03a667285faabef288c7d972c55843fefb8efca3f5c39febd3459f20d50f2e3"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-003/metrics.json",
+      "sha256": "e49c69a8341e226505cf29c1326cf2190f925a0c26d278b9c2457569a9229719"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-003/completion.json",
+      "sha256": "93caa1a4827a7932f0a901e9703e0729bcf7ed247402230be0d8cac7d3ecb46b"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-003/runtime/progress.json",
+      "sha256": "92c959d3e516cc8dced9627ac12a235a9a13372f53c2415568ffc3cc7a032a23"
+    }
+  ],
+  "baseline_snapshot_root": "/home/loopwhile/v100-llm-test-wbs5/c0c50945e085"
+}

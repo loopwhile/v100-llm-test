@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "experiment_id": "EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-003",
+  "semantic_audit": "FAIL",
+  "project_a": "PASS",
+  "project_b": "FAIL",
+  "project_a_reason": "Transaction.commit clears self.pending inside the iteration; the second staged write is skipped. The answer explains the two-write reproduction and a grounded fix.",
+  "project_b_reason": "The answer attributes failure to JobQueue._sequence and proposes locking push. The pre-registered defect is JobQueue.pop yielding between nonempty check and heappop, causing an empty-heap IndexError with one job and two workers.",
+  "requests_sha256": "d03a667285faabef288c7d972c55843fefb8efca3f5c39febd3459f20d50f2e3",
+  "oracle_sha256": "221d0606a19b08e223d3eecac59ff99da151441dace3f5937ebed29a275ed7bb"
+}

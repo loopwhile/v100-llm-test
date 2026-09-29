@@ -1,0 +1,9 @@
+{
+  "experiment_id": "EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-002",
+  "verdict": "PASS_C2_ACTIVE",
+  "completed_at_utc": "2026-09-29T07:35:39.072078+00:00",
+  "post_health": {
+    "healthy": true,
+    "at_utc": "2026-09-29T07:35:38.979246+00:00"
+  }
+}

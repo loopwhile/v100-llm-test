@@ -1,0 +1,83 @@
+{
+  "at_utc": "2026-09-29T09:36:06.744344+00:00",
+  "monotonic_s": 13930.868217007,
+  "gpu_fields": [
+    "index",
+    "uuid",
+    "name",
+    "memory.total",
+    "memory.free",
+    "memory.used",
+    "temperature.gpu",
+    "power.draw",
+    "clocks.sm",
+    "clocks.mem",
+    "utilization.gpu"
+  ],
+  "gpus": {
+    "status": "OBSERVED",
+    "value": "0, GPU-bb94e2a3-e900-d9e5-b580-194e4a36fb3a, Tesla V100-SXM2-16GB, 16384, 16145, 0, 48, 27.48, 135, 877, 0\n1, GPU-ef3074d2-f4f9-3f23-56d2-2ae6fe90694f, Tesla V100-SXM2-16GB, 16384, 16145, 0, 44, 27.50, 135, 877, 0\n"
+  },
+  "gpu_processes": {
+    "status": "OBSERVED",
+    "value": ""
+  },
+  "host_ram_swap": {
+    "status": "OBSERVED",
+    "value": "MemTotal:       64060292 kB\nMemFree:         9347124 kB\nMemAvailable:   62435996 kB\nBuffers:          194576 kB\nCached:         53323040 kB\nSwapCached:         4524 kB\nActive:          2864224 kB\nInactive:       50852832 kB\nActive(anon):     187624 kB\nInactive(anon):    36652 kB\nActive(file):    2676600 kB\nInactive(file): 50816180 kB\nUnevictable:        8208 kB\nMlocked:            8208 kB\nSwapTotal:       4194300 kB\nSwapFree:        4189776 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:            448740 kB\nWriteback:             0 kB\nAnonPages:        203692 kB\nMapped:           270420 kB\nShmem:             18860 kB\nKReclaimable:     314864 kB\nSlab:             471664 kB\nSReclaimable:     314864 kB\nSUnreclaim:       156800 kB\nKernelStack:        6128 kB\nPageTables:         8092 kB\nSecPageTables:         0 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    36224444 kB\nCommitted_AS:    1178144 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:      182164 kB\nVmallocChunk:          0 kB\nPercpu:             8832 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:         0 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:     94208 kB\nFilePmdMapped:         0 kB\nCmaTotal:              0 kB\nCmaFree:               0 kB\nUnaccepted:            0 kB\nBalloon:               0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:     1205804 kB\nDirectMap2M:    13000704 kB\nDirectMap1G:    54525952 kB\n"
+  },
+  "runtime_identity": {
+    "family": "1CatAI/1Cat-vLLM",
+    "version": "1.5.0",
+    "wheel": "1cat_vllm-1.5.0-cp312-cp312-linux_x86_64.whl",
+    "sha256": "2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b",
+    "torch": "2.10.0+cu128",
+    "cuda_userspace": "12.8",
+    "flash_attn_v100": "1.2.0",
+    "status": "bootstrap_pin_requires_fresh_verification"
+  },
+  "model_identity": {
+    "status": "static_runtime_contract_ready_host_startup_pending",
+    "planning_ready": true,
+    "repository": "ornith-ai/Ornith-1.5-35B-A3B-NVFP4",
+    "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa",
+    "path": "/srv/models/ornith-1.5-35b-a3b-nvfp4",
+    "weight_quant": "NVFP4",
+    "kv_candidates": [
+      "fp8_e5m2"
+    ],
+    "speculative_candidates": [
+      "target-only"
+    ],
+    "attention_backend": "FLASH_ATTN_V100",
+    "kv_contract_note": "The previous generic FP8 intent is made explicit as fp8_e5m2 because pinned 1Cat-vLLM 1.5.0 resolves generic fp8 to E5M2 on SM70 Flash-V100. Host startup compatibility is still pending.",
+    "compatibility_note": "1Cat-vLLM 1.5.0 contains Qwen3.5-MoE and NVFP4 paths, but the exact Ornith checkpoint still requires a P520 startup compatibility gate.",
+    "required_backend_lanes": [
+      "stock",
+      "v100-skinny"
+    ]
+  },
+  "expected_artifact_hash": {
+    "assets/ornith_35b_eval.png": "758a8f72b41a58e287e5922eaeda3d08f8830e16d77d92438ccce9333e1ab47d",
+    "assets/ornith_logo.png": "458ee0d85baea4d1fc0b099245f243b21006f696921f896a5b59980a6eadef6a",
+    "model-00001-of-00003.safetensors": "648fe83171485f4be03ea58d86089e088c94c2a3dc88922233f9002f30d8bc8b",
+    "model-00002-of-00003.safetensors": "cb5c5978721a1e87406ae68f1cd5a855326e40ff8bc13832644c392115336987",
+    "model-00003-of-00003.safetensors": "8303cef7d375021d69dcafc60d3fad5f8186995b18b0db5e2a609aadeb8a4f51",
+    "tokenizer.json": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+    "config.json": "319ee1293a279a57990fcfc18fdb533101ffaf264a990a7d0bcb1c3d24fc720d",
+    "tokenizer_config.json": "5186f0defcd7f232382c7f0aebcd2252d073bb921ab240e407b7ae8745d2b29b",
+    "model.safetensors.index.json": "52af7e400d0138ffde60f127fbf3ce494e6ebf682748f7e44545c25b68d28128"
+  },
+  "candidate_id": "R0-BASELINE-EAGER-MBT4096",
+  "workload": {
+    "path": "workloads/performance/v1.json",
+    "sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+    "context_per_request": 131072,
+    "requests": [
+      "project-a",
+      "project-b"
+    ],
+    "output_reserve": 4096,
+    "min_output": 1024
+  }
+}

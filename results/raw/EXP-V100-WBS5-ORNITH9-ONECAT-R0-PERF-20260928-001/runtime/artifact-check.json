@@ -1,0 +1,27 @@
+{
+  "path": "/srv/models/ornith-1.5-9b-nvfp4",
+  "repository": "ornith-ai/Ornith-1.5-9B-NVFP4",
+  "revision": "155f200d85ad58464571c77d5e1122ea5d419d7b",
+  "files": {
+    "config.json": {
+      "expected": "84bd143f937ebe7f2eb26fe251c2219d318f1945367d8b332ad74b3a80fdd057",
+      "actual": "84bd143f937ebe7f2eb26fe251c2219d318f1945367d8b332ad74b3a80fdd057",
+      "revision": "155f200d85ad58464571c77d5e1122ea5d419d7b"
+    },
+    "model.safetensors": {
+      "expected": "1cdf915951ce890af09973dba6403a457c6098f31e8613225eef0204c7dd4caa",
+      "actual": "1cdf915951ce890af09973dba6403a457c6098f31e8613225eef0204c7dd4caa",
+      "revision": "155f200d85ad58464571c77d5e1122ea5d419d7b"
+    },
+    "tokenizer.json": {
+      "expected": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+      "actual": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+      "revision": "155f200d85ad58464571c77d5e1122ea5d419d7b"
+    },
+    "tokenizer_config.json": {
+      "expected": "316230d6a809701f4db5ea8f8fc862bc3a6f3229c937c174e674ff3ca0a64ac8",
+      "actual": "316230d6a809701f4db5ea8f8fc862bc3a6f3229c937c174e674ff3ca0a64ac8",
+      "revision": "155f200d85ad58464571c77d5e1122ea5d419d7b"
+    }
+  }
+}

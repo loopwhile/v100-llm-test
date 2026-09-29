@@ -1,0 +1,42 @@
+{
+  "path": "/srv/models/ornith-1.5-35b-a3b-nvfp4",
+  "repository": "ornith-ai/Ornith-1.5-35B-A3B-NVFP4",
+  "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa",
+  "files": {
+    "config.json": {
+      "expected": "319ee1293a279a57990fcfc18fdb533101ffaf264a990a7d0bcb1c3d24fc720d",
+      "actual": "319ee1293a279a57990fcfc18fdb533101ffaf264a990a7d0bcb1c3d24fc720d",
+      "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa"
+    },
+    "model-00001-of-00003.safetensors": {
+      "expected": "648fe83171485f4be03ea58d86089e088c94c2a3dc88922233f9002f30d8bc8b",
+      "actual": "648fe83171485f4be03ea58d86089e088c94c2a3dc88922233f9002f30d8bc8b",
+      "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa"
+    },
+    "model-00002-of-00003.safetensors": {
+      "expected": "cb5c5978721a1e87406ae68f1cd5a855326e40ff8bc13832644c392115336987",
+      "actual": "cb5c5978721a1e87406ae68f1cd5a855326e40ff8bc13832644c392115336987",
+      "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa"
+    },
+    "model-00003-of-00003.safetensors": {
+      "expected": "8303cef7d375021d69dcafc60d3fad5f8186995b18b0db5e2a609aadeb8a4f51",
+      "actual": "8303cef7d375021d69dcafc60d3fad5f8186995b18b0db5e2a609aadeb8a4f51",
+      "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa"
+    },
+    "model.safetensors.index.json": {
+      "expected": "52af7e400d0138ffde60f127fbf3ce494e6ebf682748f7e44545c25b68d28128",
+      "actual": "52af7e400d0138ffde60f127fbf3ce494e6ebf682748f7e44545c25b68d28128",
+      "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa"
+    },
+    "tokenizer.json": {
+      "expected": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+      "actual": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+      "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa"
+    },
+    "tokenizer_config.json": {
+      "expected": "5186f0defcd7f232382c7f0aebcd2252d073bb921ab240e407b7ae8745d2b29b",
+      "actual": "5186f0defcd7f232382c7f0aebcd2252d073bb921ab240e407b7ae8745d2b29b",
+      "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa"
+    }
+  }
+}

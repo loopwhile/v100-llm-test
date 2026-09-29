@@ -1492,7 +1492,18 @@ python3 scripts/run_wbs5_remote.py --track qwen-onecat --candidate R2 --experime
 
 GPU inference 없음. R0/R1/R3 및 나중에 unblock되어 실제 실행된 경우에만 R2를 포함한다. R1 graph hit, R3 E5M2 exact route/scales, active-overlap/queue-only, output integrity를 evidence 범위까지만 기록한다.
 
-#### 5.4.2 Ornith 1.5 9B / 1Cat-vLLM [NON-EXECUTABLE PARENT — FROZEN / CONDITIONAL_PENDING_GATE / G0]
+#### 5.4.2 Ornith 1.5 9B / 1Cat-vLLM [NON-EXECUTABLE PARENT — G0 SEMANTIC FAIL / R0–R3 DIAGNOSTIC FAIL_OUTPUT / REVIEW PENDING]
+
+2026-09-29 회수된 G0 3회와 performance diagnostic R0~R3 4회를 개별 report 및 summary/comparison CSV에 등록했다. G0 `-001`은 runtime preflight `INCONCLUSIVE`다. G0 `-002`/`-003`은 raw C2 ACTIVE 및 mechanical PASS이지만 Project B가 사전 등록된 `JobQueue.pop` check→await→heappop race 대신 `_sequence` 문제를 지목했으므로 publication 최종 판정은 **FAIL_OUTPUT**이다. `-003/semantic-audit.json`과 두 응답을 근거로 삼았으며 G0 PASS receipt는 없다. [G0 raw](../results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-003/) / [G0 report](../reports/ornith-1.5-9b/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-003.md).
+
+| WBS | Candidate | 최종 판정 | C2 | TTFT / aggregate decode / wall | 출력·효과 증거 |
+|---|---|---|---|---|---|
+| 5.4.2.2 | R0 baseline | `FAIL_OUTPUT` | active, queue=false | 299.28 s / 14.85 tok/s / 478.89 s | A PASS, B FAIL; MTP 1,131/1,552 accepted. |
+| 5.4.2.3 | R1 MBT8192 | `FAIL_OUTPUT` | active, queue=false | 299.38 s / 14.85 tok/s / 478.98 s | A PASS, B FAIL; R0와 성능 차이 미미. |
+| 5.4.2.4 | R2 target graph | `FAIL_OUTPUT` | active, queue=false | 302.53 s / 19.53 tok/s / 413.14 s | A PASS, B FAIL; graph capture/replay `UNKNOWN`. |
+| 5.4.2.5 | R3 MTP2 | `FAIL_OUTPUT` | active, queue=false | 302.16 s / 17.32 tok/s / 459.76 s | A PASS, B FAIL; 1,462/2,580 accepted, ratio 56.67%; graph `UNKNOWN`. |
+
+R0~R3 모두 G0 FAIL receipt를 사용한 `performance_diagnostic=true` 실행이다. 출력 토큰 수가 2,184~2,754로 다르고 각 실행의 Project B가 실패했으므로 aggregate decode/wall 차이는 관측값으로만 둔다. 평균 request decode는 성공한 Project A만 반영한다. 어느 후보도 semantic-qualified recipe로 승격하지 않는다. 각 [R0](../reports/ornith-1.5-9b/EXP-V100-WBS5-ORNITH9-ONECAT-R0-PERF-20260928-001.md), [R1](../reports/ornith-1.5-9b/EXP-V100-WBS5-ORNITH9-ONECAT-R1-PERF-20260928-001.md), [R2](../reports/ornith-1.5-9b/EXP-V100-WBS5-ORNITH9-ONECAT-R2-PERF-20260928-001.md), [R3](../reports/ornith-1.5-9b/EXP-V100-WBS5-ORNITH9-ONECAT-R3-PERF-20260928-001.md) report 참조.
 
 Frozen candidates:
 
@@ -1531,7 +1542,7 @@ Admission gate:
 - final recipe 승격에는 G0 admission, valid `performance/v1.json` evidence, output integrity, active-overlap/telemetry provenance가 필요하다.
 
 
-##### 5.4.2.1 Ornith 1.5 9B 1Cat-vLLM — G0 semantic requalification
+##### 5.4.2.1 Ornith 1.5 9B 1Cat-vLLM — G0 semantic requalification [DONE — SEMANTIC FAIL]
 
 이 항목은 WBS5 performance candidate가 아니라 **R0 ~ R3 공통 admission prerequisite**다. pre-registered WBS3 `concurrency/v2.json`과 `v2-ground-truth.json`을 사용한 별도 measured experiment를 수행한다.
 
@@ -1554,7 +1565,7 @@ G0 receipt 필수 의미:
 
 semantic audit가 불명확하거나 한 project라도 FAIL이면 PASS receipt를 만들지 않고 정식 G0 admission을 차단한다. 별도 hash-bound FAIL receipt와 `--performance-diagnostic`을 사용하는 R0 ~ R3 성능 진단만 예외로 허용한다.
 
-##### 5.4.2.2 Ornith 1.5 9B 1Cat-vLLM — R0 baseline [REQUIRES G0]
+##### 5.4.2.2 Ornith 1.5 9B 1Cat-vLLM — R0 baseline [DIAGNOSTIC DONE — FAIL_OUTPUT]
 
 2026-09-29 사용자 지시에 따라 G0 `-003`의 semantic FAIL을 명시한 **performance diagnostic**으로 R0 baseline을 한 번 측정한다. G0 PASS receipt를 만들거나 주장하지 않는다. `g0-diagnostic-receipt.json`은 `-003`의 semantic audit, requests, metrics, completion, progress SHA를 묶는다. R0 raw에는 `performance_diagnostic=true`를 기록한다. 이 결과는 성능 관찰용이며 final recipe 승격에는 부적격이다.
 
@@ -1562,7 +1573,7 @@ semantic audit가 불명확하거나 한 project라도 FAIL이면 PASS receipt�
 python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R0 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R0-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-003/g0-diagnostic-receipt.json --performance-diagnostic --execute-measured
 ```
 
-##### 5.4.2.3 Ornith 1.5 9B 1Cat-vLLM — R1 MBT8192 [PERFORMANCE DIAGNOSTIC]
+##### 5.4.2.3 Ornith 1.5 9B 1Cat-vLLM — R1 MBT8192 [DIAGNOSTIC DONE — FAIL_OUTPUT]
 
 G0 `-003` semantic FAIL은 유지한다. 아래 명령은 R1을 성능 진단으로 한 번 측정하며 `g0-diagnostic-portable-receipt.json`이 G0 raw와 source-checkout baseline을 묶는다. 결과는 final recipe 승격에 사용할 수 없다.
 
@@ -1570,7 +1581,7 @@ G0 `-003` semantic FAIL은 유지한다. 아래 명령은 R1을 성능 진단으
 python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R1 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R1-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-003/g0-diagnostic-portable-receipt.json --performance-diagnostic --execute-measured
 ```
 
-##### 5.4.2.4 Ornith 1.5 9B 1Cat-vLLM — R2 TARGET-GRAPH [PERFORMANCE DIAGNOSTIC]
+##### 5.4.2.4 Ornith 1.5 9B 1Cat-vLLM — R2 TARGET-GRAPH [DIAGNOSTIC DONE — FAIL_OUTPUT]
 
 ```bash
 python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R2 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R2-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-003/g0-diagnostic-portable-receipt.json --performance-diagnostic --execute-measured
@@ -1578,7 +1589,7 @@ python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R2 --exper
 
 실제 graph capture/replay가 확인되지 않으면 UNKNOWN으로 남긴다.
 
-##### 5.4.2.5 Ornith 1.5 9B 1Cat-vLLM — R3 MTP2 [PERFORMANCE DIAGNOSTIC]
+##### 5.4.2.5 Ornith 1.5 9B 1Cat-vLLM — R3 MTP2 [DIAGNOSTIC DONE — FAIL_OUTPUT]
 
 ```bash
 python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R3 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R3-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-003/g0-diagnostic-portable-receipt.json --performance-diagnostic --execute-measured
@@ -1586,11 +1597,21 @@ python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R3 --exper
 
 resolved n_predict, actual MTP2 acceptance와 output integrity를 runtime evidence로 기록한다.
 
-##### 5.4.2.6 Ornith 1.5 9B 1Cat-vLLM — track result review
+##### 5.4.2.6 Ornith 1.5 9B 1Cat-vLLM — track result review [PENDING]
 
 GPU inference 없음. G0 receipt identity부터 재검증한 후 R0 ~ R3 diagnostic raw를 비교할 수 있다. G0 FAIL이면 semantic-qualified final recipe 승격은 차단하고, diagnostic performance 결과와 output integrity를 구분해 보고한다.
 
-#### 5.4.3 Ornith 1.5 35B-A3B / 1Cat-vLLM [NON-EXECUTABLE PARENT — FROZEN / READY_FOR_MEASURED_EXECUTION]
+#### 5.4.3 Ornith 1.5 35B-A3B / 1Cat-vLLM [NON-EXECUTABLE PARENT — R0/R2 PASS / R1 FAIL_OUTPUT / REVIEW PENDING]
+
+2026-09-29 회수된 `screening-1` R0/R1/R2 3회를 개별 report 및 summary/comparison CSV에 등록했다. 세 실행 모두 C2 resident/active=true, queue_only=false, post-health healthy다. 두 요청의 prompt tokens는 각각 126,975/126,976이다.
+
+| WBS | Candidate | 최종 판정 | TTFT | Prefill | Aggregate decode | Batch wall | 출력·graph 증거 |
+|---|---|---|---|---|---|---|---|
+| 5.4.3.1 | R0 eager MBT4096 | `PASS_C2_ACTIVE` | 109.62 s | 1,456.96 tok/s | 11.48 tok/s | 282.74 s | A/B PASS, 2,557 output tokens; graph `UNKNOWN` (eager). |
+| 5.4.3.2 | R1 graph-auto | `FAIL_OUTPUT` | 109.22 s | 1,459.67 tok/s | 23.34 tok/s | 205.02 s | A PASS/B FAIL, 3,384 output tokens; capture/replay `UNKNOWN`. |
+| 5.4.3.3 | R2 eager MBT8192 | `PASS_C2_ACTIVE` | 111.34 s | 1,142.84 tok/s | 17.95 tok/s | 298.73 s | A/B PASS, 3,453 output tokens; graph `UNKNOWN` (eager). |
+
+R1의 aggregate decode/wall은 실패한 B가 포함된 배치 관측값이며 mean request decode는 성공한 A만 반영한다. R1의 성능 우위나 graph hit를 주장하지 않는다. R2는 R0보다 prefill이 약 21.6% 낮고 TTFT가 약 1.6% 높다. 출력 길이도 달라 batch wall/aggregate decode의 순위를 recipe 효과로 단정하지 않는다. R0/R2의 PASS는 mechanical output 및 C2 판정이며 task-level semantic audit를 대신하지 않는다. [R0](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001.md), [R1](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260928-001.md), [R2](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R2-PERF-20260928-001.md) report 참조. Track recipe 결정은 5.4.3.4 review에서 수행한다.
 
 Frozen candidates:
 
@@ -1622,13 +1643,13 @@ LOCAL_VERIFY_REQUIRED:
 - final recipe 승격에는 valid measured performance evidence와 output integrity가 필요하다.
 
 
-##### 5.4.3.1 Ornith 1.5 35B 1Cat-vLLM — R0 eager MBT4096
+##### 5.4.3.1 Ornith 1.5 35B 1Cat-vLLM — R0 eager MBT4096 [DONE — PASS_C2_ACTIVE]
 
 ```bash
 python3 scripts/run_wbs5_remote.py --track ornith35-onecat --candidate R0 --experiment-id EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
-##### 5.4.3.2 Ornith 1.5 35B 1Cat-vLLM — R1 graph-auto
+##### 5.4.3.2 Ornith 1.5 35B 1Cat-vLLM — R1 graph-auto [DONE — FAIL_OUTPUT]
 
 R0 대비 target eager 제거만 변경한다. 실제 graph route/capture/replay는 runtime evidence로 판정한다.
 
@@ -1636,7 +1657,7 @@ R0 대비 target eager 제거만 변경한다. 실제 graph route/capture/replay
 python3 scripts/run_wbs5_remote.py --track ornith35-onecat --candidate R1 --experiment-id EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
-##### 5.4.3.3 Ornith 1.5 35B 1Cat-vLLM — R2 MBT8192
+##### 5.4.3.3 Ornith 1.5 35B 1Cat-vLLM — R2 MBT8192 [DONE — PASS_C2_ACTIVE]
 
 ```bash
 python3 scripts/run_wbs5_remote.py --track ornith35-onecat --candidate R2 --experiment-id EXP-V100-WBS5-ORNITH35-ONECAT-R2-PERF-20260928-001 --run-label screening-1 --execute-measured
@@ -1644,7 +1665,7 @@ python3 scripts/run_wbs5_remote.py --track ornith35-onecat --candidate R2 --expe
 
 VRAM fit 실패는 setting을 바꾸지 말고 candidate measured result로 보존한다.
 
-##### 5.4.3.4 Ornith 1.5 35B 1Cat-vLLM — track result review
+##### 5.4.3.4 Ornith 1.5 35B 1Cat-vLLM — track result review [PENDING]
 
 GPU inference 없음. R0/R1/R2의 exact config identity와 성능, graph evidence, output integrity, active overlap/queue state를 비교한다. 새로운 MBT/graph candidate를 만들지 않는다.
 
