@@ -965,6 +965,8 @@ python3 scripts/run_wbs5_remote.py --track qwen-llama --candidate R2 --experimen
 
 ##### 5.3.1.7 Qwen3.8 llama.cpp — track result review [DONE — R2 FINAL RECIPE CANDIDATE]
 
+상세 기록: [WBS 5.3.1.7 result review](WBS-5.3.1.7-result-review.md).
+
 상태: **DONE — TRACK REVIEW** (2026-09-29). 이번 review에서는 GPU inference를 추가 실행하지 않았고, 이미 publication된 R0 repetition 2건과 R1/R2 screening 각 1건의 raw artifact만 사용했다. R1/R2 optional confirm은 5.3.1.5/5.3.1.6의 사용자 결정대로 **SKIP** 상태를 유지하며, frozen candidate 밖의 새 tuning candidate를 추가하지 않는다.
 
 검토 대상:
@@ -1112,6 +1114,8 @@ python3 scripts/run_wbs5_remote.py --track ornith9-llama --candidate R2 --experi
 완료 후 distinct backend routing, common decode-window active overlap/queue-only, post-health, backend별 speculative counter evidence를 확인한다.
 
 ##### 5.3.2.4 Ornith 1.5 9B llama.cpp — track result review [DONE — REVIEW_COMPLETE / RECIPE_PENDING]
+
+상세 기록: [WBS 5.3.2.4 result review](WBS-5.3.2.4-result-review.md).
 
 GPU inference 없음. 공식 publication된 R0/R1/R2의 `performance/v1.json` measured evidence만 비교했다. 세 run 모두 exact Q6_K artifact/SHA, FP16 KV, llama.cpp b10775, 1GPU×2 + LiteLLM topology, 131072 context/request, C2 independent A/B, output reserve 4096 / minimum actual output 1024, temperature 0 / top_p 1 / seed 520을 유지했다.
 
@@ -1339,6 +1343,8 @@ python3 scripts/run_wbs5_remote.py --track gemma-llama --candidate R3 --experime
 Gate B 미충족은 R3 failure가 아니라 conditional candidate의 정상 SKIP이다.
 
 ##### 5.3.4.6 Gemma4 llama.cpp — track result review [DONE — R0 RETAINED]
+
+상세 기록: [WBS 5.3.4.6 result review](WBS-5.3.4.6-result-review.md).
 
 GPU inference 없음. 이미 publication된 R0/R1/R2 raw만 사용해 frozen one-variable delta를 비교했다. R3는 5.3.4.4 Gate B가 `NOT_TRIGGERED`이므로 미실행 상태를 그대로 보존하며 대체 candidate를 추가하지 않는다.
 

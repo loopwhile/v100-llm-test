@@ -26,6 +26,7 @@
 
 ## WBS 5 Ornith 1.5 9B llama.cpp track result review — 2026-09-29
 
+- 상세 문서: `docs/WBS-5.3.2.4-result-review.md`.
 - **5.3.2.4 DONE — REVIEW_COMPLETE / RECIPE_PENDING**. GPU inference 없이 publication된 R0/R1/R2 `performance/v1.json` evidence만 비교했다.
 - 세 run 모두 `PASS_C2_ACTIVE`, two-request output PASS, distinct backend routing, active overlap, `queue_only=false`, post-health healthy를 유지했다. performance workload에는 WBS3 semantic oracle이 없으므로 새 semantic PASS는 선언하지 않는다.
 - R1 `TARGET_UB256`은 R0 대비 TTFT **-23.52%**, Prefill **+30.73%**, Aggregate Decode **+4.08%**, End-to-End **+24.28%**, Batch Wall **-19.71%**이며 Mean Decode는 +0.40%, Peak VRAM은 GPU당 +52 MiB(+0.48%)였다. 의도한 prefill-side 효과가 확인되어 **final recipe 후보로 유지**한다.
@@ -35,6 +36,7 @@
 
 ## WBS 5 Qwen3.8-27B llama.cpp 5.3.1.7 track result review — 2026-09-29
 
+- 상세 문서: `docs/WBS-5.3.1.7-result-review.md`.
 - 상태: **DONE — TRACK REVIEW**. 추가 GPU inference 없이 publication된 4건(R0 repetition 2건, R1 NGRAM screening 1건, R2 UB256 screening 1건)의 raw artifact만 비교했다.
 - 네 run 모두 `PASS_C2_ACTIVE`, 두 request mechanical output PASS, `active_overlap=true`, `queue_only=false`, post-health healthy를 유지했다.
 - R1 NGRAM은 draft 985 / accepted 323 / acceptance 32.79%로 speculative activity가 실제 관찰됐지만, R0 rep-2 대비 TTFT +0.04%, prefill -0.03%, mean request decode +3.23%, aggregate +1.02%, E2E +0.44%, batch wall -1.24%로 recipe-level 성능 이득이 baseline variability를 넘어섰다고 보지 않는다. **R1 branch 종료**.
@@ -46,6 +48,7 @@
 
 ## WBS 5 Gemma4 llama.cpp 5.3.4.6 track result review — 2026-09-29
 
+- 상세 문서: `docs/WBS-5.3.4.6-result-review.md`.
 - Gemma4 llama.cpp R0/R1/R2 measured raw 3건은 모두 `PASS_C2_ACTIVE`, 두 요청 output PASS, `active_overlap=true`, `queue_only=false`, post-health healthy다.
 - **5.3.4.6 review 완료.** R1 NGRAM은 acceptance 37.5%가 관찰됐지만 R0 대비 mean decode -4.69%, aggregate -5.92%, E2E -5.56%, wall +2.06%로 실효 성능이 악화되어 branch 종료한다.
 - R2 b1024는 TTFT +0.23%, prefill -1.01%, mean decode -1.15%, aggregate +0.72%, E2E -0.22%, wall -0.09%로 intended TTFT/prefill improvement가 없었다. 모두 3%보다 작은 차이이므로 noise 가능성을 명시하며 자동 반복 없이 branch 종료한다.
