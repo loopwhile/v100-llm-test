@@ -19,6 +19,8 @@ import shlex
 import subprocess
 import sys
 
+from wbs5_contract import PYTHON as ONECAT_PYTHON
+
 ROOT = Path(__file__).resolve().parents[1]
 SSH_HOST = "p520"
 REMOTE_BASE = "/home/loopwhile/v100-llm-test-wbs5"
@@ -117,6 +119,21 @@ def summarize(local_raw: Path, *, benchmark_rc, recovered_existing: bool):
     print(json.dumps(summary, ensure_ascii=False, indent=2))
 
 
+def ornith9_g0_argv(experiment_id: str) -> list[str]:
+    # SSH does not forward the caller's environment. Pin the same interpreter
+    # used by measured WBS5 1Cat candidates in the remote G0 process itself.
+    return [
+        "env",
+        f"V100_1CAT_PYTHON={ONECAT_PYTHON}",
+        "python3",
+        "scripts/run_c2_onecat.py",
+        "--experiment-id",
+        experiment_id,
+        "--model",
+        "ornith-1.5-9b",
+    ]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--track")
@@ -183,14 +200,7 @@ def main():
         )
 
     if args.ornith9_g0:
-        remote_argv = [
-            "python3",
-            "scripts/run_c2_onecat.py",
-            "--experiment-id",
-            args.experiment_id,
-            "--model",
-            "ornith-1.5-9b",
-        ]
+        remote_argv = ornith9_g0_argv(args.experiment_id)
     else:
         remote_argv = [
             "python3",

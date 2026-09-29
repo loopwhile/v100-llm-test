@@ -1535,11 +1535,13 @@ Admission gate:
 
 이 항목은 WBS5 performance candidate가 아니라 **R0 ~ R3 공통 admission prerequisite**다. pre-registered WBS3 `concurrency/v2.json`과 `v2-ground-truth.json`을 사용한 별도 measured experiment를 수행한다.
 
+첫 시도 `EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001`은 원격 G0 프로세스에 `V100_1CAT_PYTHON`이 전달되지 않아 runtime preflight에서 `INCONCLUSIVE`로 종료했다. raw는 보존하며 새 ID `-002`로 재실행한다. G0 원격 실행은 WBS5 1Cat 후보와 동일한 pinned Python을 사용한다.
+
 ```bash
-python3 scripts/run_wbs5_remote.py --ornith9-g0 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001
+python3 scripts/run_wbs5_remote.py --ornith9-g0 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-002
 ```
 
-실행 후 Project A/B 응답을 ground-truth oracle에 대해 semantic audit한다. 두 project 모두 PASS하고 raw measured evidence가 유효할 때만 `results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001/g0-receipt.json`을 작성한다.
+실행 후 Project A/B 응답을 ground-truth oracle에 대해 semantic audit한다. 두 project 모두 PASS하고 raw measured evidence가 유효할 때만 `results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-002/g0-receipt.json`을 작성한다.
 
 G0 receipt 필수 의미:
 
@@ -1555,19 +1557,19 @@ semantic audit가 불명확하거나 한 project라도 FAIL이면 PASS receipt�
 ##### 5.4.2.2 Ornith 1.5 9B 1Cat-vLLM — R0 baseline [REQUIRES G0]
 
 ```bash
-python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R0 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R0-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001/g0-receipt.json --execute-measured
+python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R0 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R0-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-002/g0-receipt.json --execute-measured
 ```
 
 ##### 5.4.2.3 Ornith 1.5 9B 1Cat-vLLM — R1 MBT8192 [REQUIRES G0]
 
 ```bash
-python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R1 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R1-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001/g0-receipt.json --execute-measured
+python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R1 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R1-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-002/g0-receipt.json --execute-measured
 ```
 
 ##### 5.4.2.4 Ornith 1.5 9B 1Cat-vLLM — R2 TARGET-GRAPH [REQUIRES G0]
 
 ```bash
-python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R2 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R2-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001/g0-receipt.json --execute-measured
+python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R2 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R2-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-002/g0-receipt.json --execute-measured
 ```
 
 실제 graph capture/replay가 확인되지 않으면 UNKNOWN으로 남긴다.
@@ -1575,7 +1577,7 @@ python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R2 --exper
 ##### 5.4.2.5 Ornith 1.5 9B 1Cat-vLLM — R3 MTP2 [REQUIRES G0]
 
 ```bash
-python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R3 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R3-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001/g0-receipt.json --execute-measured
+python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R3 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R3-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-002/g0-receipt.json --execute-measured
 ```
 
 resolved n_predict, actual MTP2 acceptance와 output integrity를 runtime evidence로 기록한다.
