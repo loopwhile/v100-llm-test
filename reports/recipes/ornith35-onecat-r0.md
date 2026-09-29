@@ -19,7 +19,7 @@ Topology: `tp2-shared`. vLLM tensor parallel size 2, max-num-seqs 2.
 - NVFP4 config/index/tokenizer 및 세 weight shard SHA256은 아래 exact artifact receipt에 수록.
 - Runtime observed: `1.5.0`
 - Runtime pin: `1cat_vllm-1.5.0-cp312-cp312-linux_x86_64.whl`
-- Commit / wheel SHA256: `2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b`
+- Wheel SHA256: `2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b`
 - [측정 전 artifact 검증](../../results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/runtime/artifact-check.json) · [runtime 사전 검사](../../results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/runtime/preflight.json)
 
 ```json
