@@ -1,0 +1,11 @@
+{
+  "/metrics": {
+    "unavailable": "[Errno 104] Connection reset by peer"
+  },
+  "/props": {
+    "unavailable": "[Errno 104] Connection reset by peer"
+  },
+  "/slots": {
+    "unavailable": "[Errno 104] Connection reset by peer"
+  }
+}

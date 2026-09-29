@@ -1,0 +1,45 @@
+{
+  "attempt1": {
+    "status": "INTERRUPTED_BY_PREFLIGHT_AUDIT",
+    "stage": "CPU-only compilation; no inference",
+    "reason": "Control links NCCL 2.23.4 and RPC; default CMake lacked NCCL development header and RPC was disabled. Stopped to remove avoidable backend differences.",
+    "evidence_remote": "/home/loopwhile/v100-wbs7-preflight-20260929/evidence-attempt1-missing-nccl",
+    "build_log_remote": "/home/loopwhile/v100-wbs7-preflight-20260929/build-attempt1.log",
+    "build_log_local": "build/build-attempt1.log"
+  },
+  "correction": {
+    "source_patch_changed": false,
+    "libnccl_dev": "2.23.4-1+cuda12.6",
+    "GGML_CUDA_NCCL": "ON",
+    "GGML_RPC": "ON",
+    "host_modified": false,
+    "measured_retry": false
+  },
+  "control_linked_backends": [
+    "cpu",
+    "cuda",
+    "rpc"
+  ],
+  "control_blas_dependency": false,
+  "attempt2": {
+    "status": "COMPILE_FAILED",
+    "stage": "CUDA fattn-vec template instantiation; no inference",
+    "reason": "External patch GQA branch invoked b10775 launch_fattn with 9 arguments; b10775 requires explicit tenth use_sparse boolean.",
+    "evidence_remote": "/home/loopwhile/v100-wbs7-preflight-20260929/evidence/compile.log",
+    "preserved_patch_sha256": "d9d582c0332da10a3188b4181e02da63857760cb5698aa31a90469f283decb9e",
+    "build_log_local": "build/compile-attempt2.log"
+  },
+  "attempt3": {
+    "status": "PASS_COMPILE_AND_LINK",
+    "source_patch_changed": true,
+    "change": "append use_sparse=false to new GQA-only launch_fattn call; other source unchanged",
+    "patch_sha256": "25632d838c5e04c6b32920e5f61c39868e995d83156cb315ff477cf287197f80",
+    "candidate_source_sha256": "7253a4f2cfc4363b9bd6228ec44efc6d5c790c8d69771d649671a94cd1629dc1",
+    "evidence_remote": "/home/loopwhile/v100-wbs7-preflight-20260929/evidence/compile-v2.log",
+    "measured_retry": false,
+    "link_fix": "CMAKE_EXE_LINKER_FLAGS=-Wl,-rpath-link,/usr/local/cuda/lib64/stubs (link time only)",
+    "build_log_local": "build/compile-v2.log",
+    "link_reconfigure_log_local": "build/link-reconfigure.log",
+    "link_fix_log_local": "build/link-fix.log"
+  }
+}

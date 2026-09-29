@@ -1,0 +1,50 @@
+0.00.047.448 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.048.573 W srv  llama_server: -----------------
+0.00.048.578 W srv  llama_server: CORS is set to allow all origins ('*') and no API key is set
+0.00.048.579 W srv  llama_server: this can be a security risk (cross-origin attacks)
+0.00.048.579 W srv  llama_server: more info: https://github.com/ggml-org/llama.cpp/pull/25655
+0.00.048.580 W srv  llama_server: -----------------
+0.00.050.243 I srv    load_model: loading model '/model/target.gguf'
+AMX is not ready to be used!
+0.01.857.226 W common_fit_params: failed to fit params to free device memory: n_gpu_layers already set by user to -2, abort
+0.05.431.886 I cmn          init: llama threadpool init, n_threads = 6
+0.05.432.320 I common_speculative_init_result: creating MTP draft context against the target model '/model/target.gguf'
+0.05.462.425 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 613.03 MiB on device 1: cudaMalloc failed: out of memory
+0.05.462.436 E ggml_gallocr_reserve_n_impl: failed to allocate CUDA1 buffer of size 642810368
+0.05.462.437 E graph_reserve: failed to allocate compute buffers
+0.05.462.444 W sched_reserve: compute buffer allocation failed, retrying without pipeline parallelism
+0.05.531.511 I srv    load_model: capping per-slot context (262144) to --kv-unified-per-slot (131072)
+0.05.677.959 I srv    load_model: initializing, n_slots = 2, n_ctx_slot = 131072, kv_unified = 'true'
+0.05.856.954 W srv          init: chat template supports preserving reasoning, it is enabled by default (may use more tokens, disable via --no-reasoning-preserve)
+0.05.857.004 I srv  llama_server: model loaded
+0.05.857.010 I srv  llama_server: listening on http://0.0.0.0:8080
+0.05.857.011 W srv  llama_server: NOTICE: server default port will be changed to :9931 in a future release
+0.05.857.011 W srv  llama_server:         ref: https://github.com/ggml-org/llama.cpp/pull/26508
+0.16.825.167 I slot get_availabl: id  1 | task -1 | selected slot by LRU, t_last = -1
+0.16.825.908 I slot launch_slot_: id  1 | task 8 | processing task, is_child = 0
+/opt/llama.cpp/ggml/src/ggml-cuda/ggml-cuda.cu:108: CUDA error
+0.17.202.772 E CUDA error: out of memory
+0.17.202.778 E   current device: 1, in function alloc at /opt/llama.cpp/ggml/src/ggml-cuda/ggml-cuda.cu:591
+0.17.202.779 E   cuMemCreate(&handle, reserve_size, &prop, 0)
+/usr/local/lib/libggml-base.so.0(+0x1c97b)[0x77f26703797b]
+/usr/local/lib/libggml-base.so.0(ggml_print_backtrace+0x21f)[0x77f267037dff]
+/usr/local/lib/libggml-base.so.0(ggml_abort+0x152)[0x77f267037fd2]
+/usr/local/lib/libggml-cuda.so.0(+0x285246)[0x77f25c176246]
+/usr/local/lib/libggml-cuda.so.0(_ZN18ggml_cuda_pool_vmm5allocEmPm+0x3e5)[0x77f25c18eaf5]
+/usr/local/lib/libggml-cuda.so.0(+0x28f067)[0x77f25c180067]
+/usr/local/lib/libggml-cuda.so.0(+0x29a989)[0x77f25c18b989]
+/usr/local/lib/libggml-base.so.0(ggml_backend_sched_graph_compute_async+0x867)[0x77f267057bc7]
+/usr/local/lib/libllama.so.0(_ZN13llama_context13graph_computeEP11ggml_cgraphb+0xa1)[0x77f2671f5651]
+/usr/local/lib/libllama.so.0(_ZN13llama_context14process_ubatchERK12llama_ubatch14llm_graph_typeP22llama_memory_context_iR11ggml_status+0x11b)[0x77f2671f7deb]
+/usr/local/lib/libllama.so.0(_ZN13llama_context6decodeERK11llama_batch+0x55f)[0x77f2671ffb2f]
+/usr/local/lib/libllama.so.0(llama_decode+0x10)[0x77f267200e40]
+/usr/local/lib/libllama-server-impl.so(_ZNSt17_Function_handlerIFvvEZN19server_context_impl6decodeERiiR11llama_batchEUlvE_E9_M_invokeERKSt9_Any_data+0x38)[0x77f2680a6d28]
+/usr/local/lib/libllama-server-impl.so(_ZN12server_queue14yield_to_queueEOSt8functionIFvvEE+0xab)[0x77f268064e0b]
+/usr/local/lib/libllama-server-impl.so(_ZN19server_context_impl6decodeERiiR11llama_batch+0x16b)[0x77f2680b883b]
+/usr/local/lib/libllama-server-impl.so(_ZN19server_context_impl12update_slotsEv+0x573)[0x77f2680bf003]
+/usr/local/lib/libllama-server-impl.so(_ZN12server_queue10start_loopEl+0x128)[0x77f268065898]
+/usr/local/lib/libllama-server-impl.so(_Z12llama_serverR13common_paramsiPPc+0x49df)[0x77f2680152ef]
+/usr/local/lib/libllama-server-impl.so(_Z12llama_serveriPPc+0xdf)[0x77f26801642f]
+/usr/lib/x86_64-linux-gnu/libc.so.6(+0x29d90)[0x77f267b03d90]
+/usr/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x80)[0x77f267b03e40]
+llama-server(+0x1295)[0x654359ee3295]

@@ -1,0 +1,5 @@
+[1/7] Linking CXX executable tools/ui/llama-ui-embed
+[2/7] Provisioning UI assets
+-- UI: HF stamp 'b10775' matches version, skipping HF fetch
+-- UI: gzip compression applied (/work/build/tools/ui/dist/_gzip)
+[3/3] Linking CXX executable bin/llama-server

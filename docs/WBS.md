@@ -2127,7 +2127,10 @@ D32:
 최종 상태:
 - **CLOSED — C32 PASS / C32 DID NOT OUTPERFORM PRIOR 32K OBSERVATION / D32 NOT RUN**.
 
-## 7. Qwen3.8 llama.cpp post-WBS5 SM70 optimization validation [PLANNED]
+## 7. Qwen3.8 llama.cpp post-WBS5 SM70 optimization validation [DONE — NO NEW VALIDATED RECIPE]
+
+WBS 7.0 static/build preflight, both single measured executions and 7.3 review
+are complete. Detailed decision: [WBS-7.3-result-review.md](WBS-7.3-result-review.md).
 
 목적:
 - WBS 5의 Qwen3.8 llama.cpp 결과와 final candidate는 historical/frozen evidence로 그대로 보존한다.
@@ -2138,7 +2141,15 @@ D32:
 - WBS 5 R2를 control로 재사용하며 baseline을 다시 실행하지 않는다.
 - MTP와 GQA×2를 동시에 적용한 combined candidate는 WBS 7 범위에서 만들지 않는다.
 
-### 7.0 Frozen baseline / provenance / no-inference preflight [PLANNED]
+### 7.0 Frozen baseline / provenance / no-inference preflight [DONE — STATIC_BUILD_READY]
+
+Execution record: [WBS-7.0-preflight-report.md](WBS-7.0-preflight-report.md).
+Frozen baseline, model SHA256/header, native-MTP static support, exact b10775
+source and isolated GQA×2 patch/build identity are verified. Candidate image
+`sha256:5a247f632e6b3922d6d33906e9ccc16739391f2088f3488427ef4fb88221f262`
+contains the b10775 GQA×2 branch; control/candidate grouped kernel symbols are
+0/24. No model load or generation request was submitted. See
+`state/wbs7-preflight.json` for hashes, flags, loader paths and build corrections.
 
 Authoritative control:
 - Candidate: WBS 5 `Q38-LLAMA-WBS5-R2-TARGET-UB256`.
@@ -2183,7 +2194,22 @@ External provenance:
 - Reject unrelated changes to GDN, ARGMAX, MTP subvocabulary, tensor-split behavior, KV type, batch/ubatch, graph policy, clocks or host settings.
 - No C1 128K measured screening is scheduled. The first and only measured execution for each candidate is C2 128K × 2 slots.
 
-### 7.1 Qwen3.8 native MTP1 — C2 128K × 2 slots [PLANNED — EXACTLY 1 MEASURED RUN]
+### 7.1 Qwen3.8 native MTP1 — C2 128K × 2 slots [DONE — FAIL_OOM]
+
+The sole authorized measured invocation used
+`EXP-V100-WBS7-QWEN-LLAMA-MTP1-C2-128K-20260929-001` and the frozen
+performance/v1 workload. Raw evidence was retrieved to
+`results/raw/EXP-V100-WBS7-QWEN-LLAMA-MTP1-C2-128K-20260929-001`.
+The model SHA256 and control image ID matched. The server created a native MTP
+draft context and reported speculative slots, then a GPU1 613.03 MiB draft
+allocation failed. The first admitted request hit CUDA VMM out of memory and
+the server aborted. Raw harness verdict is `FAIL_CRASH`; the [failure review](../results/raw/EXP-V100-WBS7-QWEN-LLAMA-MTP1-C2-128K-20260929-001/wbs7-failure-review.json)
+classifies the evidenced terminal cause as **FAIL_OOM**. No request completed,
+post-health failed, speculative counters were not reached. Sampled peak VRAM
+was GPU0 13,593 MiB / GPU1 16,123 MiB (two measured-window samples only).
+This candidate is closed without retry or a smaller fallback. The
+[individual report](../reports/qwen3-8-27b/EXP-V100-WBS7-QWEN-LLAMA-MTP1-C2-128K-20260929-001.md)
+retains the raw harness verdict.
 
 Candidate ID:
 - `Q38-LLAMA-WBS7-MTP1-C2-128K`.
@@ -2216,7 +2242,20 @@ Pass/stop policy:
 - Only one measured execution is authorized. Harness-invalid/no-request-admitted infrastructure failures must be preserved as inconclusive evidence and require explicit user authorization before any rerun.
 - No automatic MTP2/MTP3/MTP7, MTP+NGRAM or MTP+GQA×2 follow-up is authorized.
 
-### 7.2 SM70 GQA×2 + Q8_0 KV — C2 128K × 2 slots [PLANNED — EXACTLY 1 MEASURED RUN]
+### 7.2 SM70 GQA×2 + Q8_0 KV — C2 128K × 2 slots [DONE — PASS_C2_ACTIVE]
+
+The sole measured invocation used image
+`sha256:5a247f632e6b3922d6d33906e9ccc16739391f2088f3488427ef4fb88221f262`,
+TARGET mode and Q8_0 K/V. Experiment ID:
+`EXP-V100-WBS7-QWEN-LLAMA-GQA2-Q80-C2-128K-20260929-001`.
+The two requests completed with mechanical output PASS, C2 active overlap and
+healthy post-health. Candidate and control have identical prompt hashes,
+output token counts and output text. Mean request decode was 5.961 vs 5.593
+tok/s (+6.58%); batch wall 1315.438 vs 1337.272 s (-1.63%); sampled peak VRAM
+was unchanged at 13,447/14,533 MiB. Runtime GQA kernel dispatch remains
+unobserved and one run does not establish repeatability. See the
+[individual report](../reports/qwen3-8-27b/EXP-V100-WBS7-QWEN-LLAMA-GQA2-Q80-C2-128K-20260929-001.md)
+and [7.3 review](WBS-7.3-result-review.md). Do not start a second invocation.
 
 Candidate ID:
 - `Q38-LLAMA-WBS7-SM70-GQA2-Q80-C2-128K`.
@@ -2260,7 +2299,11 @@ Stop policy:
 - Failure is terminal for this frozen candidate; do not silently add other patches, change KV type or switch topology.
 - Harness-invalid/no-request-admitted infrastructure failure is preserved as inconclusive and is not automatically rerun.
 
-### 7.3 Result review / closeout [PLANNED — NO GPU INFERENCE]
+### 7.3 Result review / closeout [DONE — NO GPU INFERENCE]
+
+The [review](WBS-7.3-result-review.md) closes MTP1 as terminal `FAIL_OOM` and
+retains GQA×2 only as a reproducible experimental build. **No new validated
+post-WBS5 recipe** is published. The six frozen WBS5 recipes remain unchanged.
 
 Use only:
 - frozen WBS 5 R2 control;

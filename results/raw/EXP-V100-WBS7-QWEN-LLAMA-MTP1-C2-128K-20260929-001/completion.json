@@ -1,0 +1,10 @@
+{
+  "experiment_id": "EXP-V100-WBS7-QWEN-LLAMA-MTP1-C2-128K-20260929-001",
+  "verdict": "FAIL_CRASH",
+  "completed_at_utc": "2026-09-29T12:53:36.281295+00:00",
+  "post_health": {
+    "healthy": false,
+    "error": "[Errno 104] Connection reset by peer",
+    "at_utc": "2026-09-29T12:53:36.257216+00:00"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "upstream_blob_verified": true,
+  "files_changed": [
+    "ggml/src/ggml-cuda/fattn-vec.cuh"
+  ],
+  "unrelated_thread_launch_gdn_knobs_excluded": true,
+  "patch_applies_with_fuzz_zero": true,
+  "applied_result_matches_candidate_source": true,
+  "patch_sha256": "25632d838c5e04c6b32920e5f61c39868e995d83156cb315ff477cf287197f80",
+  "base_source_sha256": "5a24853d8f4932d2d6be1fb7a5fb74c46c221b24320182a96bf56a49b678f517",
+  "candidate_source_sha256": "7253a4f2cfc4363b9bd6228ec44efc6d5c790c8d69771d649671a94cd1629dc1",
+  "patch_output": "patching file ggml/src/ggml-cuda/fattn-vec.cuh\n",
+  "forward_port_adjustment": "b10775 launch_fattn requires explicit use_sparse=false after stream_k=false; external patch had one fewer argument.",
+  "limitation": "Static patch/provenance audit only; no CUDA kernel execution or numeric validation."
+}

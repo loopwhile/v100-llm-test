@@ -1,0 +1,7 @@
+{
+  "commit": "67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
+  "upstream_tree": "5d61cb84711c5ad70d6a3c213e45b949bcf7e3d7",
+  "reconstructed_archive_tree": "5d61cb84711c5ad70d6a3c213e45b949bcf7e3d7",
+  "match": true,
+  "method": "Extract exact commit archive; git init; git -c core.autocrlf=false add -f .; git write-tree. No source build mutations."
+}

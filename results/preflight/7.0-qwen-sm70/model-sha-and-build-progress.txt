@@ -1,0 +1,17 @@
+322e194ff79741c7baa497c240f677f54b201b0efab44ca8e50f122b39123482  /srv/models/qwen3.8-unsloth/Qwen3.8-27B-UD-Q4_K_M.gguf
+ ---> Removed intermediate container f25ca30744e0
+ ---> d5b9775d9e52
+Step 3/3 : ENTRYPOINT ["bash"]
+ ---> Running in 5a3a7f78378a
+ ---> Removed intermediate container 5a3a7f78378a
+ ---> d265566b9075
+Successfully built d265566b9075
+Successfully tagged wbs7-gqa2-builder:20260929
+[64/481] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/mmf.cu.o
+[65/481] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/mean.cu.o
+[66/481] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/mmid.cu.o
+[67/481] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/moe-weighted-reduction.cu.o
+[68/481] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/mmq.cu.o
+[69/481] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/norm.cu.o
+[70/481] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/opt-step-adamw.cu.o
+[71/481] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/opt-step-sgd.cu.o

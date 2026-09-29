@@ -68,7 +68,7 @@ WBS 5 final recipe publication is complete: **6 validated recipes across 5 track
 
 Validation is bounded to the recorded hardware, exact artifacts and performance workload. Ornith 9B llama.cpp retains an unresolved upstream repository identity and is validated against its exact local GGUF. Mechanical output PASS does not add semantic coding-quality certification.
 
-Current execution status and separately planned WBS 7 work are recorded in [WBS](docs/WBS.md) and [current state](state/current.md). WBS 7 outcomes are not part of the frozen WBS 5 recipes.
+WBS 7 post-WBS5 validation is complete; its [result review](docs/WBS-7.3-result-review.md) records MTP1 GPU OOM and the bounded GQA×2 result. Current execution status is recorded in [WBS](docs/WBS.md) and [current state](state/current.md). WBS 7 outcomes are not part of the frozen WBS 5 recipes.
 
 Offline repository validation:
 

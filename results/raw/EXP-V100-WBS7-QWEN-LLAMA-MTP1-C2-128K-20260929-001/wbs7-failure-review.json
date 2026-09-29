@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "candidate_id": "Q38-LLAMA-WBS7-MTP1-C2-128K",
+  "experiment_id": "EXP-V100-WBS7-QWEN-LLAMA-MTP1-C2-128K-20260929-001",
+  "reviewed_at_utc": "2026-09-29T12:55:39.371155+00:00",
+  "harness_verdict": "FAIL_CRASH",
+  "candidate_terminal_classification": "FAIL_OOM",
+  "basis": "Server created native MTP draft context, then GPU1 allocation failed at 613.03 MiB; first admitted request hit CUDA VMM out of memory and process aborted.",
+  "log_sha256": "2d87b3cdf80f2f5d1b8d02c4e7b21d4c6069059f49fa5f7718ade04dba25a114",
+  "log_evidence": [
+    {
+      "line": 11,
+      "text": "0.05.432.320 I common_speculative_init_result: creating MTP draft context against the target model '/model/target.gguf'"
+    },
+    {
+      "line": 12,
+      "text": "0.05.462.425 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 613.03 MiB on device 1: cudaMalloc failed: out of memory"
+    },
+    {
+      "line": 17,
+      "text": "0.05.677.959 I srv    load_model: initializing, n_slots = 2, n_ctx_slot = 131072, kv_unified = 'true'"
+    },
+    {
+      "line": 26,
+      "text": "0.17.202.772 E CUDA error: out of memory"
+    },
+    {
+      "line": 28,
+      "text": "0.17.202.779 E   cuMemCreate(&handle, reserve_size, &prop, 0)"
+    }
+  ],
+  "completed_requests": 0,
+  "output_passed_requests": 0,
+  "post_health": {
+    "healthy": false,
+    "error": "[Errno 104] Connection reset by peer",
+    "at_utc": "2026-09-29T12:53:36.257216+00:00"
+  },
+  "peak_vram_mib": {
+    "gpu0": 13593.0,
+    "gpu1": 16123.0
+  },
+  "speculative_counters": "UNKNOWN_NOT_REACHED",
+  "policy": "One valid terminal measured candidate run; no configuration reduction or retry."
+}

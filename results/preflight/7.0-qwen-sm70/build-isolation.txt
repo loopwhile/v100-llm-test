@@ -1,0 +1,5 @@
+null [{"Type":"bind","Source":"/home/loopwhile/v100-wbs7-preflight-20260929","Destination":"/work","Mode":"","RW":true,"Propagation":"rprivate"}]
+sha256:d265566b90757e2e9f87c226b056f194a5dfb5fe58a2ade9c1b8313bcff989c0
+[103/481] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq320-dv256.cu.o
+[104/481] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq128-dv128.cu.o
+[105/481] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq40-dv40.cu.o

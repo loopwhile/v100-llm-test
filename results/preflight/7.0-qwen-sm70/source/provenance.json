@@ -1,0 +1,23 @@
+{
+  "base_commit": "67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
+  "base_archive_url": "https://codeload.github.com/ggml-org/llama.cpp/tar.gz/67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
+  "base_archive_sha256": "a4a2e650e6040f8d63b1ebdc8c042da322497a677f2b6406233321b849d0ba28",
+  "gqa_reference_commit": "5edfd28c56ef10d21f32fdcfcb12361bb6db1c55",
+  "gqa_source_blob": "7074ba8d0a48142823f7f4befff271ff1879633d",
+  "mtp_reference_commit": "7080181335f660cbb801c9ccb68e1a74697b5604",
+  "retrieval": "Pinned raw.githubusercontent.com/codeload/API successful; web open cache miss",
+  "files_sha256": {
+    "b10775-sm70-gqa2.patch": "25632d838c5e04c6b32920e5f61c39868e995d83156cb315ff477cf287197f80",
+    "base-commit.json": "3f4dda904a368b118ba8a08de83f8a41692b6e197587b4be38abb7c814cfe938",
+    "base-common_arg.cpp": "b00aa1ef758eea76b50cd5c87f6a012b9ab6066710778d072181190043bd13ae",
+    "base-common_speculative.cpp": "a5484d4d223fde55fe14f59c3be133c59cebdad31a020d78a5c45103e35bd81a",
+    "base-fattn-vec.cuh": "5a24853d8f4932d2d6be1fb7a5fb74c46c221b24320182a96bf56a49b678f517",
+    "base-ggml_src_ggml-cuda_CMakeLists.txt": "893edd71a30e6990b88ff86a916fa7e5edbbb7a572d942a05a7fc083706c63e7",
+    "base-ggml_src_ggml-cuda_fattn-common.cuh": "4695e3fae4010e63358860ba499eb474bb47ad6d90da14995fa77194c825b4e5",
+    "base-ggml_src_ggml-cuda_fattn.cu": "6c2aeb2603c54bfdc3e257f7a9da3a2596b84a65c5af662ba087e58c2b173c9e",
+    "candidate-fattn-vec.cuh": "7253a4f2cfc4363b9bd6228ec44efc6d5c790c8d69771d649671a94cd1629dc1",
+    "upstream-mtp-README.md": "eec26135172976a973ac8bbc3c0602b3e1f86251a2dd600ac2bb24fe95d57956",
+    "upstream-sm70-tuning.patch": "eb6273b3156c82ca4fa90d02320e8ee72849f0a7aa10087987d9c75ccb7fdf02"
+  },
+  "forward_port_adjustment": "b10775 launch_fattn requires explicit use_sparse=false after stream_k=false; external patch had one fewer argument."
+}

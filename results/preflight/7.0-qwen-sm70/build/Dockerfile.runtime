@@ -1,0 +1,11 @@
+FROM kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149
+COPY build/bin/ /opt/wbs7/bin/
+COPY b10775-sm70-gqa2.patch /opt/wbs7/provenance/b10775-sm70-gqa2.patch
+ENV PATH=/opt/wbs7/bin:${PATH}
+ENV LD_LIBRARY_PATH=/opt/wbs7/bin:/usr/local/lib:/usr/local/cuda/lib64
+LABEL org.opencontainers.image.revision="67a17c17caa95742186f8b1ecadd1b5abd6d5ebb" \
+      wbs7.patch.sha256="25632d838c5e04c6b32920e5f61c39868e995d83156cb315ff477cf287197f80" \
+      wbs7.gqa-heads="2" \
+      wbs7.scope="no-inference-preflight"
+ENTRYPOINT ["/opt/wbs7/bin/llama-server"]
+CMD ["--help"]

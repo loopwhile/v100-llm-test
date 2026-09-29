@@ -1,0 +1,37 @@
+{
+  "model_sha256": {
+    "expected": "322e194ff79741c7baa497c240f677f54b201b0efab44ca8e50f122b39123482",
+    "observed": "322e194ff79741c7baa497c240f677f54b201b0efab44ca8e50f122b39123482",
+    "match": true
+  },
+  "model_header": {
+    "blk64_count": 15,
+    "nextn_count": 4,
+    "nextn_predict_layers": 1,
+    "head_count": 24,
+    "head_count_kv": 4,
+    "head_dim": 256,
+    "header_only": true
+  },
+  "control_cli": {
+    "command": "docker run --rm --gpus all --entrypoint bash kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149 -lc \"/usr/local/bin/llama-server --version; /usr/local/bin/llama-server --spec-type draft-mtp --spec-draft-n-max 1 --help\"",
+    "exit_code": 0,
+    "draft_mtp_present": true,
+    "draft_max_present": true,
+    "model_loaded": false,
+    "source_accepts_max1": "common/arg.cpp rejects only value < 0; common/speculative.cpp maps draft-mtp to COMMON_SPECULATIVE_TYPE_DRAFT_MTP",
+    "initial_driver_missing_attempt": "First --help/version without GPU visibility failed libcuda.so.1 before CLI; no server/model launched. Retained control-static.txt."
+  },
+  "inference": {
+    "generation_requests": 0,
+    "warmup_requests": 0,
+    "server_starts": 0,
+    "model_loads": 0,
+    "measured_runs": 0
+  },
+  "limitations": [
+    "MTP feasibility and correct draft activity require WBS7.1 measured execution; not established by header/help.",
+    "GQA2 path requires Q->ne[1] == 1 and gqa_ratio >= 2 after vector-kernel selection; compiled availability does not prove C2 runtime dispatch.",
+    "Control original CMake flags unknown; no bitwise one-variable build equivalence claim."
+  ]
+}

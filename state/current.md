@@ -1,5 +1,32 @@
 # Current execution
 
+## WBS 7.0 no-generation preflight — 2026-09-29
+
+- **DONE — STATIC_BUILD_READY.** Frozen R2 control audit, exact model SHA256/header, native-MTP CLI/source support, isolated GQA×2 patch and build identity verification completed.
+- Baseline: `Q38-LLAMA-WBS5-R2-TARGET-UB256`; historical evidence and CSV remain frozen. No generation, warmup, model load or measured execution in this step.
+- Source archive reconstructs exact b10775 Git tree. Patch changes only `ggml/src/ggml-cuda/fattn-vec.cuh`; SHA256 `25632d838c5e04c6b32920e5f61c39868e995d83156cb315ff477cf287197f80`.
+- P520 isolated workspace: `/home/loopwhile/v100-wbs7-preflight-20260929`. Candidate image ID `sha256:5a247f632e6b3922d6d33906e9ccc16739391f2088f3488427ef4fb88221f262`; CUDA library SHA256 `5d3ea1ba757dbe04f61f0fbac73277823d418962f9cf65bfe97aaa86731fba94`. NCCL/RPC, b10775 GQA patch interface and link-only CUDA stub corrections are recorded, with failed build logs preserved.
+- Report: `docs/WBS-7.0-preflight-report.md`; evidence: `results/preflight/7.0-qwen-sm70/`.
+- WBS 7.1 and 7.2 each completed their single measured invocation; see the 7.3 review below.
+
+## WBS 7.1 MTP1 measured execution — 2026-09-29
+
+- **DONE — EXACTLY ONE RUN / TERMINAL FAIL_OOM** on P520 in `/home/loopwhile/v100-wbs7-measured-20260929`.
+- Experiment: `EXP-V100-WBS7-QWEN-LLAMA-MTP1-C2-128K-20260929-001`. Raw harness `FAIL_CRASH`; failure review `FAIL_OOM` from GPU1 613.03 MiB MTP draft allocation failure and first-request CUDA VMM OOM. No request completed; post-health failed. Raw retrieved and individual report/CSV published.
+- Remote runner file SHA256 `3964b44aed3c17a093b79949318dc48a470ab0030553d6ba9033679167826a5a`; exact R2 command delta and performance/v1 workload hash verified. No rerun is authorized.
+
+## WBS 7.2 GQA×2 measured execution — 2026-09-29
+
+- **DONE — EXACTLY ONE RUN / PASS_C2_ACTIVE** on P520 in `/home/loopwhile/v100-wbs7-measured-20260929`.
+- Experiment: `EXP-V100-WBS7-QWEN-LLAMA-GQA2-Q80-C2-128K-20260929-001`. Fresh raw path, idle GPU and candidate image ID were checked before launch. TARGET mode, Q8_0 K/V and the frozen performance/v1 workload remained fixed.
+- Both outputs mechanical PASS, active C2 overlap, post-health healthy. Prompt/output text and token counts match the frozen R2 control exactly. Mean request decode +6.58%, wall -1.63%, peak VRAM unchanged. Raw retrieved and individual report/CSV published.
+
+## WBS 7.3 result review — 2026-09-29
+
+- **DONE — NO NEW VALIDATED RECIPE.** MTP1 was terminal GPU OOM. GQA×2 passed capacity/mechanical output but single-run observed deltas and uncounted runtime GQA dispatch do not justify recipe promotion. Reproducible patch/image/raw retained as experimental evidence.
+- Review: `docs/WBS-7.3-result-review.md`; machine-readable comparison: `state/wbs7-review.json`. WBS5 frozen recipe records unchanged.
+- Final checks: remote/local raw checksum parity, frozen WBS5 raw/recipe/workload hashes, repository contract and full unittest suite PASS. P520 benchmark containers and GPU memory cleared.
+
 ## WBS 5.5 final recipe publication — 2026-09-29
 
 - **WBS 5.5 / WBS 5: DONE — FINAL_RECIPES_PUBLISHED.** 7개 track / 25개 candidate / 28개 plan instance의 frozen ID·delta·invariant 재대조를 완료했다.
@@ -330,8 +357,6 @@
 - WBS 3: DONE
 - WBS 4: DONE
 - WBS 5: DONE — FINAL_RECIPES_PUBLISHED (6 recipes / 5 tracks; 2 tracks no eligible recipe).
-- WBS 7: PLANNED — 별도 Qwen native MTP1 / GQA2 검증; WBS5.5에서는 실행하지 않음.
+- WBS 7: DONE — 7.0 static/build preflight, 7.1 native MTP1 terminal FAIL_OOM, 7.2 GQA2 PASS_C2_ACTIVE, 7.3 review NO NEW VALIDATED RECIPE.
 - WBS 6.1~6.9: DONE (6.9 OpenVINO CLOSED / OpenBLAS+LTO 4K DONE).
 - WBS 6.10: CLOSED — C32 PASS; prior 32K observed result를 상회하지 못했고 D32는 의도적으로 미실행.
-
-

@@ -1,0 +1,264 @@
+[1/485] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml.cpp.o
+[2/485] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml-alloc.c.o
+[3/485] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-backend.cpp.o
+[4/485] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-opt.cpp.o
+[5/485] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-threading.cpp.o
+[6/485] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o
+[7/485] Building CXX object ggml/src/CMakeFiles/ggml.dir/ggml-backend-dl.cpp.o
+[8/485] Building CXX object ggml/src/CMakeFiles/ggml.dir/ggml-backend-reg.cpp.o
+[9/485] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-backend-meta.cpp.o
+[10/485] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.c.o
+[11/485] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.cpp.o
+[12/485] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/gguf.cpp.o
+[13/485] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/hbm.cpp.o
+[14/485] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/iqp.cpp.o
+[15/485] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/traits.cpp.o
+[16/485] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/quants.c.o
+[17/485] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml-quants.c.o
+[18/485] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/amx.cpp.o
+[19/485] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/mmq.cpp.o
+[20/485] Linking CXX shared library bin/libggml-base.so.0.22.0
+[21/485] Creating library symlink bin/libggml-base.so.0 bin/libggml-base.so
+[22/485] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/vec.cpp.o
+[23/485] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/binary-ops.cpp.o
+[24/485] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/unary-ops.cpp.o
+[25/485] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/repack.cpp.o
+[26/485] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/x86/quants.c.o
+[27/485] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/llamafile/sgemm.cpp.o
+[28/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/acc.cu.o
+[29/485] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/x86/repack.cpp.o
+[30/485] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ops.cpp.o
+[31/485] Linking CXX shared library bin/libggml-cpu.so.0.22.0
+[32/485] Creating library symlink bin/libggml-cpu.so.0 bin/libggml-cpu.so
+[33/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/add-id.cu.o
+[34/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/arange.cu.o
+[35/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/allreduce.cu.o
+[36/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/argmax.cu.o
+[37/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/clamp.cu.o
+[38/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/col2im-1d.cu.o
+[39/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/conv-transpose-1d.cu.o
+[40/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/concat.cu.o
+[41/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/conv2d-dw.cu.o
+[42/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/conv2d-transpose.cu.o
+[43/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/conv2d.cu.o
+[44/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/convert.cu.o
+[45/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/count-equal.cu.o
+[46/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/binbcast.cu.o
+[47/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/cross-entropy-loss.cu.o
+[48/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/cpy.cu.o
+[49/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/diag.cu.o
+[50/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/diagmask.cu.o
+[51/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/cumsum.cu.o
+[52/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/dsv4-hc.cu.o
+[53/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/fattn-tile.cu.o
+[54/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/fill.cu.o
+[55/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/fwht.cu.o
+[56/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/gated_delta_net.cu.o
+[57/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/argsort.cu.o
+[58/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/getrows.cu.o
+[59/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/gla.cu.o
+[60/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/ggml-cuda.cu.o
+In static member function 'static _Tp* std::__copy_move<_IsMove, true, std::random_access_iterator_tag>::__copy_m(const _Tp*, const _Tp*, _Tp*) [with _Tp = ggml_op; bool _IsMove = false]',
+    inlined from '_OI std::__copy_move_a2(_II, _II, _OI) [with bool _IsMove = false; _II = const ggml_op*; _OI = ggml_op*]' at /usr/include/c++/11/bits/stl_algobase.h:494:141,
+    inlined from '_OI std::__copy_move_a1(_II, _II, _OI) [with bool _IsMove = false; _II = const ggml_op*; _OI = ggml_op*]' at /usr/include/c++/11/bits/stl_algobase.h:522:40,
+    inlined from '_OI std::__copy_move_a(_II, _II, _OI) [with bool _IsMove = false; _II = const ggml_op*; _OI = ggml_op*]' at /usr/include/c++/11/bits/stl_algobase.h:529:25,
+    inlined from '_OI std::copy(_II, _II, _OI) [with _II = const ggml_op*; _OI = ggml_op*]' at /usr/include/c++/11/bits/stl_algobase.h:619:64,
+    inlined from 'static _ForwardIterator std::__uninitialized_copy<true>::__uninit_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = const ggml_op*; _ForwardIterator = ggml_op*]' at /usr/include/c++/11/bits/stl_uninitialized.h:110:19,
+    inlined from '_ForwardIterator std::uninitialized_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = const ggml_op*; _ForwardIterator = ggml_op*]' at /usr/include/c++/11/bits/stl_uninitialized.h:148:131,
+    inlined from '_ForwardIterator std::__uninitialized_copy_a(_InputIterator, _InputIterator, _ForwardIterator, std::allocator<_Tp>&) [with _InputIterator = const ggml_op*; _ForwardIterator = ggml_op*; _Tp = ggml_op]' at /usr/include/c++/11/bits/stl_uninitialized.h:333:33,
+    inlined from 'void std::vector<_Tp, _Alloc>::_M_range_insert(std::vector<_Tp, _Alloc>::iterator, _ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const ggml_op*; _Tp = ggml_op; _Alloc = std::allocator<ggml_op>]' at /usr/include/c++/11/bits/vector.tcc:751:28,
+    inlined from 'std::vector<_Tp, _Alloc>::iterator std::vector<_Tp, _Alloc>::insert(std::vector<_Tp, _Alloc>::const_iterator, std::initializer_list<_Tp>) [with _Tp = ggml_op; _Alloc = std::allocator<ggml_op>]' at /usr/include/c++/11/bits/stl_vector.h:1313:16,
+    inlined from 'int ggml_cuda_try_fuse(ggml_backend_cuda_context*, ggml_cgraph*, int)' at /work/source/ggml/src/ggml-cuda/ggml-cuda.cu:3501:11:
+/usr/include/c++/11/bits/stl_algobase.h:431:25: warning: 'void* __builtin_memcpy(void*, const void*, long unsigned int)' writing 20 bytes into a region of size 4 overflows the destination [-Wstringop-overflow=]
+  431 |             __builtin_memmove(__result, __first, sizeof(_Tp) * _Num);
+      |             ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/11/ext/new_allocator.h: In function 'int ggml_cuda_try_fuse(ggml_backend_cuda_context*, ggml_cgraph*, int)':
+/usr/include/c++/11/ext/new_allocator.h:127:49: note: at offset [24, 28] into destination object of size [24, 28] allocated by 'operator new'
+  127 |         return static_cast<_Tp*>(::operator new(__n * sizeof(_Tp)));
+      |                                   ~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~
+/usr/include/c++/11/ext/new_allocator.h:127:49: note: at offset [20, 24] into destination object of size [20, 24] allocated by 'operator new'
+  127 |         return static_cast<_Tp*>(::operator new(__n * sizeof(_Tp)));
+      |                                   ~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~
+[61/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/im2col.cu.o
+[62/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/lightning-indexer.cu.o
+[63/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/fattn.cu.o
+[64/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/mmf.cu.o
+[65/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/mmid.cu.o
+[66/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/mean.cu.o
+[67/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/moe-weighted-reduction.cu.o
+[68/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/mmq.cu.o
+[69/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/norm.cu.o
+[70/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/opt-step-adamw.cu.o
+[71/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/opt-step-sgd.cu.o
+[72/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/out-prod.cu.o
+[73/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/pad.cu.o
+[74/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/pad_reflect_1d.cu.o
+[75/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/pool1d.cu.o
+[76/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/pool2d.cu.o
+[77/485] Building CXX object src/CMakeFiles/llama.dir/llama-batch.cpp.o
+[78/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/quantize.cu.o
+[79/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/roll.cu.o
+[80/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/scale.cu.o
+[81/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/rope.cu.o
+[82/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/mmvf.cu.o
+[83/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/set.cu.o
+[84/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/set-rows.cu.o
+[85/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/snake.cu.o
+[86/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/softcap.cu.o
+[87/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/softmax.cu.o
+[88/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/solve_tri.cu.o
+[89/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/ssm-conv.cu.o
+[90/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/mmvq.cu.o
+[91/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/sumrows.cu.o
+[92/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/sum.cu.o
+[93/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/ssm-scan.cu.o
+[94/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/top-k.cu.o
+[95/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/topk-moe.cu.o
+[96/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/tri.cu.o
+[97/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/tsembd.cu.o
+[98/485] Building CXX object src/CMakeFiles/llama.dir/models/cohere2.cpp.o
+[99/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/upscale.cu.o
+[100/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/wkv.cu.o
+[101/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/unary.cu.o
+[102/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq192-dv128.cu.o
+[103/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq112-dv112.cu.o
+[104/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq320-dv256.cu.o
+[105/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq128-dv128.cu.o
+[106/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq40-dv40.cu.o
+[107/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq64-dv64.cu.o
+[108/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq576-dv512.cu.o
+[109/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq256-dv256.cu.o
+[110/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq512-dv512.cu.o
+[111/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_1-ncols2_16.cu.o
+[112/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq72-dv72.cu.o
+[113/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq80-dv80.cu.o
+[114/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq96-dv96.cu.o
+[115/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_1-ncols2_32.cu.o
+[116/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_1-ncols2_8.cu.o
+[117/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_16-ncols2_1.cu.o
+[118/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_2-ncols2_16.cu.o
+[119/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_2-ncols2_32.cu.o
+[120/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_2-ncols2_4.cu.o
+[121/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_2-ncols2_8.cu.o
+[122/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_16-ncols2_2.cu.o
+[123/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_4-ncols2_16.cu.o
+[124/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_32-ncols2_1.cu.o
+[125/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_4-ncols2_2.cu.o
+[126/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_4-ncols2_4.cu.o
+[127/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_16-ncols2_4.cu.o
+[128/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_8-ncols2_1.cu.o
+[129/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_8-ncols2_2.cu.o
+[130/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_32-ncols2_2.cu.o
+[131/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_4-ncols2_8.cu.o
+[132/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_64-ncols2_1.cu.o
+[133/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_8-ncols2_4.cu.o
+[134/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-iq1_s.cu.o
+[135/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_8-ncols2_8.cu.o
+[136/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-iq2_s.cu.o
+[137/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-iq2_xs.cu.o
+[138/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-iq2_xxs.cu.o
+[139/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-iq3_s.cu.o
+[140/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-iq3_xxs.cu.o
+[141/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-iq4_nl.cu.o
+[142/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-iq4_xs.cu.o
+[143/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-mxfp4.cu.o
+[144/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q1_0.cu.o
+[145/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-nvfp4.cu.o
+[146/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q2_0.cu.o
+[147/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q4_0.cu.o
+[148/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q4_1.cu.o
+[149/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q3_k.cu.o
+[150/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q5_0.cu.o
+[151/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q5_1.cu.o
+[152/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q4_k.cu.o
+[153/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q2_k.cu.o
+[154/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q8_0.cu.o
+[155/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_1.cu.o
+[156/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q6_k.cu.o
+[157/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q5_k.cu.o
+[158/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_10.cu.o
+[159/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_11.cu.o
+[160/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_12.cu.o
+[161/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_13.cu.o
+[162/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_14.cu.o
+[163/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_15.cu.o
+[164/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_16.cu.o
+[165/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_2.cu.o
+[166/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_3.cu.o
+[167/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_4.cu.o
+[168/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_5.cu.o
+[169/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_6.cu.o
+[170/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-vec-instance-f16-f16.cu.o
+FAILED: ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-vec-instance-f16-f16.cu.o 
+/usr/local/cuda/bin/nvcc -forward-unknown-to-host-compiler -DGGML_BACKEND_BUILD -DGGML_BACKEND_SHARED -DGGML_CUDA_PEER_MAX_BATCH_SIZE=128 -DGGML_CUDA_USE_GRAPHS -DGGML_SCHED_MAX_COPIES=4 -DGGML_SHARED -DGGML_USE_NCCL -D_GNU_SOURCE -D_XOPEN_SOURCE=600 -Dggml_cuda_EXPORTS -I/work/source/ggml/src/ggml-cuda/.. -I/work/source/ggml/src/../include -isystem=/usr/local/cuda/include -DGGML_CUDA_FATTN_VEC_GQA_HEADS=2 -O3 -DNDEBUG --generate-code=arch=compute_70,code=[compute_70,sm_70] -Xcompiler=-fPIC -use_fast_math -extended-lambda -Xcompiler "-Wmissing-declarations -Wmissing-noreturn -Wall -Wextra -Wpedantic -Wcast-qual -Wno-unused-function -Wno-array-bounds -Wextra-semi -Wno-pedantic" -std=c++17 -MD -MT ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-vec-instance-f16-f16.cu.o -MF ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-vec-instance-f16-f16.cu.o.d -x cu -c /work/source/ggml/src/ggml-cuda/template-instances/fattn-vec-instance-f16-f16.cu -o ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-vec-instance-f16-f16.cu.o
+/work/source/ggml/src/ggml-cuda/template-instances/../fattn-vec.cuh(589): error: no instance of function template "launch_fattn" matches the argument list
+            argument types are: (ggml_backend_cuda_context, ggml_tensor *, fattn_kernel_t, const int, const size_t, int, const __nv_bool, const __nv_bool, __nv_bool)
+      launch_fattn<D, 1, heads_per_block>(ctx, dst, fattn_kernel, nwarps, nbytes_shared, D, need_f16_K, need_f16_V, false);
+      ^
+/work/source/ggml/src/ggml-cuda/template-instances/../fattn-common.cuh(976): note #3322-D: number of parameters of function template "launch_fattn" does not match the call
+  void launch_fattn(
+       ^
+          detected during:
+            instantiation of "void ggml_cuda_flash_attn_ext_vec_gqa_case_impl<D,heads_per_block,type_K,type_V,use_logit_softcap>(ggml_backend_cuda_context &, ggml_tensor *) [with D=64, heads_per_block=2, type_K=GGML_TYPE_F16, type_V=GGML_TYPE_F16, use_logit_softcap=false]" at line 608
+            instantiation of "void ggml_cuda_flash_attn_ext_vec_case<D,type_K,type_V>(ggml_backend_cuda_context &, ggml_tensor *) [with D=64, type_K=GGML_TYPE_F16, type_V=GGML_TYPE_F16]" at line 5 of /work/source/ggml/src/ggml-cuda/template-instances/fattn-vec-instance-f16-f16.cu
+
+/work/source/ggml/src/ggml-cuda/template-instances/../fattn-vec.cuh(589): error: no instance of function template "launch_fattn" matches the argument list
+            argument types are: (ggml_backend_cuda_context, ggml_tensor *, fattn_kernel_t, const int, const size_t, int, const __nv_bool, const __nv_bool, __nv_bool)
+      launch_fattn<D, 1, heads_per_block>(ctx, dst, fattn_kernel, nwarps, nbytes_shared, D, need_f16_K, need_f16_V, false);
+      ^
+/work/source/ggml/src/ggml-cuda/template-instances/../fattn-common.cuh(976): note #3322-D: number of parameters of function template "launch_fattn" does not match the call
+  void launch_fattn(
+       ^
+          detected during:
+            instantiation of "void ggml_cuda_flash_attn_ext_vec_gqa_case_impl<D,heads_per_block,type_K,type_V,use_logit_softcap>(ggml_backend_cuda_context &, ggml_tensor *) [with D=64, heads_per_block=2, type_K=GGML_TYPE_F16, type_V=GGML_TYPE_F16, use_logit_softcap=true]" at line 611
+            instantiation of "void ggml_cuda_flash_attn_ext_vec_case<D,type_K,type_V>(ggml_backend_cuda_context &, ggml_tensor *) [with D=64, type_K=GGML_TYPE_F16, type_V=GGML_TYPE_F16]" at line 5 of /work/source/ggml/src/ggml-cuda/template-instances/fattn-vec-instance-f16-f16.cu
+
+/work/source/ggml/src/ggml-cuda/template-instances/../fattn-vec.cuh(589): error: no instance of function template "launch_fattn" matches the argument list
+            argument types are: (ggml_backend_cuda_context, ggml_tensor *, fattn_kernel_t, const int, const size_t, int, const __nv_bool, const __nv_bool, __nv_bool)
+      launch_fattn<D, 1, heads_per_block>(ctx, dst, fattn_kernel, nwarps, nbytes_shared, D, need_f16_K, need_f16_V, false);
+      ^
+/work/source/ggml/src/ggml-cuda/template-instances/../fattn-common.cuh(976): note #3322-D: number of parameters of function template "launch_fattn" does not match the call
+  void launch_fattn(
+       ^
+          detected during:
+            instantiation of "void ggml_cuda_flash_attn_ext_vec_gqa_case_impl<D,heads_per_block,type_K,type_V,use_logit_softcap>(ggml_backend_cuda_context &, ggml_tensor *) [with D=128, heads_per_block=2, type_K=GGML_TYPE_F16, type_V=GGML_TYPE_F16, use_logit_softcap=false]" at line 608
+            instantiation of "void ggml_cuda_flash_attn_ext_vec_case<D,type_K,type_V>(ggml_backend_cuda_context &, ggml_tensor *) [with D=128, type_K=GGML_TYPE_F16, type_V=GGML_TYPE_F16]" at line 6 of /work/source/ggml/src/ggml-cuda/template-instances/fattn-vec-instance-f16-f16.cu
+
+/work/source/ggml/src/ggml-cuda/template-instances/../fattn-vec.cuh(589): error: no instance of function template "launch_fattn" matches the argument list
+            argument types are: (ggml_backend_cuda_context, ggml_tensor *, fattn_kernel_t, const int, const size_t, int, const __nv_bool, const __nv_bool, __nv_bool)
+      launch_fattn<D, 1, heads_per_block>(ctx, dst, fattn_kernel, nwarps, nbytes_shared, D, need_f16_K, need_f16_V, false);
+      ^
+/work/source/ggml/src/ggml-cuda/template-instances/../fattn-common.cuh(976): note #3322-D: number of parameters of function template "launch_fattn" does not match the call
+  void launch_fattn(
+       ^
+          detected during:
+            instantiation of "void ggml_cuda_flash_attn_ext_vec_gqa_case_impl<D,heads_per_block,type_K,type_V,use_logit_softcap>(ggml_backend_cuda_context &, ggml_tensor *) [with D=128, heads_per_block=2, type_K=GGML_TYPE_F16, type_V=GGML_TYPE_F16, use_logit_softcap=true]" at line 611
+            instantiation of "void ggml_cuda_flash_attn_ext_vec_case<D,type_K,type_V>(ggml_backend_cuda_context &, ggml_tensor *) [with D=128, type_K=GGML_TYPE_F16, type_V=GGML_TYPE_F16]" at line 6 of /work/source/ggml/src/ggml-cuda/template-instances/fattn-vec-instance-f16-f16.cu
+
+/work/source/ggml/src/ggml-cuda/template-instances/../fattn-vec.cuh(589): error: no instance of function template "launch_fattn" matches the argument list
+            argument types are: (ggml_backend_cuda_context, ggml_tensor *, fattn_kernel_t, const int, const size_t, int, const __nv_bool, const __nv_bool, __nv_bool)
+      launch_fattn<D, 1, heads_per_block>(ctx, dst, fattn_kernel, nwarps, nbytes_shared, D, need_f16_K, need_f16_V, false);
+      ^
+/work/source/ggml/src/ggml-cuda/template-instances/../fattn-common.cuh(976): note #3322-D: number of parameters of function template "launch_fattn" does not match the call
+  void launch_fattn(
+       ^
+          detected during:
+            instantiation of "void ggml_cuda_flash_attn_ext_vec_gqa_case_impl<D,heads_per_block,type_K,type_V,use_logit_softcap>(ggml_backend_cuda_context &, ggml_tensor *) [with D=256, heads_per_block=2, type_K=GGML_TYPE_F16, type_V=GGML_TYPE_F16, use_logit_softcap=false]" at line 608
+            instantiation of "void ggml_cuda_flash_attn_ext_vec_case<D,type_K,type_V>(ggml_backend_cuda_context &, ggml_tensor *) [with D=256, type_K=GGML_TYPE_F16, type_V=GGML_TYPE_F16]" at line 7 of /work/source/ggml/src/ggml-cuda/template-instances/fattn-vec-instance-f16-f16.cu
+
+/work/source/ggml/src/ggml-cuda/template-instances/../fattn-vec.cuh(589): error: no instance of function template "launch_fattn" matches the argument list
+            argument types are: (ggml_backend_cuda_context, ggml_tensor *, fattn_kernel_t, const int, const size_t, int, const __nv_bool, const __nv_bool, __nv_bool)
+      launch_fattn<D, 1, heads_per_block>(ctx, dst, fattn_kernel, nwarps, nbytes_shared, D, need_f16_K, need_f16_V, false);
+      ^
+/work/source/ggml/src/ggml-cuda/template-instances/../fattn-common.cuh(976): note #3322-D: number of parameters of function template "launch_fattn" does not match the call
+  void launch_fattn(
+       ^
+          detected during:
+            instantiation of "void ggml_cuda_flash_attn_ext_vec_gqa_case_impl<D,heads_per_block,type_K,type_V,use_logit_softcap>(ggml_backend_cuda_context &, ggml_tensor *) [with D=256, heads_per_block=2, type_K=GGML_TYPE_F16, type_V=GGML_TYPE_F16, use_logit_softcap=true]" at line 611
+            instantiation of "void ggml_cuda_flash_attn_ext_vec_case<D,type_K,type_V>(ggml_backend_cuda_context &, ggml_tensor *) [with D=256, type_K=GGML_TYPE_F16, type_V=GGML_TYPE_F16]" at line 7 of /work/source/ggml/src/ggml-cuda/template-instances/fattn-vec-instance-f16-f16.cu
+
+6 errors detected in the compilation of "/work/source/ggml/src/ggml-cuda/template-instances/fattn-vec-instance-f16-f16.cu".
+[171/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_7.cu.o
+[172/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_8.cu.o
+[173/485] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_9.cu.o
+ninja: build stopped: subcommand failed.

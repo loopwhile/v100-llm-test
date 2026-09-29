@@ -1,0 +1,8 @@
+{
+  "candidate_id": "Q38-LLAMA-WBS7-MTP1",
+  "harness_verdict": "FAIL_CRASH",
+  "candidate_verdict": "FAIL_CRASH",
+  "native_mtp_draft_tokens": null,
+  "post_health": false,
+  "at_utc": "2026-09-29T12:53:36.812757+00:00"
+}

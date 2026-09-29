@@ -1,0 +1,370 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-09-29T12:14:34.286732+00:00",
+  "scope": "WBS 7.0 frozen historical control audit; no inference",
+  "experiment_id": "EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001",
+  "candidate_id": "Q38-LLAMA-WBS5-R2-TARGET-UB256",
+  "verdict": "PASS_C2_ACTIVE",
+  "model_identity": {
+    "status": "verified_local_artifact",
+    "repository": "unsloth/Qwen3.8-27B-GGUF",
+    "revision": "4ca720788d1e01f1bff70c033e0d0028fd02e502",
+    "path": "/srv/models/qwen3.8-unsloth/Qwen3.8-27B-UD-Q4_K_M.gguf",
+    "filename": "Qwen3.8-27B-UD-Q4_K_M.gguf",
+    "sha256": "322e194ff79741c7baa497c240f677f54b201b0efab44ca8e50f122b39123482",
+    "size": 16464440224,
+    "weight_quant": "UD-Q4_K_M",
+    "kv_candidates": [
+      "Q8_0"
+    ],
+    "required_spec_lanes": [
+      "target-only",
+      "ngram"
+    ]
+  },
+  "runtime": {
+    "family": "kyuz0/nvidia-v100-ai-toolboxes",
+    "image": "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149",
+    "build": 10775,
+    "commit": "67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
+    "cuda_cudart": "12.6.77-1",
+    "cuda_cublas": "12.6.4.1-1",
+    "status": "bootstrap_pin_requires_fresh_verification"
+  },
+  "launch_command": "docker run --cidfile /home/loopwhile/v100-llm-test-wbs5-manual-45ee01cb2d9e/results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/container-0.cid --label experiment=EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001 --rm --pull=never --name exp-v100-wbs5-qwen-llama-r2-perf-20260928-001-backend-0 --label project=v100-llm-test --gpus '\"device=0,1\"' -p 127.0.0.1:18080:8080 -v /srv/models/qwen3.8-unsloth/Qwen3.8-27B-UD-Q4_K_M.gguf:/model/target.gguf:ro --entrypoint llama-server kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149 -m /model/target.gguf --host 0.0.0.0 --port 8080 -ngl all --split-mode layer --tensor-split 1,1 --ctx-size 262144 --parallel 2 --kv-unified --kv-unified-per-slot 131072 --batch-size 512 --ubatch-size 256 --cache-type-k q8_0 --cache-type-v q8_0 --flash-attn on --spec-type none --jinja --reasoning off --metrics --slots --no-warmup",
+  "command": [
+    "docker",
+    "run",
+    "--rm",
+    "--pull=never",
+    "--name",
+    "v100-test-18080",
+    "--label",
+    "project=v100-llm-test",
+    "--gpus",
+    "\"device=0,1\"",
+    "-p",
+    "127.0.0.1:18080:8080",
+    "-v",
+    "/srv/models/qwen3.8-unsloth/Qwen3.8-27B-UD-Q4_K_M.gguf:/model/target.gguf:ro",
+    "--entrypoint",
+    "llama-server",
+    "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149",
+    "-m",
+    "/model/target.gguf",
+    "--host",
+    "0.0.0.0",
+    "--port",
+    "8080",
+    "-ngl",
+    "all",
+    "--split-mode",
+    "layer",
+    "--tensor-split",
+    "1,1",
+    "--ctx-size",
+    "262144",
+    "--parallel",
+    "2",
+    "--kv-unified",
+    "--kv-unified-per-slot",
+    "131072",
+    "--batch-size",
+    "512",
+    "--ubatch-size",
+    "256",
+    "--cache-type-k",
+    "q8_0",
+    "--cache-type-v",
+    "q8_0",
+    "--flash-attn",
+    "on",
+    "--spec-type",
+    "none",
+    "--jinja",
+    "--reasoning",
+    "off",
+    "--metrics",
+    "--slots",
+    "--no-warmup"
+  ],
+  "environment": {},
+  "workload_manifest": {
+    "path": "workloads/performance/v1.json",
+    "sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca"
+  },
+  "sampling": {
+    "temperature": 0,
+    "top_p": 1,
+    "seed": 520
+  },
+  "metrics": {
+    "context_tokens": 131072,
+    "concurrency": 2,
+    "intended_requests": 2,
+    "completed_requests": 2,
+    "output_passed_requests": 2,
+    "batch_wall_s": 1337.2715330690007,
+    "submission_skew_s": 0.005008370999348699,
+    "ttft_ms": 679052.9158024993,
+    "prefill_tps": 264.11174227589436,
+    "mean_request_decode_tps": 5.5925074552546326,
+    "aggregate_decode_tps": 4.514346086155433,
+    "end_to_end_output_tps": 3.457039117097142,
+    "c1_128k": false,
+    "c2_resident": true,
+    "c2_active": true,
+    "queue_only": false,
+    "peak_vram_gpu0_mib": 13447.0,
+    "peak_vram_gpu1_mib": 14533.0,
+    "verdict": "PASS_C2_ACTIVE",
+    "concurrency_verdict": "PASS_C2_ACTIVE",
+    "mechanical_output_verdict": "PASS",
+    "speculative_evidence": {
+      "draft_tokens": 0.0,
+      "accepted_tokens": 0.0,
+      "draft_count": 0.0,
+      "acceptance_ratio": null
+    },
+    "total_output_tokens": 4623,
+    "candidate_id": "Q38-LLAMA-WBS5-R2-TARGET-UB256",
+    "workload_manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca"
+  },
+  "post_health": {
+    "healthy": true,
+    "at_utc": "2026-09-28T10:43:47.120575+00:00"
+  },
+  "historical_mtp_ignored_tensor_evidence": [
+    {
+      "line": 9,
+      "text": "0.01.658.005 W model has unused tensor blk.64.attn_norm.weight (size = 20480 bytes) -- ignoring"
+    },
+    {
+      "line": 10,
+      "text": "0.01.658.016 W model has unused tensor blk.64.post_attention_norm.weight (size = 20480 bytes) -- ignoring"
+    },
+    {
+      "line": 11,
+      "text": "0.01.658.031 W model has unused tensor blk.64.attn_q.weight (size = 51609600 bytes) -- ignoring"
+    },
+    {
+      "line": 12,
+      "text": "0.01.658.037 W model has unused tensor blk.64.attn_k.weight (size = 5570560 bytes) -- ignoring"
+    },
+    {
+      "line": 13,
+      "text": "0.01.658.042 W model has unused tensor blk.64.attn_v.weight (size = 5570560 bytes) -- ignoring"
+    },
+    {
+      "line": 14,
+      "text": "0.01.658.061 W model has unused tensor blk.64.attn_output.weight (size = 25804800 bytes) -- ignoring"
+    },
+    {
+      "line": 15,
+      "text": "0.01.658.066 W model has unused tensor blk.64.attn_q_norm.weight (size = 1024 bytes) -- ignoring"
+    },
+    {
+      "line": 16,
+      "text": "0.01.658.072 W model has unused tensor blk.64.attn_k_norm.weight (size = 1024 bytes) -- ignoring"
+    },
+    {
+      "line": 17,
+      "text": "0.01.658.077 W model has unused tensor blk.64.ffn_gate.weight (size = 73113600 bytes) -- ignoring"
+    },
+    {
+      "line": 18,
+      "text": "0.01.658.082 W model has unused tensor blk.64.ffn_down.weight (size = 73113600 bytes) -- ignoring"
+    },
+    {
+      "line": 19,
+      "text": "0.01.658.088 W model has unused tensor blk.64.ffn_up.weight (size = 73113600 bytes) -- ignoring"
+    },
+    {
+      "line": 20,
+      "text": "0.01.658.095 W model has unused tensor blk.64.nextn.eh_proj.weight (size = 43008000 bytes) -- ignoring"
+    },
+    {
+      "line": 21,
+      "text": "0.01.658.101 W model has unused tensor blk.64.nextn.enorm.weight (size = 20480 bytes) -- ignoring"
+    },
+    {
+      "line": 22,
+      "text": "0.01.658.106 W model has unused tensor blk.64.nextn.hnorm.weight (size = 20480 bytes) -- ignoring"
+    },
+    {
+      "line": 23,
+      "text": "0.01.658.122 W model has unused tensor blk.64.nextn.shared_head_norm.weight (size = 20480 bytes) -- ignoring"
+    }
+  ],
+  "limitations": [
+    "Historical C2 overlap includes positive interleaved server-log evidence; sampler recorded idle endpoints only.",
+    "Mechanical output PASS is not semantic coding-quality certification.",
+    "aggregate_decode_tps includes mixed overlap/output windows, not a pure decode-kernel metric."
+  ],
+  "preserved_files": [
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/completion.json",
+      "sha256": "0fc81a48e38f49e32ea29babc6b1c0fcd6274e447a3890ebd4547e4e11f4aef4"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/config.json",
+      "sha256": "624fe2b0a1eca5cb74e880b8a96a601670f91901839ac95793c0802256f6495a"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/gpu-peak.json",
+      "sha256": "eeb2494643fce22f681673b0c31750dcd4a85876acb81253debfae6b5316b135"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/graph-evidence.json",
+      "sha256": "b2303f224c010da349cddd746a093060c963f9a24e0974818b14f5ea5b5e831a"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/health-after.json",
+      "sha256": "f4419ecf6d0ef326a41adff85d4f1cd464cc53eced4d9ff38287e0cbd089e8e8"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/health-before.json",
+      "sha256": "0d904572be4f28586e3e92a272034ac45889b58b36f9e0bc055ec2dbb29473a2"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/identity.json",
+      "sha256": "adc154b7786b03b64797b87b8a27a321d52db8172cd66feaaa4b4b0b136659eb"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/log-overlap-evidence.json",
+      "sha256": "fe1db53f1fee0a27b1f16ff96f56e7312233baf94fa17918d54f2482eb0ca3c1"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/metrics.json",
+      "sha256": "a98ec8fb7b4d02fd6e83c2611cf23a74f53268b0a8a72ad38d720b30f7b63e86"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/overlap-evidence.json",
+      "sha256": "770a3dd0aa88ff8ee0104e6e98377faa1c69a485d0f8e607319cfbab31f711e5"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/payloads.json",
+      "sha256": "f7358d7107b816a6dd94f4349419e84cd5f2b1375edeb564408cc588dd6b77e4"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/requests.json",
+      "sha256": "2b64d6489e5798947002d3738ec171e94fd5ef348c7dfa2bb5136a5429d5ac5a"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/artifact-check.json",
+      "sha256": "6a9e5b6356fdc2dd41b8f8064acb8f4a6add1a96b3cfcbb6c165d3486d199670"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/candidate-plan.json",
+      "sha256": "323f78049f4060f73f06f4a0981c2a6d24783ec5011d2309f4d352354df0e8c7"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/cleanup.json",
+      "sha256": "f07ce2611a41f9ea95493e1a59b0971662f05adfce462c29c1c9cabc5c9ed808"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/container-0.cid",
+      "sha256": "87db5e8a39fe5514621db23dace0ba0860025f8d2f4ddb3e9fdb38e1e8c39412"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/container-inspect.json",
+      "sha256": "e929eeecceb09637e8bd030c8678f8eec64e34bcde7e6163ac4afe63b1b32758"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/effective-environment.json",
+      "sha256": "98d96b3819bd6fe975507e6e6e0bccafcaca916e83bc0d70cb7412b04b164bcd"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/exit.json",
+      "sha256": "e4d28d9a72853d2b438bf0bb1605a2584c024143d1d6f6ce3dafdfb44773943e"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/gpu-telemetry.jsonl",
+      "sha256": "1e41ca9c4293f23ce4ce62a176892e72e5734a443988cd208f4f18000948bc85"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/measurement.log",
+      "sha256": "e86611066f8ef1bbe9904d50282892696bf8ca0a87dc59cd624ee51ea465914f"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/planned-config.json",
+      "sha256": "05909677a507055c66e247dfaca0f844d0771255f5f6d7f094b2d14a1cd68e54"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/pre-run-receipt.json",
+      "sha256": "4a379d6ca9b40c55b1524f58c1095422a9d72b84ffc8d4905b86cfaf1ce6d6a6"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/preflight.json",
+      "sha256": "e6d17b9bf72937ccd5bd6dd3d43803b88a76007cd3222609a68322d474ab63f5"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/runtime-version.txt",
+      "sha256": "6c7f147ae72876955585308dbcbe61039f5b6d3cfda4ee11e17c3040e34555e3"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/server-0.log",
+      "sha256": "021087112c899b0b015f17f09eee6e4f7994b008234a6f228c024cc4f35cef8e"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/server-process.json",
+      "sha256": "8e65fbab7407116f4f5433a12ddb8a95e0ed8a24c9c63bb3d1f33fba1c83f91a"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/slot-progress-0.jsonl",
+      "sha256": "9f65ad942cfe2411cb2b0dfd7bba6fd0e52c39fa54549ff0bb34c95bf3f41907"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/startup-snapshot.json",
+      "sha256": "6d40c073ce5e4fc5a9c42118f9ddc5e3ece636ac0437e4c971b2431f08f41805"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/server-after.json",
+      "sha256": "a978987880f03a573c5a916e7fe4ab15c89d4c4523c2fa106c10e91a6deac605"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/server-before.json",
+      "sha256": "6d40c073ce5e4fc5a9c42118f9ddc5e3ece636ac0437e4c971b2431f08f41805"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/slot-progress.json",
+      "sha256": "71caa19484f6bd6bc0342b2ef8e4503578c3130ca3caa8bb958c0ae0d4c605f1"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/speculative-evidence.json",
+      "sha256": "d3c42815f9298b3a51806a4c7340c374abb91d340026f539dca6fbf72646b229"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/tokenization.json",
+      "sha256": "8351fe7f38b7f97454653bb1a254da874a55691c0b15da153e3d9b64f27b76fe"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/wbs5-evidence.json",
+      "sha256": "684a82f76381c3c960351eb72fcdfe47edda7918b7e49d0d22a628900088ae8a"
+    },
+    {
+      "path": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/workload.json",
+      "sha256": "f3704e3dc7b91d87418cb070f667d83126dbd9ba17e829aedeb41ddb2fa30b7c"
+    },
+    {
+      "path": "results/summary.csv",
+      "sha256": "02424638dbbc6adb557b1f4c3a061467a06a2ddf11d5342cd4c991e465d4821a"
+    },
+    {
+      "path": "reports/comparison.csv",
+      "sha256": "64747151d09e5713ad2a6c4a1ee4ae842ce22ec8468dc285d8ec53abe6f8d5fc"
+    },
+    {
+      "path": "state/wbs5-final-recipes.json",
+      "sha256": "48a9630301418ddccfe608611a6805309a81dc91eaf091fbff635c1e5f48bb6a"
+    },
+    {
+      "path": "docs/WBS-5.5-final-recipes.md",
+      "sha256": "d5b7a2a8e2c6f287951bd885b74ebadfc963a58e3b2ac444567869a2de8047d5"
+    },
+    {
+      "path": "workloads/performance/v1.json",
+      "sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca"
+    }
+  ]
+}

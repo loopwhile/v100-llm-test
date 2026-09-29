@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "status": "REVIEW_COMPLETE",
+  "recorded_at_utc": "2026-09-29T13:23:00.208423+00:00",
+  "control_experiment": "EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001",
+  "mtp1_experiment": "EXP-V100-WBS7-QWEN-LLAMA-MTP1-C2-128K-20260929-001",
+  "gqa2_experiment": "EXP-V100-WBS7-QWEN-LLAMA-GQA2-Q80-C2-128K-20260929-001",
+  "mtp1": {
+    "harness_verdict": "FAIL_CRASH",
+    "terminal_classification": "FAIL_OOM",
+    "completed_requests": 0,
+    "draft_activity": "UNKNOWN_NOT_REACHED",
+    "decision": "CLOSE_NO_RECIPE_NO_RETRY"
+  },
+  "gqa2": {
+    "harness_verdict": "PASS_C2_ACTIVE",
+    "candidate_verdict": "PASS_C2_ACTIVE",
+    "mechanical_output_verdict": "PASS",
+    "completed_requests": 2,
+    "post_health": true,
+    "active_overlap": true,
+    "queue_only": false,
+    "workload_manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+    "materialized_workload_sha256": "fd0750a0fb746e2d8c312a157142c26e93ac5427ea7e822deaa3431fddbf3712",
+    "same_output_text_as_control": true,
+    "same_output_token_counts_as_control": true,
+    "request_comparison": [
+      {
+        "request_id": "project-a",
+        "prompt_sha256": "e604b72ce69e4af8b3c48b272e51b853995bc10ba752fe1b6dfccde91624c86b",
+        "output_text_sha256": "b904b4060bc177f154028d6dae294fbc06d6b40ea28755e104814a80dcfa43a3",
+        "output_tokens": 2653,
+        "control_decode_tps": 9.075647896797483,
+        "gqa_decode_tps": 9.812837442555217,
+        "decode_delta_pct": 8.122720869524546,
+        "control_ttft_ms": 1044976.6924439991,
+        "gqa_ttft_ms": 1045093.471952
+      },
+      {
+        "request_id": "project-b",
+        "prompt_sha256": "843e1249186c77f97714ff48164c242ab9fc048eab2f5e1d1ff0c532862c425f",
+        "output_text_sha256": "c0415c7b1401126d7db573b758b69aaeef49cb1712297acc1bc165eeac1f3630",
+        "output_tokens": 1970,
+        "control_decode_tps": 2.109367013711783,
+        "gqa_decode_tps": 2.1086036378645177,
+        "decode_delta_pct": -0.036189806814224124,
+        "control_ttft_ms": 313129.13916099933,
+        "gqa_ttft_ms": 313032.3456350002
+      }
+    ],
+    "metric_comparison": {
+      "ttft_ms": {
+        "control": 679052.9158024993,
+        "gqa2": 679062.9087935002,
+        "delta_pct": 0.0014716071116582796
+      },
+      "prefill_tps": {
+        "control": 264.11174227589436,
+        "gqa2": 264.1629944209108,
+        "delta_pct": 0.019405477611411648
+      },
+      "mean_request_decode_tps": {
+        "control": 5.5925074552546326,
+        "gqa2": 5.960720540209867,
+        "delta_pct": 6.584042809085
+      },
+      "aggregate_decode_tps": {
+        "control": 4.514346086155433,
+        "gqa2": 4.612252786152026,
+        "delta_pct": 2.168790299371448
+      },
+      "end_to_end_output_tps": {
+        "control": 3.457039117097142,
+        "gqa2": 3.5144191621247027,
+        "delta_pct": 1.6598031750286513
+      },
+      "batch_wall_s": {
+        "control": 1337.2715330690007,
+        "gqa2": 1315.437853806,
+        "delta_pct": -1.6327035103254617
+      },
+      "peak_vram_gpu0_mib": {
+        "control": 13447.0,
+        "gqa2": 13447.0,
+        "delta_pct": 0.0
+      },
+      "peak_vram_gpu1_mib": {
+        "control": 14533.0,
+        "gqa2": 14533.0,
+        "delta_pct": 0.0
+      }
+    },
+    "graph_reuse_control": 4339,
+    "graph_reuse_gqa2": 4339,
+    "candidate_cuda_image_id": "sha256:5a247f632e6b3922d6d33906e9ccc16739391f2088f3488427ef4fb88221f262",
+    "gqa_kernel_runtime_dispatch": "UNKNOWN",
+    "decision": "RETAIN_REPRODUCIBLE_EXPERIMENTAL_BUILD_NOT_VALIDATED_RECIPE"
+  },
+  "overall_decision": "NO_NEW_VALIDATED_POST_WBS5_RECIPE",
+  "reasons": [
+    "MTP1 cannot serve the frozen C2 128K envelope on 2x V100 16GB due to GPU1 OOM.",
+    "GQA2 mechanical correctness/capacity passed, but single-run +6.58% mean request decode and -1.63% wall are observations, not a repeatable optimization proof.",
+    "Project A decode improved while Project B decode was essentially unchanged; runtime GQA dispatch was not counted.",
+    "Control original CMake flags are unavailable, so rebuild has unquantified compile/toolchain differences.",
+    "No combined candidate or further measurements authorized."
+  ],
+  "limitations": [
+    "aggregate_decode_tps includes overlap/output window and is not a pure CUDA decode-kernel metric.",
+    "Performance workload has no WBS3 semantic coding-quality oracle; outputs are mechanically valid and exactly match control text.",
+    "Sampled VRAM peaks can miss transients."
+  ]
+}

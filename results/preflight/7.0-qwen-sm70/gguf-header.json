@@ -1,0 +1,192 @@
+{
+  "path": "/srv/models/qwen3.8-unsloth/Qwen3.8-27B-UD-Q4_K_M.gguf",
+  "size": 16464440224,
+  "gguf_version": 3,
+  "tensor_count": 866,
+  "metadata_count": 50,
+  "metadata": {
+    "general.architecture": "qwen35",
+    "general.type": "model",
+    "general.sampling.top_k": 20,
+    "general.sampling.top_p": 0.949999988079071,
+    "general.sampling.temp": 1.0,
+    "general.name": "Qwen3.8-27B",
+    "general.basename": "Qwen3.8-27B",
+    "general.description": "Renewal of the beloved Qwen model, delivering unmatched intelligence density.",
+    "general.quantized_by": "Unsloth",
+    "general.size_label": "27B",
+    "general.license": "apache-2.0",
+    "general.repo_url": "https://huggingface.co/unsloth",
+    "general.base_model.count": 1,
+    "general.base_model.0.name": "Qwen3.8 27B",
+    "general.base_model.0.organization": "Qwen",
+    "general.base_model.0.repo_url": "https://huggingface.co/Qwen/Qwen3.8-27B",
+    "general.tags": [
+      "unsloth"
+    ],
+    "qwen35.block_count": 65,
+    "qwen35.context_length": 262144,
+    "qwen35.embedding_length": 5120,
+    "qwen35.feed_forward_length": 17408,
+    "qwen35.attention.head_count": 24,
+    "qwen35.attention.head_count_kv": 4,
+    "qwen35.rope.dimension_sections": [
+      11,
+      11,
+      10,
+      0
+    ],
+    "qwen35.rope.freq_base": 10000000.0,
+    "qwen35.attention.layer_norm_rms_epsilon": 9.999999974752427e-07,
+    "qwen35.attention.key_length": 256,
+    "qwen35.attention.value_length": 256,
+    "qwen35.nextn_predict_layers": 1,
+    "qwen35.ssm.conv_kernel": 4,
+    "qwen35.ssm.state_size": 128,
+    "qwen35.ssm.group_count": 16,
+    "qwen35.ssm.time_step_rank": 48,
+    "qwen35.ssm.inner_size": 6144,
+    "qwen35.full_attention_interval": 4,
+    "qwen35.rope.dimension_count": 64,
+    "general.quantization_version": 2,
+    "general.file_type": 15,
+    "quantize.imatrix.file": "Qwen3.8-27B-GGUF/imatrix_unsloth.gguf",
+    "quantize.imatrix.entries_count": 496,
+    "quantize.imatrix.chunks_count": 1251
+  },
+  "tensor_directory_end": 10996621,
+  "header_sha256": "1d59995fd5915284b680989f64021a6be3dbb1773de9864ea14fc245fb6342fe",
+  "blk64_tensors": [
+    {
+      "name": "blk.64.attn_k.weight",
+      "shape": [
+        5120,
+        1024
+      ],
+      "ggml_type": 8,
+      "relative_offset": 16102434816
+    },
+    {
+      "name": "blk.64.attn_k_norm.weight",
+      "shape": [
+        256
+      ],
+      "ggml_type": 0,
+      "relative_offset": 16108005376
+    },
+    {
+      "name": "blk.64.attn_norm.weight",
+      "shape": [
+        5120
+      ],
+      "ggml_type": 0,
+      "relative_offset": 16108006400
+    },
+    {
+      "name": "blk.64.attn_output.weight",
+      "shape": [
+        6144,
+        5120
+      ],
+      "ggml_type": 14,
+      "relative_offset": 16108026880
+    },
+    {
+      "name": "blk.64.attn_q.weight",
+      "shape": [
+        5120,
+        12288
+      ],
+      "ggml_type": 14,
+      "relative_offset": 16133831680
+    },
+    {
+      "name": "blk.64.attn_q_norm.weight",
+      "shape": [
+        256
+      ],
+      "ggml_type": 0,
+      "relative_offset": 16185441280
+    },
+    {
+      "name": "blk.64.attn_v.weight",
+      "shape": [
+        5120,
+        1024
+      ],
+      "ggml_type": 8,
+      "relative_offset": 16185442304
+    },
+    {
+      "name": "blk.64.ffn_down.weight",
+      "shape": [
+        17408,
+        5120
+      ],
+      "ggml_type": 14,
+      "relative_offset": 16191012864
+    },
+    {
+      "name": "blk.64.ffn_gate.weight",
+      "shape": [
+        5120,
+        17408
+      ],
+      "ggml_type": 14,
+      "relative_offset": 16264126464
+    },
+    {
+      "name": "blk.64.ffn_up.weight",
+      "shape": [
+        5120,
+        17408
+      ],
+      "ggml_type": 14,
+      "relative_offset": 16337240064
+    },
+    {
+      "name": "blk.64.nextn.eh_proj.weight",
+      "shape": [
+        10240,
+        5120
+      ],
+      "ggml_type": 14,
+      "relative_offset": 16410353664
+    },
+    {
+      "name": "blk.64.nextn.enorm.weight",
+      "shape": [
+        5120
+      ],
+      "ggml_type": 0,
+      "relative_offset": 16453361664
+    },
+    {
+      "name": "blk.64.nextn.hnorm.weight",
+      "shape": [
+        5120
+      ],
+      "ggml_type": 0,
+      "relative_offset": 16453382144
+    },
+    {
+      "name": "blk.64.nextn.shared_head_norm.weight",
+      "shape": [
+        5120
+      ],
+      "ggml_type": 0,
+      "relative_offset": 16453402624
+    },
+    {
+      "name": "blk.64.post_attention_norm.weight",
+      "shape": [
+        5120
+      ],
+      "ggml_type": 0,
+      "relative_offset": 16453423104
+    }
+  ],
+  "blk64_count": 15,
+  "nextn_count": 4,
+  "policy": "header only; no model load or inference"
+}

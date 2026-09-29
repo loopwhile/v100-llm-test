@@ -1,0 +1,33 @@
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  972.3MB
+Step 1/8 : FROM kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149
+ ---> e8bf2d9a1b9e
+Step 2/8 : COPY build/bin/ /opt/wbs7/bin/
+ ---> cb0ccfd6b1c6
+Step 3/8 : COPY b10775-sm70-gqa2.patch /opt/wbs7/provenance/b10775-sm70-gqa2.patch
+ ---> deafc8d264db
+Step 4/8 : ENV PATH=/opt/wbs7/bin:${PATH}
+ ---> Running in 4fcb649e700f
+ ---> Removed intermediate container 4fcb649e700f
+ ---> db4a3f5efae5
+Step 5/8 : ENV LD_LIBRARY_PATH=/opt/wbs7/bin:/usr/local/lib:/usr/local/cuda/lib64
+ ---> Running in 94d81842e017
+ ---> Removed intermediate container 94d81842e017
+ ---> 0edcb1784737
+Step 6/8 : LABEL org.opencontainers.image.revision="67a17c17caa95742186f8b1ecadd1b5abd6d5ebb"       wbs7.patch.sha256="25632d838c5e04c6b32920e5f61c39868e995d83156cb315ff477cf287197f80"       wbs7.gqa-heads="2"       wbs7.scope="no-inference-preflight"
+ ---> Running in 169315efd0e7
+ ---> Removed intermediate container 169315efd0e7
+ ---> 6e4e16bfc8f7
+Step 7/8 : ENTRYPOINT ["/opt/wbs7/bin/llama-server"]
+ ---> Running in e01b9f588e45
+ ---> Removed intermediate container e01b9f588e45
+ ---> 6f40b5213fa2
+Step 8/8 : CMD ["--help"]
+ ---> Running in e8c9b62541df
+ ---> Removed intermediate container e8c9b62541df
+ ---> 5a247f632e6b
+Successfully built 5a247f632e6b
+Successfully tagged wbs7-qwen-gqa2:b10775-20260929

@@ -1,0 +1,9 @@
+{
+  "status": "UNKNOWN",
+  "active_overlap": null,
+  "resident": null,
+  "queue_only": null,
+  "method": "interleaved llama.cpp slot print_timing n_gen events",
+  "event_count": 0,
+  "limitation": "No positive decode-interleaving proof found."
+}

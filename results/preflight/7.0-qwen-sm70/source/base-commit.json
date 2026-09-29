@@ -1,0 +1,35 @@
+{
+  "sha": "67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
+  "node_id": "C_kwDOJH_K4NoAKDY3YTE3YzE3Y2FhOTU3NDIxODZmOGIxZWNhZGQxYjVhYmQ2ZDVlYmI",
+  "url": "https://api.github.com/repos/ggml-org/llama.cpp/git/commits/67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
+  "html_url": "https://github.com/ggml-org/llama.cpp/commit/67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
+  "author": {
+    "name": "Xuan-Son Nguyen",
+    "email": "son@huggingface.co",
+    "date": "2026-09-02T23:00:57Z"
+  },
+  "committer": {
+    "name": "GitHub",
+    "email": "noreply@github.com",
+    "date": "2026-09-02T23:00:57Z"
+  },
+  "tree": {
+    "sha": "5d61cb84711c5ad70d6a3c213e45b949bcf7e3d7",
+    "url": "https://api.github.com/repos/ggml-org/llama.cpp/git/trees/5d61cb84711c5ad70d6a3c213e45b949bcf7e3d7"
+  },
+  "message": "mtmd: fix idefics3 preproc (#28273)",
+  "parents": [
+    {
+      "sha": "159b741427337a2e9a58b08121001545d66b5825",
+      "url": "https://api.github.com/repos/ggml-org/llama.cpp/git/commits/159b741427337a2e9a58b08121001545d66b5825",
+      "html_url": "https://github.com/ggml-org/llama.cpp/commit/159b741427337a2e9a58b08121001545d66b5825"
+    }
+  ],
+  "verification": {
+    "verified": true,
+    "reason": "valid",
+    "signature": "-----BEGIN PGP SIGNATURE-----\n\nwsFcBAABCAAQBQJqmKqpCRC1aQ7uu5UhlAAAeCoQAGc7iL3t3jDHBZfn2ajUOu6I\nAiK5Efxnx+UcPaERsANZZGBSn+jtle2tLgRwlpmzf1P4os07yvLdOhtp/0yEEEEn\nRwD7qSI9aUDLzEWcYkHfL2/nSup1HyzJGOG7eB1147FNCHP+x9bDWUgud5PgekAY\ny0Ei1qyrNj0Pl2prpe1ElshEZ6htNPU0+ABFH4NRs2H2ABOoDu8hL69rfg5qSD9i\nM9X1GTyAFSilTU7ItAZBEsEMntMwjj9SMoL8HrJvkeSCPCgYP0fvJPnQKzLKnKSN\niVm3xA4uvca+67XLZmr1yccGuF42q/w6/gHjvvBaBcMCoWSKWcgALUxEa4Ag7Imt\nD0+U1uhWFDJl3BfXPKRl9AH4EheQmy/XL2CmklmkcrQe2TBx9xX/ygTFuMOXKaj7\nIUefAZAkNYHRnsgYGe8vx/S7UkjkZYZ7XrZyax9LlMs/JeECYCP5j6BaL9N5R8MH\nDGeqZAnditwsjqKdyPVlLf9CMww2jEBqdLiKu5Xbzw46FZ14GUknUhUdeR+V4f9t\nVvWuAeF6uMdMGCp/L4pfrMLNabXzMMyEB6099rQ7qmL0Pt/OOs+r1ESx5+kBUSH7\nrZg2m8ibvGFywuTJfzf2smvDAtCVoYUBm31x9BvV30d3SJANs5YyzeCF/klmmfv6\nPCQ4WS4Juwf9M8lJFseO\n=Rxjc\n-----END PGP SIGNATURE-----\n",
+    "payload": "tree 5d61cb84711c5ad70d6a3c213e45b949bcf7e3d7\nparent 159b741427337a2e9a58b08121001545d66b5825\nauthor Xuan-Son Nguyen <son@huggingface.co> 1788390057 +0200\ncommitter GitHub <noreply@github.com> 1788390057 +0200\n\nmtmd: fix idefics3 preproc (#28273)",
+    "verified_at": "2026-09-02T23:00:58Z"
+  }
+}
