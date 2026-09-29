@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "verdict": "FAIL_STARTUP",
+  "error": "server exited during startup"
+}

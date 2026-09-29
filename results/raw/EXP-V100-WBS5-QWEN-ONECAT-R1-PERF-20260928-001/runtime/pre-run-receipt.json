@@ -1,0 +1,87 @@
+{
+  "at_utc": "2026-09-29T06:32:58.641467+00:00",
+  "monotonic_s": 2942.765342233,
+  "gpu_fields": [
+    "index",
+    "uuid",
+    "name",
+    "memory.total",
+    "memory.free",
+    "memory.used",
+    "temperature.gpu",
+    "power.draw",
+    "clocks.sm",
+    "clocks.mem",
+    "utilization.gpu"
+  ],
+  "gpus": {
+    "status": "OBSERVED",
+    "value": "0, GPU-bb94e2a3-e900-d9e5-b580-194e4a36fb3a, Tesla V100-SXM2-16GB, 16384, 16145, 0, 47, 27.48, 135, 877, 0\n1, GPU-ef3074d2-f4f9-3f23-56d2-2ae6fe90694f, Tesla V100-SXM2-16GB, 16384, 16145, 0, 43, 27.50, 135, 877, 0\n"
+  },
+  "gpu_processes": {
+    "status": "OBSERVED",
+    "value": ""
+  },
+  "host_ram_swap": {
+    "status": "OBSERVED",
+    "value": "MemTotal:       64060292 kB\nMemFree:        37963888 kB\nMemAvailable:   62488488 kB\nBuffers:          181580 kB\nCached:         24845564 kB\nSwapCached:            0 kB\nActive:          1745324 kB\nInactive:       23462108 kB\nActive(anon):     204068 kB\nInactive(anon):        0 kB\nActive(file):    1541256 kB\nInactive(file): 23462108 kB\nUnevictable:        9580 kB\nMlocked:            9580 kB\nSwapTotal:       4194300 kB\nSwapFree:        4194300 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:            491996 kB\nWriteback:             0 kB\nAnonPages:        190192 kB\nMapped:           266740 kB\nShmem:             16384 kB\nKReclaimable:     216960 kB\nSlab:             358652 kB\nSReclaimable:     216960 kB\nSUnreclaim:       141692 kB\nKernelStack:        5616 kB\nPageTables:         6504 kB\nSecPageTables:         0 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    36224444 kB\nCommitted_AS:    1130564 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:      181644 kB\nVmallocChunk:          0 kB\nPercpu:             7536 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:         0 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:     57344 kB\nFilePmdMapped:         0 kB\nCmaTotal:              0 kB\nCmaFree:               0 kB\nUnaccepted:            0 kB\nBalloon:               0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:      558636 kB\nDirectMap2M:     7356416 kB\nDirectMap1G:    60817408 kB\n"
+  },
+  "runtime_identity": {
+    "family": "1CatAI/1Cat-vLLM",
+    "version": "1.5.0",
+    "wheel": "1cat_vllm-1.5.0-cp312-cp312-linux_x86_64.whl",
+    "sha256": "2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b",
+    "torch": "2.10.0+cu128",
+    "cuda_userspace": "12.8",
+    "flash_attn_v100": "1.2.0",
+    "status": "bootstrap_pin_requires_fresh_verification"
+  },
+  "model_identity": {
+    "status": "verified_local_artifact_runtime_preflight_pass",
+    "repository": "QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4",
+    "revision": "15d2e47bffe5d8ad23928879f8f7d2f74909e259",
+    "path": "/srv/models/qwen3.8-vllm/Qwen3.8-27B-QUASAR-NVFP4",
+    "weight_quant": "NVFP4",
+    "kv_candidates": [
+      "fp8_e4m3"
+    ],
+    "required_backend_lanes": [
+      "stock",
+      "v100-skinny"
+    ],
+    "speculative_candidates": [
+      "target-only"
+    ],
+    "planning_ready": true,
+    "gpu_memory_utilization": "0.92",
+    "language_model_only": true,
+    "kv_contract_note": "Pinned 1Cat-vLLM 1.5.0 QUASAR Qwen3.8-27B NVFP4 target-only long-context path is validated with explicit fp8_e4m3. Do not use the generic fp8 alias for this acceptance lane.",
+    "attention_backend": "FLASH_ATTN_V100",
+    "environment": {
+      "VLLM_FLASH_V100_DECODE_PARTITION_SIZE": "256"
+    }
+  },
+  "expected_artifact_hash": {
+    "model-00001-of-00005.safetensors": "54d83c1d36631de231876217a8e0c2483eccee8746369a482b79442bdfc5d958",
+    "model-00002-of-00005.safetensors": "bb5c367ac5ba8b2ab68f07b9719f1c3ac528ada98c26523be6e2c07f82e299bc",
+    "model-00003-of-00005.safetensors": "6bfa358557579f538682984a667e243a72ab361d50c583fbf06ba3148653fda1",
+    "model-00004-of-00005.safetensors": "260822c66711e7fbd9df0f96b0da0b54b01c2bd77612911885b33f88f18003d7",
+    "model-00005-of-00005.safetensors": "08e4c9bcd8ca371240cae47c98e5e1a499a14caeab5ee2ca4a0a07c24c69a24b",
+    "tokenizer.json": "0997f410c57a1f4e53b09e4be8f4a172d90edd9564368fb0847030937229b9f3",
+    "config.json": "4a602978ea802d91171d3c5a8b99c5a23900ed474289133d9d0193a35ce3206b",
+    "tokenizer_config.json": "b11349aafa7cdc6a320767cf7ceb29ed82f7eda5d65e8e0819e76f0ce947bf27",
+    "model.safetensors.index.json": "eee26dbb894969febd90ea21f29c10adc660267c47eeff63e08ef45611761046"
+  },
+  "candidate_id": "R1-E4M3-128K-CUDAGRAPH-C1",
+  "workload": {
+    "path": "workloads/performance/v1.json",
+    "sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+    "context_per_request": 131072,
+    "requests": [
+      "project-a",
+      "project-b"
+    ],
+    "output_reserve": 4096,
+    "min_output": 1024
+  }
+}

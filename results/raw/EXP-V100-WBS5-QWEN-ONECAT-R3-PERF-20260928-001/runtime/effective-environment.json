@@ -1,0 +1,16 @@
+{
+  "host_process_environments": [
+    {
+      "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "LANG": "C.UTF-8",
+      "HOME": "/home/loopwhile",
+      "CUDA_VISIBLE_DEVICES": "0,1",
+      "VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL": "0",
+      "PYTHONPATH": "/home/loopwhile/v100-llm-test-wbs5/6cc8afdf5858/scripts/runtime_hooks",
+      "VLLM_FLASH_V100_DECODE_PARTITION_SIZE": "256",
+      "VLLM_SM70_GDN_DECODE_FLASHQLA": "0"
+    }
+  ],
+  "containers": [],
+  "scope": "exact subprocess env plus pinned image defaults and Docker overrides before launch"
+}

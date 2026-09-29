@@ -1398,7 +1398,17 @@ Track result review 결론:
 `2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b`를 기준으로 local verification한다.
 설치 package tree만으로 wheel SHA를 추정하지 않으며 local wheel 원본이 없으면 provenance 한계를 명시한다.
 
-#### 5.4.1 Qwen3.8-27B / 1Cat-vLLM [NON-EXECUTABLE PARENT — FROZEN / READY_FOR_MEASURED_EXECUTION / R2 BLOCKED]
+#### 5.4.1 Qwen3.8-27B / 1Cat-vLLM [NON-EXECUTABLE PARENT — R0/R3 MEASURED / R1 STARTUP FAILED / R2 BLOCKED / REVIEW PENDING]
+
+2026-09-29 회수된 WBS 5.4.1.1/.2/.3의 `screening-1` 결과를 기록했다. 세 실행의 raw evidence, 개별 report, `results/summary.csv`, `reports/comparison.csv`를 보존한다.
+
+| WBS | Candidate | Measured verdict | Evidence 범위 |
+|---|---|---|---|
+| 5.4.1.1 | R0 E4M3 | `QUEUE_ONLY` | 126,975/126,976 prompt tokens의 두 요청 완료, 7,788 output tokens, mechanical output PASS. C2 resident/active false. |
+| 5.4.1.2 | R1 CUDA Graph | `FAIL_STARTUP` | Torch Inductor compile 중 GPU0 CUDA OOM (1.19 GiB allocation 시도, free 911.50 MiB). 측정 요청과 graph capture/replay evidence 없음. |
+| 5.4.1.3 | R3 E5M2 | `QUEUE_ONLY` | R0와 같은 두 요청 완료, 7,788 output tokens, mechanical output PASS. C2 resident/active false. |
+
+R0/R3의 수치는 이번 queue-only 실행에서 관측한 값이며 C2 ACTIVE 성능 수치가 아니다. Mechanical output PASS는 task-level semantic acceptance를 뜻하지 않는다. 최종 recipe 승격과 track decision은 5.4.1.5에서 검토한다. R2의 host toolchain blocker는 유지한다.
 
 현재 evidence를 다음처럼 분리한다.
 
@@ -1438,6 +1448,8 @@ LOCAL_VERIFY_REQUIRED:
 
 ##### 5.4.1.1 Qwen3.8 1Cat-vLLM — R0 E4M3 semantic baseline
 
+실행 완료: `EXP-V100-WBS5-QWEN-ONECAT-R0-PERF-20260928-001` → **QUEUE_ONLY**. 두 요청이 각각 126,975/126,976 prompt tokens와 3,692/4,096 output tokens로 완료됐고 mechanical output은 PASS였다. `max-num-seqs=1` 실행에서 server sampler의 peak processing 1 / waiting 1, C2 resident=false, active=false다. TTFT 1,298,200.34 ms, aggregate decode 5.02 tok/s, batch wall 2,270.90 s는 queue-only 관측값이다. [개별 report](../reports/qwen3-8-27b/EXP-V100-WBS5-QWEN-ONECAT-R0-PERF-20260928-001.md). Semantic baseline의 task-level correctness는 미판정이다.
+
 공통 invariant인 `VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL=0`, `VLLM_FLASH_V100_DECODE_PARTITION_SIZE=256`, `VLLM_SM70_GDN_DECODE_FLASHQLA=0`을 유지한다.
 
 ```bash
@@ -1448,6 +1460,8 @@ python3 scripts/run_wbs5_remote.py --track qwen-onecat --candidate R0 --experime
 
 ##### 5.4.1.2 Qwen3.8 1Cat-vLLM — R1 CUDA Graph C1 axis
 
+실행 종료: `EXP-V100-WBS5-QWEN-ONECAT-R1-PERF-20260928-001` → **FAIL_STARTUP**. EngineCore 초기화 중 Torch Inductor compile의 CUDA OOM으로 서버가 종료됐다. 측정 요청이 없어서 C1/C2, throughput, graph capture/replay를 판정할 수 없다. [개별 report](../reports/qwen3-8-27b/EXP-V100-WBS5-QWEN-ONECAT-R1-PERF-20260928-001.md). 기존 frozen 설정의 성공 evidence로 취급하지 않는다.
+
 R0 대비 eager 제거 + frozen capture config `{"cudagraph_capture_sizes":[1]}` 축만 적용한다. 실제 capture/replay는 runtime evidence로만 판정한다.
 
 ```bash
@@ -1455,6 +1469,8 @@ python3 scripts/run_wbs5_remote.py --track qwen-onecat --candidate R1 --experime
 ```
 
 ##### 5.4.1.3 Qwen3.8 1Cat-vLLM — R3 E5M2
+
+실행 완료: `EXP-V100-WBS5-QWEN-ONECAT-R3-PERF-20260928-001` → **QUEUE_ONLY**. R0와 동일한 두 요청과 7,788 output tokens를 완료했고 mechanical output은 PASS였다. Server sampler의 peak processing 1 / waiting 1, C2 resident=false, active=false다. TTFT 470,113.08 ms, aggregate decode 7.86 tok/s, batch wall 1,160.41 s는 queue-only 관측값이다. [개별 report](../reports/qwen3-8-27b/EXP-V100-WBS5-QWEN-ONECAT-R3-PERF-20260928-001.md). E5M2 route의 task-level correctness 및 C2 ACTIVE 이득은 미판정이다.
 
 현재 기본 실행 queue에서는 toolchain-blocked R2보다 먼저 수행한다. R0 대비 KV dtype E4M3 -> E5M2만 변경하고 GDN decode/prefill 공통 invariant는 유지한다.
 

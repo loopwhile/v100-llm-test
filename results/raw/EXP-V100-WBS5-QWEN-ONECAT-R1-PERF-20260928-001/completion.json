@@ -1,0 +1,5 @@
+{
+  "experiment_id": "EXP-V100-WBS5-QWEN-ONECAT-R1-PERF-20260928-001",
+  "verdict": "FAIL_STARTUP",
+  "error": "server exited during startup"
+}

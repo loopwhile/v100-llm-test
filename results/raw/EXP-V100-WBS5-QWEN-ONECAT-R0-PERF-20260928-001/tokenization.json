@@ -1,0 +1,20 @@
+{
+  "items": [
+    {
+      "request_id": "project-a",
+      "receipt": {
+        "source": "vllm tokenizer",
+        "prompt_tokens": 126975
+      },
+      "error": null
+    },
+    {
+      "request_id": "project-b",
+      "receipt": {
+        "source": "vllm tokenizer",
+        "prompt_tokens": 126976
+      },
+      "error": null
+    }
+  ]
+}
