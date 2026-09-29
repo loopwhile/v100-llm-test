@@ -314,7 +314,7 @@ class FrozenContractTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     c.assert_admission(p, receipt)
 
-    def test_g0_fail_allows_only_hash_bound_r0_performance_diagnostic(self):
+    def test_g0_fail_allows_hash_bound_ornith9_performance_diagnostics(self):
         p = plan("ornith9-onecat", "R0")
         with tempfile.TemporaryDirectory() as td:
             root = Path(td); gate_id = "EXP-GATE-FAIL"
@@ -337,16 +337,24 @@ class FrozenContractTests(unittest.TestCase):
             names = ("semantic-audit.json", "requests.json", "metrics.json", "completion.json", "runtime/progress.json")
             receipt = {"gate": "ORNITH9_G0", "verdict": "FAIL", "use": "PERFORMANCE_DIAGNOSTIC_ONLY",
                        "track": "ornith9-onecat", "baseline_configuration_sha256": p["configuration_sha256"],
+                       "baseline_source_root": str(ROOT),
                        "experiment_id": gate_id, "semantic_audit": "FAIL", "project_a": "PASS", "project_b": "FAIL",
                        "file_sha256": pins,
                        "evidence": [{"path": str(raw / name), "sha256": h.sha((raw / name).read_bytes())}
                                     for name in names]}
             with patch.object(c, "ROOT", root), patch.object(c, "verify_inputs", return_value=c.verify_inputs()):
-                c.assert_admission(p, receipt, performance_diagnostic=True)
+                for candidate in ("R0", "R1", "R2", "R3"):
+                    c.assert_admission(plan("ornith9-onecat", candidate), receipt, performance_diagnostic=True)
+                remote_launch = copy.deepcopy(c.launch_plan("ornith9-onecat", "R0"))
+                remote_launch["command_environments"][0]["PYTHONPATH"] = "/remote/new-snapshot/scripts/runtime_hooks"
+                original_launch = c.launch_plan
+                with patch.object(c, "launch_plan", side_effect=lambda track, candidate: remote_launch
+                                  if (track, candidate) == ("ornith9-onecat", "R0") else original_launch(track, candidate)):
+                    c.assert_admission(p, receipt, performance_diagnostic=True)
                 with self.assertRaisesRegex(ValueError, "CONDITIONAL_PENDING_GATE"):
                     c.assert_admission(p, receipt)
-                with self.assertRaisesRegex(ValueError, "limited to Ornith9 1Cat R0"):
-                    c.assert_admission(plan("ornith9-onecat", "R1"), receipt, performance_diagnostic=True)
+                with self.assertRaisesRegex(ValueError, "limited to Ornith9 1Cat R0-R3"):
+                    c.assert_admission(plan("qwen-onecat", "R0"), receipt, performance_diagnostic=True)
                 with self.assertRaisesRegex(ValueError, "gate evidence incomplete"):
                     c.assert_admission(p, dict(receipt, project_b="PASS"), performance_diagnostic=True)
                 (raw / "requests.json").write_text("tampered")

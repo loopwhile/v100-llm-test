@@ -178,8 +178,9 @@ def main():
                 "and --execute-measured"
             )
     if args.performance_diagnostic and (args.ornith9_g0 or args.track != "ornith9-onecat"
-                                        or args.candidate != "R0" or args.gate_receipt is None):
-        parser.error("--performance-diagnostic requires Ornith9 1Cat R0 and --gate-receipt")
+                                        or args.candidate not in ("R0", "R1", "R2", "R3")
+                                        or args.gate_receipt is None):
+        parser.error("--performance-diagnostic requires Ornith9 1Cat R0-R3 and --gate-receipt")
     if args.run_label == "retry-1":
         predecessor = args.experiment_id[:-3] + "001"
         expected = ROOT / "results/raw" / predecessor / "completion.json"

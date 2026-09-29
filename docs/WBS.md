@@ -1522,11 +1522,11 @@ Admission gate:
 - WBS3 Project B semantic discrepancy 때문에 WBS5 measured candidate 전에 별도 **G0 semantic requalification**이 필요하다.
 - G0는 pre-registered WBS3 concurrency semantic oracle를 사용하며 이 planning integration에서 실행하지 않는다.
 - G0 전에 workload/oracle path/hash와 seeded `JobQueue.pop` check -> await -> heappop race가 그대로인지 local validation한다.
-- G0 PASS 전에는 R1 ~ R3와 final recipe 승격을 차단한다. 사용자 지정 R0 performance diagnostic은 G0 semantic FAIL을 hash-bound evidence로 기록하고 `--performance-diagnostic`을 명시한 경우에만 허용한다. 이 결과는 throughput/VRAM 관찰용이며 semantic PASS 또는 validated recipe로 간주하지 않는다.
+- G0 PASS 전에는 final recipe 승격을 차단한다. 사용자 지정 R0 ~ R3 performance diagnostic은 G0 semantic FAIL을 hash-bound evidence로 기록하고 `--performance-diagnostic`을 명시한 경우에만 허용한다. 이 결과는 throughput/VRAM 관찰용이며 semantic PASS 또는 validated recipe로 간주하지 않는다.
 
 실행 순서/stop:
 - local validation: R0 -> R1 -> R2 -> R3.
-- G0 admission -> ChatGPT pre-run validation -> WBS5 measured sequence.
+- G0 admission -> ChatGPT pre-run validation -> WBS5 measured sequence. G0 semantic FAIL이 기록된 경우에는 아래 명시적 performance diagnostic 경로만 허용하며 final recipe 승격은 보류한다.
 - frozen delta 이외 hidden effective change가 발견되면 해당 candidate는 measured admission 전에 stop/block.
 - final recipe 승격에는 G0 admission, valid `performance/v1.json` evidence, output integrity, active-overlap/telemetry provenance가 필요하다.
 
@@ -1552,7 +1552,7 @@ G0 receipt 필수 의미:
 - `file_sha256`에 현재 input lock의 `workloads/concurrency/v2.json` 및 `workloads/concurrency/v2-ground-truth.json` SHA를 기록.
 - `evidence`에는 위 G0 raw directory 내부의 실제 semantic/requests/metrics/completion evidence 경로와 SHA256을 기록.
 
-semantic audit가 불명확하거나 한 project라도 FAIL이면 PASS receipt를 만들지 않고 R0 ~ R3를 모두 차단한다.
+semantic audit가 불명확하거나 한 project라도 FAIL이면 PASS receipt를 만들지 않고 정식 G0 admission을 차단한다. 별도 hash-bound FAIL receipt와 `--performance-diagnostic`을 사용하는 R0 ~ R3 성능 진단만 예외로 허용한다.
 
 ##### 5.4.2.2 Ornith 1.5 9B 1Cat-vLLM — R0 baseline [REQUIRES G0]
 
@@ -1562,31 +1562,33 @@ semantic audit가 불명확하거나 한 project라도 FAIL이면 PASS receipt�
 python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R0 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R0-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-003/g0-diagnostic-receipt.json --performance-diagnostic --execute-measured
 ```
 
-##### 5.4.2.3 Ornith 1.5 9B 1Cat-vLLM — R1 MBT8192 [REQUIRES G0]
+##### 5.4.2.3 Ornith 1.5 9B 1Cat-vLLM — R1 MBT8192 [PERFORMANCE DIAGNOSTIC]
+
+G0 `-003` semantic FAIL은 유지한다. 아래 명령은 R1을 성능 진단으로 한 번 측정하며 `g0-diagnostic-portable-receipt.json`이 G0 raw와 source-checkout baseline을 묶는다. 결과는 final recipe 승격에 사용할 수 없다.
 
 ```bash
-python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R1 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R1-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-002/g0-receipt.json --execute-measured
+python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R1 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R1-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-003/g0-diagnostic-portable-receipt.json --performance-diagnostic --execute-measured
 ```
 
-##### 5.4.2.4 Ornith 1.5 9B 1Cat-vLLM — R2 TARGET-GRAPH [REQUIRES G0]
+##### 5.4.2.4 Ornith 1.5 9B 1Cat-vLLM — R2 TARGET-GRAPH [PERFORMANCE DIAGNOSTIC]
 
 ```bash
-python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R2 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R2-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-002/g0-receipt.json --execute-measured
+python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R2 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R2-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-003/g0-diagnostic-portable-receipt.json --performance-diagnostic --execute-measured
 ```
 
 실제 graph capture/replay가 확인되지 않으면 UNKNOWN으로 남긴다.
 
-##### 5.4.2.5 Ornith 1.5 9B 1Cat-vLLM — R3 MTP2 [REQUIRES G0]
+##### 5.4.2.5 Ornith 1.5 9B 1Cat-vLLM — R3 MTP2 [PERFORMANCE DIAGNOSTIC]
 
 ```bash
-python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R3 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R3-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-002/g0-receipt.json --execute-measured
+python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R3 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R3-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-003/g0-diagnostic-portable-receipt.json --performance-diagnostic --execute-measured
 ```
 
 resolved n_predict, actual MTP2 acceptance와 output integrity를 runtime evidence로 기록한다.
 
 ##### 5.4.2.6 Ornith 1.5 9B 1Cat-vLLM — track result review
 
-GPU inference 없음. G0 receipt identity부터 재검증한 후 R0 ~ R3를 비교한다. G0 FAIL이면 이 review는 “track blocked by G0”로 종료하며 performance 후보를 임의 실행/대체하지 않는다.
+GPU inference 없음. G0 receipt identity부터 재검증한 후 R0 ~ R3 diagnostic raw를 비교할 수 있다. G0 FAIL이면 semantic-qualified final recipe 승격은 차단하고, diagnostic performance 결과와 output integrity를 구분해 보고한다.
 
 #### 5.4.3 Ornith 1.5 35B-A3B / 1Cat-vLLM [NON-EXECUTABLE PARENT — FROZEN / READY_FOR_MEASURED_EXECUTION]
 

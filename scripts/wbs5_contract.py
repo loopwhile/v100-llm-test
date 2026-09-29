@@ -324,14 +324,27 @@ def assert_admission(plan, receipt=None, *, performance_diagnostic=False):
     if plan["status"] == "BLOCKED_BY_HOST_TOOLCHAIN":
         raise ValueError("BLOCKED_BY_HOST_TOOLCHAIN: nvcc and CUDA toolkit absent; explicit approved host change required")
     gate = plan["admission_gate"]
-    if performance_diagnostic and (plan["track"], plan["candidate_key"], gate) != ("ornith9-onecat", "R0", "ORNITH9_G0"):
-        raise ValueError("performance diagnostic is limited to Ornith9 1Cat R0")
+    if performance_diagnostic and (plan["track"] != "ornith9-onecat" or
+                                   plan["candidate_key"] not in ("R0", "R1", "R2", "R3") or
+                                   gate != "ORNITH9_G0"):
+        raise ValueError("performance diagnostic is limited to Ornith9 1Cat R0-R3")
     if not gate:
         return
     expected_verdict = "FAIL" if performance_diagnostic else "PASS"
     if not isinstance(receipt, dict) or receipt.get("gate") != gate or receipt.get("verdict") != expected_verdict:
         raise ValueError("CONDITIONAL_PENDING_GATE: " + gate)
-    if receipt.get("track") != plan["track"] or receipt.get("baseline_configuration_sha256") != h.sha(h.canon(normalized(launch_plan(plan["track"], "R0")))):
+    baseline = normalized(launch_plan(plan["track"], "R0"))
+    if performance_diagnostic and receipt.get("baseline_source_root") is not None:
+        source_root = Path(receipt["baseline_source_root"])
+        if not source_root.is_absolute() or ".." in source_root.parts:
+            raise ValueError("diagnostic baseline source root invalid")
+        # The hook path is snapshot-local. Compare the frozen serving plan after
+        # rebasing only this path to the receipt's source checkout.
+        hook_path = baseline["servers"][0]["environment"].get("PYTHONPATH")
+        if not isinstance(hook_path, str) or not hook_path.endswith("/scripts/runtime_hooks"):
+            raise ValueError("diagnostic baseline hook path invalid")
+        baseline["servers"][0]["environment"]["PYTHONPATH"] = str(source_root / "scripts/runtime_hooks")
+    if receipt.get("track") != plan["track"] or receipt.get("baseline_configuration_sha256") != h.sha(h.canon(baseline)):
         raise ValueError("gate identity mismatch")
     if not receipt.get("experiment_id") or receipt["experiment_id"] == plan["experiment_id"]:
         raise ValueError("gate needs separate measured evidence")
