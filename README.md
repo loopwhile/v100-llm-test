@@ -64,17 +64,15 @@ Fresh runs write raw evidence under results/raw/<EXPERIMENT_ID>/, one Markdown r
 Historical results are not imported as acceptance evidence. C2 evidence is sampled from runtime metrics/slots during the measured window, and sampled peak VRAM is merged into the experiment metrics. For Ornith 9B 1GPU×2, evidence additionally records LiteLLM deployment headers and backend activity so the result proves that the single gateway actually distributed the two active requests across GPU0/GPU1.
 
 ## Project status
-Repository implementation is complete through the runtime-lane/test-plan stage. Remaining work is measured execution according to:
-- docs/WBS.md
-- docs/test-matrix.md
-- docs/runtime-lanes.md
-- docs/workload-contract.md
+WBS 5 final recipe publication is complete: **6 validated recipes across 5 tracks**, with Qwen and Ornith 9B 1Cat tracks closed without an eligible recipe. See [final publication](docs/WBS-5.5-final-recipes.md) for the recipe index, performance, exact launch commands, provenance and limitations; [machine-readable records](state/wbs5-final-recipes.json) include the frozen-plan audit and evidence hashes.
 
-Before execution:
+Validation is bounded to the recorded hardware, exact artifacts and performance workload. Ornith 9B llama.cpp retains an unresolved upstream repository identity and is validated against its exact local GGUF. Mechanical output PASS does not add semantic coding-quality certification.
+
+Current execution status and separately planned WBS 7 work are recorded in [WBS](docs/WBS.md) and [current state](state/current.md). WBS 7 outcomes are not part of the frozen WBS 5 recipes.
+
+Offline repository validation:
 
     python3 scripts/validate_repo.py
     python3 -m unittest discover -s tests -v
-
-Exact runtime/model compatibility and local artifact identities still require fresh verification on p520-llm before measured GPU runs.
 
 The project ends with validated/bounded recipes per model/runtime/topology. It does not choose or deploy one final production configuration; recipe selection is left to the user.

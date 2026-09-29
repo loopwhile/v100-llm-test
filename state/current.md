@@ -1,5 +1,15 @@
 # Current execution
 
+## WBS 5.5 final recipe publication — 2026-09-29
+
+- **WBS 5.5 / WBS 5: DONE — FINAL_RECIPES_PUBLISHED.** 7개 track / 25개 candidate / 28개 plan instance의 frozen ID·delta·invariant 재대조를 완료했다.
+- **6개 VALIDATED_RECIPE:** Qwen llama R2, Ornith9 llama R1, Ornith35 llama R1·R2(별도 설정), Gemma llama R0, Ornith35 1Cat R0.
+- Qwen/Ornith9 1Cat은 **NO ELIGIBLE RECIPE**. Toolchain BLOCKED, G0 FAIL, Gate B NOT_TRIGGERED 및 optional confirm SKIP 상태를 보존했다.
+- 6건 모두 performance/v1 C2 active / mechanical output PASS 2/2 / post-health healthy. Ornith9 llama는 repository unresolved를 유지하고 exact local artifact로 검증 범위를 한정한다. 신규 semantic PASS나 overall winner/자동 배포는 선언하지 않는다.
+- 최종 보고서: `docs/WBS-5.5-final-recipes.md`; 개별 레시피: `reports/recipes/`; exact command/provenance/metric/evidence hash: `state/wbs5-final-recipes.json`.
+- 추가 GPU inference, 신규 experiment, host 변경 없음. 기존 raw/측정 report/CSV 보존.
+- 아래 WBS5 항목은 publication 이전의 **historical execution log**다. 현재 최종 상태는 이 항목과 WBS 5.5 보고서를 따른다.
+
 ## WBS 5.4 1Cat-vLLM track result reviews — 2026-09-29
 
 - **5.4.1.5 Qwen3.8 1Cat-vLLM: DONE — REVIEW_COMPLETE / NO ELIGIBLE RECIPE.** R0/R3는 두 128K 요청을 mechanical PASS로 완료했지만 `max-num-seqs=1`에서 `QUEUE_ONLY`; R1은 compile OOM `FAIL_STARTUP`; R2는 `BLOCKED_BY_HOST_TOOLCHAIN` 미실행이다. R3 E5M2의 queue-only prefill/TTFT/wall 개선은 보존하지만 C2 ACTIVE 및 task-level semantic qualification이 없어 5.5 recipe로 승격하지 않는다. 상세: `docs/WBS-5.4.1.5-result-review.md`.
@@ -319,9 +329,8 @@
 - WBS 2: DONE
 - WBS 3: DONE
 - WBS 4: DONE
-- WBS 5: 7개 model/runtime track candidate selection 및 frozen plan 문서화 완료; 공식 WBS integration 완료.
-- WBS 5 next: 8A~8D 완료 -> ChatGPT pre-run final validation; measured runs 자동 시작 금지.
-- WBS 5 GPU measured runs: NOT STARTED.
+- WBS 5: DONE — FINAL_RECIPES_PUBLISHED (6 recipes / 5 tracks; 2 tracks no eligible recipe).
+- WBS 7: PLANNED — 별도 Qwen native MTP1 / GQA2 검증; WBS5.5에서는 실행하지 않음.
 - WBS 6.1~6.9: DONE (6.9 OpenVINO CLOSED / OpenBLAS+LTO 4K DONE).
 - WBS 6.10: CLOSED — C32 PASS; prior 32K observed result를 상회하지 못했고 D32는 의도적으로 미실행.
 

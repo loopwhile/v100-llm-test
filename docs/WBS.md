@@ -704,15 +704,15 @@ Shared TP2와 다음 항목을 비교한다.
   - 다른 KV quantization (e.g. FP8), 다른 speculative configuration, 다른 runtime에서의 결과까지 물리적으로 불가능하다고 일반화하지 않는다.
   - 프로젝트 불변 규칙에 따라 설정을 임의 변경하는 자동 재시도는 수행하지 않고 closed 처리함.
 
-## 5. 성능 최적화 및 모델별 최종 레시피 확정 [IN_PROGRESS — FROZEN / PARTIAL_MEASURED_RESULTS_PUBLISHED]
+## 5. 성능 최적화 및 모델별 최종 레시피 확정 [DONE — FINAL_RECIPES_PUBLISHED]
 
 WBS 2/3/4에서 확보한 capacity/correctness/topology evidence와 WBS 5의 performance evidence를 분리한다.
 WBS 5는 아래 7개 model/runtime track에 대해 이미 연구·선정이 끝난 frozen candidate만 실행하며,
 새 candidate 자동 생성, exhaustive grid, 임의 tuning을 수행하지 않는다.
 
-현재 단계는 **PARTIAL_MEASURED_RESULTS_PUBLISHED — 유효한 WBS5 measured raw 14건(Qwen llama.cpp 4건 + Ornith 1.5 9B llama.cpp 3건 + Ornith 1.5 35B llama.cpp 4건 + Gemma4 llama.cpp 3건)의 공식 report/CSV 반영 완료**이다. 8A 및 8B~8D runner/harness 구현·dry-plan·static/unit validation + ChatGPT pre-run final validation은 완료된 준비 이력이다.
-25개 frozen candidate의 28개 dry-plan을 저장했다. Qwen 1Cat R2는 host toolchain BLOCKED, Ornith9 1Cat G0는 pending이며 Gemma R3 Gate B는 `NOT_TRIGGERED`로 판정해 R3를 SKIP했다. 준비 당시 harness validation은 통과했으며, 회수 raw의 sampler 오류와 evidence 한계는 5.3.1에 기록했다. [준비 결과](WBS-5-preparation-readiness.md).
-2026-09-28~29 canonical `results/raw/`와 WBS experiment ID 대조 결과, 공식 publication 완료 raw는 Qwen llama.cpp `5.3.1.1`~`5.3.1.4` 4건, Ornith 1.5 9B llama.cpp `5.3.2.1`~`5.3.2.3` 3건, Ornith 1.5 35B llama.cpp `5.3.3.1`~`5.3.3.4` 4건, Gemma4 llama.cpp `5.3.4.1`~`5.3.4.3` 3건, 총 14건이다. 14건 모두 저장된 최종 verdict `PASS_C2_ACTIVE`로 publication했다. Ornith 9B R0의 최초 시도는 구 HEAD의 slot evidence parser 예외로 중단된 harness-invalid attempt였고 공식 performance evidence로 사용하지 않았다. Ornith 9B R2는 `ngram-simple` configuration이지만 이 workload에서 NGRAM draft activity가 관측되지 않았다. Ornith 35B R1의 최초 `-001` raw는 측정 전 포트 충돌로 `INCONCLUSIVE`; 보존하되 공식 performance report/CSV에서 제외하고, 사용자 지정 동일 설정 재실행 `-002`만 publication했다. Qwen llama.cpp `5.3.1.7`, Ornith 1.5 9B llama.cpp `5.3.2.4`, Ornith 1.5 35B llama.cpp `5.3.3.5`, Gemma4 llama.cpp `5.3.4.6` track review는 모두 완료됐다. Qwen R2와 Ornith9 R1은 final recipe 후보로 유지되고, Ornith35 R1/R2는 workload-oriented `VALIDATED_RECIPE`, Gemma4 R0는 WBS 5.5 승격 대상으로 유지한다. WBS 5.5 final recipe publication은 아직 미완료다.
+현재 단계는 **DONE — FINAL_RECIPES_PUBLISHED (2026-09-29)**다. 7개 track review와 WBS 5.5 publication을 완료해 5개 track의 6개 configuration을 `VALIDATED_RECIPE`로 기록했다. Qwen/Ornith9 1Cat 두 track은 `NO ELIGIBLE RECIPE`로 종결했다. [최종 레시피 및 종결 보고서](WBS-5.5-final-recipes.md).
+
+기존 llama.cpp 공식 measured 결과 14건과 1Cat measured/diagnostic 결과, 실패·미실행 evidence를 보존한다. Qwen 1Cat R2는 `BLOCKED_BY_HOST_TOOLCHAIN` 미실행, Ornith9 1Cat G0는 semantic FAIL, Gemma R3 Gate B는 `NOT_TRIGGERED`/SKIP이다. Frozen candidate 25개 / dry-plan instance 28개를 최종 재대조했으며 새 inference는 수행하지 않았다. [준비 이력](WBS-5-preparation-readiness.md)과 각 track의 아래 execution/review 기록은 당시의 단계별 판단을 보존하며 최종 recipe 상태는 5.5가 authoritative하다.
 
 ### 5.1 authoritative planning input 및 진행 단계
 
@@ -736,11 +736,11 @@ WBS 5 단계 흐름:
 3. `docs/WBS.md` 공식 반영 완료.
 4. Codex CLI local validation / test preparation 완료 (8A~8D; measured inference 없음).
 5. ChatGPT pre-run final validation 완료.
-6. **현재 단계: 유효한 measured child 14건의 raw/report publication 완료. llama.cpp 네 track review(Qwen `5.3.1.7`, Ornith 9B `5.3.2.4`, Ornith 35B `5.3.3.5`, Gemma4 `5.3.4.6`)는 모두 DONE이다. Qwen R2와 Ornith9 R1은 final recipe 후보, Ornith35 R1/R2는 workload-oriented `VALIDATED_RECIPE`, Gemma4 R0는 WBS 5.5 승격 대상으로 유지한다. 다음 measured child를 자동 실행하지 않는다.**
-7. 각 track measured 결과 분석 및 track review WBS 수행.
-8. 필요 시 Claude independent review.
-9. 모델별 final recipe 확정.
-10. WBS 5 final publication / DONE.
+6. Measured 결과 raw/report/CSV publication 완료; 실패 및 diagnostic 결과도 원래 판정으로 보존.
+7. 7개 track result review 완료.
+8. 별도 independent review가 필요한 잔여 실행 gate 없음; blocked/conditional 미실행 상태는 최종 보고서에 명시.
+9. 모델별 final recipe 6개 확정 완료.
+10. **WBS 5.5 final publication / WBS 5 DONE.**
 
 5번까지는 준비/검증 lifecycle이고, 6번부터의 실제 작업 단위는 아래 `5.3.x.y` / `5.4.x.y` 번호를 authoritative execution WBS로 사용한다. 따라서 Codex CLI에는 다시 기존 프로젝트 방식대로 **“WBS 5.3.1.1 진행해.”**처럼 한 번호씩 지시한다.
 
@@ -1692,7 +1692,7 @@ GPU inference 없이 R0/R1/R2의 exact frozen delta, 성능, graph evidence, out
 - R0는 C2 active, queue=false, 두 요청 mechanical output PASS, post-health healthy인 baseline으로 유지한다.
 - 결론: `R0-BASELINE-EAGER-MBT4096`만 5.5 final recipe publication 대상으로 유지한다. R1/R2 branch 종료, 새 candidate 및 추가 inference 없음.
 
-### 5.5 final recipe 승격 및 publication
+### 5.5 final recipe 승격 및 publication [DONE — 2026-09-29]
 
 WBS 5에서는 하나의 overall winner나 자동 배포 구성을 선택하지 않는다.
 각 model/runtime track에서 실제 검증된 configuration만 recipe로 남긴다.
@@ -1725,6 +1725,25 @@ WBS 5에서는 하나의 overall winner나 자동 배포 구성을 선택하지 
 
 WBS 5 final publication 전 7개 track candidate ID/delta/invariant가 frozen source 문서와 다시 일치하는지 검토하고,
 measured run을 하지 않은 candidate를 `VALIDATED`로 표기하지 않는다.
+
+최종 publication 결과:
+
+| Track | 최종 recipe | 상태 |
+|---|---|---|
+| Qwen3.8 llama.cpp | R2 TARGET b512/ub256 | VALIDATED_RECIPE |
+| Ornith 9B llama.cpp | R1 TARGET b512/ub256, 1GPU×2 + LiteLLM | VALIDATED_RECIPE — exact local artifact 한정; repository unresolved |
+| Ornith 35B llama.cpp | R1 native MTP1 b512/ub128 + 별도 R2 TARGET b512/ub256 | VALIDATED_RECIPE 2개; 결합 설정 미검증 |
+| Gemma4 llama.cpp | R0 TARGET b512/ub128 | VALIDATED_RECIPE |
+| Qwen3.8 1Cat | 없음 | NO ELIGIBLE RECIPE |
+| Ornith 9B 1Cat | 없음 | NO ELIGIBLE RECIPE |
+| Ornith 35B 1Cat | R0 E5M2/eager/MBT4096/max-num-seqs2 | VALIDATED_RECIPE |
+
+- [최종 보고서 및 6개 개별 레시피](WBS-5.5-final-recipes.md).
+- [기계 판독 recipe / frozen audit / evidence hash receipt](../state/wbs5-final-recipes.json).
+- 7개 track / 25개 candidate / 28개 plan instance의 ID·delta·invariant 재대조 PASS.
+- 승격 대상 모두 C2 active / mechanical output PASS 2/2 / post-health healthy. Performance semantic certification은 별도 수행하지 않았다.
+- 기존 raw, 개별 measured report 및 CSV 판정 보존. 새 GPU inference 및 자동 배포 없음.
+- **WBS 5 / 5.5 DONE — FINAL_RECIPES_PUBLISHED.** WBS7은 별도 후속 범위다.
 
 
 ## 6. CPU+RAM 전용 dual-resident 128K 서버 + 32K measured request 검증 [DONE]

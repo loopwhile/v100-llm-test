@@ -1,0 +1,2986 @@
+{
+  "date": "2026-09-29",
+  "phase": "WBS5.5",
+  "status": "DONE",
+  "new_gpu_inference_executed": false,
+  "new_experiments_created": false,
+  "frozen_input_lock_sha256": "1a4f30d400c54b483cb01ec0e4fac7bfe6d3d90e325694a47eb11552706b4b6a",
+  "frozen_input_sha256": {
+    "config/models/gemma4-26b-a4b.json": "8c799e88fe2b249f1cf0c735f279966cc7a0073881c803b0c8408885dc20eb1d",
+    "config/models/ornith-1.5-35b-a3b.json": "6bf470cfbf0f1ee0007435300001ce9cc1b23bcf3987f9cdd1d6079490d4550a",
+    "config/models/ornith-1.5-9b.json": "f0d36ff39c37b345b529ac9fd9ad8dbf222bca5e4c0457b1836fd6230a883004",
+    "config/models/qwen3.8-27b.json": "0496bbeded0a02bf6ef8b826c77c58be504fe5271d56e478d0ec28c914e905f7",
+    "config/profiles/acceptance-128k.json": "27aaf239a946d0306a1520c48d7e6fdade3bd25ca755470b21b0f54b64d78c68",
+    "config/profiles/runtime-lanes.json": "2303ef66b9b1eae934da31225e42e8660a6ae6924cca35591a877c10df0f7b2e",
+    "config/profiles/topologies.json": "817a1157673d346f04efde8da7d3cc3e9b3ef2b47b690988808b55a6a4c35956",
+    "config/profiles/wbs5-candidates.json": "cd64d92df60870d9dc9ec834804f299da7d1ade54c6d04a26a043a2e35e58549",
+    "config/runtime-lock.json": "a4d88fd4f22f258f715c605f3b3d9dce75da1a81b42dc1c6db12a93683680d12",
+    "workloads/performance/v1.json": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+    "workloads/concurrency/v2.json": "ab6ac578301c8f48700d5a50c808e1bfb42538f186c50a82168509215dc9e479",
+    "workloads/concurrency/v2-ground-truth.json": "221d0606a19b08e223d3eecac59ff99da151441dace3f5937ebed29a275ed7bb",
+    "scripts/runtime_launcher.py": "65a8c2b55809f8ff3b806c1480d026e3e995eddc7008c282dfa2555ad07952e7",
+    "docs/WBS-5 - Gemma4 26B A4B - llama.cpp.md": "7ead89d626c04f04678e825d4ab0d6420793a3100d0ff2578590d7ec3aa8782e",
+    "docs/WBS-5 - Ornith 1.5 35B-A3B - 1Cat-vLLM.md": "423f1f237a6b7b08417a4711ea04c295631f9e377c8db819cdf8ebd9248fae58",
+    "docs/WBS-5 - Ornith 1.5 35B-A3B - llama.cpp.md": "127c957ae5b1b56dd4654b05e10e7cdbf3ca3a29fffeb21858d014e3ee364aa6",
+    "docs/WBS-5 - Ornith 1.5 9B - 1Cat-vLLM.md": "8f917f043d74ffb488a49b13be5bea51050db6a75dd8b642743123c0a39ffa8c",
+    "docs/WBS-5 - Ornith 1.5 9B - llama.cpp.md": "a031eb3d4288dd206f5005db0d3fe4a7ff031e82cb280ec7127d9d005cf23079",
+    "docs/WBS-5 - Qwen 3.8 27B - 1Cat-vLLM.md": "4da7faf379c245d5809764370d53c3ee82cd581b72070c44320c768a05caba80",
+    "docs/WBS-5 - Qwen 3.8 27B - llama.cpp.md": "79c2c6ecdd179e51f9c0c7686a711749309561cf80d16aeb19941a352959cb54",
+    "state/wbs5-artifact-receipts/ornith35-onecat.json": "72d09883354e8b38fff3d73bed631a5541d90de6f2bc37a3cac57ac8af16dabf",
+    "state/wbs5-artifact-receipts/ornith9-onecat.json": "0a8d1a9d29bd70c8120c43518b3e34e7d932724c71d194d0f9e9f144ee2563e7",
+    "state/wbs5-artifact-receipts/qwen-onecat.json": "8c2dea111779697db9859d09b633b2c978760c39f5b8a828f77055f460de84b2"
+  },
+  "frozen_tracks": 7,
+  "frozen_candidates": 25,
+  "audited_plan_instances": 28,
+  "plan_comparison": "All frozen candidate IDs present in their source documents; normalized serving invariants and allowed OFAT deltas match. Only snapshot-local PYTHONPATH root rebased for comparison; measured hashes and commands preserved verbatim.",
+  "plan_audit": [
+    {
+      "track": "qwen-llama",
+      "candidate_key": "R0",
+      "candidate_id": "Q38-LLAMA-WBS5-R0-TARGET-B512-UB128",
+      "experiment_id": "EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-001",
+      "configuration_sha256": "5e01a180e3daf2320997fd1c6ea39cc884367b8e20f8141511e9e7f9c2276e96",
+      "normalized_delta_from_r0": []
+    },
+    {
+      "track": "qwen-llama",
+      "candidate_key": "R0",
+      "candidate_id": "Q38-LLAMA-WBS5-R0-TARGET-B512-UB128",
+      "experiment_id": "EXP-V100-WBS5-QWEN-LLAMA-R0-PERF-20260928-002",
+      "configuration_sha256": "5e01a180e3daf2320997fd1c6ea39cc884367b8e20f8141511e9e7f9c2276e96",
+      "normalized_delta_from_r0": []
+    },
+    {
+      "track": "qwen-llama",
+      "candidate_key": "R1",
+      "candidate_id": "Q38-LLAMA-WBS5-R1-NGRAM-DEFAULT",
+      "experiment_id": "EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-001",
+      "configuration_sha256": "56517c9ee467b89d46eb211fc39a669b288813d747bb006447231b45c4943ee3",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--spec-type/0",
+          "r0": "none",
+          "candidate": "ngram-simple"
+        }
+      ]
+    },
+    {
+      "track": "qwen-llama",
+      "candidate_key": "R1",
+      "candidate_id": "Q38-LLAMA-WBS5-R1-NGRAM-DEFAULT",
+      "experiment_id": "EXP-V100-WBS5-QWEN-LLAMA-R1-PERF-20260928-002",
+      "configuration_sha256": "56517c9ee467b89d46eb211fc39a669b288813d747bb006447231b45c4943ee3",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--spec-type/0",
+          "r0": "none",
+          "candidate": "ngram-simple"
+        }
+      ]
+    },
+    {
+      "track": "qwen-llama",
+      "candidate_key": "R2",
+      "candidate_id": "Q38-LLAMA-WBS5-R2-TARGET-UB256",
+      "experiment_id": "EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001",
+      "configuration_sha256": "7bb2031d35687846839c27cd0d6d87649280a97dbaf015cc1bb57ac9fdfd6d9c",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--ubatch-size/0",
+          "r0": "128",
+          "candidate": "256"
+        }
+      ]
+    },
+    {
+      "track": "qwen-llama",
+      "candidate_key": "R2",
+      "candidate_id": "Q38-LLAMA-WBS5-R2-TARGET-UB256",
+      "experiment_id": "EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-002",
+      "configuration_sha256": "7bb2031d35687846839c27cd0d6d87649280a97dbaf015cc1bb57ac9fdfd6d9c",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--ubatch-size/0",
+          "r0": "128",
+          "candidate": "256"
+        }
+      ]
+    },
+    {
+      "track": "ornith9-llama",
+      "candidate_key": "R0",
+      "candidate_id": "TARGET_BASELINE",
+      "experiment_id": "EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB128-1GPU2-C2-PERF-20260928-001",
+      "configuration_sha256": "63048c1908be000f2309992c26ab5ac7075d3f84dda6f108a3e0d77d6e8c4be5",
+      "normalized_delta_from_r0": []
+    },
+    {
+      "track": "ornith9-llama",
+      "candidate_key": "R1",
+      "candidate_id": "TARGET_UB256",
+      "experiment_id": "EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001",
+      "configuration_sha256": "c6933aca605c596224e45f7bfffff65405703b225e62d3dd74685de2c56331ab",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--ubatch-size/0",
+          "r0": "128",
+          "candidate": "256"
+        },
+        {
+          "path": "/servers/1/argv/--ubatch-size/0",
+          "r0": "128",
+          "candidate": "256"
+        }
+      ]
+    },
+    {
+      "track": "ornith9-llama",
+      "candidate_key": "R2",
+      "candidate_id": "NGRAM_DEFAULT",
+      "experiment_id": "EXP-V100-ORN15-9B-LLAMA-NGRAM-B512-UB128-1GPU2-C2-PERF-20260928-001",
+      "configuration_sha256": "3dde907776e967fae3f397c000a588e47654a089a2265268e5eb53fa205aa327",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--spec-type/0",
+          "r0": "none",
+          "candidate": "ngram-simple"
+        },
+        {
+          "path": "/servers/1/argv/--spec-type/0",
+          "r0": "none",
+          "candidate": "ngram-simple"
+        }
+      ]
+    },
+    {
+      "track": "ornith35-llama",
+      "candidate_key": "R0",
+      "candidate_id": "ORN35-LLAMA-WBS5-R0-TARGET",
+      "experiment_id": "EXP-V100-WBS5-ORNITH35-LLAMA-R0-PERF-20260928-001",
+      "configuration_sha256": "dcdfab3bd7b57c71dc313b867b1feefd7770898e6bb9820079bd9585d516c9fa",
+      "normalized_delta_from_r0": []
+    },
+    {
+      "track": "ornith35-llama",
+      "candidate_key": "R1",
+      "candidate_id": "ORN35-LLAMA-WBS5-R1-MTP1",
+      "experiment_id": "EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-001",
+      "configuration_sha256": "c3edfef92d58414744f94d9e4ad41afa4ebc0be0690984972624792231031b5b",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--spec-draft-n-max",
+          "r0": null,
+          "candidate": [
+            "1"
+          ]
+        },
+        {
+          "path": "/servers/0/argv/--spec-type/0",
+          "r0": "none",
+          "candidate": "draft-mtp"
+        }
+      ]
+    },
+    {
+      "track": "ornith35-llama",
+      "candidate_key": "R2",
+      "candidate_id": "ORN35-LLAMA-WBS5-R2-UB256",
+      "experiment_id": "EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001",
+      "configuration_sha256": "4252ccbe93e014a972be06ebe6d046af998493fecb7472c9ec665d0df3a2aad1",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--ubatch-size/0",
+          "r0": "128",
+          "candidate": "256"
+        }
+      ]
+    },
+    {
+      "track": "ornith35-llama",
+      "candidate_key": "R3",
+      "candidate_id": "ORN35-LLAMA-WBS5-R3-QUEUE4X",
+      "experiment_id": "EXP-V100-WBS5-ORNITH35-LLAMA-R3-PERF-20260928-001",
+      "configuration_sha256": "d67aa13b3d4b35076ff60cecaec0067f3853f22cc9a67d9349641ebadd313754",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/container_environment/CUDA_SCALE_LAUNCH_QUEUES",
+          "r0": null,
+          "candidate": "4x"
+        }
+      ]
+    },
+    {
+      "track": "gemma-llama",
+      "candidate_key": "R0",
+      "candidate_id": "G4-LCPP-WBS5-R0-TARGET-B512-UB128",
+      "experiment_id": "EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001",
+      "configuration_sha256": "e2075376ea251e443dc7e1994f05aaf80478829c89cc79bcdebf26d5c063be9a",
+      "normalized_delta_from_r0": []
+    },
+    {
+      "track": "gemma-llama",
+      "candidate_key": "R1",
+      "candidate_id": "G4-LCPP-WBS5-R1-NGRAM-DEFAULT-B512-UB128",
+      "experiment_id": "EXP-V100-WBS5-GEMMA-LLAMA-R1-PERF-20260928-001",
+      "configuration_sha256": "21829a1f1ddd26124f4303ab7436a96e55c8e24b9a7fe1050884450d6fa9371d",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--spec-type/0",
+          "r0": "none",
+          "candidate": "ngram-simple"
+        }
+      ]
+    },
+    {
+      "track": "gemma-llama",
+      "candidate_key": "R2",
+      "candidate_id": "G4-LCPP-WBS5-R2-TARGET-B1024-UB128",
+      "experiment_id": "EXP-V100-WBS5-GEMMA-LLAMA-R2-PERF-20260928-001",
+      "configuration_sha256": "bbebd1abbe792f45cacb24c87551c2850ada74a319f0098e2d91182d45884b33",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--batch-size/0",
+          "r0": "512",
+          "candidate": "1024"
+        }
+      ]
+    },
+    {
+      "track": "gemma-llama",
+      "candidate_key": "R3",
+      "candidate_id": "G4-LCPP-WBS5-R3-TARGET-B512-UB128-GRAPHOFF",
+      "experiment_id": "EXP-V100-WBS5-GEMMA-LLAMA-R3-PERF-20260928-001",
+      "configuration_sha256": "a3ab90aac27856ce620964a528dc1e05f59adf79e71ead775e2c0fc3d2f21de6",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/container_environment/GGML_CUDA_DISABLE_GRAPHS",
+          "r0": null,
+          "candidate": "1"
+        }
+      ]
+    },
+    {
+      "track": "qwen-onecat",
+      "candidate_key": "R0",
+      "candidate_id": "R0-E4M3-128K-SEMANTIC-BASELINE",
+      "experiment_id": "EXP-V100-WBS5-QWEN-ONECAT-R0-PERF-20260928-001",
+      "configuration_sha256": "5e09c2a6711b48d9bddf63fc38ff79935d6f94449cd093bbf6c3bcdb2b18f17b",
+      "normalized_delta_from_r0": []
+    },
+    {
+      "track": "qwen-onecat",
+      "candidate_key": "R1",
+      "candidate_id": "R1-E4M3-128K-CUDAGRAPH-C1",
+      "experiment_id": "EXP-V100-WBS5-QWEN-ONECAT-R1-PERF-20260928-001",
+      "configuration_sha256": "e3bd1ebdca0031972417e70432830f015efdaf016ef016371acf3bbda992dd72",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--compilation-config",
+          "r0": null,
+          "candidate": [
+            "{\"cudagraph_capture_sizes\":[1]}"
+          ]
+        },
+        {
+          "path": "/servers/0/argv/--enforce-eager",
+          "r0": [
+            true
+          ],
+          "candidate": null
+        }
+      ]
+    },
+    {
+      "track": "qwen-onecat",
+      "candidate_key": "R2",
+      "candidate_id": "R2-E4M3-128K-ORIGINAL-FLASHQLA-PREFILL",
+      "experiment_id": "EXP-V100-WBS5-QWEN-ONECAT-R2-PERF-20260928-001",
+      "configuration_sha256": "02440f20d913d4bbfcabd7369425e43f93efee49ee3864c0705a2032399a6712",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/environment/VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL",
+          "r0": "0",
+          "candidate": "1"
+        }
+      ]
+    },
+    {
+      "track": "qwen-onecat",
+      "candidate_key": "R3",
+      "candidate_id": "R3-E5M2-128K-KV-ROUTE",
+      "experiment_id": "EXP-V100-WBS5-QWEN-ONECAT-R3-PERF-20260928-001",
+      "configuration_sha256": "f859c32e9b3553c27994a383c2d42d76e4524a5620e644bcbf92df4630d9946c",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--kv-cache-dtype/0",
+          "r0": "fp8_e4m3",
+          "candidate": "fp8_e5m2"
+        }
+      ]
+    },
+    {
+      "track": "ornith9-onecat",
+      "candidate_key": "R0",
+      "candidate_id": "ORN15-9B-1CAT-WBS5-R0-BASELINE",
+      "experiment_id": "EXP-V100-WBS5-ORNITH9-ONECAT-R0-PERF-20260928-001",
+      "configuration_sha256": "476587fbe3cc7be63b8bfc7e09d4871e941759d1e96e0e8502f2aa1fc0f381ae",
+      "normalized_delta_from_r0": []
+    },
+    {
+      "track": "ornith9-onecat",
+      "candidate_key": "R1",
+      "candidate_id": "ORN15-9B-1CAT-WBS5-R1-MBT8192",
+      "experiment_id": "EXP-V100-WBS5-ORNITH9-ONECAT-R1-PERF-20260928-001",
+      "configuration_sha256": "345a84fe9c139645435c3c7a0d1ae16be6972127d0b9c1a68056eca4181b2997",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--max-num-batched-tokens/0",
+          "r0": "4096",
+          "candidate": "8192"
+        }
+      ]
+    },
+    {
+      "track": "ornith9-onecat",
+      "candidate_key": "R2",
+      "candidate_id": "ORN15-9B-1CAT-WBS5-R2-TARGET-GRAPH",
+      "experiment_id": "EXP-V100-WBS5-ORNITH9-ONECAT-R2-PERF-20260928-001",
+      "configuration_sha256": "a6272cf074b60ee179dc7cb42d88e873ac5834e1399233673cb9db92d443f0c9",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--enforce-eager",
+          "r0": [
+            true
+          ],
+          "candidate": null
+        }
+      ]
+    },
+    {
+      "track": "ornith9-onecat",
+      "candidate_key": "R3",
+      "candidate_id": "ORN15-9B-1CAT-WBS5-R3-MTP2",
+      "experiment_id": "EXP-V100-WBS5-ORNITH9-ONECAT-R3-PERF-20260928-001",
+      "configuration_sha256": "cad661f17cdf9cf9af404ef99def4b3fa2e8c82362d192ca2bf6904601222889",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--speculative-config/0",
+          "r0": "{\"method\":\"mtp\",\"num_speculative_tokens\":1,\"attention_backend\":\"TRITON_ATTN\"}",
+          "candidate": "{\"method\":\"mtp\",\"num_speculative_tokens\":2,\"attention_backend\":\"TRITON_ATTN\"}"
+        }
+      ]
+    },
+    {
+      "track": "ornith35-onecat",
+      "candidate_key": "R0",
+      "candidate_id": "R0-BASELINE-EAGER-MBT4096",
+      "experiment_id": "EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001",
+      "configuration_sha256": "13656935f8ac5b0e159eb324f6ff9431f30a575279ca8c2dca0b8e8b7a3fd437",
+      "normalized_delta_from_r0": []
+    },
+    {
+      "track": "ornith35-onecat",
+      "candidate_key": "R1",
+      "candidate_id": "R1-GRAPH-AUTO-MBT4096",
+      "experiment_id": "EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260928-001",
+      "configuration_sha256": "c736583f8f1b19e7273bbc11f133f4ff5947cb5021426787fd81924cd25927ff",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--enforce-eager",
+          "r0": [
+            true
+          ],
+          "candidate": null
+        }
+      ]
+    },
+    {
+      "track": "ornith35-onecat",
+      "candidate_key": "R2",
+      "candidate_id": "R2-EAGER-MBT8192",
+      "experiment_id": "EXP-V100-WBS5-ORNITH35-ONECAT-R2-PERF-20260928-001",
+      "configuration_sha256": "e566ba87ed5542a5d0f7799f2693ffffdfb820e68017107f1ed021cc89bd0f19",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--max-num-batched-tokens/0",
+          "r0": "4096",
+          "candidate": "8192"
+        }
+      ]
+    }
+  ],
+  "candidate_dispositions": [
+    {
+      "track": "qwen-llama",
+      "candidate_key": "R0",
+      "candidate_id": "Q38-LLAMA-WBS5-R0-TARGET-B512-UB128",
+      "disposition": "REFERENCE_ONLY",
+      "source_document": "docs/WBS-5 - Qwen 3.8 27B - llama.cpp.md"
+    },
+    {
+      "track": "qwen-llama",
+      "candidate_key": "R1",
+      "candidate_id": "Q38-LLAMA-WBS5-R1-NGRAM-DEFAULT",
+      "disposition": "CLOSED_NO_QUALIFYING_BENEFIT",
+      "source_document": "docs/WBS-5 - Qwen 3.8 27B - llama.cpp.md"
+    },
+    {
+      "track": "qwen-llama",
+      "candidate_key": "R2",
+      "candidate_id": "Q38-LLAMA-WBS5-R2-TARGET-UB256",
+      "disposition": "VALIDATED_RECIPE",
+      "source_document": "docs/WBS-5 - Qwen 3.8 27B - llama.cpp.md"
+    },
+    {
+      "track": "ornith9-llama",
+      "candidate_key": "R0",
+      "candidate_id": "TARGET_BASELINE",
+      "disposition": "REFERENCE_ONLY",
+      "source_document": "docs/WBS-5 - Ornith 1.5 9B - llama.cpp.md"
+    },
+    {
+      "track": "ornith9-llama",
+      "candidate_key": "R1",
+      "candidate_id": "TARGET_UB256",
+      "disposition": "VALIDATED_RECIPE",
+      "source_document": "docs/WBS-5 - Ornith 1.5 9B - llama.cpp.md"
+    },
+    {
+      "track": "ornith9-llama",
+      "candidate_key": "R2",
+      "candidate_id": "NGRAM_DEFAULT",
+      "disposition": "CLOSED_NO_DRAFT_ACTIVITY",
+      "source_document": "docs/WBS-5 - Ornith 1.5 9B - llama.cpp.md"
+    },
+    {
+      "track": "ornith35-llama",
+      "candidate_key": "R0",
+      "candidate_id": "ORN35-LLAMA-WBS5-R0-TARGET",
+      "disposition": "REFERENCE_ONLY",
+      "source_document": "docs/WBS-5 - Ornith 1.5 35B-A3B - llama.cpp.md"
+    },
+    {
+      "track": "ornith35-llama",
+      "candidate_key": "R1",
+      "candidate_id": "ORN35-LLAMA-WBS5-R1-MTP1",
+      "disposition": "VALIDATED_RECIPE",
+      "source_document": "docs/WBS-5 - Ornith 1.5 35B-A3B - llama.cpp.md"
+    },
+    {
+      "track": "ornith35-llama",
+      "candidate_key": "R2",
+      "candidate_id": "ORN35-LLAMA-WBS5-R2-UB256",
+      "disposition": "VALIDATED_RECIPE",
+      "source_document": "docs/WBS-5 - Ornith 1.5 35B-A3B - llama.cpp.md"
+    },
+    {
+      "track": "ornith35-llama",
+      "candidate_key": "R3",
+      "candidate_id": "ORN35-LLAMA-WBS5-R3-QUEUE4X",
+      "disposition": "CLOSED_NO_MEASURABLE_BENEFIT",
+      "source_document": "docs/WBS-5 - Ornith 1.5 35B-A3B - llama.cpp.md"
+    },
+    {
+      "track": "gemma-llama",
+      "candidate_key": "R0",
+      "candidate_id": "G4-LCPP-WBS5-R0-TARGET-B512-UB128",
+      "disposition": "VALIDATED_RECIPE",
+      "source_document": "docs/WBS-5 - Gemma4 26B A4B - llama.cpp.md"
+    },
+    {
+      "track": "gemma-llama",
+      "candidate_key": "R1",
+      "candidate_id": "G4-LCPP-WBS5-R1-NGRAM-DEFAULT-B512-UB128",
+      "disposition": "CLOSED_PERFORMANCE_REGRESSION",
+      "source_document": "docs/WBS-5 - Gemma4 26B A4B - llama.cpp.md"
+    },
+    {
+      "track": "gemma-llama",
+      "candidate_key": "R2",
+      "candidate_id": "G4-LCPP-WBS5-R2-TARGET-B1024-UB128",
+      "disposition": "CLOSED_NO_QUALIFYING_BENEFIT",
+      "source_document": "docs/WBS-5 - Gemma4 26B A4B - llama.cpp.md"
+    },
+    {
+      "track": "gemma-llama",
+      "candidate_key": "R3",
+      "candidate_id": "G4-LCPP-WBS5-R3-TARGET-B512-UB128-GRAPHOFF",
+      "disposition": "SKIPPED_GATE_B_NOT_TRIGGERED",
+      "source_document": "docs/WBS-5 - Gemma4 26B A4B - llama.cpp.md"
+    },
+    {
+      "track": "qwen-onecat",
+      "candidate_key": "R0",
+      "candidate_id": "R0-E4M3-128K-SEMANTIC-BASELINE",
+      "disposition": "NO_ELIGIBLE_RECIPE_QUEUE_ONLY",
+      "source_document": "docs/WBS-5 - Qwen 3.8 27B - 1Cat-vLLM.md"
+    },
+    {
+      "track": "qwen-onecat",
+      "candidate_key": "R1",
+      "candidate_id": "R1-E4M3-128K-CUDAGRAPH-C1",
+      "disposition": "CLOSED_FAIL_STARTUP",
+      "source_document": "docs/WBS-5 - Qwen 3.8 27B - 1Cat-vLLM.md"
+    },
+    {
+      "track": "qwen-onecat",
+      "candidate_key": "R2",
+      "candidate_id": "R2-E4M3-128K-ORIGINAL-FLASHQLA-PREFILL",
+      "disposition": "BLOCKED_BY_HOST_TOOLCHAIN_NOT_RUN",
+      "source_document": "docs/WBS-5 - Qwen 3.8 27B - 1Cat-vLLM.md"
+    },
+    {
+      "track": "qwen-onecat",
+      "candidate_key": "R3",
+      "candidate_id": "R3-E5M2-128K-KV-ROUTE",
+      "disposition": "NO_ELIGIBLE_RECIPE_QUEUE_ONLY",
+      "source_document": "docs/WBS-5 - Qwen 3.8 27B - 1Cat-vLLM.md"
+    },
+    {
+      "track": "ornith9-onecat",
+      "candidate_key": "R0",
+      "candidate_id": "ORN15-9B-1CAT-WBS5-R0-BASELINE",
+      "disposition": "NO_ELIGIBLE_RECIPE_G0_FAIL_OUTPUT",
+      "source_document": "docs/WBS-5 - Ornith 1.5 9B - 1Cat-vLLM.md"
+    },
+    {
+      "track": "ornith9-onecat",
+      "candidate_key": "R1",
+      "candidate_id": "ORN15-9B-1CAT-WBS5-R1-MBT8192",
+      "disposition": "NO_ELIGIBLE_RECIPE_G0_FAIL_OUTPUT",
+      "source_document": "docs/WBS-5 - Ornith 1.5 9B - 1Cat-vLLM.md"
+    },
+    {
+      "track": "ornith9-onecat",
+      "candidate_key": "R2",
+      "candidate_id": "ORN15-9B-1CAT-WBS5-R2-TARGET-GRAPH",
+      "disposition": "NO_ELIGIBLE_RECIPE_G0_FAIL_OUTPUT",
+      "source_document": "docs/WBS-5 - Ornith 1.5 9B - 1Cat-vLLM.md"
+    },
+    {
+      "track": "ornith9-onecat",
+      "candidate_key": "R3",
+      "candidate_id": "ORN15-9B-1CAT-WBS5-R3-MTP2",
+      "disposition": "NO_ELIGIBLE_RECIPE_G0_FAIL_OUTPUT",
+      "source_document": "docs/WBS-5 - Ornith 1.5 9B - 1Cat-vLLM.md"
+    },
+    {
+      "track": "ornith35-onecat",
+      "candidate_key": "R0",
+      "candidate_id": "R0-BASELINE-EAGER-MBT4096",
+      "disposition": "VALIDATED_RECIPE",
+      "source_document": "docs/WBS-5 - Ornith 1.5 35B-A3B - 1Cat-vLLM.md"
+    },
+    {
+      "track": "ornith35-onecat",
+      "candidate_key": "R1",
+      "candidate_id": "R1-GRAPH-AUTO-MBT4096",
+      "disposition": "CLOSED_FAIL_OUTPUT",
+      "source_document": "docs/WBS-5 - Ornith 1.5 35B-A3B - 1Cat-vLLM.md"
+    },
+    {
+      "track": "ornith35-onecat",
+      "candidate_key": "R2",
+      "candidate_id": "R2-EAGER-MBT8192",
+      "disposition": "CLOSED_NO_QUALIFYING_BENEFIT",
+      "source_document": "docs/WBS-5 - Ornith 1.5 35B-A3B - 1Cat-vLLM.md"
+    }
+  ],
+  "validated_recipe_count": 6,
+  "recipes": [
+    {
+      "track": "qwen-llama",
+      "candidate_key": "R2",
+      "candidate_id": "Q38-LLAMA-WBS5-R2-TARGET-UB256",
+      "status": "VALIDATED_RECIPE",
+      "orientation": "LONG_PREFILL_LATENCY_ORIENTED",
+      "experiment_id": "EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001",
+      "measured_runs_used": 1,
+      "validation_scope": "performance/v1 C2 active + mechanical output integrity; no new semantic qualification",
+      "model_identity": {
+        "repository": "unsloth/Qwen3.8-27B-GGUF",
+        "revision": "4ca720788d1e01f1bff70c033e0d0028fd02e502",
+        "path": "/srv/models/qwen3.8-unsloth/Qwen3.8-27B-UD-Q4_K_M.gguf",
+        "filename": "Qwen3.8-27B-UD-Q4_K_M.gguf",
+        "sha256": "322e194ff79741c7baa497c240f677f54b201b0efab44ca8e50f122b39123482",
+        "weight_quant": "UD-Q4_K_M"
+      },
+      "artifact_verification": {
+        "path": "/srv/models/qwen3.8-unsloth/Qwen3.8-27B-UD-Q4_K_M.gguf",
+        "expected": "322e194ff79741c7baa497c240f677f54b201b0efab44ca8e50f122b39123482",
+        "actual": "322e194ff79741c7baa497c240f677f54b201b0efab44ca8e50f122b39123482"
+      },
+      "runtime_identity": {
+        "family": "kyuz0/nvidia-v100-ai-toolboxes",
+        "image": "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149",
+        "build": 10775,
+        "commit": "67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
+        "cuda_cudart": "12.6.77-1",
+        "cuda_cublas": "12.6.4.1-1",
+        "status": "bootstrap_pin_requires_fresh_verification"
+      },
+      "runtime_version_observed": "version: 0.3.0-dev (build 10775, commit 67a17c17c)\nbuilt with GNU 11.4.0 for Linux x86_64",
+      "weight_quant": "UD-Q4_K_M",
+      "kv_dtype": "Q8_0",
+      "speculative": "target-only",
+      "speculative_depth": 0,
+      "topology": "tp2-shared",
+      "context_per_request": 131072,
+      "measured_concurrency": 2,
+      "configuration_sha256": "7bb2031d35687846839c27cd0d6d87649280a97dbaf015cc1bb57ac9fdfd6d9c",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--ubatch-size/0",
+          "r0": "128",
+          "candidate": "256"
+        }
+      ],
+      "serving_arguments": [
+        {
+          "wrapper": [
+            "docker",
+            "run",
+            "--rm",
+            "--pull=never",
+            "--name",
+            "v100-test-18080",
+            "--label",
+            "project=v100-llm-test",
+            "--gpus",
+            "\"device=0,1\"",
+            "-p",
+            "127.0.0.1:18080:8080",
+            "-v",
+            "/srv/models/qwen3.8-unsloth/Qwen3.8-27B-UD-Q4_K_M.gguf:/model/target.gguf:ro",
+            "--entrypoint",
+            "llama-server",
+            "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149"
+          ],
+          "argv": {
+            "-m": [
+              "/model/target.gguf"
+            ],
+            "--host": [
+              "0.0.0.0"
+            ],
+            "--port": [
+              "8080"
+            ],
+            "-ngl": [
+              "all"
+            ],
+            "--split-mode": [
+              "layer"
+            ],
+            "--tensor-split": [
+              "1,1"
+            ],
+            "--ctx-size": [
+              "262144"
+            ],
+            "--parallel": [
+              "2"
+            ],
+            "--kv-unified": [
+              true
+            ],
+            "--kv-unified-per-slot": [
+              "131072"
+            ],
+            "--batch-size": [
+              "512"
+            ],
+            "--ubatch-size": [
+              "256"
+            ],
+            "--cache-type-k": [
+              "q8_0"
+            ],
+            "--cache-type-v": [
+              "q8_0"
+            ],
+            "--flash-attn": [
+              "on"
+            ],
+            "--spec-type": [
+              "none"
+            ],
+            "--jinja": [
+              true
+            ],
+            "--reasoning": [
+              "off"
+            ],
+            "--metrics": [
+              true
+            ],
+            "--slots": [
+              true
+            ],
+            "--no-warmup": [
+              true
+            ]
+          },
+          "environment": {},
+          "container_environment": {}
+        }
+      ],
+      "exact_measured_launch_command": "docker run --cidfile /home/loopwhile/v100-llm-test-wbs5-manual-45ee01cb2d9e/results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/container-0.cid --label experiment=EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001 --rm --pull=never --name exp-v100-wbs5-qwen-llama-r2-perf-20260928-001-backend-0 --label project=v100-llm-test --gpus '\"device=0,1\"' -p 127.0.0.1:18080:8080 -v /srv/models/qwen3.8-unsloth/Qwen3.8-27B-UD-Q4_K_M.gguf:/model/target.gguf:ro --entrypoint llama-server kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149 -m /model/target.gguf --host 0.0.0.0 --port 8080 -ngl all --split-mode layer --tensor-split 1,1 --ctx-size 262144 --parallel 2 --kv-unified --kv-unified-per-slot 131072 --batch-size 512 --ubatch-size 256 --cache-type-k q8_0 --cache-type-v q8_0 --flash-attn on --spec-type none --jinja --reasoning off --metrics --slots --no-warmup",
+      "effective_host_environment": [
+        {
+          "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+          "LANG": "C.UTF-8",
+          "HOME": "/home/loopwhile"
+        }
+      ],
+      "container_environment_overrides": [
+        {}
+      ],
+      "resolved_environment_receipt": "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/effective-environment.json",
+      "gateway": null,
+      "workload": {
+        "path": "workloads/performance/v1.json",
+        "sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "context_per_request": 131072,
+        "requests": [
+          "project-a",
+          "project-b"
+        ],
+        "output_reserve": 4096,
+        "min_output": 1024
+      },
+      "sampling": {
+        "temperature": 0,
+        "top_p": 1,
+        "seed": 520
+      },
+      "metrics": {
+        "context_tokens": 131072,
+        "concurrency": 2,
+        "intended_requests": 2,
+        "completed_requests": 2,
+        "output_passed_requests": 2,
+        "batch_wall_s": 1337.2715330690007,
+        "submission_skew_s": 0.005008370999348699,
+        "ttft_ms": 679052.9158024993,
+        "prefill_tps": 264.11174227589436,
+        "mean_request_decode_tps": 5.5925074552546326,
+        "aggregate_decode_tps": 4.514346086155433,
+        "end_to_end_output_tps": 3.457039117097142,
+        "c1_128k": false,
+        "c2_resident": true,
+        "c2_active": true,
+        "queue_only": false,
+        "peak_vram_gpu0_mib": 13447.0,
+        "peak_vram_gpu1_mib": 14533.0,
+        "verdict": "PASS_C2_ACTIVE",
+        "concurrency_verdict": "PASS_C2_ACTIVE",
+        "mechanical_output_verdict": "PASS",
+        "total_output_tokens": 4623,
+        "candidate_id": "Q38-LLAMA-WBS5-R2-TARGET-UB256",
+        "workload_manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca"
+      },
+      "request_metrics": [
+        {
+          "request_id": "project-a",
+          "actual_output_tokens": 2653,
+          "ttft_ms": 1044976.6924439991,
+          "prefill_tps": 121.52487896370896,
+          "decode_tps": 9.075647896797483,
+          "verdict": "PASS"
+        },
+        {
+          "request_id": "project-b",
+          "actual_output_tokens": 1970,
+          "ttft_ms": 313129.13916099933,
+          "prefill_tps": 406.6986055880797,
+          "decode_tps": 2.109367013711783,
+          "verdict": "PASS"
+        }
+      ],
+      "tokenization": {
+        "items": [
+          {
+            "request_id": "project-a",
+            "receipt": {
+              "source": "llama tokenizer",
+              "prompt_tokens": 126975,
+              "formatted_prompt_sha256": "9539b390e52a2bd30974b1a5e52c89f74e8ac8c57e64867fdbd75ea5dd23d69a"
+            },
+            "error": null
+          },
+          {
+            "request_id": "project-b",
+            "receipt": {
+              "source": "llama tokenizer",
+              "prompt_tokens": 126976,
+              "formatted_prompt_sha256": "88c27de8b4f22a688c696af5e89e4bc1c73dabf9f31e0370f008fdaa57865c50"
+            },
+            "error": null
+          }
+        ]
+      },
+      "post_health": {
+        "healthy": true,
+        "at_utc": "2026-09-28T10:43:47.120575+00:00"
+      },
+      "graph_evidence": {
+        "status": "OBSERVED",
+        "reuse_count": 4339,
+        "scope": "server lifetime, includes startup/routing preflight if present; not necessarily measured-window hits",
+        "raw_logs_preserved": true
+      },
+      "speculative_evidence": {
+        "aggregate": {
+          "draft_tokens": 0.0,
+          "accepted_tokens": 0.0,
+          "draft_count": 0.0,
+          "acceptance_ratio": null
+        },
+        "backends": {
+          "root": {
+            "draft_tokens": 0.0,
+            "accepted_tokens": 0.0,
+            "draft_count": 0.0
+          }
+        },
+        "source": "llama.cpp /metrics before/after measured window",
+        "status": "OBSERVED"
+      },
+      "gpu_telemetry_summary": {
+        "0": {
+          "power.draw": {
+            "status": "OBSERVED",
+            "min": 26.52,
+            "max": 216.3,
+            "samples": 653
+          },
+          "temperature.gpu": {
+            "status": "OBSERVED",
+            "min": 44.0,
+            "max": 72.0,
+            "samples": 653
+          },
+          "clocks.sm": {
+            "status": "OBSERVED",
+            "min": 135.0,
+            "max": 1200.0,
+            "samples": 653
+          },
+          "clocks.mem": {
+            "status": "OBSERVED",
+            "min": 877.0,
+            "max": 877.0,
+            "samples": 653
+          },
+          "utilization.gpu": {
+            "status": "OBSERVED",
+            "min": 0.0,
+            "max": 100.0,
+            "samples": 653
+          }
+        },
+        "1": {
+          "power.draw": {
+            "status": "OBSERVED",
+            "min": 27.02,
+            "max": 202.69,
+            "samples": 653
+          },
+          "temperature.gpu": {
+            "status": "OBSERVED",
+            "min": 41.0,
+            "max": 63.0,
+            "samples": 653
+          },
+          "clocks.sm": {
+            "status": "OBSERVED",
+            "min": 135.0,
+            "max": 1200.0,
+            "samples": 653
+          },
+          "clocks.mem": {
+            "status": "OBSERVED",
+            "min": 877.0,
+            "max": 877.0,
+            "samples": 653
+          },
+          "utilization.gpu": {
+            "status": "OBSERVED",
+            "min": 0.0,
+            "max": 100.0,
+            "samples": 653
+          }
+        }
+      },
+      "telemetry_limitation": "VRAM peak sampled every 0.5s; power/temp/clocks sampled every 2s. TPS definitions unchanged.",
+      "limitations": [
+        "R0 두 반복 대비 TTFT 약 24.7~24.9%, wall 약 13.2~15.4% 감소. Decode는 유지 + 약한 개선 신호다.",
+        "llama slot sampler 누락은 보존된 server log의 task overlap으로 보정됐다. log-overlap-evidence.json과 원래 sampler evidence를 함께 참조한다.",
+        "WBS7 native MTP/GQA2 결과는 이 frozen recipe에 포함하지 않는다."
+      ],
+      "source_document": "docs/WBS-5 - Qwen 3.8 27B - llama.cpp.md",
+      "review_document": "docs/WBS-5.3.1.7-result-review.md",
+      "report": "reports/qwen3-8-27b/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001.md",
+      "evidence_sha256": {
+        "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/config.json": "624fe2b0a1eca5cb74e880b8a96a601670f91901839ac95793c0802256f6495a",
+        "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/metrics.json": "a98ec8fb7b4d02fd6e83c2611cf23a74f53268b0a8a72ad38d720b30f7b63e86",
+        "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/requests.json": "2b64d6489e5798947002d3738ec171e94fd5ef348c7dfa2bb5136a5429d5ac5a",
+        "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/completion.json": "0fc81a48e38f49e32ea29babc6b1c0fcd6274e447a3890ebd4547e4e11f4aef4",
+        "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/health-after.json": "f4419ecf6d0ef326a41adff85d4f1cd464cc53eced4d9ff38287e0cbd089e8e8",
+        "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/tokenization.json": "8351fe7f38b7f97454653bb1a254da874a55691c0b15da153e3d9b64f27b76fe",
+        "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/wbs5-evidence.json": "684a82f76381c3c960351eb72fcdfe47edda7918b7e49d0d22a628900088ae8a",
+        "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/overlap-evidence.json": "770a3dd0aa88ff8ee0104e6e98377faa1c69a485d0f8e607319cfbab31f711e5",
+        "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/gpu-peak.json": "eeb2494643fce22f681673b0c31750dcd4a85876acb81253debfae6b5316b135",
+        "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/graph-evidence.json": "b2303f224c010da349cddd746a093060c963f9a24e0974818b14f5ea5b5e831a",
+        "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/speculative-evidence.json": "d3c42815f9298b3a51806a4c7340c374abb91d340026f539dca6fbf72646b229",
+        "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/preflight.json": "e6d17b9bf72937ccd5bd6dd3d43803b88a76007cd3222609a68322d474ab63f5",
+        "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/artifact-check.json": "6a9e5b6356fdc2dd41b8f8064acb8f4a6add1a96b3cfcbb6c165d3486d199670",
+        "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/pre-run-receipt.json": "4a379d6ca9b40c55b1524f58c1095422a9d72b84ffc8d4905b86cfaf1ce6d6a6",
+        "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/effective-environment.json": "98d96b3819bd6fe975507e6e6e0bccafcaca916e83bc0d70cb7412b04b164bcd",
+        "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/runtime-version.txt": "6c7f147ae72876955585308dbcbe61039f5b6d3cfda4ee11e17c3040e34555e3",
+        "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/gpu-telemetry.jsonl": "1e41ca9c4293f23ce4ce62a176892e72e5734a443988cd208f4f18000948bc85",
+        "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/runtime/server-0.log": "021087112c899b0b015f17f09eee6e4f7994b008234a6f228c024cc4f35cef8e",
+        "results/raw/EXP-V100-WBS5-QWEN-LLAMA-R2-PERF-20260928-001/log-overlap-evidence.json": "fe1db53f1fee0a27b1f16ff96f56e7312233baf94fa17918d54f2482eb0ca3c1"
+      },
+      "promotion_checks": {
+        "frozen_identity_delta_invariants": "PASS",
+        "artifact_receipt": "PASS",
+        "preflight": "PASS",
+        "workload_and_128k_token_budget": "PASS",
+        "c2_active_and_output_integrity": "PASS",
+        "post_health": "PASS",
+        "telemetry_preserved": "PASS",
+        "published_report_and_csv": "PASS",
+        "conditional_gate": "NOT_APPLICABLE"
+      }
+    },
+    {
+      "track": "ornith9-llama",
+      "candidate_key": "R1",
+      "candidate_id": "TARGET_UB256",
+      "status": "VALIDATED_RECIPE",
+      "orientation": "LONG_PREFILL_LATENCY_ORIENTED",
+      "experiment_id": "EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001",
+      "measured_runs_used": 1,
+      "validation_scope": "performance/v1 C2 active + mechanical output integrity; no new semantic qualification",
+      "model_identity": {
+        "repository": null,
+        "revision": "5957ee5dcb88e9a9f4cd9a23c649320d20a574cd",
+        "path": "/srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf",
+        "filename": "Ornith-1.5-9B-MTP-Q6_K.gguf",
+        "sha256": "79a9925bb7771dea3530d57b185e97b9713a73a7c06bdb9804f7d019aa42f480",
+        "weight_quant": "Q6_K"
+      },
+      "artifact_verification": {
+        "path": "/srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf",
+        "expected": "79a9925bb7771dea3530d57b185e97b9713a73a7c06bdb9804f7d019aa42f480",
+        "actual": "79a9925bb7771dea3530d57b185e97b9713a73a7c06bdb9804f7d019aa42f480"
+      },
+      "runtime_identity": {
+        "family": "kyuz0/nvidia-v100-ai-toolboxes",
+        "image": "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149",
+        "build": 10775,
+        "commit": "67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
+        "cuda_cudart": "12.6.77-1",
+        "cuda_cublas": "12.6.4.1-1",
+        "status": "bootstrap_pin_requires_fresh_verification"
+      },
+      "runtime_version_observed": "version: 0.3.0-dev (build 10775, commit 67a17c17c)\nbuilt with GNU 11.4.0 for Linux x86_64",
+      "weight_quant": "Q6_K",
+      "kv_dtype": "FP16",
+      "speculative": "target-only",
+      "speculative_depth": 0,
+      "topology": "1gpu-x2-independent",
+      "context_per_request": 131072,
+      "measured_concurrency": 2,
+      "configuration_sha256": "c6933aca605c596224e45f7bfffff65405703b225e62d3dd74685de2c56331ab",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--ubatch-size/0",
+          "r0": "128",
+          "candidate": "256"
+        },
+        {
+          "path": "/servers/1/argv/--ubatch-size/0",
+          "r0": "128",
+          "candidate": "256"
+        }
+      ],
+      "serving_arguments": [
+        {
+          "wrapper": [
+            "docker",
+            "run",
+            "--rm",
+            "--pull=never",
+            "--name",
+            "v100-test-18080",
+            "--label",
+            "project=v100-llm-test",
+            "--gpus",
+            "device=0",
+            "-p",
+            "127.0.0.1:18080:8080",
+            "-v",
+            "/srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf:/model/target.gguf:ro",
+            "--entrypoint",
+            "llama-server",
+            "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149"
+          ],
+          "argv": {
+            "-m": [
+              "/model/target.gguf"
+            ],
+            "--host": [
+              "0.0.0.0"
+            ],
+            "--port": [
+              "8080"
+            ],
+            "-ngl": [
+              "all"
+            ],
+            "--ctx-size": [
+              "131072"
+            ],
+            "--parallel": [
+              "1"
+            ],
+            "--kv-unified": [
+              true
+            ],
+            "--kv-unified-per-slot": [
+              "131072"
+            ],
+            "--batch-size": [
+              "512"
+            ],
+            "--ubatch-size": [
+              "256"
+            ],
+            "--cache-type-k": [
+              "f16"
+            ],
+            "--cache-type-v": [
+              "f16"
+            ],
+            "--flash-attn": [
+              "on"
+            ],
+            "--spec-type": [
+              "none"
+            ],
+            "--jinja": [
+              true
+            ],
+            "--reasoning": [
+              "off"
+            ],
+            "--metrics": [
+              true
+            ],
+            "--slots": [
+              true
+            ],
+            "--no-warmup": [
+              true
+            ]
+          },
+          "environment": {},
+          "container_environment": {}
+        },
+        {
+          "wrapper": [
+            "docker",
+            "run",
+            "--rm",
+            "--pull=never",
+            "--name",
+            "v100-test-18081",
+            "--label",
+            "project=v100-llm-test",
+            "--gpus",
+            "device=1",
+            "-p",
+            "127.0.0.1:18081:8080",
+            "-v",
+            "/srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf:/model/target.gguf:ro",
+            "--entrypoint",
+            "llama-server",
+            "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149"
+          ],
+          "argv": {
+            "-m": [
+              "/model/target.gguf"
+            ],
+            "--host": [
+              "0.0.0.0"
+            ],
+            "--port": [
+              "8080"
+            ],
+            "-ngl": [
+              "all"
+            ],
+            "--ctx-size": [
+              "131072"
+            ],
+            "--parallel": [
+              "1"
+            ],
+            "--kv-unified": [
+              true
+            ],
+            "--kv-unified-per-slot": [
+              "131072"
+            ],
+            "--batch-size": [
+              "512"
+            ],
+            "--ubatch-size": [
+              "256"
+            ],
+            "--cache-type-k": [
+              "f16"
+            ],
+            "--cache-type-v": [
+              "f16"
+            ],
+            "--flash-attn": [
+              "on"
+            ],
+            "--spec-type": [
+              "none"
+            ],
+            "--jinja": [
+              true
+            ],
+            "--reasoning": [
+              "off"
+            ],
+            "--metrics": [
+              true
+            ],
+            "--slots": [
+              true
+            ],
+            "--no-warmup": [
+              true
+            ]
+          },
+          "environment": {},
+          "container_environment": {}
+        }
+      ],
+      "exact_measured_launch_command": "docker run --cidfile /home/loopwhile/v100-llm-test-wbs5-manual/416817e5f2a8-ornith9-llama-20260928/results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/runtime/container-0.cid --label experiment=EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001 --rm --pull=never --name exp-v100-orn15-9b-llama-target-b512-ub256-1gpu2-c2-perf-20260928-001-backend-0 --label project=v100-llm-test --gpus device=0 -p 127.0.0.1:18080:8080 -v /srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf:/model/target.gguf:ro --entrypoint llama-server kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149 -m /model/target.gguf --host 0.0.0.0 --port 8080 -ngl all --ctx-size 131072 --parallel 1 --kv-unified --kv-unified-per-slot 131072 --batch-size 512 --ubatch-size 256 --cache-type-k f16 --cache-type-v f16 --flash-attn on --spec-type none --jinja --reasoning off --metrics --slots --no-warmup\ndocker run --cidfile /home/loopwhile/v100-llm-test-wbs5-manual/416817e5f2a8-ornith9-llama-20260928/results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/runtime/container-1.cid --label experiment=EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001 --rm --pull=never --name exp-v100-orn15-9b-llama-target-b512-ub256-1gpu2-c2-perf-20260928-001-backend-1 --label project=v100-llm-test --gpus device=1 -p 127.0.0.1:18081:8080 -v /srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf:/model/target.gguf:ro --entrypoint llama-server kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149 -m /model/target.gguf --host 0.0.0.0 --port 8080 -ngl all --ctx-size 131072 --parallel 1 --kv-unified --kv-unified-per-slot 131072 --batch-size 512 --ubatch-size 256 --cache-type-k f16 --cache-type-v f16 --flash-attn on --spec-type none --jinja --reasoning off --metrics --slots --no-warmup\ndocker run --cidfile /home/loopwhile/v100-llm-test-wbs5-manual/416817e5f2a8-ornith9-llama-20260928/results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/runtime/container-gateway.cid --label experiment=EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001 --rm --pull=never --name exp-v100-orn15-9b-llama-target-b512-ub256-1gpu2-c2-perf-20260928-001-gateway --label project=v100-llm-test --network host -v /home/loopwhile/v100-llm-test-wbs5-manual/416817e5f2a8-ornith9-llama-20260928/results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/runtime/litellm-config.yaml:/app/config.yaml:ro ghcr.io/berriai/litellm:v1.101.0 --config /app/config.yaml --host 127.0.0.1 --port 18079",
+      "effective_host_environment": [
+        {
+          "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+          "LANG": "C.UTF-8",
+          "HOME": "/home/loopwhile"
+        },
+        {
+          "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+          "LANG": "C.UTF-8",
+          "HOME": "/home/loopwhile"
+        },
+        {
+          "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+          "LANG": "C.UTF-8",
+          "HOME": "/home/loopwhile"
+        }
+      ],
+      "container_environment_overrides": [
+        {},
+        {}
+      ],
+      "resolved_environment_receipt": "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/runtime/effective-environment.json",
+      "gateway": {
+        "runtime": "LiteLLM",
+        "runtime_revision": "1.101.0 / 18243cd7af4c3325165ba68b21379e2719e051c7",
+        "image": "ghcr.io/berriai/litellm:v1.101.0",
+        "endpoint": "http://127.0.0.1:18079",
+        "routing_strategy": "least-busy",
+        "backend_max_parallel_requests": 1,
+        "config": {
+          "model_list": [
+            {
+              "model_name": "Ornith-1.5-9B",
+              "model_info": {
+                "id": "backend-0"
+              },
+              "litellm_params": {
+                "model": "openai/Ornith-1.5-9B",
+                "api_base": "http://127.0.0.1:18080/v1",
+                "api_key": "local-no-key",
+                "max_parallel_requests": 1,
+                "timeout": 1800,
+                "stream_timeout": 1800,
+                "max_retries": 0
+              }
+            },
+            {
+              "model_name": "Ornith-1.5-9B",
+              "model_info": {
+                "id": "backend-1"
+              },
+              "litellm_params": {
+                "model": "openai/Ornith-1.5-9B",
+                "api_base": "http://127.0.0.1:18081/v1",
+                "api_key": "local-no-key",
+                "max_parallel_requests": 1,
+                "timeout": 1800,
+                "stream_timeout": 1800,
+                "max_retries": 0
+              }
+            }
+          ],
+          "router_settings": {
+            "routing_strategy": "least-busy",
+            "num_retries": 0
+          }
+        },
+        "command": [
+          "docker",
+          "run",
+          "--rm",
+          "--pull=never",
+          "--name",
+          "v100-test-litellm",
+          "--label",
+          "project=v100-llm-test",
+          "--network",
+          "host",
+          "-v",
+          "{LITELLM_CONFIG}:/app/config.yaml:ro",
+          "ghcr.io/berriai/litellm:v1.101.0",
+          "--config",
+          "/app/config.yaml",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "18079"
+        ]
+      },
+      "workload": {
+        "path": "workloads/performance/v1.json",
+        "sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "context_per_request": 131072,
+        "requests": [
+          "project-a",
+          "project-b"
+        ],
+        "output_reserve": 4096,
+        "min_output": 1024
+      },
+      "sampling": {
+        "temperature": 0,
+        "top_p": 1,
+        "seed": 520
+      },
+      "metrics": {
+        "context_tokens": 131072,
+        "concurrency": 2,
+        "intended_requests": 2,
+        "completed_requests": 2,
+        "output_passed_requests": 2,
+        "batch_wall_s": 173.34305018500163,
+        "submission_skew_s": 0.2756473580011516,
+        "ttft_ms": 139204.07742749923,
+        "prefill_tps": 912.1921134898216,
+        "mean_request_decode_tps": 43.98746356459341,
+        "aggregate_decode_tps": 80.89530707327604,
+        "end_to_end_output_tps": 16.199091899001093,
+        "c1_128k": false,
+        "c2_resident": true,
+        "c2_active": true,
+        "queue_only": false,
+        "peak_vram_gpu0_mib": 10945.0,
+        "peak_vram_gpu1_mib": 10945.0,
+        "verdict": "PASS_C2_ACTIVE",
+        "concurrency_verdict": "PASS_C2_ACTIVE",
+        "mechanical_output_verdict": "PASS",
+        "total_output_tokens": 2808,
+        "candidate_id": "TARGET_UB256",
+        "workload_manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca"
+      },
+      "request_metrics": [
+        {
+          "request_id": "project-a",
+          "actual_output_tokens": 1438,
+          "ttft_ms": 140108.34766799962,
+          "prefill_tps": 906.2629180445382,
+          "decode_tps": 43.341058189868086,
+          "verdict": "PASS"
+        },
+        {
+          "request_id": "project-b",
+          "actual_output_tokens": 1370,
+          "ttft_ms": 138299.8071869988,
+          "prefill_tps": 918.1213089351052,
+          "decode_tps": 44.633868939318745,
+          "verdict": "PASS"
+        }
+      ],
+      "tokenization": {
+        "items": [
+          {
+            "request_id": "project-a",
+            "receipt": {
+              "source": "llama tokenizer",
+              "prompt_tokens": 126975,
+              "formatted_prompt_sha256": "9539b390e52a2bd30974b1a5e52c89f74e8ac8c57e64867fdbd75ea5dd23d69a"
+            },
+            "error": null
+          },
+          {
+            "request_id": "project-b",
+            "receipt": {
+              "source": "llama tokenizer",
+              "prompt_tokens": 126976,
+              "formatted_prompt_sha256": "88c27de8b4f22a688c696af5e89e4bc1c73dabf9f31e0370f008fdaa57865c50"
+            },
+            "error": null
+          }
+        ]
+      },
+      "post_health": {
+        "healthy": true,
+        "gateway": {
+          "healthy": true,
+          "at_utc": "2026-09-28T13:01:31.046645+00:00",
+          "route": "/health/liveliness"
+        },
+        "backends": [
+          {
+            "healthy": true,
+            "at_utc": "2026-09-28T13:01:31.048213+00:00"
+          },
+          {
+            "healthy": true,
+            "at_utc": "2026-09-28T13:01:31.049792+00:00"
+          }
+        ],
+        "at_utc": "2026-09-28T13:01:31.049823+00:00"
+      },
+      "graph_evidence": {
+        "status": "OBSERVED",
+        "reuse_count": 2849,
+        "scope": "server lifetime, includes startup/routing preflight if present; not necessarily measured-window hits",
+        "raw_logs_preserved": true
+      },
+      "speculative_evidence": {
+        "aggregate": {
+          "draft_tokens": 0.0,
+          "accepted_tokens": 0.0,
+          "draft_count": 0.0,
+          "acceptance_ratio": null
+        },
+        "backends": {
+          "root/backends/backend_1": {
+            "draft_tokens": 0.0,
+            "accepted_tokens": 0.0,
+            "draft_count": 0.0
+          },
+          "root/backends/backend_0": {
+            "draft_tokens": 0.0,
+            "accepted_tokens": 0.0,
+            "draft_count": 0.0
+          }
+        },
+        "source": "llama.cpp /metrics before/after measured window",
+        "status": "OBSERVED"
+      },
+      "gpu_telemetry_summary": {
+        "0": {
+          "power.draw": {
+            "status": "OBSERVED",
+            "min": 26.04,
+            "max": 171.23,
+            "samples": 133
+          },
+          "temperature.gpu": {
+            "status": "OBSERVED",
+            "min": 43.0,
+            "max": 71.0,
+            "samples": 133
+          },
+          "clocks.sm": {
+            "status": "OBSERVED",
+            "min": 135.0,
+            "max": 1200.0,
+            "samples": 133
+          },
+          "clocks.mem": {
+            "status": "OBSERVED",
+            "min": 877.0,
+            "max": 877.0,
+            "samples": 133
+          },
+          "utilization.gpu": {
+            "status": "OBSERVED",
+            "min": 0.0,
+            "max": 100.0,
+            "samples": 133
+          }
+        },
+        "1": {
+          "power.draw": {
+            "status": "OBSERVED",
+            "min": 26.52,
+            "max": 168.75,
+            "samples": 133
+          },
+          "temperature.gpu": {
+            "status": "OBSERVED",
+            "min": 40.0,
+            "max": 65.0,
+            "samples": 133
+          },
+          "clocks.sm": {
+            "status": "OBSERVED",
+            "min": 135.0,
+            "max": 1200.0,
+            "samples": 133
+          },
+          "clocks.mem": {
+            "status": "OBSERVED",
+            "min": 877.0,
+            "max": 877.0,
+            "samples": 133
+          },
+          "utilization.gpu": {
+            "status": "OBSERVED",
+            "min": 0.0,
+            "max": 100.0,
+            "samples": 133
+          }
+        }
+      },
+      "telemetry_limitation": "VRAM peak sampled every 0.5s; power/temp/clocks sampled every 2s. TPS definitions unchanged.",
+      "limitations": [
+        "R0 대비 TTFT -23.52%, prefill +30.73%, wall -19.71%, mean request decode +0.40%.",
+        "원본 repository는 UNRESOLVED/null이다. 기록된 revision과 local GGUF SHA256에 한정해 검증했으며 다운로드 가능한 upstream provenance의 완결성을 주장하지 않는다.",
+        "LiteLLM 단일 endpoint가 필수다. 별도 backend 직접 분배는 이 recipe의 acceptance 경로가 아니다."
+      ],
+      "source_document": "docs/WBS-5 - Ornith 1.5 9B - llama.cpp.md",
+      "review_document": "docs/WBS-5.3.2.4-result-review.md",
+      "report": "reports/ornith-1.5-9b/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001.md",
+      "evidence_sha256": {
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/config.json": "953275aec92d273106cb7bd8cd1ec2d92ae9a62235787c09aa706318e0881225",
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/metrics.json": "2f4ed4f6ea76f9c28b401c0fffd88a9ab7a431aa54a442fdf4cfc6c469075a10",
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/requests.json": "93f91d650062cf70fa240ee1008e53428569e0665bad32dd2c9ace8d8f625ca1",
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/completion.json": "14e9a298cdaaec0c602231ce8702bc89d6e57893833dacbe25d007d7a1551072",
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/health-after.json": "ad550e3ecbaeebcd9b68cf3754405e6c91f5c9bd3b986f6cb7ac7233c352abfb",
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/tokenization.json": "8351fe7f38b7f97454653bb1a254da874a55691c0b15da153e3d9b64f27b76fe",
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/wbs5-evidence.json": "8e4024435564f1c9b82bd564976266733f726281d19dcdb5218c66707214f72b",
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/overlap-evidence.json": "bcfcfe322caf52ff95cf08cbee2387c38879a1fe802d97ae28e1671c8fed14ba",
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/gpu-peak.json": "f7da01d35718dedbeca9116d065f67f5ce1fc526b7ece6c3bce5839acf83f150",
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/graph-evidence.json": "77ea560d0f69e278fd52c28120a499a9595be40129781952b11d8a1df0fce501",
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/speculative-evidence.json": "780931ce6420e5e87265de7d8a5608acbab94a42f76e491da9ad3a93b942c496",
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/runtime/preflight.json": "9a2fc570d9bac7adfe1348110b411bdb657726c279ff4de0e8da7c28a6482cbf",
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/runtime/artifact-check.json": "697d32132e14dc6431b56a45c6c649d59fa1a3900218fa6235197780f81f9ebd",
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/runtime/pre-run-receipt.json": "50a844dc2d09d10e375970c62f8fd0baf7758c3c20e83b419c0a2b96ce11563b",
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/runtime/effective-environment.json": "b2a7c99170c20a4778da9bc25c8b11fe973039c8a6fa349d0107dc553ed81144",
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/runtime/runtime-version.txt": "6c7f147ae72876955585308dbcbe61039f5b6d3cfda4ee11e17c3040e34555e3",
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/runtime/gpu-telemetry.jsonl": "c4db7154259d00d04c8bd2e14f31ba7af970fe8ff50d8ce5b0d0559ccc683da8",
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/runtime/server-0.log": "822da25072016ec10d692e36500fce8c4aec087d2793bfd81348bcd86155ffa7",
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/runtime/server-1.log": "ca876b8098b21ef9b766ec690a1c59470463d7ea7794db9d7e91361a7cf6f838",
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/runtime/litellm-config.yaml": "95404c58b28eb0503687942e1f81a06153e598e253635c990a7dc4c4fd420c14",
+        "results/raw/EXP-V100-ORN15-9B-LLAMA-TARGET-B512-UB256-1GPU2-C2-PERF-20260928-001/runtime/gateway-version.txt": "653ece76d24ac3cca46b1cb08a915a3d7feb311e7c48f037513221a9d2dfba25"
+      },
+      "promotion_checks": {
+        "frozen_identity_delta_invariants": "PASS",
+        "artifact_receipt": "PASS",
+        "preflight": "PASS",
+        "workload_and_128k_token_budget": "PASS",
+        "c2_active_and_output_integrity": "PASS",
+        "post_health": "PASS",
+        "telemetry_preserved": "PASS",
+        "published_report_and_csv": "PASS",
+        "conditional_gate": "NOT_APPLICABLE"
+      }
+    },
+    {
+      "track": "ornith35-llama",
+      "candidate_key": "R1",
+      "candidate_id": "ORN35-LLAMA-WBS5-R1-MTP1",
+      "status": "VALIDATED_RECIPE",
+      "orientation": "DECODE_ORIENTED",
+      "experiment_id": "EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002",
+      "measured_runs_used": 1,
+      "validation_scope": "performance/v1 C2 active + mechanical output integrity; no new semantic qualification",
+      "model_identity": {
+        "repository": "ornith-ai/Ornith-1.5-35B-A3B-GGUF",
+        "revision": "12393612fd4f730ff5aadc23e9b8f9648aa49ceb",
+        "path": "/srv/models/ornith-1.5-35b-a3b-gguf/Ornith-1.5-35B-Q4_K_M.gguf",
+        "filename": "Ornith-1.5-35B-Q4_K_M.gguf",
+        "sha256": "42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f",
+        "weight_quant": "Q4_K_M"
+      },
+      "artifact_verification": {
+        "path": "/srv/models/ornith-1.5-35b-a3b-gguf/Ornith-1.5-35B-Q4_K_M.gguf",
+        "expected": "42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f",
+        "actual": "42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f"
+      },
+      "runtime_identity": {
+        "family": "kyuz0/nvidia-v100-ai-toolboxes",
+        "image": "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149",
+        "build": 10775,
+        "commit": "67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
+        "cuda_cudart": "12.6.77-1",
+        "cuda_cublas": "12.6.4.1-1",
+        "status": "bootstrap_pin_requires_fresh_verification"
+      },
+      "runtime_version_observed": "version: 0.3.0-dev (build 10775, commit 67a17c17c)\nbuilt with GNU 11.4.0 for Linux x86_64",
+      "weight_quant": "Q4_K_M",
+      "kv_dtype": "Q8_0",
+      "speculative": "native-mtp",
+      "speculative_depth": 1,
+      "topology": "tp2-shared",
+      "context_per_request": 131072,
+      "measured_concurrency": 2,
+      "configuration_sha256": "c3edfef92d58414744f94d9e4ad41afa4ebc0be0690984972624792231031b5b",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--spec-draft-n-max",
+          "r0": null,
+          "candidate": [
+            "1"
+          ]
+        },
+        {
+          "path": "/servers/0/argv/--spec-type/0",
+          "r0": "none",
+          "candidate": "draft-mtp"
+        }
+      ],
+      "serving_arguments": [
+        {
+          "wrapper": [
+            "docker",
+            "run",
+            "--rm",
+            "--pull=never",
+            "--name",
+            "v100-test-18080",
+            "--label",
+            "project=v100-llm-test",
+            "--gpus",
+            "\"device=0,1\"",
+            "-p",
+            "127.0.0.1:18080:8080",
+            "-v",
+            "/srv/models/ornith-1.5-35b-a3b-gguf/Ornith-1.5-35B-Q4_K_M.gguf:/model/target.gguf:ro",
+            "--entrypoint",
+            "llama-server",
+            "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149"
+          ],
+          "argv": {
+            "-m": [
+              "/model/target.gguf"
+            ],
+            "--host": [
+              "0.0.0.0"
+            ],
+            "--port": [
+              "8080"
+            ],
+            "-ngl": [
+              "all"
+            ],
+            "--split-mode": [
+              "layer"
+            ],
+            "--tensor-split": [
+              "1,1"
+            ],
+            "--ctx-size": [
+              "262144"
+            ],
+            "--parallel": [
+              "2"
+            ],
+            "--kv-unified": [
+              true
+            ],
+            "--kv-unified-per-slot": [
+              "131072"
+            ],
+            "--batch-size": [
+              "512"
+            ],
+            "--ubatch-size": [
+              "128"
+            ],
+            "--cache-type-k": [
+              "q8_0"
+            ],
+            "--cache-type-v": [
+              "q8_0"
+            ],
+            "--flash-attn": [
+              "on"
+            ],
+            "--spec-type": [
+              "draft-mtp"
+            ],
+            "--spec-draft-n-max": [
+              "1"
+            ],
+            "--jinja": [
+              true
+            ],
+            "--reasoning": [
+              "off"
+            ],
+            "--metrics": [
+              true
+            ],
+            "--slots": [
+              true
+            ],
+            "--no-warmup": [
+              true
+            ]
+          },
+          "environment": {},
+          "container_environment": {}
+        }
+      ],
+      "exact_measured_launch_command": "docker run --cidfile /home/loopwhile/v100-llm-test-wbs5/e2e2e97450cb/results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/runtime/container-0.cid --label experiment=EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002 --rm --pull=never --name exp-v100-wbs5-ornith35-llama-r1-perf-20260928-002-backend-0 --label project=v100-llm-test --gpus '\"device=0,1\"' -p 127.0.0.1:18080:8080 -v /srv/models/ornith-1.5-35b-a3b-gguf/Ornith-1.5-35B-Q4_K_M.gguf:/model/target.gguf:ro --entrypoint llama-server kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149 -m /model/target.gguf --host 0.0.0.0 --port 8080 -ngl all --split-mode layer --tensor-split 1,1 --ctx-size 262144 --parallel 2 --kv-unified --kv-unified-per-slot 131072 --batch-size 512 --ubatch-size 128 --cache-type-k q8_0 --cache-type-v q8_0 --flash-attn on --spec-type draft-mtp --spec-draft-n-max 1 --jinja --reasoning off --metrics --slots --no-warmup",
+      "effective_host_environment": [
+        {
+          "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+          "LANG": "C.UTF-8",
+          "HOME": "/home/loopwhile"
+        }
+      ],
+      "container_environment_overrides": [
+        {}
+      ],
+      "resolved_environment_receipt": "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/runtime/effective-environment.json",
+      "gateway": null,
+      "workload": {
+        "path": "workloads/performance/v1.json",
+        "sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "context_per_request": 131072,
+        "requests": [
+          "project-a",
+          "project-b"
+        ],
+        "output_reserve": 4096,
+        "min_output": 1024
+      },
+      "sampling": {
+        "temperature": 0,
+        "top_p": 1,
+        "seed": 520
+      },
+      "metrics": {
+        "context_tokens": 131072,
+        "concurrency": 2,
+        "intended_requests": 2,
+        "completed_requests": 2,
+        "output_passed_requests": 2,
+        "batch_wall_s": 1242.8441475930013,
+        "submission_skew_s": 0.005396706001192797,
+        "ttft_ms": 833066.951020499,
+        "prefill_tps": 182.78472704691532,
+        "mean_request_decode_tps": 17.329360459416264,
+        "aggregate_decode_tps": 5.708871147979874,
+        "end_to_end_output_tps": 3.4316450765447666,
+        "c1_128k": false,
+        "c2_resident": true,
+        "c2_active": true,
+        "queue_only": false,
+        "peak_vram_gpu0_mib": 12897.0,
+        "peak_vram_gpu1_mib": 13737.0,
+        "verdict": "PASS_C2_ACTIVE",
+        "concurrency_verdict": "PASS_C2_ACTIVE",
+        "mechanical_output_verdict": "PASS",
+        "total_output_tokens": 4265,
+        "candidate_id": "ORN35-LLAMA-WBS5-R1-MTP1",
+        "workload_manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca"
+      },
+      "request_metrics": [
+        {
+          "request_id": "project-a",
+          "actual_output_tokens": 2313,
+          "ttft_ms": 1170460.9408010002,
+          "prefill_tps": 108.4946169435608,
+          "decode_tps": 31.984758432552603,
+          "verdict": "PASS"
+        },
+        {
+          "request_id": "project-b",
+          "actual_output_tokens": 1952,
+          "ttft_ms": 495672.96123999765,
+          "prefill_tps": 257.07483715026984,
+          "decode_tps": 2.6739624862799234,
+          "verdict": "PASS"
+        }
+      ],
+      "tokenization": {
+        "items": [
+          {
+            "request_id": "project-a",
+            "receipt": {
+              "source": "llama tokenizer",
+              "prompt_tokens": 126975,
+              "formatted_prompt_sha256": "9539b390e52a2bd30974b1a5e52c89f74e8ac8c57e64867fdbd75ea5dd23d69a"
+            },
+            "error": null
+          },
+          {
+            "request_id": "project-b",
+            "receipt": {
+              "source": "llama tokenizer",
+              "prompt_tokens": 126976,
+              "formatted_prompt_sha256": "88c27de8b4f22a688c696af5e89e4bc1c73dabf9f31e0370f008fdaa57865c50"
+            },
+            "error": null
+          }
+        ]
+      },
+      "post_health": {
+        "healthy": true,
+        "at_utc": "2026-09-28T14:39:23.959858+00:00"
+      },
+      "graph_evidence": {
+        "status": "OBSERVED",
+        "reuse_count": 3636,
+        "scope": "server lifetime, includes startup/routing preflight if present; not necessarily measured-window hits",
+        "raw_logs_preserved": true
+      },
+      "speculative_evidence": {
+        "aggregate": {
+          "draft_tokens": 2426.0,
+          "accepted_tokens": 1838.0,
+          "draft_count": 2426.0,
+          "acceptance_ratio": 0.7576257213520198
+        },
+        "backends": {
+          "root": {
+            "draft_tokens": 2426.0,
+            "accepted_tokens": 1838.0,
+            "draft_count": 2426.0
+          }
+        },
+        "source": "llama.cpp /metrics before/after measured window",
+        "status": "OBSERVED"
+      },
+      "gpu_telemetry_summary": {
+        "0": {
+          "power.draw": {
+            "status": "OBSERVED",
+            "min": 26.52,
+            "max": 129.15,
+            "samples": 616
+          },
+          "temperature.gpu": {
+            "status": "OBSERVED",
+            "min": 43.0,
+            "max": 59.0,
+            "samples": 616
+          },
+          "clocks.sm": {
+            "status": "OBSERVED",
+            "min": 135.0,
+            "max": 1200.0,
+            "samples": 616
+          },
+          "clocks.mem": {
+            "status": "OBSERVED",
+            "min": 877.0,
+            "max": 877.0,
+            "samples": 616
+          },
+          "utilization.gpu": {
+            "status": "OBSERVED",
+            "min": 0.0,
+            "max": 95.0,
+            "samples": 616
+          }
+        },
+        "1": {
+          "power.draw": {
+            "status": "OBSERVED",
+            "min": 26.52,
+            "max": 129.62,
+            "samples": 616
+          },
+          "temperature.gpu": {
+            "status": "OBSERVED",
+            "min": 40.0,
+            "max": 56.0,
+            "samples": 616
+          },
+          "clocks.sm": {
+            "status": "OBSERVED",
+            "min": 135.0,
+            "max": 1200.0,
+            "samples": 616
+          },
+          "clocks.mem": {
+            "status": "OBSERVED",
+            "min": 877.0,
+            "max": 877.0,
+            "samples": 616
+          },
+          "utilization.gpu": {
+            "status": "OBSERVED",
+            "min": 0.0,
+            "max": 95.0,
+            "samples": 616
+          }
+        }
+      },
+      "telemetry_limitation": "VRAM peak sampled every 0.5s; power/temp/clocks sampled every 2s. TPS definitions unchanged.",
+      "limitations": [
+        "R0 대비 mean request decode +12.49%, request-A runtime decode +13.70%; prefill -4.51%, TTFT +5.26%, wall +5.65%, GPU1 peak +1428 MiB의 trade-off가 있다.",
+        "native MTP1은 target GGUF 내부 predictor를 사용한다. 별도 companion GGUF는 사용하지 않는다.",
+        "최초 -001은 포트 충돌로 측정 전 INCONCLUSIVE. 사용자 지정 재실행 -002만 성능 근거다.",
+        "R2 UB256과 결합한 설정 및 효과의 가산성은 검증하지 않았다."
+      ],
+      "source_document": "docs/WBS-5 - Ornith 1.5 35B-A3B - llama.cpp.md",
+      "review_document": "docs/WBS-5.3.3.5-result-review.md",
+      "report": "reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002.md",
+      "evidence_sha256": {
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/config.json": "e8354fab4fe48081187b9e9494685cc21ed8aa28d5dafacde91421ddd3d109f9",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/metrics.json": "f3f1e1f0c5f183140212bccb0f0e82b52a562131042a0da221d396120ac4bc42",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/requests.json": "58821391e10f037528801db3f5f6ca16084cc0f18b46481dbef8ff70f7c16335",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/completion.json": "c15c8ac1733f0fd9805f3eca56b2aa147800ef7ded8cafe599410a71760060a5",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/health-after.json": "df4f2e2410defa6bad271ef357e66110716b51d6e73c23ad4f1a5f3b4f7f00d0",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/tokenization.json": "8351fe7f38b7f97454653bb1a254da874a55691c0b15da153e3d9b64f27b76fe",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/wbs5-evidence.json": "c9f0f02721a4c6c970fc18df514c77babe9c8bbf3d538c054ad737b1316934b7",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/overlap-evidence.json": "0baec0c7913bb2d563597d35270f206f0a53d747489ae23c4305a3ddcc233ada",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/gpu-peak.json": "88dddc22c3151b43f2f22a34e331ea4f93ec6f80e6f8de380d2ae0f35955f3c1",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/graph-evidence.json": "bbe7c54efbad81058d2687935e6f24506fc1d611e729274a793a7ba3456d04f9",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/speculative-evidence.json": "2b238fd1ac13c1c98bea8758c507fe5bde4f31548afc9361e7e01a80654b7615",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/runtime/preflight.json": "43cdb6859151d0c3e46cefe705a40ba6b9173010255f46b2652f1907f703553c",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/runtime/artifact-check.json": "7968093df8d2202a3fc65361ad06006a5c40a2be6cf9196cc8dc49c95c3ff257",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/runtime/pre-run-receipt.json": "6e1e14f28f045d5aea519ff5c190cb290857c11c0842650e5456f98df0def8ae",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/runtime/effective-environment.json": "98d96b3819bd6fe975507e6e6e0bccafcaca916e83bc0d70cb7412b04b164bcd",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/runtime/runtime-version.txt": "6c7f147ae72876955585308dbcbe61039f5b6d3cfda4ee11e17c3040e34555e3",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/runtime/gpu-telemetry.jsonl": "2f709c08f76215100b72439937b9da535ceab99bcf9b124858b3c13ff3a5c660",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/runtime/server-0.log": "73c9f277476727dd67c8b947443c479dc719783ac1c809ee49c5d19d4097a5af",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/log-overlap-evidence.json": "cd9e43f9b95711a1a83fd51570bd14b420559eee2892723dc644bc51473f91ac",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R1-PERF-20260928-002/runtime/retry-receipt.json": "5ea486e8f5395cd4552429752098407dc8c1251591e498fc6a25539c8281019b"
+      },
+      "promotion_checks": {
+        "frozen_identity_delta_invariants": "PASS",
+        "artifact_receipt": "PASS",
+        "preflight": "PASS",
+        "workload_and_128k_token_budget": "PASS",
+        "c2_active_and_output_integrity": "PASS",
+        "post_health": "PASS",
+        "telemetry_preserved": "PASS",
+        "published_report_and_csv": "PASS",
+        "conditional_gate": "NOT_APPLICABLE"
+      }
+    },
+    {
+      "track": "ornith35-llama",
+      "candidate_key": "R2",
+      "candidate_id": "ORN35-LLAMA-WBS5-R2-UB256",
+      "status": "VALIDATED_RECIPE",
+      "orientation": "LONG_PREFILL_LATENCY_ORIENTED",
+      "experiment_id": "EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001",
+      "measured_runs_used": 1,
+      "validation_scope": "performance/v1 C2 active + mechanical output integrity; no new semantic qualification",
+      "model_identity": {
+        "repository": "ornith-ai/Ornith-1.5-35B-A3B-GGUF",
+        "revision": "12393612fd4f730ff5aadc23e9b8f9648aa49ceb",
+        "path": "/srv/models/ornith-1.5-35b-a3b-gguf/Ornith-1.5-35B-Q4_K_M.gguf",
+        "filename": "Ornith-1.5-35B-Q4_K_M.gguf",
+        "sha256": "42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f",
+        "weight_quant": "Q4_K_M"
+      },
+      "artifact_verification": {
+        "path": "/srv/models/ornith-1.5-35b-a3b-gguf/Ornith-1.5-35B-Q4_K_M.gguf",
+        "expected": "42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f",
+        "actual": "42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f"
+      },
+      "runtime_identity": {
+        "family": "kyuz0/nvidia-v100-ai-toolboxes",
+        "image": "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149",
+        "build": 10775,
+        "commit": "67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
+        "cuda_cudart": "12.6.77-1",
+        "cuda_cublas": "12.6.4.1-1",
+        "status": "bootstrap_pin_requires_fresh_verification"
+      },
+      "runtime_version_observed": "version: 0.3.0-dev (build 10775, commit 67a17c17c)\nbuilt with GNU 11.4.0 for Linux x86_64",
+      "weight_quant": "Q4_K_M",
+      "kv_dtype": "Q8_0",
+      "speculative": "target-only",
+      "speculative_depth": 0,
+      "topology": "tp2-shared",
+      "context_per_request": 131072,
+      "measured_concurrency": 2,
+      "configuration_sha256": "4252ccbe93e014a972be06ebe6d046af998493fecb7472c9ec665d0df3a2aad1",
+      "normalized_delta_from_r0": [
+        {
+          "path": "/servers/0/argv/--ubatch-size/0",
+          "r0": "128",
+          "candidate": "256"
+        }
+      ],
+      "serving_arguments": [
+        {
+          "wrapper": [
+            "docker",
+            "run",
+            "--rm",
+            "--pull=never",
+            "--name",
+            "v100-test-18080",
+            "--label",
+            "project=v100-llm-test",
+            "--gpus",
+            "\"device=0,1\"",
+            "-p",
+            "127.0.0.1:18080:8080",
+            "-v",
+            "/srv/models/ornith-1.5-35b-a3b-gguf/Ornith-1.5-35B-Q4_K_M.gguf:/model/target.gguf:ro",
+            "--entrypoint",
+            "llama-server",
+            "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149"
+          ],
+          "argv": {
+            "-m": [
+              "/model/target.gguf"
+            ],
+            "--host": [
+              "0.0.0.0"
+            ],
+            "--port": [
+              "8080"
+            ],
+            "-ngl": [
+              "all"
+            ],
+            "--split-mode": [
+              "layer"
+            ],
+            "--tensor-split": [
+              "1,1"
+            ],
+            "--ctx-size": [
+              "262144"
+            ],
+            "--parallel": [
+              "2"
+            ],
+            "--kv-unified": [
+              true
+            ],
+            "--kv-unified-per-slot": [
+              "131072"
+            ],
+            "--batch-size": [
+              "512"
+            ],
+            "--ubatch-size": [
+              "256"
+            ],
+            "--cache-type-k": [
+              "q8_0"
+            ],
+            "--cache-type-v": [
+              "q8_0"
+            ],
+            "--flash-attn": [
+              "on"
+            ],
+            "--spec-type": [
+              "none"
+            ],
+            "--jinja": [
+              true
+            ],
+            "--reasoning": [
+              "off"
+            ],
+            "--metrics": [
+              true
+            ],
+            "--slots": [
+              true
+            ],
+            "--no-warmup": [
+              true
+            ]
+          },
+          "environment": {},
+          "container_environment": {}
+        }
+      ],
+      "exact_measured_launch_command": "docker run --cidfile /home/loopwhile/v100-llm-test-wbs5/e2e2e97450cb/results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/runtime/container-0.cid --label experiment=EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001 --rm --pull=never --name exp-v100-wbs5-ornith35-llama-r2-perf-20260928-001-backend-0 --label project=v100-llm-test --gpus '\"device=0,1\"' -p 127.0.0.1:18080:8080 -v /srv/models/ornith-1.5-35b-a3b-gguf/Ornith-1.5-35B-Q4_K_M.gguf:/model/target.gguf:ro --entrypoint llama-server kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149 -m /model/target.gguf --host 0.0.0.0 --port 8080 -ngl all --split-mode layer --tensor-split 1,1 --ctx-size 262144 --parallel 2 --kv-unified --kv-unified-per-slot 131072 --batch-size 512 --ubatch-size 256 --cache-type-k q8_0 --cache-type-v q8_0 --flash-attn on --spec-type none --jinja --reasoning off --metrics --slots --no-warmup",
+      "effective_host_environment": [
+        {
+          "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+          "LANG": "C.UTF-8",
+          "HOME": "/home/loopwhile"
+        }
+      ],
+      "container_environment_overrides": [
+        {}
+      ],
+      "resolved_environment_receipt": "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/runtime/effective-environment.json",
+      "gateway": null,
+      "workload": {
+        "path": "workloads/performance/v1.json",
+        "sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "context_per_request": 131072,
+        "requests": [
+          "project-a",
+          "project-b"
+        ],
+        "output_reserve": 4096,
+        "min_output": 1024
+      },
+      "sampling": {
+        "temperature": 0,
+        "top_p": 1,
+        "seed": 520
+      },
+      "metrics": {
+        "context_tokens": 131072,
+        "concurrency": 2,
+        "intended_requests": 2,
+        "completed_requests": 2,
+        "output_passed_requests": 2,
+        "batch_wall_s": 1038.9901954230008,
+        "submission_skew_s": 0.005583967998973094,
+        "ttft_ms": 670090.7857649999,
+        "prefill_tps": 229.75013400216693,
+        "mean_request_decode_tps": 15.696554966961038,
+        "aggregate_decode_tps": 7.227931239549493,
+        "end_to_end_output_tps": 4.505336066327593,
+        "c1_128k": false,
+        "c2_resident": true,
+        "c2_active": true,
+        "queue_only": false,
+        "peak_vram_gpu0_mib": 13103.0,
+        "peak_vram_gpu1_mib": 12581.0,
+        "verdict": "PASS_C2_ACTIVE",
+        "concurrency_verdict": "PASS_C2_ACTIVE",
+        "mechanical_output_verdict": "PASS",
+        "total_output_tokens": 4681,
+        "candidate_id": "ORN35-LLAMA-WBS5-R2-UB256",
+        "workload_manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca"
+      },
+      "request_metrics": [
+        {
+          "request_id": "project-a",
+          "actual_output_tokens": 1832,
+          "ttft_ms": 948907.27883,
+          "prefill_tps": 133.8295078365701,
+          "decode_tps": 26.995485340493126,
+          "verdict": "PASS"
+        },
+        {
+          "request_id": "project-b",
+          "actual_output_tokens": 2849,
+          "ttft_ms": 391274.29269999993,
+          "prefill_tps": 325.6707601677638,
+          "decode_tps": 4.397624593428952,
+          "verdict": "PASS"
+        }
+      ],
+      "tokenization": {
+        "items": [
+          {
+            "request_id": "project-a",
+            "receipt": {
+              "source": "llama tokenizer",
+              "prompt_tokens": 126975,
+              "formatted_prompt_sha256": "9539b390e52a2bd30974b1a5e52c89f74e8ac8c57e64867fdbd75ea5dd23d69a"
+            },
+            "error": null
+          },
+          {
+            "request_id": "project-b",
+            "receipt": {
+              "source": "llama tokenizer",
+              "prompt_tokens": 126976,
+              "formatted_prompt_sha256": "88c27de8b4f22a688c696af5e89e4bc1c73dabf9f31e0370f008fdaa57865c50"
+            },
+            "error": null
+          }
+        ]
+      },
+      "post_health": {
+        "healthy": true,
+        "at_utc": "2026-09-28T15:02:02.464721+00:00"
+      },
+      "graph_evidence": {
+        "status": "OBSERVED",
+        "reuse_count": 4396,
+        "scope": "server lifetime, includes startup/routing preflight if present; not necessarily measured-window hits",
+        "raw_logs_preserved": true
+      },
+      "speculative_evidence": {
+        "aggregate": {
+          "draft_tokens": 0.0,
+          "accepted_tokens": 0.0,
+          "draft_count": 0.0,
+          "acceptance_ratio": null
+        },
+        "backends": {
+          "root": {
+            "draft_tokens": 0.0,
+            "accepted_tokens": 0.0,
+            "draft_count": 0.0
+          }
+        },
+        "source": "llama.cpp /metrics before/after measured window",
+        "status": "OBSERVED"
+      },
+      "gpu_telemetry_summary": {
+        "0": {
+          "power.draw": {
+            "status": "OBSERVED",
+            "min": 26.52,
+            "max": 138.32,
+            "samples": 517
+          },
+          "temperature.gpu": {
+            "status": "OBSERVED",
+            "min": 44.0,
+            "max": 62.0,
+            "samples": 517
+          },
+          "clocks.sm": {
+            "status": "OBSERVED",
+            "min": 135.0,
+            "max": 1200.0,
+            "samples": 517
+          },
+          "clocks.mem": {
+            "status": "OBSERVED",
+            "min": 877.0,
+            "max": 877.0,
+            "samples": 517
+          },
+          "utilization.gpu": {
+            "status": "OBSERVED",
+            "min": 0.0,
+            "max": 96.0,
+            "samples": 517
+          }
+        },
+        "1": {
+          "power.draw": {
+            "status": "OBSERVED",
+            "min": 27.0,
+            "max": 138.79,
+            "samples": 517
+          },
+          "temperature.gpu": {
+            "status": "OBSERVED",
+            "min": 41.0,
+            "max": 56.0,
+            "samples": 517
+          },
+          "clocks.sm": {
+            "status": "OBSERVED",
+            "min": 135.0,
+            "max": 1200.0,
+            "samples": 517
+          },
+          "clocks.mem": {
+            "status": "OBSERVED",
+            "min": 877.0,
+            "max": 877.0,
+            "samples": 517
+          },
+          "utilization.gpu": {
+            "status": "OBSERVED",
+            "min": 0.0,
+            "max": 96.0,
+            "samples": 517
+          }
+        }
+      },
+      "telemetry_limitation": "VRAM peak sampled every 0.5s; power/temp/clocks sampled every 2s. TPS definitions unchanged.",
+      "limitations": [
+        "R0 대비 prefill +20.03%, TTFT -15.33%, wall -11.68%; GPU당 peak +272 MiB. Decode 가속을 주장하지 않는다.",
+        "R1 native MTP1과 결합한 설정 및 효과의 가산성은 검증하지 않았다."
+      ],
+      "source_document": "docs/WBS-5 - Ornith 1.5 35B-A3B - llama.cpp.md",
+      "review_document": "docs/WBS-5.3.3.5-result-review.md",
+      "report": "reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001.md",
+      "evidence_sha256": {
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/config.json": "2b67d8225a217de87b3284bca0e3a9612709987437217717dbcc496f74186d71",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/metrics.json": "1a459154de0351fe03d0b8dcdcc08dcacbc03232a3bde019a1e3e720de5bf886",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/requests.json": "c8319944b8635052a7decbc955c0a9f398e122d61a173356c6494d93221f0559",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/completion.json": "ea579268592bf8b57368b302c78fdeec2048908cd8fb2e57980cabdc1f604821",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/health-after.json": "6f022408845cd71e2224261ebd5f08c06d7d81cdcd4ae7d1a77057b03e8f6cb4",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/tokenization.json": "8351fe7f38b7f97454653bb1a254da874a55691c0b15da153e3d9b64f27b76fe",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/wbs5-evidence.json": "23d2b0af474fea8b5a152bb5d8740b475d5235d7179cf282a414d674f6a7915e",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/overlap-evidence.json": "d6461df6df5764b77e96fc9fb91c7127a5ec7294dc6e00886833a82638d7d19f",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/gpu-peak.json": "7273e3868efd8aaa0d42ab0e08a3e12d1a52f5aa7f5acda1d18040d4fd9d199f",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/graph-evidence.json": "4be8d5ec5b613ad51409ba79853456fe594b5b0a62a73881b7b22b5362dae106",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/speculative-evidence.json": "d3c42815f9298b3a51806a4c7340c374abb91d340026f539dca6fbf72646b229",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/runtime/preflight.json": "d0a5e5351fcf09e3973e23c79abc01ca8d96961a68b1875ff2c8c5c3c6972ba0",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/runtime/artifact-check.json": "7968093df8d2202a3fc65361ad06006a5c40a2be6cf9196cc8dc49c95c3ff257",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/runtime/pre-run-receipt.json": "e86af48e16a24e5e1f509a47e0464daf637dc9fbf1f2b3c261de8d990ad74327",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/runtime/effective-environment.json": "98d96b3819bd6fe975507e6e6e0bccafcaca916e83bc0d70cb7412b04b164bcd",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/runtime/runtime-version.txt": "6c7f147ae72876955585308dbcbe61039f5b6d3cfda4ee11e17c3040e34555e3",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/runtime/gpu-telemetry.jsonl": "34d007f8f278a37d50eeb510d5aab9c092f37424a7e365f6548f8a4108b335cc",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/runtime/server-0.log": "88dbe2c2f85e28896988373ac93f1806b7f405647a0be2deb83478f9fe5d399f",
+        "results/raw/EXP-V100-WBS5-ORNITH35-LLAMA-R2-PERF-20260928-001/log-overlap-evidence.json": "724c77a2f62cb424edfa61a71bc1349a1c7b1e8e9935882936c93a0500fe9289"
+      },
+      "promotion_checks": {
+        "frozen_identity_delta_invariants": "PASS",
+        "artifact_receipt": "PASS",
+        "preflight": "PASS",
+        "workload_and_128k_token_budget": "PASS",
+        "c2_active_and_output_integrity": "PASS",
+        "post_health": "PASS",
+        "telemetry_preserved": "PASS",
+        "published_report_and_csv": "PASS",
+        "conditional_gate": "NOT_APPLICABLE"
+      }
+    },
+    {
+      "track": "gemma-llama",
+      "candidate_key": "R0",
+      "candidate_id": "G4-LCPP-WBS5-R0-TARGET-B512-UB128",
+      "status": "VALIDATED_RECIPE",
+      "orientation": "BASELINE",
+      "experiment_id": "EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001",
+      "measured_runs_used": 1,
+      "validation_scope": "performance/v1 C2 active + mechanical output integrity; no new semantic qualification",
+      "model_identity": {
+        "repository": "unsloth/gemma-4-26B-A4B-it-qat-GGUF",
+        "revision": "7b92b5b28818151e8669af2e45e88d6086f490dd",
+        "path": "/srv/models/gemma-4-26b-a4b-it-qat-gguf/gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf",
+        "filename": "gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf",
+        "sha256": "a7c5bc715f5ff8e99a3e8901ce7d2b42b402c669bf24f7c5250747633d0f5891",
+        "weight_quant": "UD-Q4_K_XL"
+      },
+      "artifact_verification": {
+        "path": "/srv/models/gemma-4-26b-a4b-it-qat-gguf/gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf",
+        "expected": "a7c5bc715f5ff8e99a3e8901ce7d2b42b402c669bf24f7c5250747633d0f5891",
+        "actual": "a7c5bc715f5ff8e99a3e8901ce7d2b42b402c669bf24f7c5250747633d0f5891"
+      },
+      "runtime_identity": {
+        "family": "kyuz0/nvidia-v100-ai-toolboxes",
+        "image": "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149",
+        "build": 10775,
+        "commit": "67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
+        "cuda_cudart": "12.6.77-1",
+        "cuda_cublas": "12.6.4.1-1",
+        "status": "bootstrap_pin_requires_fresh_verification"
+      },
+      "runtime_version_observed": "version: 0.3.0-dev (build 10775, commit 67a17c17c)\nbuilt with GNU 11.4.0 for Linux x86_64",
+      "weight_quant": "UD-Q4_K_XL",
+      "kv_dtype": "FP16",
+      "speculative": "target-only",
+      "speculative_depth": 0,
+      "topology": "tp2-shared",
+      "context_per_request": 131072,
+      "measured_concurrency": 2,
+      "configuration_sha256": "e2075376ea251e443dc7e1994f05aaf80478829c89cc79bcdebf26d5c063be9a",
+      "normalized_delta_from_r0": [],
+      "serving_arguments": [
+        {
+          "wrapper": [
+            "docker",
+            "run",
+            "--rm",
+            "--pull=never",
+            "--name",
+            "v100-test-18080",
+            "--label",
+            "project=v100-llm-test",
+            "--gpus",
+            "\"device=0,1\"",
+            "-p",
+            "127.0.0.1:18080:8080",
+            "-v",
+            "/srv/models/gemma-4-26b-a4b-it-qat-gguf/gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf:/model/target.gguf:ro",
+            "--entrypoint",
+            "llama-server",
+            "kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149"
+          ],
+          "argv": {
+            "-m": [
+              "/model/target.gguf"
+            ],
+            "--host": [
+              "0.0.0.0"
+            ],
+            "--port": [
+              "8080"
+            ],
+            "-ngl": [
+              "all"
+            ],
+            "--split-mode": [
+              "layer"
+            ],
+            "--tensor-split": [
+              "1,1"
+            ],
+            "--ctx-size": [
+              "262144"
+            ],
+            "--parallel": [
+              "2"
+            ],
+            "--kv-unified": [
+              true
+            ],
+            "--kv-unified-per-slot": [
+              "131072"
+            ],
+            "--batch-size": [
+              "512"
+            ],
+            "--ubatch-size": [
+              "128"
+            ],
+            "--cache-type-k": [
+              "f16"
+            ],
+            "--cache-type-v": [
+              "f16"
+            ],
+            "--flash-attn": [
+              "on"
+            ],
+            "--spec-type": [
+              "none"
+            ],
+            "--jinja": [
+              true
+            ],
+            "--reasoning": [
+              "off"
+            ],
+            "--metrics": [
+              true
+            ],
+            "--slots": [
+              true
+            ],
+            "--no-warmup": [
+              true
+            ]
+          },
+          "environment": {},
+          "container_environment": {}
+        }
+      ],
+      "exact_measured_launch_command": "docker run --cidfile /home/loopwhile/v100-llm-test-wbs5/ceb8cc92b537/results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/runtime/container-0.cid --label experiment=EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001 --rm --pull=never --name exp-v100-wbs5-gemma-llama-r0-perf-20260928-001-backend-0 --label project=v100-llm-test --gpus '\"device=0,1\"' -p 127.0.0.1:18080:8080 -v /srv/models/gemma-4-26b-a4b-it-qat-gguf/gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf:/model/target.gguf:ro --entrypoint llama-server kyuz0/nvidia-v100-ai-toolboxes@sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149 -m /model/target.gguf --host 0.0.0.0 --port 8080 -ngl all --split-mode layer --tensor-split 1,1 --ctx-size 262144 --parallel 2 --kv-unified --kv-unified-per-slot 131072 --batch-size 512 --ubatch-size 128 --cache-type-k f16 --cache-type-v f16 --flash-attn on --spec-type none --jinja --reasoning off --metrics --slots --no-warmup",
+      "effective_host_environment": [
+        {
+          "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+          "LANG": "C.UTF-8",
+          "HOME": "/home/loopwhile"
+        }
+      ],
+      "container_environment_overrides": [
+        {}
+      ],
+      "resolved_environment_receipt": "results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/runtime/effective-environment.json",
+      "gateway": null,
+      "workload": {
+        "path": "workloads/performance/v1.json",
+        "sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "context_per_request": 131072,
+        "requests": [
+          "project-a",
+          "project-b"
+        ],
+        "output_reserve": 4096,
+        "min_output": 1024
+      },
+      "sampling": {
+        "temperature": 0,
+        "top_p": 1,
+        "seed": 520
+      },
+      "metrics": {
+        "context_tokens": 131072,
+        "concurrency": 2,
+        "intended_requests": 2,
+        "completed_requests": 2,
+        "output_passed_requests": 2,
+        "batch_wall_s": 671.5400454530027,
+        "submission_skew_s": 0.005340761003026273,
+        "ttft_ms": 439098.0692069988,
+        "prefill_tps": 359.0895339559505,
+        "mean_request_decode_tps": 22.53880271579031,
+        "aggregate_decode_tps": 7.543461621592347,
+        "end_to_end_output_tps": 4.784524797523575,
+        "c1_128k": false,
+        "c2_resident": true,
+        "c2_active": true,
+        "queue_only": false,
+        "peak_vram_gpu0_mib": 10039.0,
+        "peak_vram_gpu1_mib": 10537.0,
+        "verdict": "PASS_C2_ACTIVE",
+        "concurrency_verdict": "PASS_C2_ACTIVE",
+        "mechanical_output_verdict": "PASS",
+        "total_output_tokens": 3213,
+        "candidate_id": "G4-LCPP-WBS5-R0-TARGET-B512-UB128",
+        "workload_manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca"
+      },
+      "request_metrics": [
+        {
+          "request_id": "project-a",
+          "actual_output_tokens": 1603,
+          "ttft_ms": 632645.0999539993,
+          "prefill_tps": 200.74320597089263,
+          "decode_tps": 41.25954204174776,
+          "verdict": "PASS"
+        },
+        {
+          "request_id": "project-b",
+          "actual_output_tokens": 1610,
+          "ttft_ms": 245551.03845999838,
+          "prefill_tps": 517.4358619410084,
+          "decode_tps": 3.818063389832865,
+          "verdict": "PASS"
+        }
+      ],
+      "tokenization": {
+        "items": [
+          {
+            "request_id": "project-a",
+            "receipt": {
+              "source": "llama tokenizer",
+              "prompt_tokens": 126975,
+              "formatted_prompt_sha256": "e6d88ebb16bef4b120864a2abbd67c13c4152776d5c657333da0753817b4e8f6"
+            },
+            "error": null
+          },
+          {
+            "request_id": "project-b",
+            "receipt": {
+              "source": "llama tokenizer",
+              "prompt_tokens": 126976,
+              "formatted_prompt_sha256": "b9342fa7c73a027ea15b0198d56e160d4cfafb1b5c079ec20a111f5dfb75fcc0"
+            },
+            "error": null
+          }
+        ]
+      },
+      "post_health": {
+        "healthy": true,
+        "at_utc": "2026-09-28T15:54:34.432504+00:00"
+      },
+      "graph_evidence": {
+        "status": "OBSERVED",
+        "reuse_count": 4425,
+        "scope": "server lifetime, includes startup/routing preflight if present; not necessarily measured-window hits",
+        "raw_logs_preserved": true
+      },
+      "speculative_evidence": {
+        "aggregate": {
+          "draft_tokens": 0.0,
+          "accepted_tokens": 0.0,
+          "draft_count": 0.0,
+          "acceptance_ratio": null
+        },
+        "backends": {
+          "root": {
+            "draft_tokens": 0.0,
+            "accepted_tokens": 0.0,
+            "draft_count": 0.0
+          }
+        },
+        "source": "llama.cpp /metrics before/after measured window",
+        "status": "OBSERVED"
+      },
+      "gpu_telemetry_summary": {
+        "0": {
+          "power.draw": {
+            "status": "OBSERVED",
+            "min": 26.04,
+            "max": 169.0,
+            "samples": 336
+          },
+          "temperature.gpu": {
+            "status": "OBSERVED",
+            "min": 42.0,
+            "max": 61.0,
+            "samples": 336
+          },
+          "clocks.sm": {
+            "status": "OBSERVED",
+            "min": 135.0,
+            "max": 1200.0,
+            "samples": 336
+          },
+          "clocks.mem": {
+            "status": "OBSERVED",
+            "min": 877.0,
+            "max": 877.0,
+            "samples": 336
+          },
+          "utilization.gpu": {
+            "status": "OBSERVED",
+            "min": 0.0,
+            "max": 98.0,
+            "samples": 336
+          }
+        },
+        "1": {
+          "power.draw": {
+            "status": "OBSERVED",
+            "min": 26.52,
+            "max": 161.46,
+            "samples": 336
+          },
+          "temperature.gpu": {
+            "status": "OBSERVED",
+            "min": 40.0,
+            "max": 58.0,
+            "samples": 336
+          },
+          "clocks.sm": {
+            "status": "OBSERVED",
+            "min": 135.0,
+            "max": 1200.0,
+            "samples": 336
+          },
+          "clocks.mem": {
+            "status": "OBSERVED",
+            "min": 877.0,
+            "max": 877.0,
+            "samples": 336
+          },
+          "utilization.gpu": {
+            "status": "OBSERVED",
+            "min": 0.0,
+            "max": 98.0,
+            "samples": 336
+          }
+        }
+      },
+      "telemetry_limitation": "VRAM peak sampled every 0.5s; power/temp/clocks sampled every 2s. TPS definitions unchanged.",
+      "limitations": [
+        "R1 NGRAM은 성능 악화, R2 b1024는 intended prefill/TTFT 이득이 없어 제외했다.",
+        "Graph reuse가 관측됐지만 R0의 VRAM upward drift/graph instability는 없어서 Gate B는 NOT_TRIGGERED, R3는 SKIPPED다.",
+        "WBS5 recipe는 TARGET만 사용한다. 별도 MTP companion 및 WBS2/3 MTP 결과를 이 성능 레시피에 합치지 않는다."
+      ],
+      "source_document": "docs/WBS-5 - Gemma4 26B A4B - llama.cpp.md",
+      "review_document": "docs/WBS-5.3.4.6-result-review.md",
+      "report": "reports/gemma4-26b-a4b/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001.md",
+      "evidence_sha256": {
+        "results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/config.json": "8f891368b85aa442726d9dba1e484b484687bc093f5ffd0ac2f402ba94aa8e2d",
+        "results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/metrics.json": "9896dd41afe84a7ade810648c65adda9d2e412f6794bb24b1115c16d65727fce",
+        "results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/requests.json": "7c4aee808afb53453776a4d22f6afd1c4377430bd971cee094f83ae3e4c8a351",
+        "results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/completion.json": "8f54035c8f528f4fc1604b74052bd86dea881d35011fb6da10b9b35ec62aeb1d",
+        "results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/health-after.json": "e4891265fc0df7e4152a7277b09121bbe8f8a21a0d600f1ecd0dc62d57142c51",
+        "results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/tokenization.json": "d2b687f924bb24af36654dee18d4bd580febf235396c773f6cf9529a733a2a55",
+        "results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/wbs5-evidence.json": "b3f5fe3e93164c674f840ab4286899403833c486db6909061a0dd16baf0b8baa",
+        "results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/overlap-evidence.json": "973efe1963bac6df374369821e29abea489120b68ea8f2e68212b04cde76182b",
+        "results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/gpu-peak.json": "ca75c2ea650c501fa65eea8dd6b7ba73f6822b0f4e48a437f4acec2abd20d102",
+        "results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/graph-evidence.json": "06ce04c125a67cfaf8ab1813fc2d03ee3db923715a1a1afa2d730a808fe2d24b",
+        "results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/speculative-evidence.json": "d3c42815f9298b3a51806a4c7340c374abb91d340026f539dca6fbf72646b229",
+        "results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/runtime/preflight.json": "37bb7f53c3786c7b86c4c0b9d52a2bfea2f79e32c135e08a1612df14420ae236",
+        "results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/runtime/artifact-check.json": "1c2b3a27b5bd42ada8e9e048b2cff8beaa65bbda9e8777ac1a5ae10449116bd4",
+        "results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/runtime/pre-run-receipt.json": "f1240bea9fe7d0c552480a063e746650920ae39d46a288c2564ecaa563a69c51",
+        "results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/runtime/effective-environment.json": "98d96b3819bd6fe975507e6e6e0bccafcaca916e83bc0d70cb7412b04b164bcd",
+        "results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/runtime/runtime-version.txt": "6c7f147ae72876955585308dbcbe61039f5b6d3cfda4ee11e17c3040e34555e3",
+        "results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/runtime/gpu-telemetry.jsonl": "c8be125a4d9d4ba3be8a12b9b4057b589021cc2c436696aba432b02b865c26f9",
+        "results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/runtime/server-0.log": "338b0dfc4e2fcf24a75044724a8af8aabbfa3f70f50d5bf4d0c0bf1fd1f6a535",
+        "results/raw/EXP-V100-WBS5-GEMMA-LLAMA-R0-PERF-20260928-001/log-overlap-evidence.json": "6083956aebfef9679ecded6a11e9650dbb43e46fa8b5680135cc33163766ded2"
+      },
+      "promotion_checks": {
+        "frozen_identity_delta_invariants": "PASS",
+        "artifact_receipt": "PASS",
+        "preflight": "PASS",
+        "workload_and_128k_token_budget": "PASS",
+        "c2_active_and_output_integrity": "PASS",
+        "post_health": "PASS",
+        "telemetry_preserved": "PASS",
+        "published_report_and_csv": "PASS",
+        "conditional_gate": "NOT_APPLICABLE"
+      }
+    },
+    {
+      "track": "ornith35-onecat",
+      "candidate_key": "R0",
+      "candidate_id": "R0-BASELINE-EAGER-MBT4096",
+      "status": "VALIDATED_RECIPE",
+      "orientation": "BASELINE_EAGER",
+      "experiment_id": "EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001",
+      "measured_runs_used": 1,
+      "validation_scope": "performance/v1 C2 active + mechanical output integrity; no new semantic qualification",
+      "model_identity": {
+        "repository": "ornith-ai/Ornith-1.5-35B-A3B-NVFP4",
+        "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa",
+        "path": "/srv/models/ornith-1.5-35b-a3b-nvfp4",
+        "filename": null,
+        "sha256": null,
+        "weight_quant": "NVFP4"
+      },
+      "artifact_verification": {
+        "path": "/srv/models/ornith-1.5-35b-a3b-nvfp4",
+        "repository": "ornith-ai/Ornith-1.5-35B-A3B-NVFP4",
+        "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa",
+        "files": {
+          "config.json": {
+            "expected": "319ee1293a279a57990fcfc18fdb533101ffaf264a990a7d0bcb1c3d24fc720d",
+            "actual": "319ee1293a279a57990fcfc18fdb533101ffaf264a990a7d0bcb1c3d24fc720d",
+            "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa"
+          },
+          "model-00001-of-00003.safetensors": {
+            "expected": "648fe83171485f4be03ea58d86089e088c94c2a3dc88922233f9002f30d8bc8b",
+            "actual": "648fe83171485f4be03ea58d86089e088c94c2a3dc88922233f9002f30d8bc8b",
+            "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa"
+          },
+          "model-00002-of-00003.safetensors": {
+            "expected": "cb5c5978721a1e87406ae68f1cd5a855326e40ff8bc13832644c392115336987",
+            "actual": "cb5c5978721a1e87406ae68f1cd5a855326e40ff8bc13832644c392115336987",
+            "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa"
+          },
+          "model-00003-of-00003.safetensors": {
+            "expected": "8303cef7d375021d69dcafc60d3fad5f8186995b18b0db5e2a609aadeb8a4f51",
+            "actual": "8303cef7d375021d69dcafc60d3fad5f8186995b18b0db5e2a609aadeb8a4f51",
+            "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa"
+          },
+          "model.safetensors.index.json": {
+            "expected": "52af7e400d0138ffde60f127fbf3ce494e6ebf682748f7e44545c25b68d28128",
+            "actual": "52af7e400d0138ffde60f127fbf3ce494e6ebf682748f7e44545c25b68d28128",
+            "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa"
+          },
+          "tokenizer.json": {
+            "expected": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+            "actual": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+            "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa"
+          },
+          "tokenizer_config.json": {
+            "expected": "5186f0defcd7f232382c7f0aebcd2252d073bb921ab240e407b7ae8745d2b29b",
+            "actual": "5186f0defcd7f232382c7f0aebcd2252d073bb921ab240e407b7ae8745d2b29b",
+            "revision": "94e431d9cc47fa1986a7a1a4e9a80f7f118b03aa"
+          }
+        }
+      },
+      "runtime_identity": {
+        "family": "1CatAI/1Cat-vLLM",
+        "version": "1.5.0",
+        "wheel": "1cat_vllm-1.5.0-cp312-cp312-linux_x86_64.whl",
+        "sha256": "2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b",
+        "torch": "2.10.0+cu128",
+        "cuda_userspace": "12.8",
+        "flash_attn_v100": "1.2.0",
+        "status": "bootstrap_pin_requires_fresh_verification"
+      },
+      "runtime_version_observed": "1.5.0",
+      "weight_quant": "NVFP4",
+      "kv_dtype": "fp8_e5m2",
+      "speculative": "target-only",
+      "speculative_depth": 0,
+      "topology": "tp2-shared",
+      "context_per_request": 131072,
+      "measured_concurrency": 2,
+      "configuration_sha256": "946509b6573e5c4209347ae6168fa23184d9769dbac7ac344e1e9a4ef8f4329c",
+      "normalized_delta_from_r0": [],
+      "serving_arguments": [
+        {
+          "wrapper": [
+            "/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python",
+            "-m",
+            "vllm.entrypoints.openai.api_server"
+          ],
+          "argv": {
+            "--model": [
+              "/srv/models/ornith-1.5-35b-a3b-nvfp4"
+            ],
+            "--served-model-name": [
+              "Ornith-1.5-35B-A3B"
+            ],
+            "--trust-remote-code": [
+              true
+            ],
+            "--dtype": [
+              "half"
+            ],
+            "--attention-backend": [
+              "FLASH_ATTN_V100"
+            ],
+            "--tensor-parallel-size": [
+              "2"
+            ],
+            "--kv-cache-dtype": [
+              "fp8_e5m2"
+            ],
+            "--max-model-len": [
+              "131072"
+            ],
+            "--max-num-seqs": [
+              "2"
+            ],
+            "--max-num-batched-tokens": [
+              "4096"
+            ],
+            "--gpu-memory-utilization": [
+              "0.90"
+            ],
+            "--enforce-eager": [
+              true
+            ],
+            "--host": [
+              "127.0.0.1"
+            ],
+            "--port": [
+              "18080"
+            ]
+          },
+          "environment": {
+            "CUDA_VISIBLE_DEVICES": "0,1",
+            "VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL": "0",
+            "PYTHONPATH": "/home/loopwhile/v100-llm-test-wbs5/8b0c43079ad9/scripts/runtime_hooks"
+          }
+        }
+      ],
+      "exact_measured_launch_command": "/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python -m vllm.entrypoints.openai.api_server --model /srv/models/ornith-1.5-35b-a3b-nvfp4 --served-model-name Ornith-1.5-35B-A3B --trust-remote-code --dtype half --attention-backend FLASH_ATTN_V100 --tensor-parallel-size 2 --kv-cache-dtype fp8_e5m2 --max-model-len 131072 --max-num-seqs 2 --max-num-batched-tokens 4096 --gpu-memory-utilization 0.90 --enforce-eager --host 127.0.0.1 --port 18080",
+      "effective_host_environment": [
+        {
+          "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+          "LANG": "C.UTF-8",
+          "HOME": "/home/loopwhile",
+          "CUDA_VISIBLE_DEVICES": "0,1",
+          "VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL": "0",
+          "PYTHONPATH": "/home/loopwhile/v100-llm-test-wbs5/8b0c43079ad9/scripts/runtime_hooks"
+        }
+      ],
+      "container_environment_overrides": [
+        {}
+      ],
+      "resolved_environment_receipt": "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/runtime/effective-environment.json",
+      "gateway": null,
+      "workload": {
+        "path": "workloads/performance/v1.json",
+        "sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "context_per_request": 131072,
+        "requests": [
+          "project-a",
+          "project-b"
+        ],
+        "output_reserve": 4096,
+        "min_output": 1024
+      },
+      "sampling": {
+        "temperature": 0,
+        "top_p": 1,
+        "seed": 520
+      },
+      "metrics": {
+        "context_tokens": 131072,
+        "concurrency": 2,
+        "intended_requests": 2,
+        "completed_requests": 2,
+        "output_passed_requests": 2,
+        "batch_wall_s": 282.74006375300087,
+        "submission_skew_s": 0.005180030999326846,
+        "ttft_ms": 109616.16300399965,
+        "prefill_tps": 1456.9597796297003,
+        "mean_request_decode_tps": 8.014799592371741,
+        "aggregate_decode_tps": 11.482181712895738,
+        "end_to_end_output_tps": 9.043642298368342,
+        "c1_128k": false,
+        "c2_resident": true,
+        "c2_active": true,
+        "queue_only": false,
+        "peak_vram_gpu0_mib": 14765.0,
+        "peak_vram_gpu1_mib": 14765.0,
+        "verdict": "PASS_C2_ACTIVE",
+        "concurrency_verdict": "PASS_C2_ACTIVE",
+        "mechanical_output_verdict": "PASS",
+        "total_output_tokens": 2557,
+        "candidate_id": "R0-BASELINE-EAGER-MBT4096",
+        "workload_manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca"
+      },
+      "request_metrics": [
+        {
+          "request_id": "project-a",
+          "actual_output_tokens": 1246,
+          "ttft_ms": 159240.0289540001,
+          "prefill_tps": 797.3811662435671,
+          "decode_tps": 10.142567418765259,
+          "verdict": "PASS"
+        },
+        {
+          "request_id": "project-b",
+          "actual_output_tokens": 1311,
+          "ttft_ms": 59992.29705399921,
+          "prefill_tps": 2116.538393015833,
+          "decode_tps": 5.887031765978222,
+          "verdict": "PASS"
+        }
+      ],
+      "tokenization": {
+        "items": [
+          {
+            "request_id": "project-a",
+            "receipt": {
+              "source": "vllm tokenizer",
+              "prompt_tokens": 126975
+            },
+            "error": null
+          },
+          {
+            "request_id": "project-b",
+            "receipt": {
+              "source": "vllm tokenizer",
+              "prompt_tokens": 126976
+            },
+            "error": null
+          }
+        ]
+      },
+      "post_health": {
+        "healthy": true,
+        "at_utc": "2026-09-29T09:47:24.957550+00:00"
+      },
+      "graph_evidence": {
+        "status": "UNKNOWN",
+        "reuse_count": null,
+        "scope": "server lifetime, includes startup/routing preflight if present; not necessarily measured-window hits",
+        "raw_logs_preserved": true
+      },
+      "speculative_evidence": {
+        "aggregate": {
+          "draft_tokens": null,
+          "accepted_tokens": null,
+          "draft_count": null,
+          "acceptance_ratio": null
+        },
+        "backends": {
+          "root": {
+            "draft_tokens": null,
+            "accepted_tokens": null,
+            "draft_count": null
+          }
+        },
+        "source": "1Cat-vLLM /metrics before/after measured window",
+        "status": "UNKNOWN"
+      },
+      "gpu_telemetry_summary": {
+        "0": {
+          "power.draw": {
+            "status": "OBSERVED",
+            "min": 26.5,
+            "max": 206.84,
+            "samples": 224
+          },
+          "temperature.gpu": {
+            "status": "OBSERVED",
+            "min": 44.0,
+            "max": 69.0,
+            "samples": 224
+          },
+          "clocks.sm": {
+            "status": "OBSERVED",
+            "min": 135.0,
+            "max": 1200.0,
+            "samples": 224
+          },
+          "clocks.mem": {
+            "status": "OBSERVED",
+            "min": 877.0,
+            "max": 877.0,
+            "samples": 224
+          },
+          "utilization.gpu": {
+            "status": "OBSERVED",
+            "min": 0.0,
+            "max": 100.0,
+            "samples": 224
+          }
+        },
+        "1": {
+          "power.draw": {
+            "status": "OBSERVED",
+            "min": 27.0,
+            "max": 191.8,
+            "samples": 224
+          },
+          "temperature.gpu": {
+            "status": "OBSERVED",
+            "min": 41.0,
+            "max": 63.0,
+            "samples": 224
+          },
+          "clocks.sm": {
+            "status": "OBSERVED",
+            "min": 135.0,
+            "max": 1200.0,
+            "samples": 224
+          },
+          "clocks.mem": {
+            "status": "OBSERVED",
+            "min": 877.0,
+            "max": 877.0,
+            "samples": 224
+          },
+          "utilization.gpu": {
+            "status": "OBSERVED",
+            "min": 0.0,
+            "max": 100.0,
+            "samples": 224
+          }
+        }
+      },
+      "telemetry_limitation": "VRAM peak sampled every 0.5s; power/temp/clocks sampled every 2s. TPS definitions unchanged.",
+      "limitations": [
+        "R1 graph-auto는 FAIL_OUTPUT, R2 MBT8192는 prefill/latency 이득이 없어 baseline eager를 유지했다.",
+        "런타임 로그는 speculative_config=None, enforce_eager=True, cudagraph_mode=NONE, enable_prefix_caching=True, enable_chunked_prefill=True를 기록한다. Graph evidence extractor의 UNKNOWN은 graph 가속 증거로 쓰지 않는다.",
+        "Wheel SHA는 보존된 wheel receipt와 static review로 연결한다. 설치 package tree 전체가 wheel과 byte-identical하다는 독립 검증은 없다."
+      ],
+      "source_document": "docs/WBS-5 - Ornith 1.5 35B-A3B - 1Cat-vLLM.md",
+      "review_document": "docs/WBS-5.4.3.4-result-review.md",
+      "report": "reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001.md",
+      "evidence_sha256": {
+        "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/config.json": "d043f0118263d86241d43387d78105d3d353ede5530ff26c8a8e9ba60af54f82",
+        "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/metrics.json": "ab7bfa1c8b7791b6e447958103e37533185e829611ef58665cfe6da487e17905",
+        "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/requests.json": "b8da06e88f9cf2656fd31798dfc4ec46f73f0b49c3668be05c88963d7326faec",
+        "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/completion.json": "3f1db9f4700b3d1a7ea86870f089e0cd8e2201880ed647b6729f586a7627c5eb",
+        "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/health-after.json": "2f38c54dd984d536da37bd98af85601ed6d4afc416744f4346119a0c7dfdce7d",
+        "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/tokenization.json": "265310f50011873b0ab3620769d7f4b8ca1f3f4e7c7d9aa0084f154e31e6d565",
+        "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/wbs5-evidence.json": "bf2b14ef3e524cb2b8f247d7e2ed49c9f18ba1a4fab093a984d34658b4bce10a",
+        "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/overlap-evidence.json": "e01033782d38b41927dbe1c288dc64f99d68b8ac02aff857ccf18acfc633757f",
+        "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/gpu-peak.json": "16fcee9e5001d2b346b4bc247344f476cc8acb8378b3d02973ed867856269b25",
+        "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/graph-evidence.json": "38241a550b6d1f15cdefddb5893a81d7e6bbcbbd16886eb097601d742981b181",
+        "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/speculative-evidence.json": "42709c4121ff9f07df14b470004069a1950938ed052432c66d336d138d0d13b6",
+        "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/runtime/preflight.json": "4ea73ad8c4ce9b8a861f76d06d2c3c6cadcd28e7bcc7df87e64e1b14fef3797c",
+        "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/runtime/artifact-check.json": "7015ac6d34877db99e15b16818b57f625eb5623b583c37a60cd3a784d3e5530e",
+        "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/runtime/pre-run-receipt.json": "59ce9ecfaa8e89248766e8600aa2a8ae639a4b9a68fae4de9006a5042c542bff",
+        "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/runtime/effective-environment.json": "a414f8dc5ccabc3ba6ff42bb0e5758b69d6c4301324f463789254c61a8639ba3",
+        "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/runtime/runtime-version.txt": "acb57a7135b2d7d6e665f67f056e21353023b93835f54def1ae523bf76f1bfb3",
+        "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/runtime/gpu-telemetry.jsonl": "873dbec15eb1b8558d8f5e69c664cbf9c9abf26702ed79d38d68237ff304bd29",
+        "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001/runtime/server-0.log": "ded8adc5c268b7a495b89fefc102607c1084d04fba9d19fb7a657ada1587dbb8"
+      },
+      "promotion_checks": {
+        "frozen_identity_delta_invariants": "PASS",
+        "artifact_receipt": "PASS",
+        "preflight": "PASS",
+        "workload_and_128k_token_budget": "PASS",
+        "c2_active_and_output_integrity": "PASS",
+        "post_health": "PASS",
+        "telemetry_preserved": "PASS",
+        "published_report_and_csv": "PASS",
+        "conditional_gate": "NOT_APPLICABLE"
+      }
+    }
+  ],
+  "publication_notes": [
+    "Existing raw, experiment reports, results/summary.csv and reports/comparison.csv retain their measured verdicts. Recipe promotion is a separate publication layer.",
+    "Single screening observation per promoted recipe; no confidence interval or universal ranking.",
+    "Ornith9 llama repository identity remains unresolved; validation bounded to exact local artifact.",
+    "Performance mechanical integrity is not semantic coding-quality certification."
+  ]
+}
