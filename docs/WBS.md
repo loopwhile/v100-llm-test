@@ -1522,7 +1522,7 @@ Admission gate:
 - WBS3 Project B semantic discrepancy 때문에 WBS5 measured candidate 전에 별도 **G0 semantic requalification**이 필요하다.
 - G0는 pre-registered WBS3 concurrency semantic oracle를 사용하며 이 planning integration에서 실행하지 않는다.
 - G0 전에 workload/oracle path/hash와 seeded `JobQueue.pop` check -> await -> heappop race가 그대로인지 local validation한다.
-- G0를 통과하기 전에는 WBS5 measured candidate를 실행하지 않는다.
+- G0 PASS 전에는 R1 ~ R3와 final recipe 승격을 차단한다. 사용자 지정 R0 performance diagnostic은 G0 semantic FAIL을 hash-bound evidence로 기록하고 `--performance-diagnostic`을 명시한 경우에만 허용한다. 이 결과는 throughput/VRAM 관찰용이며 semantic PASS 또는 validated recipe로 간주하지 않는다.
 
 실행 순서/stop:
 - local validation: R0 -> R1 -> R2 -> R3.
@@ -1535,7 +1535,7 @@ Admission gate:
 
 이 항목은 WBS5 performance candidate가 아니라 **R0 ~ R3 공통 admission prerequisite**다. pre-registered WBS3 `concurrency/v2.json`과 `v2-ground-truth.json`을 사용한 별도 measured experiment를 수행한다.
 
-첫 시도 `EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001`은 원격 G0 프로세스에 `V100_1CAT_PYTHON`이 전달되지 않아 runtime preflight에서 `INCONCLUSIVE`로 종료했다. raw는 보존하며 새 ID `-002`로 재실행한다. G0 원격 실행은 WBS5 1Cat 후보와 동일한 pinned Python을 사용한다.
+첫 시도 `EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-001`은 원격 G0 프로세스에 `V100_1CAT_PYTHON`이 전달되지 않아 runtime preflight에서 `INCONCLUSIVE`로 종료했다. 이후 `-002`와 사용자 지정 `-003` 모두 raw `PASS_C2_ACTIVE`였지만 Project B가 pre-registered `JobQueue.pop` 결함 대신 `_sequence` 결함을 제시해 semantic audit는 FAIL이다. G0 원격 실행은 WBS5 1Cat 후보와 동일한 pinned Python을 사용한다.
 
 ```bash
 python3 scripts/run_wbs5_remote.py --ornith9-g0 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-002
@@ -1556,8 +1556,10 @@ semantic audit가 불명확하거나 한 project라도 FAIL이면 PASS receipt�
 
 ##### 5.4.2.2 Ornith 1.5 9B 1Cat-vLLM — R0 baseline [REQUIRES G0]
 
+2026-09-29 사용자 지시에 따라 G0 `-003`의 semantic FAIL을 명시한 **performance diagnostic**으로 R0 baseline을 한 번 측정한다. G0 PASS receipt를 만들거나 주장하지 않는다. `g0-diagnostic-receipt.json`은 `-003`의 semantic audit, requests, metrics, completion, progress SHA를 묶는다. R0 raw에는 `performance_diagnostic=true`를 기록한다. 이 결과는 성능 관찰용이며 final recipe 승격에는 부적격이다.
+
 ```bash
-python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R0 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R0-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-002/g0-receipt.json --execute-measured
+python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R0 --experiment-id EXP-V100-WBS5-ORNITH9-ONECAT-R0-PERF-20260928-001 --run-label screening-1 --gate-receipt results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-003/g0-diagnostic-receipt.json --performance-diagnostic --execute-measured
 ```
 
 ##### 5.4.2.3 Ornith 1.5 9B 1Cat-vLLM — R1 MBT8192 [REQUIRES G0]

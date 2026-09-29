@@ -314,6 +314,45 @@ class FrozenContractTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     c.assert_admission(p, receipt)
 
+    def test_g0_fail_allows_only_hash_bound_r0_performance_diagnostic(self):
+        p = plan("ornith9-onecat", "R0")
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td); gate_id = "EXP-GATE-FAIL"
+            raw = root / "results/raw" / gate_id
+            (raw / "runtime").mkdir(parents=True)
+            requests = [{"project_id": "A"}, {"project_id": "B"}]
+            h.save(raw / "requests.json", requests)
+            pins = c.verify_inputs()["sha256"]
+            h.save(raw / "semantic-audit.json", {
+                "experiment_id": gate_id, "semantic_audit": "FAIL", "project_a": "PASS", "project_b": "FAIL",
+                "requests_sha256": h.sha((raw / "requests.json").read_bytes()),
+                "oracle_sha256": pins["workloads/concurrency/v2-ground-truth.json"],
+            })
+            h.save(raw / "metrics.json", {"verdict": "PASS_C2_ACTIVE", "c2_active": True, "queue_only": False})
+            h.save(raw / "completion.json", {"experiment_id": gate_id, "verdict": "PASS_C2_ACTIVE"})
+            h.save(raw / "runtime/progress.json", {
+                "workload_manifest_sha256": pins["workloads/concurrency/v2.json"],
+                "semantic_oracle_sha256": pins["workloads/concurrency/v2-ground-truth.json"],
+            })
+            names = ("semantic-audit.json", "requests.json", "metrics.json", "completion.json", "runtime/progress.json")
+            receipt = {"gate": "ORNITH9_G0", "verdict": "FAIL", "use": "PERFORMANCE_DIAGNOSTIC_ONLY",
+                       "track": "ornith9-onecat", "baseline_configuration_sha256": p["configuration_sha256"],
+                       "experiment_id": gate_id, "semantic_audit": "FAIL", "project_a": "PASS", "project_b": "FAIL",
+                       "file_sha256": pins,
+                       "evidence": [{"path": str(raw / name), "sha256": h.sha((raw / name).read_bytes())}
+                                    for name in names]}
+            with patch.object(c, "ROOT", root), patch.object(c, "verify_inputs", return_value=c.verify_inputs()):
+                c.assert_admission(p, receipt, performance_diagnostic=True)
+                with self.assertRaisesRegex(ValueError, "CONDITIONAL_PENDING_GATE"):
+                    c.assert_admission(p, receipt)
+                with self.assertRaisesRegex(ValueError, "limited to Ornith9 1Cat R0"):
+                    c.assert_admission(plan("ornith9-onecat", "R1"), receipt, performance_diagnostic=True)
+                with self.assertRaisesRegex(ValueError, "gate evidence incomplete"):
+                    c.assert_admission(p, dict(receipt, project_b="PASS"), performance_diagnostic=True)
+                (raw / "requests.json").write_text("tampered")
+                with self.assertRaisesRegex(ValueError, "gate raw evidence hash mismatch"):
+                    c.assert_admission(p, receipt, performance_diagnostic=True)
+
     def test_gate_b_requires_hash_bound_r0_measured_evidence(self):
         p = plan("gemma-llama", "R3")
         r0 = plan("gemma-llama", "R0")

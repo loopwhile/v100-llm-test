@@ -13,8 +13,10 @@ to another WBS item.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
+import re
 import shlex
 import subprocess
 import sys
@@ -82,6 +84,24 @@ def copy_gate_receipt(local_path: Path, remote_root: str, experiment_id: str) ->
     local_path = local_path.resolve()
     if not local_path.is_file():
         raise FileNotFoundError(local_path)
+    receipt = json.loads(local_path.read_text())
+    gate_id = receipt.get("experiment_id", "")
+    if not re.fullmatch(r"EXP-[A-Za-z0-9-]+", gate_id):
+        raise ValueError("gate experiment ID invalid")
+    local_raw = ROOT / "results/raw" / gate_id
+    remote_raw = f"{remote_root}/results/raw/{gate_id}"
+    for row in receipt.get("evidence", []):
+        source = Path(row["path"])
+        source = (source if source.is_absolute() else ROOT / source).resolve()
+        try:
+            relative = source.relative_to(local_raw.resolve())
+        except ValueError as exc:
+            raise ValueError("gate evidence outside raw directory") from exc
+        if not source.is_file() or hashlib.sha256(source.read_bytes()).hexdigest() != row["sha256"]:
+            raise ValueError("gate evidence hash mismatch")
+        destination = f"{remote_raw}/{relative.as_posix()}"
+        ssh(f"mkdir -p {shlex.quote(str(Path(destination).parent))}")
+        run(["rsync", "-a", "--ignore-existing", str(source), f"{SSH_HOST}:{destination}"])
     remote_dir = f"{remote_root}/.wbs5-gates"
     remote_path = f"{remote_dir}/{experiment_id}-{local_path.name}"
     ssh(f"mkdir -p {shlex.quote(remote_dir)}")
@@ -141,6 +161,7 @@ def main():
     parser.add_argument("--experiment-id", required=True)
     parser.add_argument("--run-label")
     parser.add_argument("--gate-receipt", type=Path)
+    parser.add_argument("--performance-diagnostic", action="store_true")
     parser.add_argument("--retry-evidence", type=Path)
     parser.add_argument("--execute-measured", action="store_true")
     parser.add_argument(
@@ -156,6 +177,9 @@ def main():
                 "normal WBS5 run requires --track, --candidate, --run-label, "
                 "and --execute-measured"
             )
+    if args.performance_diagnostic and (args.ornith9_g0 or args.track != "ornith9-onecat"
+                                        or args.candidate != "R0" or args.gate_receipt is None):
+        parser.error("--performance-diagnostic requires Ornith9 1Cat R0 and --gate-receipt")
     if args.run_label == "retry-1":
         predecessor = args.experiment_id[:-3] + "001"
         expected = ROOT / "results/raw" / predecessor / "completion.json"
@@ -217,6 +241,8 @@ def main():
         ]
         if remote_gate:
             remote_argv += ["--gate-receipt", remote_gate]
+        if args.performance_diagnostic:
+            remote_argv += ["--performance-diagnostic"]
         if remote_retry_evidence:
             remote_argv += ["--retry-evidence", remote_retry_evidence]
 

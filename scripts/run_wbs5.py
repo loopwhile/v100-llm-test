@@ -66,15 +66,18 @@ def validate_worker_config(config):
     if plan["launch_plan"].get("gateway"):
         envs.append(dict(envs[0]))
     canonical = build_config(expected, envs)
-    if set(config) - set(canonical) - {"gate_receipt"}:
+    if set(config) - set(canonical) - {"gate_receipt", "performance_diagnostic"}:
         raise ValueError("FROZEN_DELTA_MISMATCH: unexpected effective config keys")
+    if config.get("performance_diagnostic") not in (None, True):
+        raise ValueError("invalid performance diagnostic marker")
     # Gate receipts are external evidence; they do not change serving configuration.
     for key in canonical:
         if config.get(key) != canonical[key]:
             raise ValueError("FROZEN_DELTA_MISMATCH: worker config " + key)
     if "retry_of" in config or config.get("measured_repetitions") != 1:
         raise ValueError("WBS5 automatic retry/repetition forbidden")
-    contract.assert_admission(plan, config.get("gate_receipt"))
+    contract.assert_admission(plan, config.get("gate_receipt"),
+                              performance_diagnostic=config.get("performance_diagnostic") is True)
 
 
 def validate_workload(workload):
@@ -172,7 +175,7 @@ def identity_check(plan, runtime):
     (runtime / "runtime-version.txt").write_text(version)
 
 
-def execute_shared(plan, gate_receipt, retry_evidence=None):
+def execute_shared(plan, gate_receipt, retry_evidence=None, *, performance_diagnostic=False):
     raw = Path(plan["raw_destination"])
     raw.mkdir(parents=True, exist_ok=False)
     runtime = raw / "runtime"
@@ -181,6 +184,8 @@ def execute_shared(plan, gate_receipt, retry_evidence=None):
         h.save(runtime / "retry-receipt.json", retry_evidence)
     envs = contract.effective_environments(plan["launch_plan"])
     config = build_config(plan, envs) | {"gate_receipt": gate_receipt}
+    if performance_diagnostic:
+        config["performance_diagnostic"] = True
     validate_worker_config(config)
     h.save(runtime / "planned-config.json", config)
     h.save(runtime / "candidate-plan.json", plan)
@@ -281,10 +286,11 @@ def execute_shared(plan, gate_receipt, retry_evidence=None):
     return rc
 
 
-def dispatch(plan, *, execute_measured=False, gate_receipt=None, retry_evidence=None, output_root=None):
+def dispatch(plan, *, execute_measured=False, gate_receipt=None, retry_evidence=None,
+             performance_diagnostic=False, output_root=None):
     if not execute_measured:
         return contract.dry_plan(plan, output_root)
-    contract.assert_admission(plan, gate_receipt)
+    contract.assert_admission(plan, gate_receipt, performance_diagnostic=performance_diagnostic)
     if socket.gethostname().split(".")[0] != "p520-llm":
         raise RuntimeError("requires p520-llm")
     contract.assert_launch(plan["track"], plan["candidate_key"], plan["launch_plan"])
@@ -304,7 +310,8 @@ def dispatch(plan, *, execute_measured=False, gate_receipt=None, retry_evidence=
         old = os.environ.get("V100_1CAT_PYTHON")
         os.environ["V100_1CAT_PYTHON"] = contract.PYTHON
         try:
-            return execute_shared(plan, gate_receipt, retry_evidence)
+            return execute_shared(plan, gate_receipt, retry_evidence,
+                                  performance_diagnostic=performance_diagnostic)
         finally:
             if old is None:
                 os.environ.pop("V100_1CAT_PYTHON", None)
@@ -320,6 +327,7 @@ def main():
     parser.add_argument("--run-label")
     parser.add_argument("--output-root", type=Path)
     parser.add_argument("--gate-receipt", type=Path)
+    parser.add_argument("--performance-diagnostic", action="store_true")
     parser.add_argument("--retry-evidence", type=Path)
     parser.add_argument("--execute-measured", action="store_true")
     parser.add_argument("--worker", type=Path)
@@ -329,6 +337,8 @@ def main():
         return 0
     if not all((args.track, args.candidate, args.experiment_id, args.run_label)):
         parser.error("--track, --candidate, --experiment-id and --run-label are required")
+    if args.performance_diagnostic and (not args.execute_measured or args.gate_receipt is None):
+        parser.error("--performance-diagnostic requires --execute-measured and --gate-receipt")
     plan = contract.build_plan(args.track, args.candidate, args.experiment_id, args.run_label)
     retry_evidence = None
     if args.run_label == "retry-1":
@@ -346,7 +356,8 @@ def main():
         parser.error("--retry-evidence requires --run-label retry-1")
     receipt = json.loads(args.gate_receipt.read_text()) if args.gate_receipt else None
     result = dispatch(plan, execute_measured=args.execute_measured, gate_receipt=receipt,
-                      retry_evidence=retry_evidence, output_root=args.output_root)
+                      retry_evidence=retry_evidence, performance_diagnostic=args.performance_diagnostic,
+                      output_root=args.output_root)
     if isinstance(result, int):
         return result
     print(json.dumps(result, ensure_ascii=False, indent=2))

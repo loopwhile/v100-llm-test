@@ -320,19 +320,25 @@ def build_plan(track, candidate, exp, label, root=ROOT, port=18080, gateway_port
                                 "measurement": "VERIFY_DURING_MEASURED_RUN: graph hits, spec acceptance, active overlap, output integrity, prefix behavior"}}
 
 
-def assert_admission(plan, receipt=None):
+def assert_admission(plan, receipt=None, *, performance_diagnostic=False):
     if plan["status"] == "BLOCKED_BY_HOST_TOOLCHAIN":
         raise ValueError("BLOCKED_BY_HOST_TOOLCHAIN: nvcc and CUDA toolkit absent; explicit approved host change required")
     gate = plan["admission_gate"]
+    if performance_diagnostic and (plan["track"], plan["candidate_key"], gate) != ("ornith9-onecat", "R0", "ORNITH9_G0"):
+        raise ValueError("performance diagnostic is limited to Ornith9 1Cat R0")
     if not gate:
         return
-    if not isinstance(receipt, dict) or receipt.get("gate") != gate or receipt.get("verdict") != "PASS":
+    expected_verdict = "FAIL" if performance_diagnostic else "PASS"
+    if not isinstance(receipt, dict) or receipt.get("gate") != gate or receipt.get("verdict") != expected_verdict:
         raise ValueError("CONDITIONAL_PENDING_GATE: " + gate)
     if receipt.get("track") != plan["track"] or receipt.get("baseline_configuration_sha256") != h.sha(h.canon(normalized(launch_plan(plan["track"], "R0")))):
         raise ValueError("gate identity mismatch")
     if not receipt.get("experiment_id") or receipt["experiment_id"] == plan["experiment_id"]:
         raise ValueError("gate needs separate measured evidence")
-    required = {"semantic_audit": "PASS", "project_a": "PASS", "project_b": "PASS"} if gate == "ORNITH9_G0" else {"graph_support": "PASS"}
+    required = ({"semantic_audit": "FAIL", "project_a": "PASS", "project_b": "FAIL",
+                 "use": "PERFORMANCE_DIAGNOSTIC_ONLY"} if performance_diagnostic else
+                {"semantic_audit": "PASS", "project_a": "PASS", "project_b": "PASS"} if gate == "ORNITH9_G0" else
+                {"graph_support": "PASS"})
     if any(receipt.get(k) != v for k, v in required.items()):
         raise ValueError("gate evidence incomplete")
     if gate == "ORNITH9_G0":
@@ -359,6 +365,32 @@ def assert_admission(plan, receipt=None):
         if not path.is_file() or h.sha(path.read_bytes()) != row["sha256"]:
             raise ValueError("gate raw evidence hash mismatch")
         verified[relative.as_posix()] = path
+    if performance_diagnostic:
+        required_paths = ("semantic-audit.json", "requests.json", "metrics.json", "completion.json", "runtime/progress.json")
+        if any(name not in verified for name in required_paths):
+            raise ValueError("diagnostic requires hash-bound G0 measured and semantic evidence")
+        try:
+            audit = json.loads(verified["semantic-audit.json"].read_text())
+            requests = json.loads(verified["requests.json"].read_text())
+            metrics = json.loads(verified["metrics.json"].read_text())
+            completion = json.loads(verified["completion.json"].read_text())
+            progress = json.loads(verified["runtime/progress.json"].read_text())
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError("diagnostic G0 evidence invalid") from exc
+        pins = verify_inputs()["sha256"]
+        if (audit.get("experiment_id") != receipt["experiment_id"]
+                or audit.get("semantic_audit") != "FAIL"
+                or audit.get("project_a") != "PASS" or audit.get("project_b") != "FAIL"
+                or audit.get("requests_sha256") != h.sha(verified["requests.json"].read_bytes())
+                or audit.get("oracle_sha256") != pins["workloads/concurrency/v2-ground-truth.json"]
+                or not isinstance(requests, list) or [row.get("project_id") for row in requests] != ["A", "B"]
+                or metrics.get("verdict") != "PASS_C2_ACTIVE" or metrics.get("c2_active") is not True
+                or metrics.get("queue_only") is not False
+                or completion.get("experiment_id") != receipt["experiment_id"]
+                or completion.get("verdict") != "PASS_C2_ACTIVE"
+                or progress.get("workload_manifest_sha256") != pins["workloads/concurrency/v2.json"]
+                or progress.get("semantic_oracle_sha256") != pins["workloads/concurrency/v2-ground-truth.json"]):
+            raise ValueError("diagnostic G0 identity, semantic, or measured evidence mismatch")
     if gate == "GEMMA_GATE_B":
         required_paths = ("config.json", "identity.json", "metrics.json", "completion.json")
         if any(name not in verified for name in required_paths):
