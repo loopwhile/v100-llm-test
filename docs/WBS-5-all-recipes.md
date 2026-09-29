@@ -24,7 +24,7 @@ WBS 5.5 자체에서는 새 GPU inference를 수행하지 않았다. 아래 측�
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | R0 `Q38-LLAMA-WBS5-R0-TARGET-B512-UB128` | TARGET · b512/ub128 · Q8_0 | PASS_C2_ACTIVE ×2 | C2 ACTIVE / queue=false | 901.97<br>904.12 | 206.12<br>178.23 | 5.269<br>5.385 | 3.693<br>3.958 | 2.527<br>2.732 | 1541.28<br>1580.35 | 3895<br>4318 | 13159/14247<br>13159/14245 | REFERENCE_ONLY |
 | R1 `Q38-LLAMA-WBS5-R1-NGRAM-DEFAULT` | NGRAM · b512/ub128 · Q8_0 | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 904.45 | 178.17 | 5.559 | 3.998 | 2.744 | 1560.73 | 4283 | 13161/14249 | CLOSED_NO_QUALIFYING_BENEFIT |
-| R2 `Q38-LLAMA-WBS5-R2-TARGET-UB256` | TARGET · b512/ub256 · Q8_0 | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 679.05 | 264.11 | 5.593 | 4.514 | 3.457 | 1337.27 | 4623 | 13447/14533 | VALIDATED_RECIPE |
+| ⭐ R2 `Q38-LLAMA-WBS5-R2-TARGET-UB256` | TARGET · b512/ub256 · Q8_0 | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 679.05 | 264.11 | 5.593 | 4.514 | 3.457 | 1337.27 | 4623 | 13447/14533 | VALIDATED_RECIPE |
 
 R0는 동일 frozen configuration 반복 2회다. R1/R2 optional confirm은 `SKIP — USER_DECISION`이며 별도 measured raw가 없다.
 
@@ -33,7 +33,7 @@ R0는 동일 frozen configuration 반복 2회다. R1/R2 optional confirm은 `SKI
 | Candidate | 설정 | 실행 verdict | 동시요청 | TTFT s | Prefill tok/s | Mean decode | Agg decode | E2E tok/s | Wall s | Output | Peak VRAM MiB<br>GPU0/GPU1 | 5.5 final disposition |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | R0 `TARGET_BASELINE` | TARGET · b512/ub128 · FP16 KV | PASS_C2_ACTIVE | C2 ACTIVE / distinct backends | 182.02 | 697.74 | 43.81 | 77.73 | 13.03 | 215.90 | 2814 | 10893/10893 | REFERENCE_ONLY |
-| R1 `TARGET_UB256` | TARGET · b512/ub256 · FP16 KV | PASS_C2_ACTIVE | C2 ACTIVE / distinct backends | 139.20 | 912.19 | 43.99 | 80.90 | 16.20 | 173.34 | 2808 | 10945/10945 | VALIDATED_RECIPE |
+| ⭐ R1 `TARGET_UB256` | TARGET · b512/ub256 · FP16 KV | PASS_C2_ACTIVE | C2 ACTIVE / distinct backends | 139.20 | 912.19 | 43.99 | 80.90 | 16.20 | 173.34 | 2808 | 10945/10945 | VALIDATED_RECIPE |
 | R2 `NGRAM_DEFAULT` | NGRAM · b512/ub128 · FP16 KV | PASS_C2_ACTIVE | C2 ACTIVE / distinct backends | 182.04 | 697.67 | 43.21 | 76.57 | 13.00 | 216.41 | 2814 | 10893/10893 | CLOSED_NO_DRAFT_ACTIVITY |
 
 모든 run은 단일 LiteLLM endpoint를 통해 project-a→GPU0/backend-0, project-b→GPU1/backend-1로 분산됐고 active overlap=true였다. R2는 `ngram-simple`로 실행됐지만 measured-window draft counter가 0이었다.
@@ -43,8 +43,8 @@ R0는 동일 frozen configuration 반복 2회다. R1/R2 optional confirm은 `SKI
 | Candidate | 설정 | 실행 verdict | 동시요청 | TTFT s | Prefill tok/s | Mean decode | Agg decode | E2E tok/s | Wall s | Output | Peak VRAM MiB<br>GPU0/GPU1 | 5.5 final disposition |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | R0 `ORN35-LLAMA-WBS5-R0-TARGET` | TARGET · b512/ub128 · Q8_0 | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 791.44 | 191.42 | 15.406 | 5.400 | 3.218 | 1176.33 | 3786 | 12831/12309 | REFERENCE_ONLY |
-| R1 `ORN35-LLAMA-WBS5-R1-MTP1` | native MTP1 · b512/ub128 · Q8_0 | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 833.07 | 182.78 | 17.329 | 5.709 | 3.432 | 1242.84 | 4265 | 12897/13737 | VALIDATED_RECIPE — DECODE_ORIENTED |
-| R2 `ORN35-LLAMA-WBS5-R2-UB256` | TARGET · b512/ub256 · Q8_0 | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 670.09 | 229.75 | 15.697 | 7.228 | 4.505 | 1038.99 | 4681 | 13103/12581 | VALIDATED_RECIPE — LONG_PREFILL |
+| ⭐ R1 `ORN35-LLAMA-WBS5-R1-MTP1` | native MTP1 · b512/ub128 · Q8_0 | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 833.07 | 182.78 | 17.329 | 5.709 | 3.432 | 1242.84 | 4265 | 12897/13737 | VALIDATED_RECIPE — DECODE_ORIENTED |
+| ⭐ R2 `ORN35-LLAMA-WBS5-R2-UB256` | TARGET · b512/ub256 · Q8_0 | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 670.09 | 229.75 | 15.697 | 7.228 | 4.505 | 1038.99 | 4681 | 13103/12581 | VALIDATED_RECIPE — LONG_PREFILL |
 | R3 `ORN35-LLAMA-WBS5-R3-QUEUE4X` | TARGET · b512/ub128 · `CUDA_SCALE_LAUNCH_QUEUES=4x` | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 791.61 | 191.38 | 15.390 | 5.399 | 3.218 | 1176.66 | 3786 | 12831/12309 | CLOSED_NO_MEASURABLE_BENEFIT |
 
 R1 최초 `-001`은 measured request 전 port conflict로 INCONCLUSIVE이며 성능표에서 제외했다. R1 수치는 사용자 승인 재실행 `-002`다. R1 MTP1 acceptance는 1838/2426 = 75.76%. R1+R2 결합 설정은 검증하지 않았다.
@@ -53,7 +53,7 @@ R1 최초 `-001`은 measured request 전 port conflict로 INCONCLUSIVE이며 성
 
 | Candidate | 설정 | 실행 verdict | 동시요청 | TTFT s | Prefill tok/s | Mean decode | Agg decode | E2E tok/s | Wall s | Output | Peak VRAM MiB<br>GPU0/GPU1 | 5.5 final disposition |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| R0 `G4-LCPP-WBS5-R0-TARGET-B512-UB128` | TARGET · b512/ub128 · FP16 KV | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 439.10 | 359.09 | 22.54 | 7.54 | 4.78 | 671.54 | 3213 | 10039/10537 | VALIDATED_RECIPE |
+| ⭐ R0 `G4-LCPP-WBS5-R0-TARGET-B512-UB128` | TARGET · b512/ub128 · FP16 KV | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 439.10 | 359.09 | 22.54 | 7.54 | 4.78 | 671.54 | 3213 | 10039/10537 | VALIDATED_RECIPE |
 | R1 `G4-LCPP-WBS5-R1-NGRAM-DEFAULT-B512-UB128` | NGRAM · b512/ub128 · FP16 KV | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 448.49 | 353.18 | 21.48 | 7.10 | 4.52 | 685.38 | 3097 | 10039/10607 | CLOSED_PERFORMANCE_REGRESSION |
 | R2 `G4-LCPP-WBS5-R2-TARGET-B1024-UB128` | TARGET · b1024/ub128 · FP16 KV | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 440.10 | 355.46 | 22.28 | 7.60 | 4.77 | 670.94 | 3203 | 10039/10537 | CLOSED_NO_QUALIFYING_BENEFIT |
 | R3 `G4-LCPP-WBS5-R3-TARGET-B512-UB128-GRAPHOFF` | TARGET · b512/ub128 · graph off | SKIP — Gate B NOT_TRIGGERED | NOT_RUN | — | — | — | — | — | — | — | — | SKIPPED_GATE_B_NOT_TRIGGERED |
@@ -86,7 +86,7 @@ G0 semantic audit에서 Project B가 seeded race가 아닌 `_sequence` 문제를
 
 | Candidate | 설정 | 실행 verdict | 동시요청 | TTFT s | Prefill tok/s | Mean decode | Agg decode | E2E tok/s | Wall s | Output | Peak VRAM MiB<br>GPU0/GPU1 | 5.5 final disposition |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| R0 `R0-BASELINE-EAGER-MBT4096` | NVFP4 · E5M2 KV · eager · MBT4096 | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 109.62 | 1456.96 | 8.01 | 11.48 | 9.04 | 282.74 | 2557 | 14765/14765 | VALIDATED_RECIPE |
+| ⭐ R0 `R0-BASELINE-EAGER-MBT4096` | NVFP4 · E5M2 KV · eager · MBT4096 | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 109.62 | 1456.96 | 8.01 | 11.48 | 9.04 | 282.74 | 2557 | 14765/14765 | VALIDATED_RECIPE |
 | R1 `R1-GRAPH-AUTO-MBT4096` | NVFP4 · E5M2 KV · graph auto · MBT4096 | FAIL_OUTPUT | C2 ACTIVE / queue=false | 109.22 | 1459.67 | 51.40* | 23.34* | 16.51* | 205.02* | 3384* | 14921/14921 | CLOSED_FAIL_OUTPUT |
 | R2 `R2-EAGER-MBT8192` | NVFP4 · E5M2 KV · eager · MBT8192 | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 111.34 | 1142.84 | 9.65 | 17.95 | 11.56 | 298.73 | 3453 | 14753/14753 | CLOSED_NO_QUALIFYING_BENEFIT |
 
