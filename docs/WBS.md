@@ -1398,7 +1398,7 @@ Track result review 결론:
 `2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b`를 기준으로 local verification한다.
 설치 package tree만으로 wheel SHA를 추정하지 않으며 local wheel 원본이 없으면 provenance 한계를 명시한다.
 
-#### 5.4.1 Qwen3.8-27B / 1Cat-vLLM [NON-EXECUTABLE PARENT — R0/R3 MEASURED / R1 STARTUP FAILED / R2 BLOCKED / REVIEW PENDING]
+#### 5.4.1 Qwen3.8-27B / 1Cat-vLLM [NON-EXECUTABLE PARENT — REVIEW COMPLETE / NO ELIGIBLE RECIPE]
 
 2026-09-29 회수된 WBS 5.4.1.1/.2/.3의 `screening-1` 결과를 기록했다. 세 실행의 raw evidence, 개별 report, `results/summary.csv`, `reports/comparison.csv`를 보존한다.
 
@@ -1408,7 +1408,7 @@ Track result review 결론:
 | 5.4.1.2 | R1 CUDA Graph | `FAIL_STARTUP` | Torch Inductor compile 중 GPU0 CUDA OOM (1.19 GiB allocation 시도, free 911.50 MiB). 측정 요청과 graph capture/replay evidence 없음. |
 | 5.4.1.3 | R3 E5M2 | `QUEUE_ONLY` | R0와 같은 두 요청 완료, 7,788 output tokens, mechanical output PASS. C2 resident/active false. |
 
-R0/R3의 수치는 이번 queue-only 실행에서 관측한 값이며 C2 ACTIVE 성능 수치가 아니다. Mechanical output PASS는 task-level semantic acceptance를 뜻하지 않는다. 최종 recipe 승격과 track decision은 5.4.1.5에서 검토한다. R2의 host toolchain blocker는 유지한다.
+R0/R3의 수치는 이번 queue-only 실행에서 관측한 값이며 C2 ACTIVE 성능 수치가 아니다. Mechanical output PASS는 task-level semantic acceptance를 뜻하지 않는다. 5.4.1.5 review 결과 현재 frozen WBS5 evidence만으로 final recipe 승격 조건을 충족하는 candidate는 없다. R3는 R0보다 queue-only prefill/TTFT/wall 관측이 크게 개선됐지만 C2 ACTIVE와 task-level semantic qualification이 없어서 승격하지 않는다. R1은 FAIL_STARTUP, R2의 host toolchain blocker는 유지한다.
 
 현재 evidence를 다음처럼 분리한다.
 
@@ -1488,11 +1488,17 @@ python3 scripts/run_wbs5_remote.py --track qwen-onecat --candidate R3 --experime
 python3 scripts/run_wbs5_remote.py --track qwen-onecat --candidate R2 --experiment-id EXP-V100-WBS5-QWEN-ONECAT-R2-PERF-20260928-001 --run-label screening-1 --execute-measured
 ```
 
-##### 5.4.1.5 Qwen3.8 1Cat-vLLM — track result review
+##### 5.4.1.5 Qwen3.8 1Cat-vLLM — track result review [DONE — REVIEW_COMPLETE / NO ELIGIBLE RECIPE]
 
-GPU inference 없음. R0/R1/R3 및 나중에 unblock되어 실제 실행된 경우에만 R2를 포함한다. R1 graph hit, R3 E5M2 exact route/scales, active-overlap/queue-only, output integrity를 evidence 범위까지만 기록한다.
+GPU inference 없이 publication된 R0/R1/R3와 R2 blocker를 검토했다. 상세 기록: [5.4.1.5 result review](WBS-5.4.1.5-result-review.md).
 
-#### 5.4.2 Ornith 1.5 9B / 1Cat-vLLM [NON-EXECUTABLE PARENT — G0 SEMANTIC FAIL / R0–R3 DIAGNOSTIC FAIL_OUTPUT / REVIEW PENDING]
+- R0/R3는 동일 7,788 output tokens를 완료했지만 둘 다 `max-num-seqs=1`, C2 active=false, `QUEUE_ONLY`다.
+- R3 E5M2는 queue-only 관측에서 R0 대비 TTFT -63.79%, prefill +275.55%, batch wall -48.90%였지만 Peak VRAM이 GPU당 15,567 -> 16,117 MiB로 증가했고 task-level semantic qualification이 없다. C2 recipe로 승격하지 않는다.
+- R1은 Torch Inductor compile CUDA OOM의 `FAIL_STARTUP`; graph capture/replay 성능 evidence가 없다.
+- R2는 `BLOCKED_BY_HOST_TOOLCHAIN` 상태로 미실행이며 validated/failure로 재분류하지 않는다.
+- 결론: 현재 frozen WBS5 evidence에서 5.5 final recipe로 넘길 Qwen 1Cat candidate는 없다. 새 candidate와 추가 inference를 만들지 않는다.
+
+#### 5.4.2 Ornith 1.5 9B / 1Cat-vLLM [NON-EXECUTABLE PARENT — REVIEW COMPLETE / NO ELIGIBLE RECIPE — G0 SEMANTIC FAIL]
 
 2026-09-29 회수된 G0 3회와 performance diagnostic R0~R3 4회를 개별 report 및 summary/comparison CSV에 등록했다. G0 `-001`은 runtime preflight `INCONCLUSIVE`다. G0 `-002`/`-003`은 raw C2 ACTIVE 및 mechanical PASS이지만 Project B가 사전 등록된 `JobQueue.pop` check→await→heappop race 대신 `_sequence` 문제를 지목했으므로 publication 최종 판정은 **FAIL_OUTPUT**이다. `-003/semantic-audit.json`과 두 응답을 근거로 삼았으며 G0 PASS receipt는 없다. [G0 raw](../results/raw/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-003/) / [G0 report](../reports/ornith-1.5-9b/EXP-V100-WBS5-ORNITH9-ONECAT-G0-20260928-003.md).
 
@@ -1597,11 +1603,17 @@ python3 scripts/run_wbs5_remote.py --track ornith9-onecat --candidate R3 --exper
 
 resolved n_predict, actual MTP2 acceptance와 output integrity를 runtime evidence로 기록한다.
 
-##### 5.4.2.6 Ornith 1.5 9B 1Cat-vLLM — track result review [PENDING]
+##### 5.4.2.6 Ornith 1.5 9B 1Cat-vLLM — track result review [DONE — REVIEW_COMPLETE / NO ELIGIBLE RECIPE]
 
-GPU inference 없음. G0 receipt identity부터 재검증한 후 R0 ~ R3 diagnostic raw를 비교할 수 있다. G0 FAIL이면 semantic-qualified final recipe 승격은 차단하고, diagnostic performance 결과와 output integrity를 구분해 보고한다.
+GPU inference 없이 G0 semantic FAIL 및 R0 ~ R3 diagnostic raw를 재검토했다. 상세 기록: [5.4.2.6 result review](WBS-5.4.2.6-result-review.md).
 
-#### 5.4.3 Ornith 1.5 35B-A3B / 1Cat-vLLM [NON-EXECUTABLE PARENT — R0/R2 PASS / R1 FAIL_OUTPUT / REVIEW PENDING]
+- G0 PASS admission이 없고 R0 ~ R3 모두 Project B `FAIL_OUTPUT`이라 5.5 output-integrity/admission 조건을 충족하지 않는다.
+- R1 MBT8192는 R0와 성능이 사실상 동일하고 VRAM만 GPU당 +96 MiB여서 branch를 닫는다.
+- R2는 mean decode +17.24% / aggregate +31.47% / wall -13.73% 신호가 있으나 graph capture/replay가 `UNKNOWN`, E2E는 -5.68%, output 길이도 다르고 Project B가 실패했다. graph 효과나 recipe 우위를 주장하지 않는다.
+- R3 MTP2 acceptance는 56.67%로 관측됐지만 G0/output failure를 우회할 근거가 아니다.
+- 결론: final recipe 후보 없음. 새 graph/MTP/MBT candidate와 추가 inference를 만들지 않는다.
+
+#### 5.4.3 Ornith 1.5 35B-A3B / 1Cat-vLLM [NON-EXECUTABLE PARENT — REVIEW COMPLETE / R0 RETAINED]
 
 2026-09-29 회수된 `screening-1` R0/R1/R2 3회를 개별 report 및 summary/comparison CSV에 등록했다. 세 실행 모두 C2 resident/active=true, queue_only=false, post-health healthy다. 두 요청의 prompt tokens는 각각 126,975/126,976이다.
 
@@ -1611,7 +1623,7 @@ GPU inference 없음. G0 receipt identity부터 재검증한 후 R0 ~ R3 diagnos
 | 5.4.3.2 | R1 graph-auto | `FAIL_OUTPUT` | 109.22 s | 1,459.67 tok/s | 23.34 tok/s | 205.02 s | A PASS/B FAIL, 3,384 output tokens; capture/replay `UNKNOWN`. |
 | 5.4.3.3 | R2 eager MBT8192 | `PASS_C2_ACTIVE` | 111.34 s | 1,142.84 tok/s | 17.95 tok/s | 298.73 s | A/B PASS, 3,453 output tokens; graph `UNKNOWN` (eager). |
 
-R1의 aggregate decode/wall은 실패한 B가 포함된 배치 관측값이며 mean request decode는 성공한 A만 반영한다. R1의 성능 우위나 graph hit를 주장하지 않는다. R2는 R0보다 prefill이 약 21.6% 낮고 TTFT가 약 1.6% 높다. 출력 길이도 달라 batch wall/aggregate decode의 순위를 recipe 효과로 단정하지 않는다. R0/R2의 PASS는 mechanical output 및 C2 판정이며 task-level semantic audit를 대신하지 않는다. [R0](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001.md), [R1](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260928-001.md), [R2](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R2-PERF-20260928-001.md) report 참조. Track recipe 결정은 5.4.3.4 review에서 수행한다.
+R1의 aggregate decode/wall은 실패한 B가 포함된 배치 관측값이며 mean request decode는 성공한 A만 반영한다. R1의 성능 우위나 graph hit를 주장하지 않는다. R2는 R0보다 prefill이 약 21.6% 낮고 TTFT가 약 1.6% 높다. 출력 길이도 달라 batch wall/aggregate decode의 순위를 recipe 효과로 단정하지 않는다. R0/R2의 PASS는 mechanical output 및 C2 판정이며 task-level semantic audit를 대신하지 않는다. [R0](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001.md), [R1](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260928-001.md), [R2](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R2-PERF-20260928-001.md) report 참조. 5.4.3.4 review에서 R1은 output failure로, R2는 intended prefill/latency 효과 부재로 branch를 닫고 R0를 5.5 final recipe 대상으로 유지했다.
 
 Frozen candidates:
 
@@ -1665,9 +1677,14 @@ python3 scripts/run_wbs5_remote.py --track ornith35-onecat --candidate R2 --expe
 
 VRAM fit 실패는 setting을 바꾸지 말고 candidate measured result로 보존한다.
 
-##### 5.4.3.4 Ornith 1.5 35B 1Cat-vLLM — track result review [PENDING]
+##### 5.4.3.4 Ornith 1.5 35B 1Cat-vLLM — track result review [DONE — R0 RETAINED]
 
-GPU inference 없음. R0/R1/R2의 exact config identity와 성능, graph evidence, output integrity, active overlap/queue state를 비교한다. 새로운 MBT/graph candidate를 만들지 않는다.
+GPU inference 없이 R0/R1/R2의 exact frozen delta, 성능, graph evidence, output integrity, C2 state를 비교했다. 상세 기록: [5.4.3.4 result review](WBS-5.4.3.4-result-review.md).
+
+- R1 graph-auto는 Project B `FAIL_OUTPUT`이고 graph capture/replay도 `UNKNOWN`이라 branch를 닫는다. 높은 decode/aggregate 수치를 graph 효과로 사용하지 않는다.
+- R2 MBT8192는 R0 대비 TTFT +1.57%, prefill -21.56%, batch wall +5.66%로 intended long-prefill/latency 이득이 없었다. Mean decode +20.34% / aggregate +56.30%는 output tokens +35.04%와 scheduling 비대칭이 섞인 단일 run 관측이라 pure decode win으로 승격하지 않는다.
+- R0는 C2 active, queue=false, 두 요청 mechanical output PASS, post-health healthy인 baseline으로 유지한다.
+- 결론: `R0-BASELINE-EAGER-MBT4096`만 5.5 final recipe publication 대상으로 유지한다. R1/R2 branch 종료, 새 candidate 및 추가 inference 없음.
 
 ### 5.5 final recipe 승격 및 publication
 

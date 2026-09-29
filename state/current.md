@@ -1,12 +1,19 @@
 # Current execution
 
+## WBS 5.4 1Cat-vLLM track result reviews — 2026-09-29
+
+- **5.4.1.5 Qwen3.8 1Cat-vLLM: DONE — REVIEW_COMPLETE / NO ELIGIBLE RECIPE.** R0/R3는 두 128K 요청을 mechanical PASS로 완료했지만 `max-num-seqs=1`에서 `QUEUE_ONLY`; R1은 compile OOM `FAIL_STARTUP`; R2는 `BLOCKED_BY_HOST_TOOLCHAIN` 미실행이다. R3 E5M2의 queue-only prefill/TTFT/wall 개선은 보존하지만 C2 ACTIVE 및 task-level semantic qualification이 없어 5.5 recipe로 승격하지 않는다. 상세: `docs/WBS-5.4.1.5-result-review.md`.
+- **5.4.2.6 Ornith 1.5 9B 1Cat-vLLM: DONE — REVIEW_COMPLETE / NO ELIGIBLE RECIPE.** G0 semantic FAIL로 PASS admission이 없고 R0~R3 diagnostic 모두 Project B `FAIL_OUTPUT`이다. R1은 no-benefit, R2 graph 효과는 UNKNOWN, R3 MTP2 acceptance 56.67%는 diagnostic으로만 보존한다. 상세: `docs/WBS-5.4.2.6-result-review.md`.
+- **5.4.3.4 Ornith 1.5 35B-A3B 1Cat-vLLM: DONE — R0 RETAINED.** R1 graph-auto는 `FAIL_OUTPUT`/graph UNKNOWN으로 종료. R2 MBT8192는 prefill -21.56%, TTFT +1.57%, wall +5.66%로 intended latency 이득이 없고 output 길이 차이가 커 decode/aggregate 상승을 recipe 우위로 해석하지 않는다. R0 baseline만 5.5 final recipe publication 대상으로 유지한다. 상세: `docs/WBS-5.4.3.4-result-review.md`.
+- 세 review 모두 새 GPU inference, retry, sweep, host/toolchain 변경 없이 기존 raw/report만 사용했다.
+
 ## WBS 5.4 Ornith 1Cat-vLLM measured results publication — 2026-09-29
 
 - 공식 reporter로 새 raw 10건(G0 3건, Ornith 9B performance diagnostic 4건, Ornith 35B performance 3건)의 개별 report와 `results/summary.csv` / `reports/comparison.csv` 행을 발행했다. 세부 수치와 report 링크는 `docs/WBS.md` 5.4.2 / 5.4.3에 기록했다.
 - Ornith 9B G0 `-001`은 `INCONCLUSIVE`; `-002`/`-003`은 raw C2 ACTIVE·mechanical PASS였으나 Project B semantic audit 실패로 최종 publication verdict `FAIL_OUTPUT`이다. G0 PASS admission은 없고 R0~R3는 `performance_diagnostic=true`만 허용됐다.
 - Ornith 9B R0~R3는 모두 C2 active/queue=false였지만 Project B `FAIL_OUTPUT`으로 최종 `FAIL_OUTPUT`이다. R2 target graph의 capture/replay는 `UNKNOWN`, R3 MTP2 acceptance는 1,462/2,580(56.67%)이다. 진단 수치를 validated recipe 성능으로 사용하지 않는다.
 - Ornith 35B R0·R2는 `PASS_C2_ACTIVE`와 두 요청 output PASS, R1은 C2 active이나 Project B `FAIL_OUTPUT`이다. R1 graph capture/replay는 `UNKNOWN`; R2 MBT8192는 R0 대비 prefill 약 21.6% 감소, TTFT 약 1.6% 증가했다. 출력 길이가 달라 batch wall/aggregate decode 순위로 recipe를 결정하지 않는다.
-- 5.4.2.6 / 5.4.3.4 track result review 및 final recipe 판단은 **PENDING**. 이번 publication에서 추가 GPU inference는 하지 않았다.
+- 5.4.1.5 / 5.4.2.6 / 5.4.3.4 track result review는 모두 **DONE**. Qwen과 Ornith 9B는 현재 frozen evidence에서 eligible recipe 없음, Ornith 35B는 R0 baseline만 5.5 대상으로 유지한다. Review 과정에서 추가 GPU inference는 하지 않았다.
 
 ## WBS 5.3.3.5 Ornith 1.5 35B llama.cpp track result review — 2026-09-29
 
