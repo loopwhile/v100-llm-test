@@ -38,3 +38,8 @@ scratch/
 # Generated workload/cache material
 .cache/
 workloads/generated/
+
+# High-volume raw sampling streams; compact/derived evidence remains tracked.
+results/raw/**/runtime/slot-progress-*.jsonl
+results/raw/**/runtime/gpu-telemetry.jsonl
+results/raw/**/slot-progress.json
