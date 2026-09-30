@@ -1,5 +1,11 @@
 # Current execution
 
+## WBS 5.4.3 Ornith 35B / 1Cat R1 user-requested follow-up — 2026-09-30
+
+- **DONE — PASS_C2_ACTIVE / R0 RECIPE RETAINED.** `EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001`에서 동일 R1 serving command/workload로 독립 측정 1회를 완료했다. Project A/B output 2915/1934 tokens 모두 mechanical PASS, C2 active, post-health healthy. 이전 R1 원측정은 B 997 < 최소 1024 tokens로 `FAIL_OUTPUT`이었다.
+- R1의 두 측정 모두 graph capture/replay는 `UNKNOWN`이며 output trajectory가 달라 graph speedup이나 출력 안정성을 확정하지 않는다. 2026-09-29 WBS 5.5의 R0 `VALIDATED_RECIPE`와 frozen publication receipt는 유지한다. [후속 review](../docs/WBS-5.4.3.4-result-review.md#7-2026-09-30-r1-재측정-addendum), [후속 machine-readable receipt](wbs5-ornith35-onecat-r1-followup.json), [raw](../results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001/completion.json), [report](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001.md) 참조.
+- `results/summary.csv`와 `reports/comparison.csv`에 후속 실행 행을 추가했다. 이전 행과 WBS 5.5 publication snapshot은 historical evidence로 보존한다.
+
 ## WBS 7.0 no-generation preflight — 2026-09-29
 
 - **DONE — STATIC_BUILD_READY.** Frozen R2 control audit, exact model SHA256/header, native-MTP CLI/source support, isolated GQA×2 patch and build identity verification completed.

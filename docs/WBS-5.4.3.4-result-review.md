@@ -2,6 +2,8 @@
 
 Review date: 2026-09-29
 
+> 이 문서의 1~6절은 2026-09-29 원래 review의 판정 이력이다. 2026-09-30 사용자 요청으로 수행한 동일 R1 설정 재측정과 현재 해석은 **7절**에 기록한다.
+
 ## 1. Scope
 
 이 review는 **추가 GPU inference 없이** publication된 R0/R1/R2 WBS5 raw/report와 frozen one-variable delta만 비교한다.
@@ -71,3 +73,18 @@ Decision: **R0 `R0-BASELINE-EAGER-MBT4096` RETAINED AS FINAL RECIPE CANDIDATE**.
 - 추가 GPU inference 없음.
 
 WBS 5.4.3.4 status: **DONE — R0 RETAINED**.
+
+## 7. 2026-09-30 R1 재측정 addendum
+
+사용자 요청으로 R1 `R1-GRAPH-AUTO-MBT4096`을 새 experiment ID `EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001`에서 측정 1회 수행했다. 원래 frozen plan 28개에 포함되지 않은 독립 후속 실행이며, runner의 `screening-1` 라벨을 새 날짜의 ID에서 재사용했다. [후속 측정 report](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001.md)와 [raw evidence](../results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001/wbs5-evidence.json)를 보존한다.
+
+두 R1 실행의 normalized serving command, R0 대비 `--enforce-eager` 제거 delta, workload SHA256 `e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca`가 일치한다. Snapshot 경로가 달라 전체 configuration SHA256은 다르므로 같은 문자열 hash라고 주장하지 않는다.
+
+| R1 측정 | Raw verdict | Project A / B output tokens | TTFT s | Prefill tok/s | Mean decode tok/s | Aggregate decode tok/s | E2E tok/s | Wall s | Graph capture/replay |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| 2026-09-29 원측정 | `FAIL_OUTPUT` | 2387 PASS / 997 FAIL | 109.22 | 1459.67 | 51.40* | 23.34* | 16.51* | 205.02* | `UNKNOWN` |
+| 2026-09-30 재측정 | `PASS_C2_ACTIVE` | 2915 PASS / 1934 PASS | 108.01 | 1484.15 | 30.51 | 30.32 | 22.16 | 218.77 | `UNKNOWN` |
+
+후속 측정은 두 요청 모두 최소 1024 output tokens를 넘기고 `finish_reason=stop`, C2 active/queue=false, post-health healthy였다. 원측정 B의 997-token 조기 종료는 이번에는 재현되지 않았다. `*` 원측정의 mean decode는 A만 반영하며 다른 값에는 실패한 B가 섞인다. 재측정은 output trajectory가 원측정 및 R0와 크게 달라 aggregate decode나 wall 차이를 graph 자체의 속도 향상으로 분리할 수 없다. Graph capture/replay evidence도 여전히 `UNKNOWN`이다.
+
+**현재 판정:** R1은 `FAIL_OUTPUT` 1회와 `PASS_C2_ACTIVE` 1회의 상충된 output evidence가 있다. 원래 2026-09-29 `CLOSED_FAIL_OUTPUT`은 당시 publication 판정으로 보존한다. 후속 1회 PASS만으로 output 안정성이나 graph 효과가 확인됐다고 보지 않아 R1을 final recipe로 승격하지 않는다. R0의 기존 `VALIDATED_RECIPE`와 5.5 publication receipt는 변경하지 않는다. 별도 [후속 machine-readable receipt](../state/wbs5-ornith35-onecat-r1-followup.json)에 두 실행의 verdict와 evidence SHA256을 기록했다. 추가 측정은 이 review에서 실행하지 않았다.

@@ -2,6 +2,8 @@
 
 Date: 2026-09-29 · **DONE — 6 VALIDATED_RECIPES / 5 TRACKS; 2 TRACKS NO ELIGIBLE RECIPE**
 
+**2026-09-30 후속 기록:** Ornith 35B / 1Cat R1 동일 설정 재측정은 `PASS_C2_ACTIVE`(A/B 모두 mechanical output PASS)였다. 원측정의 Project B `FAIL_OUTPUT`과 결과가 상충하고 두 실행 모두 graph capture/replay는 `UNKNOWN`이다. 아래 recipe 6개 및 disposition 표는 2026-09-29 publication snapshot으로 보존하며, 후속 한 번의 PASS만으로 R1을 승격하지 않는다. [후속 review](WBS-5.4.3.4-result-review.md#7-2026-09-30-r1-재측정-addendum).
+
 기존 raw와 7개 track review를 근거로 최종 레시피 6개를 발행했다. 전체 winner/자동 배포를 선택하지 않는다. 이번 단계에서 GPU inference, 신규 candidate, retry, host 변경은 수행하지 않았다.
 
 ## 최종 레시피
@@ -25,7 +27,7 @@ Date: 2026-09-29 · **DONE — 6 VALIDATED_RECIPES / 5 TRACKS; 2 TRACKS NO ELIGI
 - **Ornith 9B llama.cpp R1**: 1GPU×2 + 필수 LiteLLM, UB256. 원본 repository 이름은 **UNRESOLVED**로 유지한다. 고정 local GGUF SHA256과 revision receipt 범위에서 승격하며 upstream 다운로드 재현성을 보증하지 않는다.
 - **Ornith 35B llama.cpp R1/R2**: native MTP1의 decode 지향 레시피와 UB256의 long-prefill 지향 레시피를 각각 보존한다. MTP1은 TTFT/wall 및 VRAM trade-off가 있으며 두 설정의 결합은 검증하지 않았다.
 - **Gemma llama.cpp R0**: TARGET b512/ub128. NGRAM/b1024에서 유효 개선이 없어 baseline을 확정한다. Gate B 미충족으로 graph-off 후보는 미실행이다.
-- **Ornith 35B 1Cat R0**: E5M2, eager, MBT4096, max-num-seqs 2. Output failure가 있는 graph 후보와 intended latency 개선이 없는 MBT8192를 제외한다.
+- **Ornith 35B 1Cat R0**: E5M2, eager, MBT4096, max-num-seqs 2. R1 graph 후보는 원측정 output failure와 후속 PASS가 상충하고 graph 효과가 확인되지 않았다. MBT8192는 intended latency 개선이 없어 제외한다.
 - **Qwen 1Cat: NO ELIGIBLE RECIPE**. R0/R3는 QUEUE_ONLY, R1은 compile OOM FAIL_STARTUP, R2는 toolchain BLOCKED 미실행. Queue-only 및 semantic qualification 부재를 C2 recipe로 승격하지 않는다. [5.4.1.5 review](WBS-5.4.1.5-result-review.md).
 - **Ornith 9B 1Cat: NO ELIGIBLE RECIPE**. G0 semantic admission FAIL; R0~R3 diagnostic 모두 Project B FAIL_OUTPUT. [5.4.2.6 review](WBS-5.4.2.6-result-review.md).
 
@@ -58,7 +60,7 @@ Performance workload에는 WBS3의 semantic oracle이 없다. 이 publication의
 | ornith9-onecat | `ORN15-9B-1CAT-WBS5-R2-TARGET-GRAPH` | `NO_ELIGIBLE_RECIPE_G0_FAIL_OUTPUT` |
 | ornith9-onecat | `ORN15-9B-1CAT-WBS5-R3-MTP2` | `NO_ELIGIBLE_RECIPE_G0_FAIL_OUTPUT` |
 | ornith35-onecat | `R0-BASELINE-EAGER-MBT4096` | `VALIDATED_RECIPE` |
-| ornith35-onecat | `R1-GRAPH-AUTO-MBT4096` | `CLOSED_FAIL_OUTPUT` |
+| ornith35-onecat | `R1-GRAPH-AUTO-MBT4096` | `CLOSED_FAIL_OUTPUT` (2026-09-29 snapshot; 2026-09-30 PASS follow-up, not promoted) |
 | ornith35-onecat | `R2-EAGER-MBT8192` | `CLOSED_NO_QUALIFYING_BENEFIT` |
 
 미실행 candidate/optional confirm은 검증된 것으로 표시하지 않는다. Qwen R1/R2 optional confirm은 기존 SKIP 결정을 유지한다. Ornith35 llama R1의 측정 전 포트 충돌 -001은 INCONCLUSIVE로 보존하고, 사용자 지정 재실행 -002만 승격 근거로 사용했다.

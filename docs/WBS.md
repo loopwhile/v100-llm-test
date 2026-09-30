@@ -1621,6 +1621,8 @@ GPU inference 없이 G0 semantic FAIL 및 R0 ~ R3 diagnostic raw를 재검토했
 
 #### 5.4.3 Ornith 1.5 35B-A3B / 1Cat-vLLM [NON-EXECUTABLE PARENT — REVIEW COMPLETE / R0 RETAINED]
 
+**2026-09-30 후속:** 사용자 요청의 R1 동일 설정 재측정 `EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001`은 `PASS_C2_ACTIVE`였다. Project A/B가 2915/1934 tokens로 mechanical output PASS, C2 active, post-health healthy를 충족했다. 원래 R1 `FAIL_OUTPUT`(B 997 < 1024 tokens)과 상충하며 graph capture/replay는 두 번 모두 `UNKNOWN`이다. 따라서 R1을 5.5 recipe로 소급 승격하지 않고 R0를 유지한다. 아래 표와 5.4.3.4 판정은 **2026-09-29 원래 review 이력**이며 현재 해석은 [review addendum](WBS-5.4.3.4-result-review.md#7-2026-09-30-r1-재측정-addendum)에 기록했다.
+
 2026-09-29 회수된 `screening-1` R0/R1/R2 3회를 개별 report 및 summary/comparison CSV에 등록했다. 세 실행 모두 C2 resident/active=true, queue_only=false, post-health healthy다. 두 요청의 prompt tokens는 각각 126,975/126,976이다.
 
 | WBS | Candidate | 최종 판정 | TTFT | Prefill | Aggregate decode | Batch wall | 출력·graph 증거 |
@@ -1691,6 +1693,16 @@ GPU inference 없이 R0/R1/R2의 exact frozen delta, 성능, graph evidence, out
 - R2 MBT8192는 R0 대비 TTFT +1.57%, prefill -21.56%, batch wall +5.66%로 intended long-prefill/latency 이득이 없었다. Mean decode +20.34% / aggregate +56.30%는 output tokens +35.04%와 scheduling 비대칭이 섞인 단일 run 관측이라 pure decode win으로 승격하지 않는다.
 - R0는 C2 active, queue=false, 두 요청 mechanical output PASS, post-health healthy인 baseline으로 유지한다.
 - 결론: `R0-BASELINE-EAGER-MBT4096`만 5.5 final recipe publication 대상으로 유지한다. R1/R2 branch 종료, 새 candidate 및 추가 inference 없음.
+
+##### 5.4.3.5 Ornith 1.5 35B 1Cat-vLLM — R1 사용자 요청 후속 재측정 [DONE — PASS_C2_ACTIVE / NOT_PROMOTED]
+
+2026-09-30 원래 frozen candidate R1의 동일 serving command/workload로 독립 측정 1회를 새 ID에서 실행했다. 원래 28개 dry-plan instance의 추가 candidate나 자동 retry는 아니다. Runner의 `screening-1` 라벨을 새 날짜의 ID에 사용했다. [측정 report](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001.md)와 [review addendum](WBS-5.4.3.4-result-review.md#7-2026-09-30-r1-재측정-addendum) 참조.
+
+```bash
+python3 scripts/run_wbs5_remote.py --track ornith35-onecat --candidate R1 --experiment-id EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001 --run-label screening-1 --execute-measured
+```
+
+Raw `PASS_C2_ACTIVE`, Project A/B output 2915/1934 tokens PASS, TTFT 108.01 s, prefill 1484.15 tok/s, mean decode 30.51 tok/s, aggregate decode 30.32 tok/s, wall 218.77 s, GPU0/GPU1 sampled peak 14825/14825 MiB. 이전 B output failure는 재현되지 않았지만 graph capture/replay는 `UNKNOWN`, output trajectory도 달라 graph 효과나 안정성을 확정하지 않는다. 기존 R0 final recipe를 유지한다.
 
 ### 5.5 final recipe 승격 및 publication [DONE — 2026-09-29]
 

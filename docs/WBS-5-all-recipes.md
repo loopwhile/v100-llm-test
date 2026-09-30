@@ -2,6 +2,8 @@
 
 Date: 2026-09-29
 
+Update: 2026-09-30 · Ornith 35B / 1Cat R1 사용자 요청 재측정을 7절에 추가했다. `5.5 final disposition`은 2026-09-29 publication snapshot이며 신규 측정만으로 소급 변경하지 않는다.
+
 이 문서는 WBS 5.5가 최종 review한 **7개 model/runtime track의 frozen candidate 25개 전체**를 한 곳에 기록한다. `WBS-5.5-final-recipes.md`가 승격된 6개 final recipe 중심이라면, 이 문서는 baseline, closed candidate, output failure, queue-only, gate skip, toolchain blocked까지 포함한 **전체 recipe ledger**다.
 
 WBS 5.5 자체에서는 새 GPU inference를 수행하지 않았다. 아래 측정값은 WBS 5에서 이미 보존된 canonical raw/report의 관찰값이다. 모든 performance workload는 독립 Project A/B 두 요청, 요청당 131,072-token ceiling, output reserve 4,096 / minimum 1,024, temperature 0 / top_p 1 / seed 520을 기준으로 한다.
@@ -87,10 +89,10 @@ G0 semantic audit에서 Project B가 seeded race가 아닌 `_sequence` 문제를
 | Candidate | 설정 | 실행 verdict | 동시요청 | TTFT s | Prefill tok/s | Mean decode | Agg decode | E2E tok/s | Wall s | Output | Peak VRAM MiB<br>GPU0/GPU1 | 5.5 final disposition |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | ⭐ R0 `R0-BASELINE-EAGER-MBT4096` | NVFP4 · E5M2 KV · eager · MBT4096 | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 109.62 | 1456.96 | 8.01 | 11.48 | 9.04 | 282.74 | 2557 | 14765/14765 | VALIDATED_RECIPE |
-| R1 `R1-GRAPH-AUTO-MBT4096` | NVFP4 · E5M2 KV · graph auto · MBT4096 | FAIL_OUTPUT | C2 ACTIVE / queue=false | 109.22 | 1459.67 | 51.40* | 23.34* | 16.51* | 205.02* | 3384* | 14921/14921 | CLOSED_FAIL_OUTPUT |
+| R1 `R1-GRAPH-AUTO-MBT4096` | NVFP4 · E5M2 KV · graph auto · MBT4096 | FAIL_OUTPUT<br>PASS_C2_ACTIVE | C2 ACTIVE / queue=false ×2 | 109.22<br>108.01 | 1459.67<br>1484.15 | 51.40*<br>30.51 | 23.34*<br>30.32 | 16.51*<br>22.16 | 205.02*<br>218.77 | 3384*<br>4849 | 14921/14921<br>14825/14825 | CLOSED_FAIL_OUTPUT (2026-09-29) |
 | R2 `R2-EAGER-MBT8192` | NVFP4 · E5M2 KV · eager · MBT8192 | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 111.34 | 1142.84 | 9.65 | 17.95 | 11.56 | 298.73 | 3453 | 14753/14753 | CLOSED_NO_QUALIFYING_BENEFIT |
 
-R1은 Project A PASS / Project B FAIL이라 `*` 성능값을 정상 candidate와 직접 비교하거나 graph speedup으로 해석하지 않는다. R2는 decode/aggregate 신호가 있었지만 prefill -21.56%, TTFT +1.57%, wall +5.66%로 intended latency 개선을 충족하지 못했다.
+R1의 위/아래 수치는 각각 [원측정](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260928-001.md) / [2026-09-30 동일 설정 재측정](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001.md)이다. 원측정은 Project A PASS / Project B FAIL(997 < 최소 1024 tokens)이라 `*` 성능값을 정상 candidate와 직접 비교하지 않는다. 재측정은 A/B 모두 PASS(2915/1934 tokens)였지만 두 번 모두 graph capture/replay는 `UNKNOWN`이고 output 길이가 달라 graph speedup은 증명되지 않았다. R1은 상충된 출력 evidence로 5.5 recipe에 추가하지 않는다. R2는 decode/aggregate 신호가 있었지만 prefill -21.56%, TTFT +1.57%, wall +5.66%로 intended latency 개선을 충족하지 못했다. [현재 review](WBS-5.4.3.4-result-review.md#7-2026-09-30-r1-재측정-addendum) 참조.
 
 ## 구동 명령어
 

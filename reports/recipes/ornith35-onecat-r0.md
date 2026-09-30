@@ -139,7 +139,7 @@ Output integrity: **PASS (2/2)**. C2 resident/active=true, queue_only=false; pos
 
 ## 제약 및 해석
 
-- R1 graph-auto는 FAIL_OUTPUT, R2 MBT8192는 prefill/latency 이득이 없어 baseline eager를 유지했다.
+- R1 graph-auto는 원측정 `FAIL_OUTPUT` 후 2026-09-30 사용자 요청 동일 설정 재측정에서 `PASS_C2_ACTIVE`였으나 graph capture/replay는 두 번 모두 `UNKNOWN`이다. 상충된 출력 evidence와 서로 다른 output trajectory 때문에 R1을 graph 이득이나 안정된 recipe로 승격하지 않는다. R2 MBT8192는 prefill/latency 이득이 없어 baseline eager를 유지했다. [후속 review](../../docs/WBS-5.4.3.4-result-review.md#7-2026-09-30-r1-재측정-addendum).
 - 런타임 로그는 speculative_config=None, enforce_eager=True, cudagraph_mode=NONE, enable_prefix_caching=True, enable_chunked_prefill=True를 기록한다. Graph evidence extractor의 UNKNOWN은 graph 가속 증거로 쓰지 않는다.
 - Wheel SHA는 보존된 wheel receipt와 static review로 연결한다. 설치 package tree 전체가 wheel과 byte-identical하다는 독립 검증은 없다.
 - 이 recipe의 유효 measured run은 1회다. 반복 검증의 신뢰구간이나 전체 workload에 대한 우위를 주장하지 않는다.

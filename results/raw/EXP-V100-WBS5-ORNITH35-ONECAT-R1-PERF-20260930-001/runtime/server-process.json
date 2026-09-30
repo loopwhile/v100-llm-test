@@ -1,0 +1,42 @@
+{
+  "pid": 19552,
+  "start_ticks": "711808",
+  "launch_command": [
+    "/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python",
+    "-m",
+    "vllm.entrypoints.openai.api_server",
+    "--model",
+    "/srv/models/ornith-1.5-35b-a3b-nvfp4",
+    "--served-model-name",
+    "Ornith-1.5-35B-A3B",
+    "--trust-remote-code",
+    "--dtype",
+    "half",
+    "--attention-backend",
+    "FLASH_ATTN_V100",
+    "--tensor-parallel-size",
+    "2",
+    "--kv-cache-dtype",
+    "fp8_e5m2",
+    "--max-model-len",
+    "131072",
+    "--max-num-seqs",
+    "2",
+    "--max-num-batched-tokens",
+    "4096",
+    "--gpu-memory-utilization",
+    "0.90",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "18080"
+  ],
+  "environment": {
+    "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "LANG": "C.UTF-8",
+    "HOME": "/home/loopwhile",
+    "CUDA_VISIBLE_DEVICES": "0,1",
+    "VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL": "0",
+    "PYTHONPATH": "/home/loopwhile/v100-llm-test-wbs5/a9c72cc919de/scripts/runtime_hooks"
+  }
+}
