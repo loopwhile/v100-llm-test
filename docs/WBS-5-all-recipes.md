@@ -1,12 +1,12 @@
 # WBS 5 — All recipes, measured results and launch commands
 
-Date: 2026-09-29
+Date: 2026-09-29 · Updated: 2026-09-30
 
 Update: 2026-09-30 · Ornith 35B / 1Cat R1 동일 설정 재측정 `PASS_C2_ACTIVE`를 현재 authoritative result로 반영했다. 2026-09-29 원측정 `FAIL_OUTPUT`은 historical evidence로 보존하며, current 5.5 final recipe는 R0에서 R1으로 갱신한다.
 
 이 문서는 WBS 5.5가 최종 review한 **7개 model/runtime track의 frozen candidate 25개 전체**를 한 곳에 기록한다. `WBS-5.5-final-recipes.md`가 승격된 6개 final recipe 중심이라면, 이 문서는 baseline, closed candidate, output failure, queue-only, gate skip, toolchain blocked까지 포함한 **전체 recipe ledger**다.
 
-WBS 5.5 자체에서는 새 GPU inference를 수행하지 않았다. 아래 측정값은 WBS 5에서 이미 보존된 canonical raw/report의 관찰값이다. 모든 performance workload는 독립 Project A/B 두 요청, 요청당 131,072-token ceiling, output reserve 4,096 / minimum 1,024, temperature 0 / top_p 1 / seed 520을 기준으로 한다.
+2026-09-29 원래 WBS 5.5 publication 단계 자체에서는 새 GPU inference를 수행하지 않았다. 이후 2026-09-30 사용자 요청으로 기존 frozen R1 동일 설정을 독립 재측정했고, 해당 `PASS_C2_ACTIVE` 결과를 현재 publication에 반영했다. 그 외 측정값은 기존 canonical raw/report의 관찰값이다. 모든 performance workload는 독립 Project A/B 두 요청, 요청당 131,072-token ceiling, output reserve 4,096 / minimum 1,024, temperature 0 / top_p 1 / seed 520을 기준으로 한다.
 
 ## 읽는 법
 
