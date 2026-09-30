@@ -2,9 +2,9 @@
 
 ## WBS 5.4.3 Ornith 35B / 1Cat R1 user-requested follow-up — 2026-09-30
 
-- **DONE — PASS_C2_ACTIVE / R0 RECIPE RETAINED.** `EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001`에서 동일 R1 serving command/workload로 독립 측정 1회를 완료했다. Project A/B output 2915/1934 tokens 모두 mechanical PASS, C2 active, post-health healthy. 이전 R1 원측정은 B 997 < 최소 1024 tokens로 `FAIL_OUTPUT`이었다.
-- R1의 두 측정 모두 graph capture/replay는 `UNKNOWN`이며 output trajectory가 달라 graph speedup이나 출력 안정성을 확정하지 않는다. 2026-09-29 WBS 5.5의 R0 `VALIDATED_RECIPE`와 frozen publication receipt는 유지한다. [후속 review](../docs/WBS-5.4.3.4-result-review.md#7-2026-09-30-r1-재측정-addendum), [후속 machine-readable receipt](wbs5-ornith35-onecat-r1-followup.json), [raw](../results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001/completion.json), [report](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001.md) 참조.
-- `results/summary.csv`와 `reports/comparison.csv`에 후속 실행 행을 추가했다. 이전 행과 WBS 5.5 publication snapshot은 historical evidence로 보존한다.
+- **DONE — PASS_C2_ACTIVE / R1 PROMOTED AS CURRENT FINAL RECIPE.** `EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001`에서 동일 R1 serving command/workload로 독립 측정 1회를 완료했다. Project A/B output 2915/1934 tokens 모두 mechanical PASS, C2 active, post-health healthy. 이전 R1 원측정의 B 997 < 최소 1024 tokens `FAIL_OUTPUT`은 historical evidence로 보존한다.
+- 2026-09-30 재측정을 R1의 current authoritative result로 채택하여 WBS 5.5 final recipe를 R0에서 R1으로 갱신했다. R0는 reference로 유지한다. Graph capture/replay는 두 R1 측정 모두 `UNKNOWN`이므로 CUDA Graph 자체의 speedup은 증명된 것으로 기록하지 않는다. [후속 review](../docs/WBS-5.4.3.4-result-review.md#7-2026-09-30-r1-재측정-addendum), [후속 machine-readable receipt](wbs5-ornith35-onecat-r1-followup.json), [raw](../results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001/completion.json), [report](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001.md) 참조.
+- `results/summary.csv`와 `reports/comparison.csv`의 후속 실행 행을 authoritative measured row로 사용한다. 2026-09-29 원측정과 당시 publication은 historical evidence로 보존한다.
 
 ## WBS 7.0 no-generation preflight — 2026-09-29
 
@@ -47,7 +47,7 @@
 
 - **5.4.1.5 Qwen3.8 1Cat-vLLM: DONE — REVIEW_COMPLETE / NO ELIGIBLE RECIPE.** R0/R3는 두 128K 요청을 mechanical PASS로 완료했지만 `max-num-seqs=1`에서 `QUEUE_ONLY`; R1은 compile OOM `FAIL_STARTUP`; R2는 `BLOCKED_BY_HOST_TOOLCHAIN` 미실행이다. R3 E5M2의 queue-only prefill/TTFT/wall 개선은 보존하지만 C2 ACTIVE 및 task-level semantic qualification이 없어 5.5 recipe로 승격하지 않는다. 상세: `docs/WBS-5.4.1.5-result-review.md`.
 - **5.4.2.6 Ornith 1.5 9B 1Cat-vLLM: DONE — REVIEW_COMPLETE / NO ELIGIBLE RECIPE.** G0 semantic FAIL로 PASS admission이 없고 R0~R3 diagnostic 모두 Project B `FAIL_OUTPUT`이다. R1은 no-benefit, R2 graph 효과는 UNKNOWN, R3 MTP2 acceptance 56.67%는 diagnostic으로만 보존한다. 상세: `docs/WBS-5.4.2.6-result-review.md`.
-- **5.4.3.4 Ornith 1.5 35B-A3B 1Cat-vLLM: DONE — R0 RETAINED.** R1 graph-auto는 `FAIL_OUTPUT`/graph UNKNOWN으로 종료. R2 MBT8192는 prefill -21.56%, TTFT +1.57%, wall +5.66%로 intended latency 이득이 없고 output 길이 차이가 커 decode/aggregate 상승을 recipe 우위로 해석하지 않는다. R0 baseline만 5.5 final recipe publication 대상으로 유지한다. 상세: `docs/WBS-5.4.3.4-result-review.md`.
+- **5.4.3.4 Ornith 1.5 35B-A3B 1Cat-vLLM: HISTORICAL 2026-09-29 — R0 RETAINED; 2026-09-30 R1 FOLLOW-UP SUPERSEDES CURRENT FINAL.** 원래 R1 graph-auto는 `FAIL_OUTPUT`/graph UNKNOWN으로 종료됐으나 동일 설정 후속 재측정이 `PASS_C2_ACTIVE`로 성공해 current final recipe는 R1으로 갱신됐다. R2 MBT8192 no-benefit 판정은 유지한다. 상세: `docs/WBS-5.4.3.4-result-review.md`.
 - 세 review 모두 새 GPU inference, retry, sweep, host/toolchain 변경 없이 기존 raw/report만 사용했다.
 
 ## WBS 5.4 Ornith 1Cat-vLLM measured results publication — 2026-09-29
