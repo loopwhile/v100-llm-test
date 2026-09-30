@@ -1,5 +1,14 @@
 # Current execution
 
+## Current authoritative summary — 2026-09-30
+
+- WBS 2, 3, 4, 5 and 7 are complete; WBS 6 is closed through 6.10 as recorded below.
+- WBS5 current publication has **6 VALIDATED_RECIPE entries across 5 tracks**: Qwen llama R2; Ornith9 llama R1; Ornith35 llama R1 and R2; Gemma llama R0; Ornith35 1Cat R1.
+- Ornith35 1Cat R1 is the current recipe after the 2026-09-30 remeasurement. Ornith35 1Cat R0 is historical/reference only.
+- Qwen 1Cat and Ornith9 1Cat have **NO ELIGIBLE RECIPE**.
+- Ornith9 llama.cpp 1GPU×2 + LiteLLM passed 128K C1/C2 across all four lanes. The pinned Ornith9 STOCK 1Cat TP1×2 profile is closed `FAIL_STARTUP` at 128K because one 16GB V100 cannot fit the FP16 KV requirement.
+- Current machine-readable outcome overlay: `state/current-model-status.json`. Hash-locked `config/models/*.json` remain frozen planning inputs and are not rewritten after measurement.
+
 ## WBS 5.4.3 Ornith 35B / 1Cat R1 user-requested follow-up — 2026-09-30
 
 - **DONE — PASS_C2_ACTIVE / R1 PROMOTED AS CURRENT FINAL RECIPE.** `EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001`에서 동일 R1 serving command/workload로 독립 측정 1회를 완료했다. Project A/B output 2915/1934 tokens 모두 mechanical PASS, C2 active, post-health healthy. 이전 R1 원측정의 B 997 < 최소 1024 tokens `FAIL_OUTPUT`은 historical evidence로 보존한다.
@@ -33,7 +42,7 @@
 - Review: `docs/WBS-7.3-result-review.md`; machine-readable comparison: `state/wbs7-review.json`. WBS5 frozen recipe records unchanged.
 - Final checks: remote/local raw checksum parity, frozen WBS5 raw/recipe/workload hashes, repository contract and full unittest suite PASS. P520 benchmark containers and GPU memory cleared.
 
-## WBS 5.5 final recipe publication — 2026-09-29
+## WBS 5.5 final recipe publication — 2026-09-29 (HISTORICAL SNAPSHOT; current Ornith35 1Cat recipe superseded to R1)
 
 - **WBS 5.5 / WBS 5: DONE — FINAL_RECIPES_PUBLISHED.** 7개 track / 25개 candidate / 28개 plan instance의 frozen ID·delta·invariant 재대조를 완료했다.
 - **6개 VALIDATED_RECIPE:** Qwen llama R2, Ornith9 llama R1, Ornith35 llama R1·R2(별도 설정), Gemma llama R0, Ornith35 1Cat R0.

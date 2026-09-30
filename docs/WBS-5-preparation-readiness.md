@@ -1,5 +1,7 @@
 # WBS5 8B~8D preparation readiness — 2026-09-28
 
+> **HISTORICAL SNAPSHOT.** This document records pre-run readiness as of 2026-09-28. Its `PENDING`, `STATIC_READY`, and `CONDITIONAL_PENDING_GATE` states are intentionally preserved. Current measured outcomes are in `state/current.md`, `state/current-model-status.json`, and `docs/WBS-5.5-final-recipes.md`.
+
 시작 main SHA: `a78f0a8762b22724051e0d095eb48bb2de9b9b03`. 작업 시작 clean tree에서 원격 main을 `git pull --ff-only`와 `git ls-remote`로 다시 확인했다.
 
 **READY_FOR_PRE_RUN_VALIDATION**. 7개 track의 runner/harness integration과 offline validation을 완료했다. **Measured inference executed: NO**. GPU server/model startup, short probe, G0 inference, 128K request, performance benchmark, CUDA JIT/kernel/compiler smoke는 실행하지 않았다. 서브에이전트도 사용하지 않았다.

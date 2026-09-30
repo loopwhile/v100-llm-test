@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-09-30",
+  "purpose": "Current measured outcome overlay. Does not replace or mutate hash-locked config/models planning inputs.",
+  "hardware": "Lenovo P520, 2x Tesla V100-SXM2-16GB",
+  "models": {
+    "Qwen3.8-27B": {
+      "llama_cpp": {
+        "wbs3_c2": "PASS_C2_ACTIVE",
+        "wbs5": "VALIDATED_RECIPE",
+        "current_recipes": [
+          "Q38-LLAMA-WBS5-R2-TARGET-UB256"
+        ]
+      },
+      "onecat_vllm": {
+        "topology": "tp2-shared",
+        "wbs3_c2": "QUEUE_ONLY / FAIL_OUTPUT",
+        "wbs5": "NO_ELIGIBLE_RECIPE"
+      },
+      "v100_skinny": {
+        "verdict": "FAIL_OOM_MODEL_LOAD",
+        "boot_gate": "NOT_REACHED"
+      }
+    },
+    "Ornith-1.5-9B": {
+      "llama_cpp": {
+        "shared_tp2_wbs3_c2": "PASS_C2_ACTIVE",
+        "independent_1gpu_x2_wbs4": "PASS_C2_ACTIVE",
+        "wbs5": "VALIDATED_RECIPE",
+        "current_recipes": [
+          "TARGET_UB256"
+        ],
+        "topology": "1gpu-x2-independent + LiteLLM"
+      },
+      "onecat_vllm": {
+        "shared_tp2_wbs3_c2": "PASS_C2_ACTIVE",
+        "wbs5": "NO_ELIGIBLE_RECIPE_G0_FAIL_OUTPUT",
+        "independent_1gpu_x2_wbs4": "FAIL_STARTUP",
+        "independent_1gpu_x2_note": "128K FP16 KV requires 4.68 GiB per TP1 backend; 2.61 GiB available; estimated max sequence length ~71.2K."
+      },
+      "v100_skinny": {
+        "verdict": "UNSUPPORTED",
+        "note": "No pinned v1.1 standalone model contract."
+      }
+    },
+    "Ornith-1.5-35B-A3B": {
+      "llama_cpp": {
+        "wbs3_c2": "PASS_C2_ACTIVE",
+        "wbs5": "VALIDATED_RECIPE",
+        "current_recipes": [
+          "ORN35-LLAMA-WBS5-R1-MTP1",
+          "ORN35-LLAMA-WBS5-R2-UB256"
+        ]
+      },
+      "onecat_vllm": {
+        "topology": "tp2-shared",
+        "wbs3_c2": "PASS_C2_ACTIVE",
+        "wbs5": "VALIDATED_RECIPE",
+        "current_recipes": [
+          "R1-GRAPH-AUTO-MBT4096"
+        ],
+        "note": "2026-09-30 R1 remeasurement is authoritative; graph capture/replay remains UNKNOWN."
+      },
+      "v100_skinny": {
+        "verdict": "UNSUPPORTED",
+        "note": "No pinned v1.1 standalone model contract."
+      }
+    },
+    "Gemma4-26B-A4B": {
+      "llama_cpp": {
+        "wbs3_c2": "PASS_C2_ACTIVE",
+        "wbs5": "VALIDATED_RECIPE",
+        "current_recipes": [
+          "G4-LCPP-WBS5-R0-TARGET-B512-UB128"
+        ]
+      },
+      "onecat_vllm": {
+        "topology": "tp2-shared",
+        "c1": "FAIL_TIMEOUT",
+        "c2": "NOT_ELIGIBLE",
+        "wbs5": "NOT_ELIGIBLE"
+      },
+      "v100_skinny": {
+        "verdict": "UNSUPPORTED",
+        "note": "No pinned v1.1 standalone model contract."
+      }
+    }
+  },
+  "authoritative_references": [
+    "docs/WBS.md",
+    "state/current.md",
+    "docs/WBS-5.5-final-recipes.md",
+    "state/wbs5-final-recipes.json",
+    "docs/WBS-7.3-result-review.md"
+  ]
+}

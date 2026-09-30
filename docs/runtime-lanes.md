@@ -29,7 +29,9 @@ The C2 value intentionally asks for two independent 128K logical contexts. If it
 
 ## 1Cat-vLLM stock
 
-Stock retains the imported 1Cat-vLLM 1.5.0 wheel identity, FLASH_ATTN_V100, TP2, 128K per sequence, and \`max_num_seqs=1|2\`. Ornith 1.5 9B additionally has a first-class 1GPU×2 STOCK topology once its exact NVFP4 artifact and exact MTP speculative launch configuration are resolved: two TP1 processes, one pinned to each V100, each with \`max_model_len=131072\` and \`max_num_seqs=1\`, behind the same mandatory LiteLLM gateway used by the llama.cpp independent topology. A non-target speculative candidate without a pinned launch configuration fails closed as \`UNSUPPORTED\`.
+Stock retains the imported 1Cat-vLLM 1.5.0 wheel identity, FLASH_ATTN_V100, and the pinned per-model contracts. Shared TP2 WBS3 v2 results are now measured rather than pending: Ornith 1.5 9B and Ornith 1.5 35B-A3B reached `PASS_C2_ACTIVE`; Qwen3.8 completed as `QUEUE_ONLY / FAIL_OUTPUT`; Gemma4 was not C2-eligible because C1 ended `FAIL_TIMEOUT`.
+
+Ornith 1.5 9B also has an exact pinned TP1×2 + LiteLLM STOCK profile, but WBS 4.2.1 closed it as `FAIL_STARTUP`: each one-GPU TP1 process needed 4.68 GiB of FP16 KV for 128K while only 2.61 GiB was available, giving an estimated maximum sequence length of about 71.2K. The failure occurred before routing preflight/measured C2, so this topology is **not pending** and does not inherit the successful llama.cpp 1GPU×2 result.
 
 ## v100-skinny
 
@@ -65,6 +67,8 @@ The TP2 census expectation is **256** protected FP8 module instances (128 per ra
 ## LiteLLM gateway for Ornith 9B 1GPU×2
 
 The independent topology pins LiteLLM v1.101.0 (`18243cd7af4c3325165ba68b21379e2719e051c7`) as part of the measured serving stack.
+
+This gateway contract is fully validated by the llama.cpp 1GPU×2 WBS4 runs. The pinned 1Cat TP1×2 profile failed its per-backend 128K startup gate before LiteLLM routing preflight, so no 1Cat 128K gateway PASS is claimed.
 
 - one client endpoint: `http://127.0.0.1:18079`
 - two local OpenAI-compatible deployments: backend ports 18080/18081

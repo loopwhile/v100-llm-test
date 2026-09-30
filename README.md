@@ -4,7 +4,9 @@ Serving acceptance and performance-recipe tests for a Lenovo P520 with 2× Tesla
 
 ## Goal
 
-Determine which model/runtime/topology can reliably serve independent single-agent coding projects, then retain reproducible per-model serving recipes with:
+Validate reproducible serving configurations for independent single-agent coding projects, preserving exact model/runtime/topology evidence and publishing bounded recipes rather than selecting one automatic winner.
+
+Operating target:
 - per-agent context ceiling: 128K
 - normal concurrency: C1
 - required peak concurrency: C2
@@ -21,8 +23,7 @@ A server merely configured for 128K is not a 128K PASS. Two accepted HTTP reques
 
 ## Required runtime lanes
 
-llama.cpp:
-Global llama.cpp lane catalog:
+llama.cpp global lane catalog:
 - TARGET
 - NGRAM
 - MTP
@@ -34,45 +35,77 @@ vLLM family:
 - 1Cat-vLLM STOCK
 - v100-skinny SKINNY, mandatory explicit result row
 
-v100-skinny is a separate pinned runtime identity, not a flag on the STOCK 1Cat environment. On the current 2×V100-16GB P520, WBS 1.4 ends at `FAIL_OOM_MODEL_LOAD` during QPN prepack before server boot, so SKINNY is retained as evidence but not scheduled for C1/C2.
+v100-skinny is a separate pinned runtime identity, not a flag on the STOCK 1Cat environment. On the current 2×V100-16GB P520, WBS 1.4 ends at `FAIL_OOM_MODEL_LOAD` during QPN prepack before server boot, so SKINNY is retained as evidence but not scheduled for C1/C2. Non-Qwen SKINNY rows remain `UNSUPPORTED` because the pinned v1.1 standalone contract is Qwen-specific.
 
 ## Topologies
-- tp2-shared: one model/server across both V100s
-- 1gpu-x2-independent: two one-GPU Ornith 1.5 9B servers behind one **mandatory LiteLLM gateway**; a first-class candidate for llama.cpp and, once the exact artifact is verified, STOCK 1Cat-vLLM
 
-For `1gpu-x2-independent`, both C1 and C2 acceptance requests must enter through the same LiteLLM endpoint. Direct client-to-backend routing is diagnostic only and cannot produce the final topology acceptance result. LiteLLM is pinned to v1.101.0 and uses a two-deployment model group with `least-busy` routing and `max_parallel_requests=1` per backend.
+- `tp2-shared`: one model/server across both V100s.
+- `1gpu-x2-independent`: two one-GPU Ornith 1.5 9B servers behind one mandatory LiteLLM gateway.
+
+The independent topology is **validated for llama.cpp**: WBS 4 completed C1 and C2 128K, and TARGET/NGRAM/MTP/MTP_NGRAM all reached `PASS_C2_ACTIVE`. The corresponding STOCK 1Cat-vLLM TP1×2 profile is **closed as `FAIL_STARTUP`**: one V100 16GB cannot fit the pinned 128K FP16 KV requirement (4.68 GiB required versus 2.61 GiB available; estimated maximum sequence length ~71.2K).
+
+For every runnable `1gpu-x2-independent` acceptance test, requests enter through the same LiteLLM endpoint. Direct client-to-backend routing is diagnostic only. LiteLLM is pinned to v1.101.0 and uses two deployments with `least-busy` routing and `max_parallel_requests=1` per backend.
 
 Shared llama.cpp C2 explicitly requests a 256K logical aggregate KV pool with a 128K ceiling per slot.
 
 ## Workloads
+
 Compact deterministic manifests:
-- workloads/capacity/v1.json
-- workloads/concurrency/v2.json — authoritative WBS 3 C2 workload
-- workloads/concurrency/v2-ground-truth.json — pre-registered semantic oracle
-- workloads/concurrency/v1.json — historical C2 evidence only
-- workloads/performance/v1.json
+- `workloads/capacity/v1.json` — C1 capacity
+- `workloads/concurrency/v2.json` — authoritative WBS 3 C2 workload
+- `workloads/concurrency/v2-ground-truth.json` — pre-registered semantic oracle
+- `workloads/concurrency/v1.json` — historical C2 evidence only
+- `workloads/performance/v1.json` — sustained C2 performance/replay workload
 
-scripts/build_128k_workload.py materializes them with the exact live tokenizer so prompt plus reserved output stays within 131072 tokens while filling at least 99% of the budget.
+`scripts/build_128k_workload.py` materializes manifests with the exact live tokenizer so prompt plus reserved output stays within 131072 tokens while filling at least 99% of the budget.
 
-C2 uses unrelated Project A and Project B material with distinct hashes. Authoritative v2 contains one known seeded bug per project anchor plus semantically-neutral section-variant padding; semantic review uses the frozen ground-truth oracle instead of forcing an unspecified risk. Capacity/C2 reserve 2048 output tokens and require at least 256 actual completion tokens. Runtime concurrency evidence is preserved independently from mechanical/semantic output verdicts. The performance workload reserves 4096 and requires at least 1024.
+Authoritative C2 uses unrelated Project A/B material with distinct hashes. Capacity/C2 reserves 2048 output tokens and requires at least 256 actual completion tokens. The performance workload reserves 4096 and requires at least 1024. Runtime concurrency evidence is preserved independently from mechanical and semantic output verdicts.
+
+See [workload contract](docs/workload-contract.md) and [workload README](workloads/README.md).
+
+## Current validated results
+
+WBS 3 authoritative C2 and WBS 4 topology validation are complete. Key STOCK 1Cat outcomes:
+- Qwen3.8 TP2: WBS3 v2 `QUEUE_ONLY / FAIL_OUTPUT`; no WBS5 eligible recipe.
+- Ornith 1.5 9B TP2: WBS3 v2 `PASS_C2_ACTIVE`; WBS5 G0 semantic admission failed and the track closed with no eligible recipe.
+- Ornith 1.5 35B-A3B TP2: WBS3 v2 `PASS_C2_ACTIVE`; WBS5 R1 is a current validated recipe.
+- Ornith 1.5 9B TP1×2 + LiteLLM: `FAIL_STARTUP` at 128K on one 16GB V100.
+- Gemma4 26B-A4B TP2: C1 ended `FAIL_TIMEOUT`; C2/WBS5 not eligible.
+
+WBS 5 final publication contains **6 validated recipes across 5 tracks**:
+- Qwen llama.cpp R2 — TARGET, UB256
+- Ornith 9B llama.cpp R1 — 1GPU×2 + LiteLLM, TARGET UB256
+- Ornith 35B llama.cpp R1 — native MTP1
+- Ornith 35B llama.cpp R2 — TARGET UB256
+- Gemma4 llama.cpp R0 — TARGET baseline
+- Ornith 35B 1Cat R1 — E5M2, graph-auto serving configuration, MBT4096
+
+Qwen 1Cat and Ornith 9B 1Cat have **NO ELIGIBLE RECIPE**. See [WBS 5 final publication](docs/WBS-5.5-final-recipes.md), [all recipe ledger](docs/WBS-5-all-recipes.md), and [machine-readable final recipes](state/wbs5-final-recipes.json).
+
+WBS 7 post-WBS5 validation is also complete. Native MTP1 ended terminal GPU OOM; the bounded GQA×2 experiment passed C2 but was not promoted to a new recipe. See [WBS 7 result review](docs/WBS-7.3-result-review.md).
+
+## Frozen inputs versus current state
+
+Files under `config/models/` are benchmark planning inputs and some are hash-locked by `config/wbs5-input-lock.json`. Their historical `status` strings must not be rewritten after measurement because doing so would invalidate the frozen-input audit. Current outcomes are recorded separately in:
+- [current execution state](state/current.md)
+- [current machine-readable model status](state/current-model-status.json)
+- [model config notes](config/models/README.md)
+
+Historical raw/config/plan files remain immutable evidence even when they contain pre-measurement status text.
 
 ## Evidence
-Fresh runs write raw evidence under results/raw/<EXPERIMENT_ID>/, one Markdown report under reports/, and normalized rows in:
-- results/summary.csv
-- reports/comparison.csv
 
-Historical results are not imported as acceptance evidence. C2 evidence is sampled from runtime metrics/slots during the measured window, and sampled peak VRAM is merged into the experiment metrics. For Ornith 9B 1GPU×2, evidence additionally records LiteLLM deployment headers and backend activity so the result proves that the single gateway actually distributed the two active requests across GPU0/GPU1.
+Fresh runs write raw evidence under `results/raw/<EXPERIMENT_ID>/`, one Markdown report under `reports/`, and normalized rows in:
+- `results/summary.csv`
+- `reports/comparison.csv`
 
-## Project status
-WBS 5 final recipe publication is complete: **6 validated recipes across 5 tracks**, with Qwen and Ornith 9B 1Cat tracks closed without an eligible recipe. See [final publication](docs/WBS-5.5-final-recipes.md) for the recipe index, performance, exact launch commands, provenance and limitations; [machine-readable records](state/wbs5-final-recipes.json) include the frozen-plan audit and evidence hashes.
+Historical results are not imported as acceptance evidence. C2 evidence is sampled from runtime metrics/slots during the measured window, and sampled peak VRAM is merged into experiment metrics. For Ornith 9B llama.cpp 1GPU×2, evidence additionally records LiteLLM deployment headers and backend activity to prove distribution across GPU0/GPU1.
 
-Validation is bounded to the recorded hardware, exact artifacts and performance workload. Ornith 9B llama.cpp retains an unresolved upstream repository identity and is validated against its exact local GGUF. Mechanical output PASS does not add semantic coding-quality certification.
-
-WBS 7 post-WBS5 validation is complete; its [result review](docs/WBS-7.3-result-review.md) records MTP1 GPU OOM and the bounded GQA×2 result. Current execution status is recorded in [WBS](docs/WBS.md) and [current state](state/current.md). WBS 7 outcomes are not part of the frozen WBS 5 recipes.
+Validation is bounded to the recorded hardware, exact artifacts and declared workload. Mechanical output PASS does not add semantic coding-quality certification.
 
 Offline repository validation:
 
     python3 scripts/validate_repo.py
     python3 -m unittest discover -s tests -v
 
-The project ends with validated/bounded recipes per model/runtime/topology. It does not choose or deploy one final production configuration; recipe selection is left to the user.
+The project publishes validated/bounded recipes per model/runtime/topology. It does not choose or deploy one final production configuration; recipe selection is left to the user.
