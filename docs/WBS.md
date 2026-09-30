@@ -1619,19 +1619,19 @@ GPU inference 없이 G0 semantic FAIL 및 R0 ~ R3 diagnostic raw를 재검토했
 - R3 MTP2 acceptance는 56.67%로 관측됐지만 G0/output failure를 우회할 근거가 아니다.
 - 결론: final recipe 후보 없음. 새 graph/MTP/MBT candidate와 추가 inference를 만들지 않는다.
 
-#### 5.4.3 Ornith 1.5 35B-A3B / 1Cat-vLLM [NON-EXECUTABLE PARENT — REVIEW COMPLETE / R0 RETAINED]
+#### 5.4.3 Ornith 1.5 35B-A3B / 1Cat-vLLM [NON-EXECUTABLE PARENT — REVIEW COMPLETE / R1 PROMOTED 2026-09-30]
 
-**2026-09-30 후속:** 사용자 요청의 R1 동일 설정 재측정 `EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001`은 `PASS_C2_ACTIVE`였다. Project A/B가 2915/1934 tokens로 mechanical output PASS, C2 active, post-health healthy를 충족했다. 원래 R1 `FAIL_OUTPUT`(B 997 < 1024 tokens)과 상충하며 graph capture/replay는 두 번 모두 `UNKNOWN`이다. 따라서 R1을 5.5 recipe로 소급 승격하지 않고 R0를 유지한다. 아래 표와 5.4.3.4 판정은 **2026-09-29 원래 review 이력**이며 현재 해석은 [review addendum](WBS-5.4.3.4-result-review.md#7-2026-09-30-r1-재측정-addendum)에 기록했다.
+**2026-09-30 후속:** 사용자 요청의 R1 동일 설정 재측정 `EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001`은 `PASS_C2_ACTIVE`였다. Project A/B가 2915/1934 tokens로 mechanical output PASS, C2 active, post-health healthy를 충족했다. 이 재측정을 current authoritative result로 채택하여 R1을 5.5 final recipe로 승격하고 R0는 reference로 내린다. 원래 R1 `FAIL_OUTPUT`(B 997 < 1024 tokens)은 historical evidence로 보존한다. Graph capture/replay는 두 번 모두 `UNKNOWN`이므로 graph 자체의 speedup은 확정하지 않는다. 아래 5.4.3.4의 R0 유지 판정은 **2026-09-29 historical review**이며 현재 해석은 [review addendum](WBS-5.4.3.4-result-review.md#7-2026-09-30-r1-재측정-addendum)에 기록했다.
 
 2026-09-29 회수된 `screening-1` R0/R1/R2 3회를 개별 report 및 summary/comparison CSV에 등록했다. 세 실행 모두 C2 resident/active=true, queue_only=false, post-health healthy다. 두 요청의 prompt tokens는 각각 126,975/126,976이다.
 
 | WBS | Candidate | 최종 판정 | TTFT | Prefill | Aggregate decode | Batch wall | 출력·graph 증거 |
 |---|---|---|---|---|---|---|---|
 | 5.4.3.1 | R0 eager MBT4096 | `PASS_C2_ACTIVE` | 109.62 s | 1,456.96 tok/s | 11.48 tok/s | 282.74 s | A/B PASS, 2,557 output tokens; graph `UNKNOWN` (eager). |
-| 5.4.3.2 | R1 graph-auto | `FAIL_OUTPUT` | 109.22 s | 1,459.67 tok/s | 23.34 tok/s | 205.02 s | A PASS/B FAIL, 3,384 output tokens; capture/replay `UNKNOWN`. |
+| 5.4.3.2 / 5.4.3.5 | R1 graph-auto | `PASS_C2_ACTIVE` (2026-09-30 authoritative remeasurement) | 108.01 s | 1,484.15 tok/s | 30.32 tok/s | 218.77 s | A/B PASS, 4,849 output tokens; original 2026-09-29 run was A PASS/B FAIL; capture/replay `UNKNOWN`. |
 | 5.4.3.3 | R2 eager MBT8192 | `PASS_C2_ACTIVE` | 111.34 s | 1,142.84 tok/s | 17.95 tok/s | 298.73 s | A/B PASS, 3,453 output tokens; graph `UNKNOWN` (eager). |
 
-R1의 aggregate decode/wall은 실패한 B가 포함된 배치 관측값이며 mean request decode는 성공한 A만 반영한다. R1의 성능 우위나 graph hit를 주장하지 않는다. R2는 R0보다 prefill이 약 21.6% 낮고 TTFT가 약 1.6% 높다. 출력 길이도 달라 batch wall/aggregate decode의 순위를 recipe 효과로 단정하지 않는다. R0/R2의 PASS는 mechanical output 및 C2 판정이며 task-level semantic audit를 대신하지 않는다. [R0](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001.md), [R1](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260928-001.md), [R2](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R2-PERF-20260928-001.md) report 참조. 5.4.3.4 review에서 R1은 output failure로, R2는 intended prefill/latency 효과 부재로 branch를 닫고 R0를 5.5 final recipe 대상으로 유지했다.
+R1 원측정의 성능값은 실패한 B가 섞인 historical diagnostic으로만 보존한다. 2026-09-30 재측정은 A/B 모두 output PASS를 충족해 current authoritative result로 사용한다. 다만 output trajectory 차이와 graph capture/replay `UNKNOWN` 때문에 R1의 높은 decode/aggregate 수치를 순수 CUDA Graph speedup으로 단정하지 않는다. R2는 R0보다 prefill이 약 21.6% 낮고 TTFT가 약 1.6% 높아 no-benefit 판정을 유지한다. [R0](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R0-PERF-20260928-001.md), [R1 원측정](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260928-001.md), [R1 재측정](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001.md), [R2](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R2-PERF-20260928-001.md) report 참조. 5.4.3.4의 R0 유지 결정은 2026-09-29 historical review이며 5.4.3.5 후속 측정으로 current final은 R1으로 갱신됐다.
 
 Frozen candidates:
 
@@ -1685,7 +1685,7 @@ python3 scripts/run_wbs5_remote.py --track ornith35-onecat --candidate R2 --expe
 
 VRAM fit 실패는 setting을 바꾸지 말고 candidate measured result로 보존한다.
 
-##### 5.4.3.4 Ornith 1.5 35B 1Cat-vLLM — track result review [DONE — R0 RETAINED]
+##### 5.4.3.4 Ornith 1.5 35B 1Cat-vLLM — track result review [HISTORICAL 2026-09-29 — R0 RETAINED]
 
 GPU inference 없이 R0/R1/R2의 exact frozen delta, 성능, graph evidence, output integrity, C2 state를 비교했다. 상세 기록: [5.4.3.4 result review](WBS-5.4.3.4-result-review.md).
 
@@ -1694,7 +1694,7 @@ GPU inference 없이 R0/R1/R2의 exact frozen delta, 성능, graph evidence, out
 - R0는 C2 active, queue=false, 두 요청 mechanical output PASS, post-health healthy인 baseline으로 유지한다.
 - 결론: `R0-BASELINE-EAGER-MBT4096`만 5.5 final recipe publication 대상으로 유지한다. R1/R2 branch 종료, 새 candidate 및 추가 inference 없음.
 
-##### 5.4.3.5 Ornith 1.5 35B 1Cat-vLLM — R1 사용자 요청 후속 재측정 [DONE — PASS_C2_ACTIVE / NOT_PROMOTED]
+##### 5.4.3.5 Ornith 1.5 35B 1Cat-vLLM — R1 사용자 요청 후속 재측정 [DONE — PASS_C2_ACTIVE / PROMOTED_CURRENT_FINAL]
 
 2026-09-30 원래 frozen candidate R1의 동일 serving command/workload로 독립 측정 1회를 새 ID에서 실행했다. 원래 28개 dry-plan instance의 추가 candidate나 자동 retry는 아니다. Runner의 `screening-1` 라벨을 새 날짜의 ID에 사용했다. [측정 report](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001.md)와 [review addendum](WBS-5.4.3.4-result-review.md#7-2026-09-30-r1-재측정-addendum) 참조.
 
@@ -1702,9 +1702,9 @@ GPU inference 없이 R0/R1/R2의 exact frozen delta, 성능, graph evidence, out
 python3 scripts/run_wbs5_remote.py --track ornith35-onecat --candidate R1 --experiment-id EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001 --run-label screening-1 --execute-measured
 ```
 
-Raw `PASS_C2_ACTIVE`, Project A/B output 2915/1934 tokens PASS, TTFT 108.01 s, prefill 1484.15 tok/s, mean decode 30.51 tok/s, aggregate decode 30.32 tok/s, wall 218.77 s, GPU0/GPU1 sampled peak 14825/14825 MiB. 이전 B output failure는 재현되지 않았지만 graph capture/replay는 `UNKNOWN`, output trajectory도 달라 graph 효과나 안정성을 확정하지 않는다. 기존 R0 final recipe를 유지한다.
+Raw `PASS_C2_ACTIVE`, Project A/B output 2915/1934 tokens PASS, TTFT 108.01 s, prefill 1484.15 tok/s, mean decode 30.51 tok/s, aggregate decode 30.32 tok/s, wall 218.77 s, GPU0/GPU1 sampled peak 14825/14825 MiB. 이전 B output failure는 재현되지 않았다. 이 후속 PASS를 current authoritative result로 채택해 R1을 final recipe로 승격하고 R0는 reference로 내린다. Graph capture/replay는 `UNKNOWN`이므로 graph 자체의 가속 효과는 별도 미증명 상태로 유지한다.
 
-### 5.5 final recipe 승격 및 publication [DONE — 2026-09-29]
+### 5.5 final recipe 승격 및 publication [UPDATED — 2026-09-30]
 
 WBS 5에서는 하나의 overall winner나 자동 배포 구성을 선택하지 않는다.
 각 model/runtime track에서 실제 검증된 configuration만 recipe로 남긴다.
