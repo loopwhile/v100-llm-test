@@ -353,6 +353,8 @@ PYTHONPATH=/home/loopwhile/Data/Workspace_VSCode/v100-llm-test/scripts/runtime_h
 /home/loopwhile/qwen3.8-bench-runtime/venv/bin/python -m vllm.entrypoints.openai.api_server --model /srv/models/ornith-1.5-35b-a3b-nvfp4 --served-model-name Ornith-1.5-35B-A3B --trust-remote-code --dtype half --attention-backend FLASH_ATTN_V100 --tensor-parallel-size 2 --kv-cache-dtype fp8_e5m2 --max-model-len 131072 --max-num-seqs 2 --max-num-batched-tokens 4096 --gpu-memory-utilization 0.9 --host 127.0.0.1 --port 18080
 ```
 
+OpenCode에서 사용하는 현재 서버 기동 명령은 [R1 recipe의 OpenCode용 명령](../reports/recipes/ornith35-onecat-r1.md#현재-opencode용-서버-기동-명령-p520)을 따른다. 위 명령은 WBS5 후보 기록이며 자동 도구 선택 파서가 포함되지 않았다.
+
 #### R2 eager MBT8192
 
 ```bash

@@ -74,6 +74,32 @@ Topology: `tp2-shared`. vLLM tensor parallel size 2, max-num-seqs 2.
 - Graph: auto path (`--enforce-eager` removed); capture/replay evidence is `UNKNOWN`.
 - Configuration SHA256: `c55b59d814bd738ecc23a527e1cdd6255f920ef126048f7dbaec513136035429`.
 
+### 현재 OpenCode용 서버 기동 명령 (P520)
+
+`ssh p520`으로 접속한 뒤 실행한다. 2026-09-30 OpenCode 연동에서 `tool_choice=auto` 요청이 HTTP 400을 반환해, 측정 당시 명령에 자동 도구 선택 및 Ornith 권장 파서를 추가했다. 이 명령은 OpenCode의 `안녕` 요청으로 확인했으며, 아래의 WBS5 측정 명령 및 성능 수치와는 구분한다.
+
+```bash
+env -i \
+  PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+  LANG=C.UTF-8 \
+  HOME=/home/loopwhile \
+  CUDA_VISIBLE_DEVICES=0,1 \
+  VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL=0 \
+  PYTHONPATH=/home/loopwhile/v100-llm-test-wbs5/a9c72cc919de/scripts/runtime_hooks \
+  /home/loopwhile/qwen3.8-bench-runtime/venv/bin/python \
+  -m vllm.entrypoints.openai.api_server \
+  --model /srv/models/ornith-1.5-35b-a3b-nvfp4 \
+  --served-model-name Ornith-1.5-35B-A3B \
+  --trust-remote-code --dtype half --attention-backend FLASH_ATTN_V100 \
+  --tensor-parallel-size 2 --kv-cache-dtype fp8_e5m2 \
+  --max-model-len 131072 --max-num-seqs 2 --max-num-batched-tokens 4096 \
+  --gpu-memory-utilization 0.90 \
+  --enable-auto-tool-choice --tool-call-parser qwen3_xml --reasoning-parser qwen3 \
+  --host 127.0.0.1 --port 18080
+```
+
+`/health`와 `tool_choice=auto` 요청이 HTTP 200으로 응답했고 `opencode run --model onecat/Ornith-1.5-35B-A3B '안녕'`이 정상 답변을 반환했다. 노트북 OpenCode는 `127.0.0.1:18080`으로 연결된 `p520` SSH 포트 포워딩을 사용한다.
+
 ### 실제 측정 launch command
 
 아래 명령은 당시 snapshot 경로와 experiment 식별자를 포함한 원문이다. 재실행 시 해당 경로가 필요하며 기존 raw experiment를 덮어쓰지 않는다. 이 publication에서는 명령을 실행하지 않았다.
