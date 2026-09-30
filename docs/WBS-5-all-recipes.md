@@ -2,7 +2,7 @@
 
 Date: 2026-09-29
 
-Update: 2026-09-30 · Ornith 35B / 1Cat R1 사용자 요청 재측정을 7절에 추가했다. `5.5 final disposition`은 2026-09-29 publication snapshot이며 신규 측정만으로 소급 변경하지 않는다.
+Update: 2026-09-30 · Ornith 35B / 1Cat R1 동일 설정 재측정 `PASS_C2_ACTIVE`를 현재 authoritative result로 반영했다. 2026-09-29 원측정 `FAIL_OUTPUT`은 historical evidence로 보존하며, current 5.5 final recipe는 R0에서 R1으로 갱신한다.
 
 이 문서는 WBS 5.5가 최종 review한 **7개 model/runtime track의 frozen candidate 25개 전체**를 한 곳에 기록한다. `WBS-5.5-final-recipes.md`가 승격된 6개 final recipe 중심이라면, 이 문서는 baseline, closed candidate, output failure, queue-only, gate skip, toolchain blocked까지 포함한 **전체 recipe ledger**다.
 
@@ -88,11 +88,11 @@ G0 semantic audit에서 Project B가 seeded race가 아닌 `_sequence` 문제를
 
 | Candidate | 설정 | 실행 verdict | 동시요청 | TTFT s | Prefill tok/s | Mean decode | Agg decode | E2E tok/s | Wall s | Output | Peak VRAM MiB<br>GPU0/GPU1 | 5.5 final disposition |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| ⭐ R0 `R0-BASELINE-EAGER-MBT4096` | NVFP4 · E5M2 KV · eager · MBT4096 | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 109.62 | 1456.96 | 8.01 | 11.48 | 9.04 | 282.74 | 2557 | 14765/14765 | VALIDATED_RECIPE |
-| R1 `R1-GRAPH-AUTO-MBT4096` | NVFP4 · E5M2 KV · graph auto · MBT4096 | FAIL_OUTPUT<br>PASS_C2_ACTIVE | C2 ACTIVE / queue=false ×2 | 109.22<br>108.01 | 1459.67<br>1484.15 | 51.40*<br>30.51 | 23.34*<br>30.32 | 16.51*<br>22.16 | 205.02*<br>218.77 | 3384*<br>4849 | 14921/14921<br>14825/14825 | CLOSED_FAIL_OUTPUT (2026-09-29) |
+| R0 `R0-BASELINE-EAGER-MBT4096` | NVFP4 · E5M2 KV · eager · MBT4096 | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 109.62 | 1456.96 | 8.01 | 11.48 | 9.04 | 282.74 | 2557 | 14765/14765 | REFERENCE_ONLY — superseded by R1 |
+| ⭐ R1 `R1-GRAPH-AUTO-MBT4096` | NVFP4 · E5M2 KV · graph auto · MBT4096 | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 108.01 | 1484.15 | 30.51 | 30.32 | 22.16 | 218.77 | 4849 | 14825/14825 | VALIDATED_RECIPE — 2026-09-30 remeasurement |
 | R2 `R2-EAGER-MBT8192` | NVFP4 · E5M2 KV · eager · MBT8192 | PASS_C2_ACTIVE | C2 ACTIVE / queue=false | 111.34 | 1142.84 | 9.65 | 17.95 | 11.56 | 298.73 | 3453 | 14753/14753 | CLOSED_NO_QUALIFYING_BENEFIT |
 
-R1의 위/아래 수치는 각각 [원측정](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260928-001.md) / [2026-09-30 동일 설정 재측정](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001.md)이다. 원측정은 Project A PASS / Project B FAIL(997 < 최소 1024 tokens)이라 `*` 성능값을 정상 candidate와 직접 비교하지 않는다. 재측정은 A/B 모두 PASS(2915/1934 tokens)였지만 두 번 모두 graph capture/replay는 `UNKNOWN`이고 output 길이가 달라 graph speedup은 증명되지 않았다. R1은 상충된 출력 evidence로 5.5 recipe에 추가하지 않는다. R2는 decode/aggregate 신호가 있었지만 prefill -21.56%, TTFT +1.57%, wall +5.66%로 intended latency 개선을 충족하지 못했다. [현재 review](WBS-5.4.3.4-result-review.md#7-2026-09-30-r1-재측정-addendum) 참조.
+R1의 2026-09-30 동일 설정 [재측정](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001.md)은 A/B 모두 PASS(2915/1934 tokens), C2 active, queue=false, post-health healthy를 충족했다. 따라서 이 재측정을 R1의 현재 authoritative measured result로 사용하고 R1을 5.5 `VALIDATED_RECIPE`로 승격한다. 2026-09-29 [원측정](../reports/ornith-1.5-35b-a3b/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260928-001.md)의 Project B FAIL(997 < 최소 1024 tokens)은 historical evidence로 보존한다. 단, graph capture/replay는 두 실행 모두 `UNKNOWN`이므로 이 승격은 **R1 serving configuration의 검증**이며 CUDA Graph 자체의 speedup을 증명한 것으로 해석하지 않는다. R2는 prefill -21.56%, TTFT +1.57%, wall +5.66%로 intended latency 개선을 충족하지 못했다. [현재 review](WBS-5.4.3.4-result-review.md#7-2026-09-30-r1-재측정-addendum) 참조.
 
 ## 구동 명령어
 
@@ -366,7 +366,7 @@ PYTHONPATH=/home/loopwhile/Data/Workspace_VSCode/v100-llm-test/scripts/runtime_h
 
 WBS 5.5 최종 상태는 다음과 같다.
 
-- `VALIDATED_RECIPE` 6개: Qwen llama R2, Ornith9 llama R1, Ornith35 llama R1, Ornith35 llama R2, Gemma llama R0, Ornith35 1Cat R0.
+- `VALIDATED_RECIPE` 6개: Qwen llama R2, Ornith9 llama R1, Ornith35 llama R1, Ornith35 llama R2, Gemma llama R0, Ornith35 1Cat R1.
 - Qwen 1Cat / Ornith9 1Cat track은 `NO ELIGIBLE RECIPE`.
 - 미실행 candidate는 Gemma llama R3 (`Gate B NOT_TRIGGERED`)와 Qwen 1Cat R2 (`BLOCKED_BY_HOST_TOOLCHAIN`).
 - Qwen llama R1/R2 optional confirm은 frozen dry-plan에는 존재하지만 사용자 결정으로 SKIP됐으며, candidate 수 25개에는 새로운 configuration으로 추가되지 않는다.
