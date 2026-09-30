@@ -42,8 +42,8 @@
         "aggregate_decode_tps": 23.340141095219767,
         "end_to_end_output_tps": 16.505328504912484,
         "batch_wall_s": 205.02469847799875,
-        "peak_vram_gpu0_mib": 14921.0,
-        "peak_vram_gpu1_mib": 14921.0
+        "peak_vram_gpu0_mib": 14921,
+        "peak_vram_gpu1_mib": 14921
       },
       "evidence_sha256": {
         "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260928-001/completion.json": "fd4483efdee9a470d244a5dbbf64d97ffa26d15d890eeb4f7ce712096db8c848",
@@ -84,8 +84,8 @@
         "aggregate_decode_tps": 30.320800794822777,
         "end_to_end_output_tps": 22.164423862289997,
         "batch_wall_s": 218.7740150669997,
-        "peak_vram_gpu0_mib": 14825.0,
-        "peak_vram_gpu1_mib": 14825.0
+        "peak_vram_gpu0_mib": 14825,
+        "peak_vram_gpu1_mib": 14825
       },
       "evidence_sha256": {
         "results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001/completion.json": "21f89758e6adb0abaa2f8295cb96cfaac2678a4fd443789b189ff9a0acdd85e6",
@@ -97,7 +97,9 @@
       }
     }
   ],
-  "current_decision": "R0_RETAINED_R1_NOT_PROMOTED_MIXED_OUTPUT_EVIDENCE_GRAPH_UNKNOWN",
+  "current_decision": "R1_PROMOTED_CURRENT_FINAL_RECIPE_R0_REFERENCE_GRAPH_EFFECT_UNPROVEN",
   "historical_publication_receipt": "state/wbs5-final-recipes.json",
-  "review_document": "docs/WBS-5.4.3.4-result-review.md"
+  "review_document": "docs/WBS-5.4.3.4-result-review.md",
+  "current_publication_receipt": "state/wbs5-final-recipes.json",
+  "publication_updated_at": "2026-09-30"
 }
