@@ -1,0 +1,36 @@
+{
+  "source_manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+  "workload_id": "V100-PERFORMANCE-C2-128K-v1",
+  "items": [
+    {
+      "id": "project-a",
+      "project_id": "A",
+      "prompt_tokens": 126967,
+      "reserved_output_tokens": 4096,
+      "minimum_output_tokens": 1024,
+      "total_budget_used": 131063,
+      "runtime_context_used": 131071,
+      "runtime_context_slack": 8,
+      "utilization": 0.9999313354492188,
+      "raw_prompt_sha256": "882a3617750ab8dbcb61d3e8e1d42641555a6b1450d060d7bb22a4f1161670b6",
+      "section_units": 487,
+      "padding_units": 62,
+      "request_sha256": "c18fa8d8b75c611a9c2eb0b613f1421ae8dc4178b64a2ff61e8dc1fab5979c28"
+    },
+    {
+      "id": "project-b",
+      "project_id": "B",
+      "prompt_tokens": 126968,
+      "reserved_output_tokens": 4096,
+      "minimum_output_tokens": 1024,
+      "total_budget_used": 131064,
+      "runtime_context_used": 131072,
+      "runtime_context_slack": 8,
+      "utilization": 0.99993896484375,
+      "raw_prompt_sha256": "5a19042f67dd7702e843595467e1d6c2b96414f565b0fbfa8036590709dba557",
+      "section_units": 490,
+      "padding_units": 58,
+      "request_sha256": "a1539e1634cecdf804e3a9a3cb106daeea91c40211b36f105e26976310f73a3d"
+    }
+  ]
+}
