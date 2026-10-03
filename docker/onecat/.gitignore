@@ -1,0 +1,5 @@
+build-context/
+cache/
+image-id.txt
+runtime-receipt.json
+build.log

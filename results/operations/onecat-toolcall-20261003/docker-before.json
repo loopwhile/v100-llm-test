@@ -1,0 +1,160 @@
+{
+  "verified_utc": "2026-10-03T10:16:35.486303+00:00",
+  "status": "PASS",
+  "host": "p520",
+  "deployment_path": "/home/loopwhile/onecat-docker",
+  "container_name": "onecat-ornith35-r1",
+  "image_id": "sha256:f7a8e119584439fbbace4e032e1283eafaccc2b1c85bbab858a3464028938e37",
+  "runtime_version": "1.5.0",
+  "wheel_sha256": "2a4d6bee4e19d315b142f2c563059f3064ddeeca563a6bdc828c33e1073c825b",
+  "installed_snapshot_sha256": "abe0a38e556b49fb4bc939ba6422b6763b8afb894a2e21a9b48f85da7aebddc2",
+  "base_image": "nvidia/cuda:12.8.1-base-ubuntu24.04@sha256:133c78a0575303be34164d0b90137a042172bdf60696af01a3c424ab402d86e2",
+  "user": "1000:1000",
+  "read_only_rootfs": true,
+  "mounts": [
+    {
+      "Source": "/srv/models/ornith-1.5-35b-a3b-nvfp4",
+      "Destination": "/srv/models/ornith-1.5-35b-a3b-nvfp4",
+      "RW": false
+    },
+    {
+      "Source": "/home/loopwhile/onecat-docker/cache",
+      "Destination": "/cache",
+      "RW": true
+    }
+  ],
+  "network_mode": "bridge",
+  "ipc_mode": "private",
+  "pid_mode": "",
+  "port_bindings": {
+    "8080/tcp": [
+      {
+        "HostIp": "127.0.0.1",
+        "HostPort": "18080"
+      }
+    ]
+  },
+  "shm_size_bytes": 8589934592,
+  "restart_policy": {
+    "Name": "unless-stopped",
+    "MaximumRetryCount": 0
+  },
+  "restart_count": 0,
+  "entrypoint": [
+    "/home/loopwhile/qwen3.8-bench-runtime/venv/bin/python",
+    "-m",
+    "vllm.entrypoints.openai.api_server"
+  ],
+  "command": [
+    "--model",
+    "/srv/models/ornith-1.5-35b-a3b-nvfp4",
+    "--served-model-name",
+    "Ornith-1.5-35B-A3B",
+    "--trust-remote-code",
+    "--dtype",
+    "half",
+    "--attention-backend",
+    "FLASH_ATTN_V100",
+    "--tensor-parallel-size",
+    "2",
+    "--kv-cache-dtype",
+    "fp8_e5m2",
+    "--max-model-len",
+    "131072",
+    "--max-num-seqs",
+    "2",
+    "--max-num-batched-tokens",
+    "4096",
+    "--gpu-memory-utilization",
+    "0.90",
+    "--host",
+    "0.0.0.0",
+    "--port",
+    "8080"
+  ],
+  "tool_call_parser": "none; deferred by user",
+  "reasoning_parser": "none",
+  "health_before_http": 200,
+  "models_http": 200,
+  "chat_http": 200,
+  "health_after_http": 200,
+  "smoke_response": {
+    "role": "assistant",
+    "content": "안녕! 😊 반가워요!",
+    "refusal": null,
+    "annotations": null,
+    "audio": null,
+    "function_call": null,
+    "tool_calls": [],
+    "reasoning": null
+  },
+  "smoke_usage": {
+    "prompt_tokens": 24,
+    "total_tokens": 35,
+    "completion_tokens": 11,
+    "prompt_tokens_details": null
+  },
+  "validation_scope": "Docker isolation, R1 arguments, model startup, health, models listing, one short chat; no 128K/C2 benchmark",
+  "runtime_environment": {
+    "CUDA_VISIBLE_DEVICES": "0,1",
+    "CUDA_CACHE_PATH": "/cache/nvidia",
+    "VLLM_SM70_FLASHQLA_ORIGINAL_PREFILL": "0",
+    "VLLM_CACHE_ROOT": "/cache/vllm",
+    "VLLM_NO_USAGE_STATS": "1",
+    "PYTHONPATH": "/opt/onecat/runtime_hooks",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "XDG_CACHE_HOME": "/cache",
+    "XDG_CONFIG_HOME": "/cache/config",
+    "HF_HOME": "/cache/huggingface",
+    "HF_HUB_OFFLINE": "1",
+    "TRANSFORMERS_OFFLINE": "1",
+    "TRITON_CACHE_DIR": "/cache/triton",
+    "TORCHINDUCTOR_CACHE_DIR": "/cache/torchinductor",
+    "TORCH_EXTENSIONS_DIR": "/cache/torch-extensions",
+    "FLASHINFER_WORKSPACE_BASE": "/cache",
+    "TILELANG_CACHE_DIR": "/cache/tilelang",
+    "TILELANG_TMP_DIR": "/tmp/tilelang"
+  },
+  "docker_health": "healthy",
+  "gpu_import_verification": {
+    "status": "PASS",
+    "python": "3.12.14",
+    "1cat-vllm": "1.5.0",
+    "torch": "2.10.0+cu128",
+    "cuda": "12.8",
+    "devices": [
+      "Tesla V100-SXM2-16GB",
+      "Tesla V100-SXM2-16GB"
+    ],
+    "compute_capabilities": [
+      [
+        7,
+        0
+      ],
+      [
+        7,
+        0
+      ]
+    ],
+    "model_module_read_only_import": "PASS"
+  },
+  "healthcheck": {
+    "Test": [
+      "CMD-SHELL",
+      "python -S -c \"import urllib.request; urllib.request.urlopen(\\\"http://127.0.0.1:8080/health\\\", timeout=3)\""
+    ],
+    "Interval": 30000000000,
+    "Timeout": 5000000000,
+    "StartPeriod": 900000000000,
+    "Retries": 3
+  },
+  "tmpfs": {
+    "/tmp": "rw,exec,nosuid,nodev,size=4g,mode=1777"
+  },
+  "cap_drop": [
+    "ALL"
+  ],
+  "security_options": [
+    "no-new-privileges"
+  ]
+}

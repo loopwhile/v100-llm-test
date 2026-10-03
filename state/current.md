@@ -1,5 +1,26 @@
 # Current execution
 
+## P520 Docker server stopped — 2026-10-03
+
+- **STOPPED — USER_REQUESTED.** 사용자 요청으로 `onecat-ornith35-r1`을 중지했다. `exited`, `running=false`, exit code 0을 확인했다. 종료 시각은 2026-10-03 20:35:18 KST다.
+- 컨테이너·이미지·캐시·모델과 parser 설정은 보존했다. `unless-stopped` 정책으로 명시적 중지 상태를 유지하며, 재사용할 때 P520 `/home/loopwhile/onecat-docker`에서 `./onecat.sh start`를 실행한다.
+- 아래 `healthy` 및 API/OpenCode PASS는 중지 전 검증 결과다. [현재 배포 기록](onecat-docker-deployment.json)의 `current_state`와 [운영 안내](../docker/onecat/README.md)를 참조한다.
+
+## P520 Docker tool calls / laptop OpenCode — 2026-10-03
+
+- **DONE — TOOL_CALL_API_PASS / OPENCODE_READ_WRITE_READ_PASS.** 현재 `onecat-ornith35-r1` 운영 명령에 `--enable-auto-tool-choice --tool-call-parser qwen3_xml --reasoning-parser qwen3`를 적용했다. 기존 R1 TP2 / 128K / max-num-seqs 2 / MBT4096 / graph-auto 및 Docker 격리 설정을 유지한다.
+- `auto` 일반·스트리밍, `required`·named 스트리밍, 도구 결과 후속 응답을 검증했다. 노트북 OpenCode 1.18.34에서 기존 `onecat-a`의 실제 `read`, `onecat`의 `write` 후 `read` 및 최종 답변이 성공했고 JSX 내용이 byte-exact로 일치했다. 실제 노트북 OpenCode 설정은 변경하지 않았으며 임시 테스트 permission만 사용했다.
+- 최종 Docker 상태 `healthy`, post-health HTTP 200, 자동 재시작 횟수 0. 검증 중 자동 재시작을 비활성화해 장애를 숨기지 않았고 검증 후 `unless-stopped`로 복원했다. 현재 Docker에서 보고된 서버 종료는 재현되지 않았다. 과거 호스트 서버 종료의 원인은 이 검증으로 확정하지 않는다.
+- [tool call 검증](onecat-toolcall-validation.json), [현재 배포 기록](onecat-docker-deployment.json), [운영 안내](../docker/onecat/README.md). 새 128K/C2 벤치마크나 기존 WBS 성능 기록 변경은 없다.
+
+## P520 1Cat-vLLM Docker operation — 2026-10-03
+
+- **DONE — DOCKER_HEALTHY / SHORT_CHAT_PASS.** Ornith-1.5-35B-A3B-NVFP4 / 1Cat-vLLM 1.5.0 / R1을 `/home/loopwhile/onecat-docker`에 배포했다. `onecat-ornith35-r1` 컨테이너는 배포 검증 당시 실행 중이었으며 API는 P520 `127.0.0.1:18080`이다.
+- Python·venv는 이미지 내부에 포함하고 호스트 venv는 마운트하지 않는다. 모델과 루트 파일시스템은 읽기 전용, 캐시는 전용 bind mount, `/tmp`와 8 GiB shared memory는 컨테이너 전용이다. 일반 UID 1000으로 실행한다.
+- 두 V100 / SM70 인식, R1 인자, 격리 설정, Docker `healthy`, `/health`·`/v1/models`·짧은 한국어 채팅 HTTP 200 및 post-health를 검증했다. 최종 컨테이너 자동 재시작 횟수는 0이다.
+- 초기 Docker 검증은 parser 미적용 상태였고 이후 위의 tool call 후속 작업에서 적용했다. 기존 WBS 측정·성능 기록은 변경하지 않으며 이번 검증은 새 128K/C2 benchmark가 아니다.
+- [운영 안내](../docker/onecat/README.md), [배포 검증 기록](onecat-docker-deployment.json). 기존 호스트 venv는 변경하지 않았다.
+
 ## Current authoritative summary — 2026-09-30
 
 - WBS 2, 3, 4, 5 and 7 are complete; WBS 6 is closed through 6.10 as recorded below.

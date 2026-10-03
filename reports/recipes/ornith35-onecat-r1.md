@@ -74,7 +74,28 @@ Topology: `tp2-shared`. vLLM tensor parallel size 2, max-num-seqs 2.
 - Graph: auto path (`--enforce-eager` removed); capture/replay evidence is `UNKNOWN`.
 - Configuration SHA256: `c55b59d814bd738ecc23a527e1cdd6255f920ef126048f7dbaec513136035429`.
 
-### 현재 OpenCode용 서버 기동 명령 (P520)
+### 현재 서버 기동 명령 (P520 / Docker)
+
+현재 서버는 사용자 요청으로 중지 상태다(2026-10-03). 컨테이너·이미지·설정을 보존했으며 아래 명령으로 재시작할 수 있다.
+
+2026-10-03부터 Docker 실행 구성은 [운영 안내](../../docker/onecat/README.md)를 따른다.
+기존 1Cat-vLLM 1.5.0 설치본을 이미지 안에 포함하고 R1 설정을 유지한다.
+현재 OpenCode 운영 명령에는 자동 도구 선택, `qwen3_xml` tool call parser 및
+`qwen3` reasoning parser를 적용한다. 일반/스트리밍 도구 호출과 노트북 OpenCode
+`read`·`write` 후 `read`를 검증했다. [검증 기록](../../state/onecat-toolcall-validation.json).
+
+```bash
+ssh p520
+cd /home/loopwhile/onecat-docker
+./onecat.sh start
+./onecat.sh status
+./onecat.sh logs
+```
+
+API 주소는 P520의 `127.0.0.1:18080`이며 기존 SSH 포트 포워딩을 사용할 수 있다.
+아래 성능 수치는 tool parser가 없었던 기존 호스트 프로세스 측정치다. 현재 Docker·parser 설정의 성능 재측정 결과를 뜻하지 않는다.
+
+### 2026-09-30 OpenCode용 호스트 기동 명령 (과거 기록)
 
 `ssh p520`으로 접속한 뒤 실행한다. 2026-09-30 OpenCode 연동에서 `tool_choice=auto` 요청이 HTTP 400을 반환해, 측정 당시 명령에 자동 도구 선택 및 Ornith 권장 파서를 추가했다. 이 명령은 OpenCode의 `안녕` 요청으로 확인했으며, 아래의 WBS5 측정 명령 및 성능 수치와는 구분한다.
 
@@ -110,7 +131,7 @@ env -i \
 
 ### Environment
 
-Host process environment와 Docker 내부 환경을 구분한다. Container defaults/실제 환경은 [resolved receipt](../../results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001/runtime/effective-environment.json)에 보존했다.
+측정 당시 호스트 프로세스 환경은 [resolved receipt](../../results/raw/EXP-V100-WBS5-ORNITH35-ONECAT-R1-PERF-20260930-001/runtime/effective-environment.json)에 보존했다. 아래 `container_overrides`는 당시 비어 있으며, 2026-10-03 Docker 구성의 환경을 뜻하지 않는다. 현재 컨테이너 환경은 [Dockerfile](../../docker/onecat/Dockerfile)을 따른다.
 
 ```json
 {

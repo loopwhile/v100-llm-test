@@ -1,0 +1,102 @@
+{
+  "verified_utc": "2026-10-03T10:48:13.002388+00:00",
+  "status": "PASS",
+  "container_name": "onecat-ornith35-r1",
+  "image_id": "sha256:f7a8e119584439fbbace4e032e1283eafaccc2b1c85bbab858a3464028938e37",
+  "tool_call_parser": "qwen3_xml",
+  "reasoning_parser": "qwen3",
+  "enable_auto_tool_choice": true,
+  "api_tests": [
+    {
+      "name": "auto_nonstream",
+      "status": "PASS",
+      "arguments": {
+        "label": "docker-tool-probe",
+        "count": 7,
+        "active": true
+      },
+      "finish_reason": "tool_calls"
+    },
+    {
+      "name": "auto_stream",
+      "status": "PASS",
+      "arguments": {
+        "label": "docker-tool-probe",
+        "count": 7,
+        "active": true
+      },
+      "finish_reason": "tool_calls"
+    },
+    {
+      "name": "required_stream",
+      "status": "PASS",
+      "arguments": {
+        "label": "docker-tool-probe",
+        "count": 7,
+        "active": true
+      },
+      "finish_reason": "tool_calls"
+    },
+    {
+      "name": "named_stream",
+      "status": "PASS",
+      "arguments": {
+        "label": "docker-tool-probe",
+        "count": 7,
+        "active": true
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "name": "tool_result_roundtrip_stream",
+      "status": "PASS",
+      "content": "DOCKER_TOOL_ROUNDTRIP_OK"
+    }
+  ],
+  "api_health_after_http": 200,
+  "opencode": {
+    "version": "1.18.34",
+    "global_config_modified": false,
+    "external_plugins_skipped_for_test": true,
+    "tests": [
+      {
+        "provider": "onecat-a",
+        "status": "PASS",
+        "tools": [
+          "read"
+        ],
+        "final_matches_file": true
+      },
+      {
+        "provider": "onecat",
+        "status": "PASS",
+        "tools": [
+          "write",
+          "read"
+        ],
+        "final": "OPENCODE_WRITE_READ_OK",
+        "file_byte_exact": true
+      }
+    ],
+    "test_permissions": "temporary config only; read/write allowed in dedicated /tmp test directory, bash/external directories denied",
+    "earlier_write_test_attempts": "Temporary granular permission rules blocked execution; corrected temporary configuration before final PASS."
+  },
+  "docker_health": "healthy",
+  "restart_count": 0,
+  "restart_policy": {
+    "Name": "unless-stopped",
+    "MaximumRetryCount": 0
+  },
+  "crash_reproduced_in_current_docker": false,
+  "historical_native_crash_cause": "Not attributed from available evidence; parser-enabled Docker startup and verified tool requests did not crash.",
+  "observed_previous_opencode_error": "auto tool choice requires --enable-auto-tool-choice and --tool-call-parser",
+  "validation_scope": "Small tool API requests and real OpenCode read/write/read. Existing R1 settings preserved; no 128K/C2 benchmark.",
+  "evidence_sha256": {
+    "results/operations/onecat-toolcall-20261003/actual-probe.jsx": "bf4868565b08ecf656ef6481e06487d64e18ae78d6fd0b748a4ea7dbcf67a8af",
+    "results/operations/onecat-toolcall-20261003/docker-before.json": "430b485065535511b3ef18d7e90a6d01c3dd69d359e71e86b8bdcba7c80eddbd",
+    "results/operations/onecat-toolcall-20261003/expected-probe.jsx": "bf4868565b08ecf656ef6481e06487d64e18ae78d6fd0b748a4ea7dbcf67a8af",
+    "results/operations/onecat-toolcall-20261003/opencode-read-events.jsonl": "0705001b9b14cc88c6a055abe6d98a50a247283c1cddc67acfa1ad9e9aa540c3",
+    "results/operations/onecat-toolcall-20261003/opencode-write-read-events.jsonl": "fc1128be954bbac8dff5990682766e9045c34b39bdf90a59f02c0d8148971066",
+    "results/operations/onecat-toolcall-20261003/tool-api-receipt.json": "f874326f4898ca390d2421eb9873d3e0db81137db0ee06a81f9b9b547d4027c7"
+  }
+}
