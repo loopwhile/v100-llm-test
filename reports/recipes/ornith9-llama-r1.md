@@ -38,6 +38,24 @@ built with GNU 11.4.0 for Linux x86_64`
 - Graph: default enabled, disable override 없음; lifetime reuse 2849회. Measured-window graph hit 수와 동일시하지 않는다.
 - Configuration SHA256: `c6933aca605c596224e45f7bfffff65405703b225e62d3dd74685de2c56331ab`.
 
+### 현재 서버 기동 (P520 / Docker)
+
+현재 서버는 사용자 요청으로 중지 상태다(2026-10-03). 컨테이너·이미지·설정과 OpenCode 모델 등록은 보존했으며 아래 명령으로 재시작할 수 있다.
+
+2026-10-03 최종 R1을 운영 서버로 실행했다. [운영 안내](../../docker/ornith9-llama-r1/README.md), [배포 기록](../../state/ornith9-llama-r1-deployment.json), [OpenCode 검증](../../state/ornith9-llama-r1-validation.json)을 참조한다.
+기존 35B endpoint를 보존하기 위해 9B backend host port만 19080/19081로 옮기고
+모델 alias를 추가했다. 필수 LiteLLM gateway는 18079이며 R1 inference 설정은 동일하다.
+노트북 OpenCode 모델 ID: `ornith9-r1/Ornith-1.5-9B`. 작은 도구 호출 및 실제
+OpenCode 읽기·쓰기 연동을 검증했으며 아래 성능 측정 기록은 변경하지 않았다.
+
+```bash
+ssh p520
+cd /home/loopwhile/ornith9-llama-r1
+./serve.sh start
+./serve.sh health
+./serve.sh stop
+```
+
 ### 실제 측정 launch command
 
 아래 명령은 당시 snapshot 경로와 experiment 식별자를 포함한 원문이다. 재실행 시 해당 경로가 필요하며 기존 raw experiment를 덮어쓰지 않는다. 이 publication에서는 명령을 실행하지 않았다.

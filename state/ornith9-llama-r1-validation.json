@@ -1,0 +1,73 @@
+{
+  "verified_utc": "2026-10-03T11:59:40.419224+00:00",
+  "status": "PASS",
+  "model_id": "ornith9-r1/Ornith-1.5-9B",
+  "api_tests": [
+    {
+      "name": "auto_nonstream",
+      "status": "PASS",
+      "arguments": {
+        "label": "docker-tool-probe",
+        "count": 7,
+        "active": true
+      },
+      "finish_reason": "tool_calls"
+    },
+    {
+      "name": "auto_stream",
+      "status": "PASS",
+      "arguments": {
+        "label": "docker-tool-probe",
+        "count": 7,
+        "active": true
+      },
+      "finish_reason": "tool_calls"
+    },
+    {
+      "name": "required_stream",
+      "status": "PASS",
+      "arguments": {
+        "label": "docker-tool-probe",
+        "count": 7,
+        "active": true
+      },
+      "finish_reason": "tool_calls"
+    },
+    {
+      "name": "named_stream",
+      "status": "PASS",
+      "arguments": {
+        "label": "docker-tool-probe",
+        "count": 7,
+        "active": true
+      },
+      "finish_reason": "tool_calls"
+    },
+    {
+      "name": "tool_result_roundtrip_stream",
+      "status": "PASS",
+      "content": "DOCKER_TOOL_ROUNDTRIP_OK"
+    }
+  ],
+  "api_health_after_http": 200,
+  "api_probe_source": "docker/onecat/verify-tools.py with only served model ID changed to Ornith-1.5-9B",
+  "opencode": {
+    "version": "1.18.34",
+    "model_listed": true,
+    "read_tool_completed": true,
+    "read_final_matches_file": true,
+    "write_tool_completed": true,
+    "read_after_write_completed": true,
+    "file_byte_exact": true,
+    "final": "ORNITH9_OPENCODE_WRITE_READ_OK",
+    "test_config": "Temporary permissions in dedicated /tmp directory; bash and external_directory denied; external plugins skipped; global permissions unchanged"
+  },
+  "validation_scope": "Small tool API requests and OpenCode read/write/read; no new 128K/C2 measurement",
+  "evidence_sha256": {
+    "results/operations/ornith9-llama-r1-20261003/actual-probe.jsx": "bf4868565b08ecf656ef6481e06487d64e18ae78d6fd0b748a4ea7dbcf67a8af",
+    "results/operations/ornith9-llama-r1-20261003/expected-probe.jsx": "bf4868565b08ecf656ef6481e06487d64e18ae78d6fd0b748a4ea7dbcf67a8af",
+    "results/operations/ornith9-llama-r1-20261003/opencode-read-events.jsonl": "31cd58a881903fb11c12584826f9fd0989506d562954227b60f6323a3b2251d4",
+    "results/operations/ornith9-llama-r1-20261003/opencode-write-read-events.jsonl": "6712b6d7044ba3a22faf91676e900c075945a384da1c79da31a33f15663b7001",
+    "results/operations/ornith9-llama-r1-20261003/tool-api-receipt.json": "b1e2481f3e0a581682b792ddf9665c20e235fa1f6bed41eb6e9eb14862ee056f"
+  }
+}

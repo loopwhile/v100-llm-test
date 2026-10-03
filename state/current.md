@@ -1,5 +1,14 @@
 # Current execution
 
+## Ornith 1.5 9B llama.cpp R1 / laptop OpenCode — 2026-10-03
+
+- 사용자 요청으로 게이트웨이와 backend 2개를 모두 중지했다(2026-10-03 22:12:36 KST). 세 컨테이너 `exited`, `running=false`, exit code 0을 확인했다. 컨테이너·이미지와 OpenCode 모델 등록은 보존하며 아래 PASS는 중지 전 검증 결과다.
+- **STOPPED — USER_REQUESTED; PRE-STOP API_TOOLS_PASS / OPENCODE_READ_WRITE_READ_PASS.** 최종 `TARGET_UB256` R1을 P520 `/home/loopwhile/ornith9-llama-r1`에 배포했다. GPU0·GPU1 독립 백엔드, 128K / 1 slot, batch512 / ubatch256, FP16 KV, target-only 및 필수 LiteLLM 1.101.0 least-busy gateway를 유지한다.
+- 백엔드는 P520 localhost 19080/19081, 게이트웨이는 18079다. 기존 35B 1Cat의 18080 연결은 유지하며 해당 컨테이너는 계속 중지 상태다. 운영 명령에 모델 alias와 고정 컨테이너 이름 / `unless-stopped`를 적용했다.
+- 노트북 `~/.config/opencode/opencode.jsonc`를 백업하고 `ornith9-r1/Ornith-1.5-9B` 모델을 추가했다. 기존 provider·기본 model/small_model·permission 설정은 유지했다. localhost 18079 SSH 터널을 실행했다.
+- `auto` 일반·스트리밍, `required`·named 스트리밍, tool-result round trip 및 실제 OpenCode `read`, `write` 후 `read`가 성공했다. JSX 내용이 byte-exact로 일치했다. 신규 128K/C2 benchmark는 실행하지 않았다.
+- [운영 안내](../docker/ornith9-llama-r1/README.md), [현재 배포 기록](ornith9-llama-r1-deployment.json), [검증 기록](ornith9-llama-r1-validation.json).
+
 ## P520 Docker server stopped — 2026-10-03
 
 - **STOPPED — USER_REQUESTED.** 사용자 요청으로 `onecat-ornith35-r1`을 중지했다. `exited`, `running=false`, exit code 0을 확인했다. 종료 시각은 2026-10-03 20:35:18 KST다.

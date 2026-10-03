@@ -1,0 +1,54 @@
+{
+  "verified_utc": "2026-10-03T11:55:58.782644+00:00",
+  "base_url": "http://127.0.0.1:18079",
+  "model": "Ornith-1.5-9B",
+  "tests": [
+    {
+      "name": "auto_nonstream",
+      "status": "PASS",
+      "arguments": {
+        "label": "docker-tool-probe",
+        "count": 7,
+        "active": true
+      },
+      "finish_reason": "tool_calls"
+    },
+    {
+      "name": "auto_stream",
+      "status": "PASS",
+      "arguments": {
+        "label": "docker-tool-probe",
+        "count": 7,
+        "active": true
+      },
+      "finish_reason": "tool_calls"
+    },
+    {
+      "name": "required_stream",
+      "status": "PASS",
+      "arguments": {
+        "label": "docker-tool-probe",
+        "count": 7,
+        "active": true
+      },
+      "finish_reason": "tool_calls"
+    },
+    {
+      "name": "named_stream",
+      "status": "PASS",
+      "arguments": {
+        "label": "docker-tool-probe",
+        "count": 7,
+        "active": true
+      },
+      "finish_reason": "tool_calls"
+    },
+    {
+      "name": "tool_result_roundtrip_stream",
+      "status": "PASS",
+      "content": "DOCKER_TOOL_ROUNDTRIP_OK"
+    }
+  ],
+  "health_after_http": 200,
+  "status": "PASS"
+}

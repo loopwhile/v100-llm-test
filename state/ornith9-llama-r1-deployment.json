@@ -1,0 +1,343 @@
+{
+  "observed_utc": "2026-10-03T11:57:55.060132+00:00",
+  "status": "PASS",
+  "host": "p520",
+  "deployment_path": "/home/loopwhile/ornith9-llama-r1",
+  "recipe": "Ornith 1.5 9B llama.cpp R1 / TARGET_UB256",
+  "topology": "1gpu-x2-independent with mandatory LiteLLM gateway",
+  "model_path": "/srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf",
+  "model_sha256_verified": "79a9925bb7771dea3530d57b185e97b9713a73a7c06bdb9804f7d019aa42f480",
+  "litellm_version": "1.101.0",
+  "containers": [
+    {
+      "name": "ornith9-llama-r1-backend-0",
+      "id": "9cb5164a304b23d94cf3e8d892adc63fb82f1452cd2c92be8e1688645ab33063",
+      "image_id": "sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149",
+      "running": true,
+      "restart_count": 0,
+      "restart_policy": {
+        "Name": "unless-stopped",
+        "MaximumRetryCount": 0
+      },
+      "command": [
+        "-m",
+        "/model/target.gguf",
+        "--alias",
+        "Ornith-1.5-9B",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8080",
+        "-ngl",
+        "all",
+        "--ctx-size",
+        "131072",
+        "--parallel",
+        "1",
+        "--kv-unified",
+        "--kv-unified-per-slot",
+        "131072",
+        "--batch-size",
+        "512",
+        "--ubatch-size",
+        "256",
+        "--cache-type-k",
+        "f16",
+        "--cache-type-v",
+        "f16",
+        "--flash-attn",
+        "on",
+        "--spec-type",
+        "none",
+        "--jinja",
+        "--reasoning",
+        "off",
+        "--metrics",
+        "--slots",
+        "--no-warmup"
+      ],
+      "entrypoint": [
+        "llama-server"
+      ],
+      "port_bindings": {
+        "8080/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "19080"
+          }
+        ]
+      },
+      "network_mode": "bridge",
+      "device_requests": [
+        {
+          "Driver": "",
+          "Count": 0,
+          "DeviceIDs": [
+            "0"
+          ],
+          "Capabilities": [
+            [
+              "gpu"
+            ]
+          ],
+          "Options": {}
+        }
+      ],
+      "mounts": [
+        {
+          "source": "/srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf",
+          "destination": "/model/target.gguf",
+          "rw": false
+        }
+      ]
+    },
+    {
+      "name": "ornith9-llama-r1-backend-1",
+      "id": "113c07c7fd45ad4fc9c9a91e2cae2afdd43fc30d414848210478ad206efa6cc4",
+      "image_id": "sha256:e8bf2d9a1b9e2915c5848470fc85ce1cfd4503776f13c56a12b98d2bf30ac149",
+      "running": true,
+      "restart_count": 0,
+      "restart_policy": {
+        "Name": "unless-stopped",
+        "MaximumRetryCount": 0
+      },
+      "command": [
+        "-m",
+        "/model/target.gguf",
+        "--alias",
+        "Ornith-1.5-9B",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8080",
+        "-ngl",
+        "all",
+        "--ctx-size",
+        "131072",
+        "--parallel",
+        "1",
+        "--kv-unified",
+        "--kv-unified-per-slot",
+        "131072",
+        "--batch-size",
+        "512",
+        "--ubatch-size",
+        "256",
+        "--cache-type-k",
+        "f16",
+        "--cache-type-v",
+        "f16",
+        "--flash-attn",
+        "on",
+        "--spec-type",
+        "none",
+        "--jinja",
+        "--reasoning",
+        "off",
+        "--metrics",
+        "--slots",
+        "--no-warmup"
+      ],
+      "entrypoint": [
+        "llama-server"
+      ],
+      "port_bindings": {
+        "8080/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "19081"
+          }
+        ]
+      },
+      "network_mode": "bridge",
+      "device_requests": [
+        {
+          "Driver": "",
+          "Count": 0,
+          "DeviceIDs": [
+            "1"
+          ],
+          "Capabilities": [
+            [
+              "gpu"
+            ]
+          ],
+          "Options": {}
+        }
+      ],
+      "mounts": [
+        {
+          "source": "/srv/models/ornith-1.5-9b-mtp-gguf/Ornith-1.5-9B-MTP-Q6_K.gguf",
+          "destination": "/model/target.gguf",
+          "rw": false
+        }
+      ]
+    },
+    {
+      "name": "ornith9-llama-r1-gateway",
+      "id": "1c5d5cb8fbc70b37df4c4e404b9cce5acde7916e0fc1c17c8f56d0701d4ed3d8",
+      "image_id": "sha256:d295634e09c648dcdb72c4cc2dd226f5fb87823a73e88cbbed6f205e4deb044b",
+      "running": true,
+      "restart_count": 0,
+      "restart_policy": {
+        "Name": "unless-stopped",
+        "MaximumRetryCount": 0
+      },
+      "command": [
+        "--config",
+        "/app/config.yaml",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18079"
+      ],
+      "entrypoint": [
+        "docker/prod_entrypoint.sh"
+      ],
+      "port_bindings": {},
+      "network_mode": "host",
+      "device_requests": null,
+      "mounts": [
+        {
+          "source": "/home/loopwhile/ornith9-llama-r1/litellm-config.yaml",
+          "destination": "/app/config.yaml",
+          "rw": false
+        }
+      ]
+    }
+  ],
+  "health": {
+    "backend-0": {
+      "http": 200,
+      "response": {
+        "status": "ok"
+      }
+    },
+    "backend-1": {
+      "http": 200,
+      "response": {
+        "status": "ok"
+      }
+    },
+    "gateway-models": {
+      "http": 200,
+      "response": {
+        "data": [
+          {
+            "id": "Ornith-1.5-9B",
+            "object": "model",
+            "created": 1677610602,
+            "owned_by": "openai"
+          }
+        ],
+        "object": "list"
+      }
+    }
+  },
+  "gateway_config": {
+    "model_list": [
+      {
+        "model_name": "Ornith-1.5-9B",
+        "model_info": {
+          "id": "backend-0"
+        },
+        "litellm_params": {
+          "model": "openai/Ornith-1.5-9B",
+          "api_base": "http://127.0.0.1:19080/v1",
+          "api_key": "local-no-key",
+          "max_parallel_requests": 1,
+          "timeout": 1800,
+          "stream_timeout": 1800,
+          "max_retries": 0
+        }
+      },
+      {
+        "model_name": "Ornith-1.5-9B",
+        "model_info": {
+          "id": "backend-1"
+        },
+        "litellm_params": {
+          "model": "openai/Ornith-1.5-9B",
+          "api_base": "http://127.0.0.1:19081/v1",
+          "api_key": "local-no-key",
+          "max_parallel_requests": 1,
+          "timeout": 1800,
+          "stream_timeout": 1800,
+          "max_retries": 0
+        }
+      }
+    ],
+    "router_settings": {
+      "routing_strategy": "least-busy",
+      "num_retries": 0
+    }
+  },
+  "onecat35_running": false,
+  "operational_deltas": [
+    "Backend host ports changed to 19080/19081 to preserve existing 1Cat endpoint",
+    "Added backend alias Ornith-1.5-9B",
+    "Stable container names, unless-stopped policy, and pinned existing LiteLLM image digest"
+  ],
+  "validation_scope": "Deployment and short API/OpenCode integration only; no new 128K/C2 benchmark",
+  "opencode": {
+    "provider_id": "ornith9-r1",
+    "model_id": "ornith9-r1/Ornith-1.5-9B",
+    "config_path": "/home/loopwhile/.config/opencode/opencode.jsonc",
+    "config_backup": "/home/loopwhile/.config/opencode/opencode.jsonc.bak-ornith9-r1-20261003-205508",
+    "provider_config": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ornith 1.5 9B - llama.cpp R1",
+      "options": {
+        "baseURL": "http://127.0.0.1:18079/v1",
+        "apiKey": "sk-no-key-required"
+      },
+      "models": {
+        "Ornith-1.5-9B": {
+          "name": "Ornith 1.5 9B - llama.cpp R1",
+          "limit": {
+            "context": 131072,
+            "output": 4096
+          }
+        }
+      }
+    },
+    "existing_settings_unchanged": true,
+    "default_model": "onecat-a/Ornith-1.5-35B-A3B",
+    "small_model": "onecat-a/Ornith-1.5-35B-A3B",
+    "permission_unchanged": true,
+    "ssh_forward": "127.0.0.1:18079 -> p520 127.0.0.1:18079"
+  },
+  "current_state": {
+    "observed_utc": "2026-10-03T13:13:24.537535+00:00",
+    "status": "stopped",
+    "stop_reason": "user_requested",
+    "restart_policy": "unless-stopped",
+    "containers": [
+      {
+        "name": "ornith9-llama-r1-gateway",
+        "status": "exited",
+        "running": false,
+        "exit_code": 0,
+        "finished_at_utc": "2026-10-03T13:12:36.712419341Z"
+      },
+      {
+        "name": "ornith9-llama-r1-backend-0",
+        "status": "exited",
+        "running": false,
+        "exit_code": 0,
+        "finished_at_utc": "2026-10-03T13:12:34.870176673Z"
+      },
+      {
+        "name": "ornith9-llama-r1-backend-1",
+        "status": "exited",
+        "running": false,
+        "exit_code": 0,
+        "finished_at_utc": "2026-10-03T13:12:34.396632709Z"
+      }
+    ],
+    "container_and_image_preserved": true,
+    "opencode_model_preserved": true,
+    "restart_command": "cd /home/loopwhile/ornith9-llama-r1 && ./serve.sh start"
+  },
+  "verification_note": "Top-level containers and health describe the completed deployment validation at observed_utc. See current_state for the latest operational state."
+}

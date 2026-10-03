@@ -84,6 +84,8 @@ Qwen 1Cat and Ornith 9B 1Cat have **NO ELIGIBLE RECIPE**. See [WBS 5 final publi
 
 Ornith 35B 1Cat R1 is deployed in an isolated Docker image on P520 with `qwen3_xml` tool calling and `qwen3` reasoning parsing for OpenCode. See [Docker operation and build instructions](docker/onecat/README.md). The server is currently stopped at the user’s request (2026-10-03); the container, image and configuration are retained for restart. The historical benchmark results above were measured with the host runtime without tool parsing.
 
+Ornith 9B llama.cpp R1 is deployed on P520 with two independent GPU backends and the required LiteLLM gateway. All three containers are currently stopped at the user’s request (2026-10-03). The laptop OpenCode model ID is `ornith9-r1/Ornith-1.5-9B`. See [operation instructions](docker/ornith9-llama-r1/README.md) and [tool/OpenCode validation](state/ornith9-llama-r1-validation.json).
+
 WBS 7 post-WBS5 validation is also complete. Native MTP1 ended terminal GPU OOM; the bounded GQA×2 experiment passed C2 but was not promoted to a new recipe. See [WBS 7 result review](docs/WBS-7.3-result-review.md).
 
 ## Frozen inputs versus current state
